@@ -1,0 +1,31 @@
+# US Chess TLA ingestion cron — DISABLED scaffold.
+#
+# To enable (SETUP.md step 5):
+#   1. Verify/repair the selectors in ingestion/scrape-tla.ts against the
+#      live TLA page (run `npm run scrape:tla` locally first).
+#   2. Add repo secrets: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+#   3. Rename this file to ingest.yml.
+#
+# Scraped rows land as status='draft' and are invisible to the app until a
+# human reviews and publishes them (see ingestion/README.md).
+name: Ingest US Chess TLAs
+
+on:
+  schedule:
+    - cron: "0 11 * * 1" # Mondays 11:00 UTC — TLAs update on a weekly-ish cadence
+  workflow_dispatch: {}
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run scrape:tla
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
