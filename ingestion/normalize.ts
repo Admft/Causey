@@ -109,6 +109,26 @@ export function slugify(name: string, startDate: string): string {
   );
 }
 
+/**
+ * Prefer a stable slug from the US Chess event path so weekly clubs /
+ * same-name events don't collide on name+date alone.
+ * e.g. https://new.uschess.org/irving-swiss → irving-swiss
+ */
+export function slugFromSourceUrl(sourceUrl: string, fallback: string): string {
+  try {
+    const path = new URL(sourceUrl).pathname.replace(/^\/+|\/+$/g, "");
+    const leaf = path.split("/").filter(Boolean).pop() ?? "";
+    const cleaned = leaf
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    if (cleaned.length >= 3) return cleaned.slice(0, 80);
+  } catch {
+    /* fall through */
+  }
+  return fallback;
+}
+
 /** Sentinels a reviewer must replace before publishing a draft. */
 export const NEEDS_REVIEW = {
   zip: "00000",
@@ -142,7 +162,7 @@ export function normalizeRawTla(
 
   const candidate = {
     id: opts.id,
-    slug: slugify(raw.name, dates.start),
+    slug: slugFromSourceUrl(raw.detailUrl, slugify(raw.name, dates.start)),
     name: raw.name,
     category: "chess",
     organizer_name: raw.organizerName ?? null,

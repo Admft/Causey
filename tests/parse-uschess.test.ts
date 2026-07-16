@@ -36,6 +36,7 @@ describe("US Chess listing parser", () => {
     const row = normalizeRawTla(raw, { id: "00000000-0000-4000-8000-000000000001" });
     expect(row?.source).toBe("tla_scrape");
     expect(row?.source_url).toBe(raw.detailUrl);
+    expect(row?.slug).toBe("charlotte-chess-center-tuesday-night-action");
     expect(row?.status).toBe("draft"); // no zip/coords yet
   });
 });

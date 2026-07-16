@@ -169,48 +169,79 @@ async function main() {
   console.log(`  ready to show (published): ${published}`);
   console.log(`  needs location review (draft): ${drafts.length - published}`);
 
-  if (client) {
-    const { data: existing, error: existingErr } = await client
-      .from("competitions")
-      .select("id, slug")
-      .eq("source", "tla_scrape");
-    if (existingErr) throw new Error(`lookup existing failed: ${existingErr.message}`);
-    const idBySlug = new Map(
-      (existing ?? []).map((r) => [r.slug as string, r.id as string])
+  // Always stage to disk before DB write — a failed upsert must not burn a full re-scrape.
+  const outDir = join(process.cwd(), "data", "staging");
+  mkdirSync(outDir, { recursive: true });
+  const outPath = join(outDir, "tla-drafts.json");
+  writeFileSync(outPath, JSON.stringify(drafts, null, 2) + "\n");
+  console.log(`Staged ${drafts.length} rows → ${outPath}`);
+
+  if (!client) {
+    console.log("No Supabase configured — staging file is the output. Set .env to upsert.");
+    console.log(
+      "Done. Every row has source='tla_scrape' and source_url set to its US Chess page."
     );
+    return;
+  }
 
-    const payload = drafts.map((d) => ({
-      ...d,
-      id: idBySlug.get(d.slug) ?? d.id,
-    }));
+  await upsertDrafts(client, drafts);
+  console.log(
+    "Done. Every row has source='tla_scrape' and source_url set to its US Chess page."
+  );
+}
 
+async function upsertDrafts(
+  client: NonNullable<ReturnType<typeof getServiceRoleClient>>,
+  drafts: Awaited<ReturnType<typeof normalizeRawTla>>[] extends (infer T)[]
+    ? NonNullable<T>[]
+    : never
+) {
+  const { data: existing, error: existingErr } = await client
+    .from("competitions")
+    .select("id, slug")
+    .eq("source", "tla_scrape");
+  if (existingErr) throw new Error(`lookup existing failed: ${existingErr.message}`);
+  const idBySlug = new Map(
+    (existing ?? []).map((r) => [r.slug as string, r.id as string])
+  );
+
+  const bySlug = new Map<string, (typeof drafts)[number]>();
+  for (const d of drafts) bySlug.set(d.slug, d);
+  if (bySlug.size < drafts.length) {
+    console.warn(
+      `Deduped ${drafts.length - bySlug.size} in-batch slug collisions before upsert.`
+    );
+  }
+
+  const payload = [...bySlug.values()].map((d) => ({
+    ...d,
+    id: idBySlug.get(d.slug) ?? d.id,
+  }));
+
+  const BATCH = 200;
+  let upserted = 0;
+  for (let i = 0; i < payload.length; i += BATCH) {
+    const chunk = payload.slice(i, i + BATCH);
     let { error } = await client
       .from("competitions")
-      .upsert(payload as never[], { onConflict: "slug" });
+      .upsert(chunk as never[], { onConflict: "slug" });
 
     if (error?.message?.includes("source_url")) {
       console.warn(
         "competitions.source_url missing — run supabase/migrations/0002_source_url.sql, then re-scrape. " +
           "Upserting without source_url for now (source='tla_scrape' + reg_url still identify origin)."
       );
-      const stripped = payload.map(({ source_url: _drop, ...rest }) => rest);
+      const stripped = chunk.map(({ source_url: _drop, ...rest }) => rest);
       ({ error } = await client
         .from("competitions")
         .upsert(stripped as never[], { onConflict: "slug" }));
     }
 
     if (error) throw new Error(`Supabase upsert failed: ${error.message}`);
-    console.log(`Upserted ${payload.length} competitions (source='tla_scrape').`);
-  } else {
-    const outDir = join(process.cwd(), "data", "staging");
-    mkdirSync(outDir, { recursive: true });
-    const outPath = join(outDir, "tla-drafts.json");
-    writeFileSync(outPath, JSON.stringify(drafts, null, 2) + "\n");
-    console.log(`No Supabase configured — wrote ${drafts.length} rows to ${outPath}.`);
+    upserted += chunk.length;
+    process.stdout.write(`\rUpserted ${upserted}/${payload.length}`);
   }
-  console.log(
-    "Done. Every row has source='tla_scrape' and source_url set to its US Chess page."
-  );
+  console.log(`\nUpserted ${upserted} competitions (source='tla_scrape').`);
 }
 
 const isDirectRun =
