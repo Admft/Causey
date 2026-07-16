@@ -40,8 +40,9 @@ The following pieces are already implemented in this repository:
   - `DATA_SOURCE=mock` uses in-repo JSON.
   - `DATA_SOURCE=supabase` uses the database-backed implementation.
 - Supabase migration and seed scripts.
-- A US Chess TLA ingestion scraper that stages drafts for human review.
-- A disabled GitHub Actions cron scaffold for recurring ingestion.
+- A US Chess TLA + CCA ingestion pipeline with staging, fingerprint dedupe,
+  series matching, and scrape run logs.
+- A twice-weekly GitHub Actions ingest workflow (plus optional Docker runner).
 
 ## What is intentionally not built
 
@@ -181,34 +182,30 @@ Why this matters:
 - It loads the seeded MVP data into Supabase so the production-backed app has
   the same baseline dataset as local mock mode.
 
-## 5. Verify the TLA scraper and enable recurring ingestion
+## 5. Verify scrapers and enable twice-weekly ingestion
 
 What exists already:
 
-- `ingestion/scrape-tla.ts`
-- `ingestion/README.md`
-- `.github/workflows/ingest.yml.disabled`
+- `ingestion/scrape-tla.ts` (US Chess) and `ingestion/scrape-cca.ts` (CCA)
+- `npm run scrape:all` — TLA then CCA with shared persist / dedupe / series match
+- `supabase/migrations/0005_ingestion_ops.sql` — sources, fingerprints, scrape_runs
+- `.github/workflows/ingest.yml` — Mon + Thu 11:00 UTC
+- Optional Docker: `Dockerfile.ingest` + `docker-compose.ingest.yml`
+- Full ops notes in `ingestion/README.md`
 
 What still needs to happen:
 
-1. Run `npm run scrape:tla` locally.
-2. If it parses zero rows, fix the selectors in `ingestion/scrape-tla.ts`.
-3. Review staged draft rows manually.
-4. Fill missing draft values such as:
-   - zip
-   - coordinates
-   - entry fee
-   - sections
-   - series linkage
-5. Change reviewed rows from `draft` to `published`.
-6. Rename `.github/workflows/ingest.yml.disabled` to `ingest.yml`.
-7. Add required GitHub secrets.
+1. Run `0005_ingestion_ops.sql` in the Supabase SQL editor.
+2. Run `npm run scrape:all` locally once and confirm upsert + `scrape_runs` rows.
+3. Add GitHub secrets: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+4. Confirm the Actions workflow runs (manual **Run workflow** first).
+5. Review drafts (missing zip/fees/sections) in Supabase; keep pathway rules curated.
 
 Why this matters:
 
 - There is no official unified event API.
-- The ingestion pipeline is how the app grows beyond the initial seeded data.
-- Scraped data is intentionally not auto-published.
+- Twice-weekly ingest keeps listings fresh without a dedicated VPS (prefer GHA;
+  use Docker only if you self-host cron).
 
 ## 6. Replace scaffold qualification rules with verified rules
 
@@ -216,8 +213,9 @@ This is one of the biggest remaining product tasks.
 
 What exists already:
 
-- A working qualification engine
-- Seeded qualification rules
+- A working qualification engine (`lib/qualification.ts`) + `/pathways` UI
+- Seeded qualification rules + series
+- Post-scrape **series matching** for high-confidence names (`ingestion/series-match.ts`)
 - UI and API support for pathway tracing
 - Test coverage around the engine behavior
 
@@ -226,6 +224,7 @@ What still needs to happen:
 - Replace the seeded placeholder/scaffold rules with verified official rules.
 - Add real citations into `notes`.
 - Set real `verified_on` dates.
+- Extend `SERIES_MATCH_RULES` as new recurring series appear in scrapes.
 - Repeat this process yearly as qualification rules change.
 
 Important warning:

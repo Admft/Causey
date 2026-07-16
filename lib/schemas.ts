@@ -48,6 +48,12 @@ export const CompetitionSchema = z.object({
   source: z.enum(["manual", "tla_scrape", "cca_scrape", "organizer"]),
   /** Exact upstream page the scraper read (null for hand-entered rows). */
   source_url: z.string().url().nullable().default(null),
+  /**
+   * Cross-source identity (ingestion/fingerprint.ts). Null until a scrape
+   * stamps it. Search ignores rows with canonical_id set (archived dupes).
+   */
+  fingerprint: z.string().nullable().optional(),
+  canonical_id: z.string().uuid().nullable().optional(),
   status: CompetitionStatus.default("published"),
 });
 

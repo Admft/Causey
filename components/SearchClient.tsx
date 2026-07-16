@@ -142,7 +142,10 @@ export function SearchClient() {
           grid motif (access shouldn't depend on where you live). */}
       <section className="access-grid section-rule">
         <div className="relative mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
-          <h1 className="max-w-[18ch] font-display text-display-lg font-bold tracking-tight text-foreground">
+          <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+            Chess
+          </p>
+          <h1 className="mt-2 max-w-[18ch] font-display text-display-lg font-bold tracking-tight text-foreground">
             Every scholastic chess tournament near you.
           </h1>
           <p className="mt-3 max-w-lg text-md text-muted">

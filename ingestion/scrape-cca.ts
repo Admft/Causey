@@ -35,8 +35,8 @@ import {
 import {
   loadDotEnv,
   loadStagedCompetitions,
+  persistScrapeBatch,
   stageCompetitions,
-  upsertCompetitions,
 } from "./persist";
 
 loadDotEnv();
@@ -94,7 +94,10 @@ async function main() {
       console.error("Need Supabase env vars for upsert-only.");
       process.exit(1);
     }
-    await upsertCompetitions(client, drafts, CCA_SCRAPER_ID);
+    await persistScrapeBatch(client, drafts, CCA_SCRAPER_ID, {
+      scrapeRunSource: "cca_scrape",
+      meta: { mode: "upsert_only" },
+    });
     return;
   }
 
@@ -205,7 +208,10 @@ async function main() {
     return;
   }
 
-  await upsertCompetitions(client, drafts, CCA_SCRAPER_ID);
+  await persistScrapeBatch(client, drafts, CCA_SCRAPER_ID, {
+    scrapeRunSource: "cca_scrape",
+    meta: { listing: CCA_LISTING_URL },
+  });
   console.log("Done. Rows tagged source='cca_scrape' with CCA source_url.");
 }
 

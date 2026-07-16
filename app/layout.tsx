@@ -44,10 +44,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-50 border-b border-line bg-background/90 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-            <Link href="/" aria-label="Causey — choose a competition type">
+            <Link href="/" aria-label="Causey home — browse competition types">
               <CauseyLogo size="sm" />
             </Link>
             <nav className="flex items-center gap-5" aria-label="Primary">
+              <Link
+                href="/"
+                className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+              >
+                Competitions
+              </Link>
               <Link
                 href="/chess"
                 className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"

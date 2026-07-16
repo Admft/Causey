@@ -70,6 +70,8 @@ export class SupabaseDataSource implements DataSource {
 
     const results: CompetitionResult[] = [];
     for (const row of data ?? []) {
+      // Dedupe: archived secondaries (canonical_id set) stay out of search.
+      if (row.canonical_id) continue;
       const { sections: rawSections, series: rawSeries, ...rawComp } = row;
       const c: Competition = CompetitionSchema.parse(rawComp);
       if (!competitionInDateWindow(c, filters)) continue;
@@ -122,7 +124,7 @@ export class SupabaseDataSource implements DataSource {
       .eq("status", "published")
       .maybeSingle();
     if (error) throw new Error(`Supabase lookup failed: ${error.message}`);
-    if (!data) return null;
+    if (!data || data.canonical_id) return null;
 
     const { sections: rawSections, series: rawSeries, ...rawComp } = data;
     return {
@@ -136,11 +138,32 @@ export class SupabaseDataSource implements DataSource {
     const client = requireClient();
     const { data, error } = await client
       .from("competitions")
-      .select("id, slug, name, series_id, state, start_date")
+      .select("id, slug, name, series_id, state, start_date, canonical_id")
       .eq("status", "published")
       .order("name");
-    if (error) throw new Error(`Supabase list failed: ${error.message}`);
-    return (data ?? []) as CompetitionRef[];
+    if (error) {
+      // Pre-0005 DBs lack canonical_id — fall back.
+      if (error.message.includes("canonical_id")) {
+        const retry = await client
+          .from("competitions")
+          .select("id, slug, name, series_id, state, start_date")
+          .eq("status", "published")
+          .order("name");
+        if (retry.error) throw new Error(`Supabase list failed: ${retry.error.message}`);
+        return (retry.data ?? []) as CompetitionRef[];
+      }
+      throw new Error(`Supabase list failed: ${error.message}`);
+    }
+    return ((data ?? []) as (CompetitionRef & { canonical_id?: string | null })[])
+      .filter((r) => !r.canonical_id)
+      .map(({ id, slug, name, series_id, state, start_date }) => ({
+        id,
+        slug,
+        name,
+        series_id,
+        state,
+        start_date,
+      }));
   }
 
   async listSeries(): Promise<Series[]> {

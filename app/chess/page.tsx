@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { CategorySwitcher } from "@/components/CategorySwitcher";
 import { SearchClient } from "@/components/SearchClient";
 
 export const metadata: Metadata = {
@@ -12,13 +12,12 @@ export const metadata: Metadata = {
 export default function ChessSearchPage() {
   return (
     <>
-      <div className="mx-auto max-w-6xl px-5 pt-6 sm:px-8">
-        <Link
-          href="/"
-          className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
-        >
-          ← All competition types
-        </Link>
+      {/* Category chrome lives under the sticky header — not in the hero.
+          Keeps the headline first and treats type-switching as navigation. */}
+      <div className="border-b border-line bg-surface">
+        <div className="mx-auto max-w-6xl px-5 py-2.5 sm:px-8">
+          <CategorySwitcher active="chess" />
+        </div>
       </div>
       <Suspense>
         <SearchClient />

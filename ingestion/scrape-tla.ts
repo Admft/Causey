@@ -19,7 +19,7 @@
  */
 import { load } from "cheerio";
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
@@ -36,15 +36,14 @@ import {
   parseDetailHtml,
   parseListingHtml,
 } from "./parse-uschess";
+import {
+  loadDotEnv,
+  loadStagedCompetitions,
+  persistScrapeBatch,
+  stageCompetitions,
+} from "./persist";
 
-try {
-  for (const line of readFileSync(join(process.cwd(), ".env"), "utf8").split("\n")) {
-    const m = line.match(/^([A-Z_]+)=(.*)$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-} catch {
-  /* no .env — fine */
-}
+loadDotEnv();
 
 const USER_AGENT = "CauseyBot/0.1 (+https://causey.dev; tournament discovery indexing)";
 const DETAIL_DELAY_MS = 350;
@@ -97,15 +96,17 @@ async function main() {
 
   // Re-upsert last successful scrape without re-fetching the web.
   if (process.env.SCRAPE_UPSERT_ONLY === "1") {
-    const outPath = join(process.cwd(), "data", "staging", "tla-drafts.json");
-    const drafts = JSON.parse(readFileSync(outPath, "utf8")) as Competition[];
-    console.log(`Upsert-only mode: loading ${drafts.length} rows from ${outPath}`);
+    const drafts = loadStagedCompetitions("tla-drafts.json");
+    console.log(`Upsert-only mode: loading ${drafts.length} staged TLA rows`);
     const client = getServiceRoleClient();
     if (!client) {
       console.error("Need Supabase env vars for upsert-only.");
       process.exit(1);
     }
-    await upsertDrafts(client, drafts);
+    await persistScrapeBatch(client, drafts, "tla_scrape", {
+      scrapeRunSource: "tla_scrape",
+      meta: { mode: "upsert_only" },
+    });
     return;
   }
 
@@ -185,12 +186,7 @@ async function main() {
   console.log(`  ready to show (published): ${published}`);
   console.log(`  needs location review (draft): ${drafts.length - published}`);
 
-  // Always stage to disk before DB write — a failed upsert must not burn a full re-scrape.
-  const outDir = join(process.cwd(), "data", "staging");
-  mkdirSync(outDir, { recursive: true });
-  const outPath = join(outDir, "tla-drafts.json");
-  writeFileSync(outPath, JSON.stringify(drafts, null, 2) + "\n");
-  console.log(`Staged ${drafts.length} rows → ${outPath}`);
+  stageCompetitions("tla-drafts.json", drafts);
 
   if (!client) {
     console.log("No Supabase configured — staging file is the output. Set .env to upsert.");
@@ -200,62 +196,13 @@ async function main() {
     return;
   }
 
-  await upsertDrafts(client, drafts);
+  await persistScrapeBatch(client, drafts, "tla_scrape", {
+    scrapeRunSource: "tla_scrape",
+    meta: { listing: LISTING_URL, site: SCRAPER_SITE },
+  });
   console.log(
     "Done. Every row has source='tla_scrape' and source_url set to its US Chess page."
   );
-}
-
-async function upsertDrafts(
-  client: NonNullable<ReturnType<typeof getServiceRoleClient>>,
-  drafts: Competition[]
-) {
-  const { data: existing, error: existingErr } = await client
-    .from("competitions")
-    .select("id, slug")
-    .eq("source", "tla_scrape");
-  if (existingErr) throw new Error(`lookup existing failed: ${existingErr.message}`);
-  const idBySlug = new Map(
-    (existing ?? []).map((r) => [r.slug as string, r.id as string])
-  );
-
-  const bySlug = new Map<string, Competition>();
-  for (const d of drafts) bySlug.set(d.slug, d);
-  if (bySlug.size < drafts.length) {
-    console.warn(
-      `Deduped ${drafts.length - bySlug.size} in-batch slug collisions before upsert.`
-    );
-  }
-
-  const payload = [...bySlug.values()].map((d) => ({
-    ...d,
-    id: idBySlug.get(d.slug) ?? d.id,
-  }));
-
-  const BATCH = 200;
-  let upserted = 0;
-  for (let i = 0; i < payload.length; i += BATCH) {
-    const chunk = payload.slice(i, i + BATCH);
-    let { error } = await client
-      .from("competitions")
-      .upsert(chunk as never[], { onConflict: "slug" });
-
-    if (error?.message?.includes("source_url")) {
-      console.warn(
-        "competitions.source_url missing — run supabase/migrations/0002_source_url.sql, then re-scrape. " +
-          "Upserting without source_url for now (source='tla_scrape' + reg_url still identify origin)."
-      );
-      const stripped = chunk.map(({ source_url: _drop, ...rest }) => rest);
-      ({ error } = await client
-        .from("competitions")
-        .upsert(stripped as never[], { onConflict: "slug" }));
-    }
-
-    if (error) throw new Error(`Supabase upsert failed: ${error.message}`);
-    upserted += chunk.length;
-    process.stdout.write(`\rUpserted ${upserted}/${payload.length}`);
-  }
-  console.log(`\nUpserted ${upserted} competitions (source='tla_scrape').`);
 }
 
 const isDirectRun =

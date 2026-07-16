@@ -1,0 +1,32 @@
+# Twice-weekly tournament ingestion (US Chess TLA + CCA).
+#
+# Prerequisites:
+#   1. Run supabase/migrations/0005_ingestion_ops.sql in the SQL editor.
+#   2. Repo secrets: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+#   3. Manual dry-run locally: npm run scrape:all
+#
+# Schedule: Mondays and Thursdays 11:00 UTC (twice weekly).
+# Also triggerable via Actions → Ingest tournaments → Run workflow.
+name: Ingest tournaments
+
+on:
+  schedule:
+    - cron: "0 11 * * 1,4"
+  workflow_dispatch: {}
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Scrape US Chess + CCA
+        run: npm run scrape:all
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

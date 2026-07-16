@@ -1,91 +1,129 @@
-# Ingestion — scrape → normalize → upsert (with provenance)
+# Ingestion — scrape → normalize → upsert → dedupe → series → scrape_runs
 
 There is no unified chess-tournament API. Supply comes from scrapers plus
-hand curation.
+hand curation of **pathways** (series + qualification rules).
 
 ```
 listing + detail scrape
-   → Zod normalize (source + source_url set)
-   → upsert competitions in Supabase
-   → published when zip/coords resolve; else draft for review
+  → Zod normalize (source + source_url)
+  → stage JSON under data/staging/
+  → upsert competitions (fingerprint stamped)
+  → write competition_sources (per-upstream identity)
+  → link fingerprint duplicates (archive secondary, keep TLA preferred)
+  → attach high-confidence series_id matches
+  → log scrape_runs row
 ```
 
-## Provenance (how we know where a row came from)
+## One-time DB setup
 
-Every competition row carries:
+Run these in the Supabase SQL editor if not already applied:
 
-| Column | Meaning |
+1. `0001_init.sql` … `0004_competition_name_search.sql` (existing)
+2. **`0005_ingestion_ops.sql`** — `competition_sources`, `scrape_runs`, `fingerprint`, `canonical_id`
+
+## Provenance
+
+| Column / table | Meaning |
 | --- | --- |
-| `source` | Which pipeline wrote it: `manual`, `tla_scrape`, `organizer` |
-| `source_url` | Exact upstream page scraped (US Chess event URL for TLA) |
-| `reg_url` | Where the user goes to register / learn more (organizer site when known, else `source_url`) |
+| `competitions.source` | Pipeline: `manual`, `tla_scrape`, `cca_scrape`, `organizer` |
+| `competitions.source_url` | Exact upstream page scraped |
+| `competitions.fingerprint` | Normalized name\|date\|state\|zip for cross-source matching |
+| `competitions.canonical_id` | Set on archived duplicates → points at the surviving row |
+| `competition_sources` | Every upstream sighting; UNIQUE `(source, external_key)` |
+| `scrape_runs` | Ops log for each cron / local / Docker run |
 
-Run `supabase/migrations/0002_source_url.sql` once if your project was created before this column existed.
+Search only shows `status='published'` rows **without** `canonical_id` (duplicates are archived).
 
-## US Chess upcoming-tournaments (`scrape-tla.ts`)
-
-Primary feed: https://new.uschess.org/upcoming-tournaments
+## Commands
 
 ```bash
-# Full live scrape (paginated listing + detail pages → Supabase)
-npm run scrape:tla
+npm run scrape:tla          # US Chess upcoming-tournaments
+npm run scrape:cca          # Continental Chess (chesstour.com)
+npm run scrape:all          # TLA then CCA (recommended for dedupe)
 
-# Listing only, from the saved HTML fixture (no listing network call)
-SCRAPE_HTML_FILE=ingestion/fixtures/upcoming-tournaments-page0.html \
-  SCRAPE_SKIP_DETAIL=1 \
-  npm run scrape:tla
-
-# Cap pages while testing
+SCRAPE_UPSERT_ONLY=1 npm run scrape:tla   # re-upsert staged JSON
+SCRAPE_HTML_FILE=… SCRAPE_SKIP_DETAIL=1 npm run scrape:tla
 SCRAPE_MAX_PAGES=2 npm run scrape:tla
 ```
 
-Behavior:
+## Pathways (site + scrapers)
 
-- Identifies as `CauseyBot/0.1 (+https://causey.dev)`
-- Paginates `?page=N` until empty / max pages
-- Detail pass fills address, zip, venue, organizer website, online flag
-- Skips `Online Event: Yes`
-- Resolves `lat`/`lng` from the Supabase `zips` table when zip is known
-- Sets `source='tla_scrape'` and `source_url` to the US Chess event page on every row
-- Upserts on `slug` (re-runs refresh data; stable ids for existing TLA rows)
-- Never runs at Next.js build or request time — only this script / cron
+The **qualification graph** lives in curated tables — scrapers never invent rules:
 
-### Draft vs published
-
-| Condition | status |
+| Table | Role |
 | --- | --- |
-| Valid 5-digit zip + coords in `zips` | `published` (shows in `/chess`) |
-| Missing zip/coords | `draft` (invisible until enriched) |
+| `series` | Recurring event identity (Denker, state scholastics, …) |
+| `qualification_rules` | Edges with citation + `verified_on` |
+| `competitions.series_id` | Links this year’s instance into the graph |
 
-Fees and sections are **not** auto-parsed from prose yet (`entry_fee_cents` may be 0). Pathways are curated separately later.
+After each scrape, `ingestion/series-match.ts` attaches **high-confidence** name
+patterns (e.g. “Texas Scholastic” in TX → Texas Scholastic series). Everything
+else stays `series_id=null` for hand linking in Supabase.
 
-## Cron
+Product surfaces:
 
-`.github/workflows/ingest.yml.disabled` — enable after a successful local run:
+- `/pathways` — explorer (placement → unlocks)
+- Event page sidebar — “What winning here unlocks”
+- Engine: `lib/qualification.ts` (unit-tested)
 
-1. Confirm `npm run scrape:tla` works against live US Chess
-2. Add repo secrets: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-3. Rename to `ingest.yml`
+**Ops cadence for pathways:** review `qualification_rules` yearly when US Chess /
+state affiliates publish new criteria; bump `verified_on`. Add new `series` rows
+before inventing rules. Extend `SERIES_MATCH_RULES` when a recurring scrape
+pattern is stable.
 
-## Continental Chess Association (`scrape-cca.ts`)
+## Duplicates
 
-Schedule hub: https://www.chesstour.com/refs.html
+1. **In-batch:** same slug → last write wins before upsert
+2. **Per-source re-scrape:** upsert on `slug`, reuse id for that source
+3. **Cross-source (TLA ∩ CCA):** same `fingerprint` → keep higher-priority source
+   (`tla_scrape` > `cca_scrape`), archive the other with `canonical_id`, move
+   `competition_sources` onto the survivor
+
+False merges are rare (name + date + state [+ zip]). If one happens, clear
+`canonical_id`, set status back to `published`/`draft` in Supabase, and tighten
+the fingerprint inputs.
+
+## Twice-weekly automation (recommended: GitHub Actions)
+
+**Primary:** `.github/workflows/ingest.yml`
+
+- Cron: Mondays + Thursdays **11:00 UTC**
+- Runs `npm run scrape:all`
+- Manual: Actions → **Ingest tournaments** → Run workflow
+
+Secrets required:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+**Optional Docker** (VPS / local, when you do not want GitHub runners):
 
 ```bash
-npm run scrape:cca
-
-# Listing fixture only (no listing network call)
-SCRAPE_HTML_FILE=ingestion/fixtures/cca-refs.html npm run scrape:cca
-
-# Re-upsert last staged file without re-scraping
-SCRAPE_UPSERT_ONLY=1 npm run scrape:cca
+docker compose -f docker-compose.ingest.yml build
+docker compose -f docker-compose.ingest.yml run --rm ingest
 ```
 
-- Sets `source='cca_scrape'` and `source_url` to the CCA event page
-- Sets `reg_url` to https://www.chessaction.com/ (CCA's ENTER NOW target)
-- Stages to `data/staging/cca-drafts.json` before upsert
-- Requires `supabase/migrations/0003_cca_source.sql` once (adds `cca_scrape` to the source check)
+Host cron (Mon/Thu), or keep using GitHub Actions — do **not** run both against
+the same DB on the same schedule.
+
+## US Chess (`scrape-tla.ts`)
+
+- Site: https://new.uschess.org/upcoming-tournaments
+- `source='tla_scrape'`, `source_url` = event page
+- Published when zip + coords resolve; else draft
+
+## CCA (`scrape-cca.ts`)
+
+- Site: https://www.chesstour.com/refs.html
+- `source='cca_scrape'`, `reg_url` → chessaction.com
+- Requires `0003_cca_source.sql` once
+
+## Fees / sections
+
+Not auto-parsed yet (`entry_fee_cents` may be 0; no sections written). Enrich by
+hand or a future detail parser — pathways still work via `series_id`.
 
 ## Other sources (later)
 
-Same pattern: new scraper file → new `source` value → `source_url` set to that site’s event page.
+New scraper → new `source` value → write `competition_sources` → same fingerprint
+pipeline. Prefer extending `SOURCE_PRIORITY` in `ingestion/fingerprint.ts`.

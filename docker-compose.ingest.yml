@@ -1,0 +1,17 @@
+# Optional: run scrapers on a host with Docker + cron instead of GitHub Actions.
+#
+#   docker compose -f docker-compose.ingest.yml build
+#   docker compose -f docker-compose.ingest.yml run --rm ingest
+#
+# Cron example (host crontab, Mon/Thu 06:00 America/Chicago ≈ 11:00 UTC):
+#   0 6 * * 1,4 cd /path/to/Causey && docker compose -f docker-compose.ingest.yml run --rm ingest
+services:
+  ingest:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingest
+    env_file:
+      - .env
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}

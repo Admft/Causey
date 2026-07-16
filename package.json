@@ -12,7 +12,8 @@
     "seed:supabase": "tsx scripts/seed-supabase.ts",
     "seed:zips": "tsx scripts/load-zips.ts",
     "scrape:tla": "tsx ingestion/scrape-tla.ts",
-    "scrape:cca": "tsx ingestion/scrape-cca.ts"
+    "scrape:cca": "tsx ingestion/scrape-cca.ts",
+    "scrape:all": "tsx ingestion/scrape-all.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
