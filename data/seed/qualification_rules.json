@@ -1,0 +1,218 @@
+[
+  {
+    "id": "00000000-0000-4000-8000-000000000401",
+    "from_series_id": "00000000-0000-4000-8000-000000000106",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000101",
+    "notes": "Winner of the Texas High School Championship section is invited to the Denker Tournament of High School Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000402",
+    "from_series_id": "00000000-0000-4000-8000-000000000106",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000102",
+    "notes": "Winner of the Texas K-8 Championship section is invited to the Barber Tournament of K-8 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000403",
+    "from_series_id": "00000000-0000-4000-8000-000000000106",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000103",
+    "notes": "Winner of the Texas K-5 Championship section is invited to the Rockefeller Tournament of K-5 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000404",
+    "from_series_id": "00000000-0000-4000-8000-000000000106",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000104",
+    "notes": "Winner of the Texas Girls Championship section is invited to the Haring Tournament of Girls State Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000405",
+    "from_series_id": "00000000-0000-4000-8000-000000000107",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000101",
+    "notes": "Winner of the New York High School Championship section is invited to the Denker Tournament of High School Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000406",
+    "from_series_id": "00000000-0000-4000-8000-000000000107",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000102",
+    "notes": "Winner of the New York K-8 Championship section is invited to the Barber Tournament of K-8 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000407",
+    "from_series_id": "00000000-0000-4000-8000-000000000107",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000103",
+    "notes": "Winner of the New York K-5 Championship section is invited to the Rockefeller Tournament of K-5 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000408",
+    "from_series_id": "00000000-0000-4000-8000-000000000107",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000104",
+    "notes": "Winner of the New York Girls Championship section is invited to the Haring Tournament of Girls State Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000409",
+    "from_series_id": "00000000-0000-4000-8000-000000000108",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000101",
+    "notes": "Winner of the California High School Championship section is invited to the Denker Tournament of High School Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000410",
+    "from_series_id": "00000000-0000-4000-8000-000000000108",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000102",
+    "notes": "Winner of the California K-8 Championship section is invited to the Barber Tournament of K-8 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000411",
+    "from_series_id": "00000000-0000-4000-8000-000000000108",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000103",
+    "notes": "Winner of the California K-5 Championship section is invited to the Rockefeller Tournament of K-5 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000412",
+    "from_series_id": "00000000-0000-4000-8000-000000000108",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000104",
+    "notes": "Winner of the California Girls Championship section is invited to the Haring Tournament of Girls State Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000413",
+    "from_series_id": "00000000-0000-4000-8000-000000000109",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000101",
+    "notes": "Winner of the Illinois High School Championship section is invited to the Denker Tournament of High School Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000414",
+    "from_series_id": "00000000-0000-4000-8000-000000000109",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000102",
+    "notes": "Winner of the Illinois K-8 Championship section is invited to the Barber Tournament of K-8 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000415",
+    "from_series_id": "00000000-0000-4000-8000-000000000109",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000103",
+    "notes": "Winner of the Illinois K-5 Championship section is invited to the Rockefeller Tournament of K-5 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000416",
+    "from_series_id": "00000000-0000-4000-8000-000000000109",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000104",
+    "notes": "Winner of the Illinois Girls Championship section is invited to the Haring Tournament of Girls State Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000417",
+    "from_series_id": "00000000-0000-4000-8000-000000000110",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000101",
+    "notes": "Winner of the New Jersey High School Championship section is invited to the Denker Tournament of High School Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000418",
+    "from_series_id": "00000000-0000-4000-8000-000000000110",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000102",
+    "notes": "Winner of the New Jersey K-8 Championship section is invited to the Barber Tournament of K-8 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000419",
+    "from_series_id": "00000000-0000-4000-8000-000000000110",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000103",
+    "notes": "Winner of the New Jersey K-5 Championship section is invited to the Rockefeller Tournament of K-5 Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000420",
+    "from_series_id": "00000000-0000-4000-8000-000000000110",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000104",
+    "notes": "Winner of the New Jersey Girls Championship section is invited to the Haring Tournament of Girls State Champions, held alongside the U.S. Open. SEED SCAFFOLDING — verify against the current US Chess invitational announcement before launch.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000421",
+    "from_series_id": "00000000-0000-4000-8000-000000000111",
+    "from_competition_id": null,
+    "required_placement": 3,
+    "to_series_id": "00000000-0000-4000-8000-000000000106",
+    "notes": "Top 3 finishers in each North Texas Scholastic Regional section earn a qualifier seed into the Texas Scholastic Championship. SEED SCAFFOLDING — illustrative regional qualifier rule; verify with the Texas Chess Association.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000422",
+    "from_series_id": "00000000-0000-4000-8000-000000000112",
+    "from_competition_id": null,
+    "required_placement": 3,
+    "to_series_id": "00000000-0000-4000-8000-000000000109",
+    "notes": "Top 3 finishers in the Chicago Scholastic Championship Series earn a qualifier seed into the Illinois K-12 State Championship. SEED SCAFFOLDING — illustrative regional qualifier rule; verify with the Illinois Chess Association.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000423",
+    "from_series_id": "00000000-0000-4000-8000-000000000101",
+    "from_competition_id": null,
+    "required_placement": 1,
+    "to_series_id": "00000000-0000-4000-8000-000000000105",
+    "notes": "Denker champion receives an invitation to the U.S. Junior Championship. SEED SCAFFOLDING — the real Denker prize is a scholarship; this edge exists to demonstrate a 3-hop chain and must be replaced with a verified rule.",
+    "verified_on": "2026-07-01"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000424",
+    "from_series_id": null,
+    "from_competition_id": "00000000-0000-4000-8000-000000002006",
+    "required_placement": 3,
+    "to_series_id": "00000000-0000-4000-8000-000000000106",
+    "notes": "Top 3 in the Lone Star Open Scholastic Championship section earn a qualifier seed into the Texas Scholastic Championship. SEED SCAFFOLDING — example of a rule attached to a single event rather than a series.",
+    "verified_on": "2026-07-01"
+  }
+]
