@@ -43,10 +43,10 @@ export default async function EventPage({ params }: Params) {
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <Link
-        href="/"
+        href="/chess"
         className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
       >
-        ← All tournaments
+        ← All chess tournaments
       </Link>
 
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">

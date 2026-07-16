@@ -18,11 +18,11 @@ const sourceSerif = Source_Serif_4({
 
 export const metadata: Metadata = {
   title: {
-    default: "Causey — Find scholastic chess tournaments",
+    default: "Causey — Find student competitions",
     template: "%s · Causey",
   },
   description:
-    "Search every scholastic chess tournament near you by zip code, see entry fees and eligibility up front, and trace the qualification pathway from local events to national invitationals.",
+    "Discover student competitions with eligibility, costs, and qualification pathways shown clearly.",
 };
 
 // TODO: confirm the marketing site's section anchors once causey.dev ships
@@ -44,15 +44,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-50 border-b border-line bg-background/90 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-            <Link href="/" aria-label="Causey — search tournaments">
+            <Link href="/" aria-label="Causey — choose a competition type">
               <CauseyLogo size="sm" />
             </Link>
             <nav className="flex items-center gap-5" aria-label="Primary">
               <Link
-                href="/"
+                href="/chess"
                 className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
               >
-                Search
+                Chess
               </Link>
               <Link
                 href="/pathways"
