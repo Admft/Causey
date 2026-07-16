@@ -1,0 +1,577 @@
+================================================================================
+CAUSEY DESIGN SYSTEM — STYLING REFERENCE FOR THE FULL WEBAPP
+================================================================================
+Source of truth: Causey waitlist site (EdTech-Waitlist-Website)
+Purpose: Reproduce the same visual language when building the actual product
+         (discovery, match, compete, dashboards, etc.) — not just the waitlist.
+Last synced: July 13, 2026
+
+Use this file as the style brief for any new Causey UI. Prefer copying these
+tokens and patterns exactly over inventing new ones.
+
+================================================================================
+0. INDEX
+================================================================================
+  1.  Design principles (non-negotiables)
+  2.  Brand voice & copy rules
+  3.  Color tokens
+  4.  Typography
+  5.  Spacing, radius, shadows, borders
+  6.  Layout & breakpoints
+  7.  Backgrounds & atmosphere
+  8.  Components (buttons, fields, cards, nav, logo, links, alerts)
+  9.  Pills / badges / tags (strict ruleset)
+ 10.  Motion & interaction
+ 11.  Iconography
+ 12.  Imagery (headshots, competition cards, OG)
+ 13.  Section recipes (what to use / avoid)
+ 14.  Semantic color meaning (red vs blue vs neutral)
+ 15.  Accessibility baseline
+ 16.  Tailwind / CSS setup checklist for a new app
+ 17.  Anti-patterns (vibecode blacklist)
+ 18.  Quick copy-paste token block
+
+================================================================================
+1. DESIGN PRINCIPLES (NON-NEGOTIABLES)
+================================================================================
+Brand first
+  • On branded surfaces, the Causey name/mark is a hero-level signal, not just
+    nav chrome.
+  • Brand test: if you remove the nav and the first viewport could belong to
+    another SaaS product, branding is too weak.
+
+One job per section
+  • One purpose, one headline, usually one short supporting sentence.
+  • Do not pack stats, schedules, promo strips, and secondary CTAs into the
+    first viewport of a marketing page.
+
+Honesty over decoration
+  • No fake numbers, fake ranks, fake deadlines, or placeholder bios.
+  • If something looks modern but has no Causey-specific reason, cut it.
+
+Meaning before effect
+  • Visual motifs should mean something (e.g. coordinate grid = access /
+    zip-code / opportunity shouldn't depend on where you live).
+  • Decorative blur blobs, purple glows, and generic gradient washes are banned.
+
+Cards are for interaction
+  • Default: no cards.
+  • Cards are allowed when they contain a user interaction (forms, clickable
+    team photos with LinkedIn, etc.).
+  • If removing border/shadow/radius doesn't hurt understanding, it shouldn't
+    be a card.
+
+Clarity over clutter
+  • Avoid pill clusters, icon-feature grids, stat strips, emoji, glow stacks.
+
+================================================================================
+2. BRAND VOICE & COPY RULES
+================================================================================
+Tagline (one home only — metadata/title, not repeated everywhere):
+  "Connecting talent to opportunity"
+
+Tone
+  • Direct, specific, student-access focused.
+  • Warm but not cutesy. Confident, not hypey.
+
+Banned filler (unless tied to a real date/number/named thing)
+  • "New", "Beta", "Coming soon", "AI-powered", "✨", "Live", "Now available",
+    "Pre-launch" alone.
+
+Em-dashes
+  • Avoid in marketing UI copy.
+  • Exception: founder story copy may keep its original punctuation.
+
+Audience line
+  • "Students, parents, coaches, and organizers" — use once, at the waitlist /
+    signup moment where it signals who can join. Don't spray it across every
+    section.
+
+CTA language
+  • Say what happens next: "Join the waitlist", "Book a meeting",
+    "See how it works" — not "Learn more" / "Get started".
+
+External links
+  • Always signal new-tab opens (icon + aria-label / title).
+
+================================================================================
+3. COLOR TOKENS
+================================================================================
+Copy these CSS variables into the product app unchanged.
+
+:root {
+  /* Surfaces */
+  --background: #f5f9fc;          /* page / app canvas — light cool blue-grey */
+  --surface: #ffffff;             /* primary panels */
+  --surface-raised: #ffffff;      /* raised panels (same as surface for now) */
+  --surface-soft: #f2f5f8;        /* soft section / inset backgrounds */
+
+  /* Text */
+  --foreground: #14181c;          /* near-black primary text */
+  --muted: #5a6570;               /* secondary body / helper */
+  --muted-strong: #3a4450;        /* stronger secondary (nav links at rest) */
+
+  /* Lines */
+  --line: rgba(20, 24, 28, 0.1);  /* borders / dividers */
+  --field-border: rgba(20, 24, 28, 0.14);
+
+  /* Brand red (PRIMARY action + brand mark) */
+  --brand-red: #c23b32;
+  --brand-red-hover: #a8322a;
+  --accent: #c23b32;              /* alias of brand-red */
+  --accent-hover: #a8322a;
+  --accent-soft: #f8e8e6;         /* soft red wash (disabled CTA, success tint) */
+
+  /* Brand blue (SECONDARY action — meetings / calm panels) */
+  --brand-blue: #4a8eb8;
+  --brand-blue-soft: #d4e8f4;
+  --brand-blue-strong: #3a7aa3;
+
+  /* Fields */
+  --field: #ffffff;
+}
+
+Selection highlight
+  • background: color-mix(in srgb, brand-blue 35%, white)
+  • color: foreground
+
+Error text
+  • text-red-600 (Tailwind) for validation alerts — keep consistent
+
+Do NOT introduce
+  • Purple / indigo gradient themes
+  • Warm cream (#F4F1EA-ish) + terracotta defaults
+  • Dark mode as the default product look (unless explicitly designed later)
+  • Neon / glow accents
+
+================================================================================
+4. TYPOGRAPHY
+================================================================================
+
+--- 4.1 Fonts ---
+Sans (UI + body):   Source Sans 3
+  weights: 400, 500, 600, 700
+  CSS var: --font-source → --font-sans
+
+Display / wordmark: Source Serif 4
+  weights: 600, 700
+  CSS var: --font-serif → --font-display
+  Utility: font-display
+
+Body default: sans, antialiased.
+Do NOT use Inter, Roboto, Arial, or system-only stacks as the brand face.
+
+--- 4.2 Type scale (use named tokens — no text-[13px] inventing) ---
+
+Token          Size        Line-height   Typical use
+-----------    ---------   -----------   ---------------------------------
+text-2xs       12px        1.4           tiny captions, error under fields
+text-xs        13px        1.5           helper text, footer meta, labels
+text-sm        14px        1.5           nav links, secondary buttons, body small
+text-base      15px        1.6           form fields, default UI text
+text-md        16px        1.6           supporting body
+text-lg        17px        1.6           section subheads
+text-lead      18px        1.35          card titles / lead lines
+text-xl        20px        1.25          h3 panel titles
+text-2xl       24px        1.2           large UI titles (rare)
+
+Display (responsive headings):
+text-display-sm   clamp(1.5rem, 3vw, 2rem)      lh 1.1   subsection titles
+text-display      clamp(1.75rem, 3.6vw, 2.5rem)  lh 1.1   founder / story heads
+text-display-lg   clamp(1.9rem, 3.8vw, 2.75rem)  lh 1.1   section H2s
+text-display-xl   clamp(2.1rem, 5vw, 3.25rem)    lh 1.12  hero H1
+
+Weights
+  • Regular 400 — body when needed
+  • Medium 500 — quiet emphasis
+  • Semibold 600 — buttons, labels, logo
+  • Bold 700 — headlines
+
+Tracking
+  • Headlines: tracking-tight
+  • Logo wordmark: tracking-[-0.03em]
+  • Uppercase cues: tracking-[0.1em] to ~0.16em (use sparingly)
+
+Uppercase
+  • Rare. Allowed for a single scroll cue or a functional label.
+  • Do NOT put an uppercase eyebrow on every section.
+
+Reading width
+  • Body / step copy: max ~55–65ch (max-w-prose or max-w-sm / max-w-lg as fits)
+  • Hero headline break: max-w-[15ch] when you want 2 strong lines
+
+================================================================================
+5. SPACING, RADIUS, SHADOWS, BORDERS
+================================================================================
+
+--- 5.1 Spacing rhythm ---
+Use Tailwind scale. Common values on this site:
+  gap-1 / 1.5 / 2 / 2.5 / 3 / 5 / 6 / 8 / 10
+  Section vertical: py-16 sm:py-20/24
+  Page horizontal padding: px-5 sm:px-8
+  Form field stack gap: gap-2.5
+  Header height: h-16
+
+Avoid arbitrary half-steps like px-3.5 only when matching an established
+control (nav button / field already uses px-3.5). Prefer the shared pattern.
+
+--- 5.2 Radius ---
+System radius language (match buttons/cards — NOT rounded-full by default):
+  rounded-lg     → buttons, inputs, small controls
+  rounded-xl     → success panels, medium containers
+  rounded-2xl    → primary cards / form shells / large panels
+  Logo mark:     rx ≈ 7 on a 32×32 viewBox (~22% of mark)
+
+Banned by default:
+  rounded-full pills for status/eyebrows
+  (Exception: circular avatar/check icons that are literally circles)
+
+--- 5.3 Borders ---
+  border-line                 default hairline
+  border-field-border         inputs at rest
+  border-accent / brand-red   focus / emphasis
+  border-brand-blue/45        secondary (meeting) outline buttons
+  section-rule                1px solid var(--line) top border between sections
+
+--- 5.4 Shadows ---
+Keep soft and cool — never heavy multi-layer neon.
+  Form / small card:
+    0 12px 40px rgba(20, 24, 28, 0.06)
+  Larger panel:
+    0 20px 60px rgba(20, 24, 28, 0.08)
+  Competition card:
+    0 14px 40px rgba(27, 33, 32, 0.1)
+  Card hover lift:
+    0 18px 44px rgba(27, 33, 32, 0.1)
+  Primary CTA hover:
+    0 6px 20px rgba(194, 59, 50, 0.28)
+
+================================================================================
+6. LAYOUT & BREAKPOINTS
+================================================================================
+Content max widths
+  max-w-6xl   → page chrome (header, footer, main grids)
+  max-w-5xl   → path / how-it-works content
+  max-w-4xl / 2xl / xl / lg / md / sm as needed for reading measure
+
+Breakpoints (Tailwind defaults in use)
+  sm   ~640   form goes 2-col; tighter paddings open up
+  lg   ~1024  hero 2-col; competition cards appear; desktop nav links
+  xl   ~1280  join section becomes 2-col (waitlist | want to talk)
+
+Tablet rule
+  • Do not stretch sparse panels full-bleed on iPad.
+  • Cap interactive cards (e.g. max-w-md / sm:max-w-lg) until xl if content
+    is light.
+
+Scroll offsets
+  • Sticky header ≈ 56–64px → use scroll-mt-14 / scroll-mt-24 on anchors
+
+Grid patterns that work
+  • Forms: 1-col → sm:2-col; optional full-width row with sm:col-span-2
+  • Path section: asymmetric 2-col on desktop, single column + left rail on mobile
+  • Avoid repeating "centered max-w-6xl + 3 equal cards" on every page
+
+================================================================================
+7. BACKGROUNDS & ATMOSPHERE
+================================================================================
+Default page: flat --background (#f5f9fc). Not pure white, not cream.
+
+Coordinate grid (signature motif)
+  • 46×46px grid lines at very low opacity
+  • Implemented on a ::before layer so masks NEVER fade the text
+  • Soft radial mask so grid fades at edges
+  • Use on hero / access-themed surfaces — not every panel
+
+Soft blue panel
+  • bg-brand-blue-soft/50 for secondary “conversation / meeting” zones
+
+Soft grey panel
+  • bg-surface-soft for team / story bands
+
+White surface
+  • Forms, primary interactive cards
+
+Banned
+  • Stacked radial-gradient blur blobs
+  • Purple→indigo washes
+  • Noise overlays as decoration (currently disabled)
+
+================================================================================
+8. COMPONENTS
+================================================================================
+
+--- 8.1 Logo ---
+CauseyLogo: red rounded square + white “C” path + serif “Causey” wordmark
+  Sizes: sm (18px text), md (24), lg (32), hero (clamp)
+  Mark scales with em (h-[1.05em] w-[1.05em])
+  Mark fill: #c23b32, glyph: #ffffff
+  Always keep mark + wordmark together on branded surfaces
+
+--- 8.2 Primary button (waitlist / destructive-of-emptiness actions) ---
+Class pattern: .cta-enabled
+  bg brand-red, text white, rounded-lg, h-11, font-semibold
+  hover: brand-red-hover + soft lift (-1px) + red soft shadow
+Disabled: .cta-disabled
+  bg accent-soft, text brand-red, soft red border
+  NO opacity wash on the whole control (looks grey/transparent)
+
+--- 8.3 Secondary / ghost button (Book a meeting in CTA) ---
+  Outline: border-brand-blue/45, text-brand-blue-strong, transparent fill
+  hover: stronger blue border + bg-brand-blue-soft/40
+  Keep visually lighter than primary red so waitlist wins
+
+--- 8.4 Nav outline button (Book a meeting in header) ---
+  border-line, bg-white, text-foreground, rounded-lg, text-sm font-semibold
+  hover: border-brand-red/40, text-brand-red
+  Include external-link mark (↗) always visible
+
+--- 8.5 Text links ---
+  text-muted-strong → hover:text-brand-red (or foreground in header)
+  font-medium / font-semibold depending on weight of action
+
+--- 8.6 Form fields ---
+Shared field class:
+  h-11 w-full rounded-lg
+  border border-field-border bg-field
+  px-3.5 text-base text-foreground
+  placeholder:text-muted
+  focus:border-accent focus:ring-2 focus:ring-accent/20
+  outline-none transition
+
+Selects: same field + appearance-none + custom chevron on the right
+Errors: border-red-500/70 + text-2xs text-red-600 role="alert"
+Labels: sr-only when placeholder carries the visible label
+Helper: text-xs text-muted
+
+Form layout:
+  grid grid-cols-1 gap-2.5 sm:grid-cols-2
+  Conditional extra fields: sm:col-span-2 (full width — keeps iPad/desktop even)
+
+--- 8.7 Form shell / card ---
+  rounded-2xl border border-line bg-white
+  p-5 sm:p-6
+  soft shadow (see §5.4)
+
+Success state:
+  rounded-xl border-accent/25 bg-accent-soft
+  check icon in brand-red circle
+  clear next action (share / copy)
+
+--- 8.8 Header ---
+  sticky top-0 z-50
+  h-16, border-b border-line
+  bg-background/90 backdrop-blur-md
+  max-w-6xl mx-auto px-5 sm:px-8
+  Logo left; links + meeting button right
+
+--- 8.9 Footer ---
+  section-rule, bg-surface, py-10
+  Logo + short credit; text links; copyright text-xs text-muted
+  Do not restamp the full tagline in the footer if it already lives in metadata
+
+--- 8.10 Team / people ---
+  Headshots: rounded-2xl, border-line, object-cover object-top
+  Soft shadow; optional card-lift on interactive (LinkedIn) photos
+  Name: text-base font-bold
+  Role: text-2xs font-semibold text-brand-red
+  Bio: text-xs text-muted (can hide on smallest screens)
+  Founder layout: photo + story two-column on desktop; collapsible story on mobile
+
+--- 8.11 Path / process UI (product metaphor) ---
+  Single continuous vertical line (2px) in brand-red on a muted track
+  Nodes: small circles (h-3 w-3), hollow → fill red as progress reaches them
+  Step numbers: tabular-nums, tracking wide, text-accent
+  Content: title + one sentence + two plain supporting lines (NO bullet dots required)
+  No icon squares, no bento feature cards for this story
+
+--- 8.12 Competition / listing chips (product preview) ---
+  Category label: text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red
+  Title: text-lead font-semibold
+  Meta: text-xs / text-2xs text-muted
+  Card: rounded-2xl border-line bg-white + soft shadow
+  Category colors (when encoding type) should be meaningful and consistent:
+    STEM / Debate / Arts / Chess — pick stable hues; don't pastel-everything in red
+
+================================================================================
+9. PILLS / BADGES / TAGS (STRICT)
+================================================================================
+1. Radius matches buttons/cards (rounded / rounded-md / rounded-lg) — NOT rounded-full
+2. Functional only (filter, status user can act on, category). Else remove.
+3. One accent color per categorical meaning; neutral outline if no category
+4. No status pill above the H1 by default
+5. No generic SaaS words without a specific detail
+6. Reuse an existing pill style exactly — never one-off classes
+7. Padding/type from the scale — no eyeballed px-3.5 py-1.5 / text-[13px]
+
+================================================================================
+10. MOTION & INTERACTION
+================================================================================
+Easing (default brand curve)
+  cubic-bezier(0.22, 1, 0.36, 1)     entrances / lifts
+  cubic-bezier(0.4, 0, 0.2, 1)       path draw / structured motion
+
+Allowed motions (few, intentional)
+  • Hero first-paint rise (animate-rise + short delays)
+  • Path draw / node fill on How it works (ONE job in that section)
+  • Scroll cue bob + fade-out on scroll/click
+  • Subtle nudge-x on arrows / external marks
+  • card-lift hover (−4px) only on interactive cards
+
+Banned / limited
+  • Staggered index-based delays on every card (index * 80ms etc.)
+  • Scroll-reveal on every block on the page
+  • Continuous float / glow loops on content
+  • Hero fade on mobile (keep solid)
+
+Always honor prefers-reduced-motion
+  • Disable transforms/animations; show final state
+
+================================================================================
+11. ICONOGRAPHY
+================================================================================
+  • Prefer simple stroked SVG, 1.5–2 stroke, round caps
+  • CurrentColor so icons inherit text color
+  • External link: small ↗ mark, always visible on meeting links
+  • No emoji as UI icons
+  • No soft rounded icon squares as a feature-grid pattern
+
+================================================================================
+12. IMAGERY
+================================================================================
+Headshots
+  • Real photos only
+  • object-cover object-top
+  • Consistent crop/radius with team cards
+  • Web-optimized JPEG (not giant TIFF/PNG)
+
+Product / competition visuals
+  • Show real or clearly illustrative listings — never unlabeled fake deadlines
+  • Desktop can use stacked cards; mobile may omit decorative stacks
+
+Social / OG
+  • Flat brand surface + logo lockup + short line
+  • Never use a random page photo (e.g. founder headshot) as the default share image
+
+================================================================================
+13. SECTION RECIPES — USE / AVOID
+================================================================================
+USE
+  • Vary section shape: path list, asymmetric story, tight form, full-bleed grid
+  • Left-aligned headlines often; center only when the section is truly ceremonial
+  • section-rule between major bands
+  • One primary CTA per decision moment
+
+AVOID (template smell)
+  • Uppercase eyebrow → bold headline → gray subhead → 3 icon cards  (× every section)
+  • Soft pastel icon bento grids
+  • Stat strips with fake social proof
+  • Multiple competing CTAs at equal visual weight
+
+================================================================================
+14. SEMANTIC COLOR MEANING
+================================================================================
+Red (brand-red / accent)
+  • Primary actions (Join waitlist, submit)
+  • Brand mark
+  • Role labels / category accents when tied to Causey identity
+  • Path / progress “alive” state
+
+Blue (brand-blue family)
+  • Secondary actions (Book a meeting)
+  • Calm conversational panels
+  • Selection highlight wash
+
+Neutral (muted / line / surface-soft)
+  • Structure, chrome, secondary text
+  • Disabled-adjacent soft fills (prefer accent-soft for disabled primary)
+
+Never use red and blue at equal weight for two CTAs side by side without
+hierarchy — red wins.
+
+================================================================================
+15. ACCESSIBILITY BASELINE
+================================================================================
+  • One h1 per page; logical h2 → h3 nesting (no skips for decoration)
+  • Decorative stacks / icons: aria-hidden
+  • Meaningful images: real alt text
+  • Forms: labels (visible or sr-only), role="alert" on errors, role="status" on success
+  • Keyboard: native controls; don't invent div-buttons
+  • Focus rings: accent ring on fields (ring-2 ring-accent/20)
+  • External links: announce new tab
+  • Reduced motion respected
+
+================================================================================
+16. TAILWIND / CSS SETUP CHECKLIST FOR A NEW APP
+================================================================================
+[ ] Load Source Sans 3 + Source Serif 4 (same weights)
+[ ] Paste :root color tokens from §3
+[ ] Register colors in @theme (including brand-red-hover)
+[ ] Paste type scale tokens from §4
+[ ] Add font-display utility
+[ ] Port .cta-enabled / .cta-disabled / .card-lift / .nudge-x / .section-rule
+[ ] Port hero/access grid as optional motif (mask on ::before only)
+[ ] Port reduced-motion overrides
+[ ] Reuse CauseyLogo SVG path exactly
+[ ] Set security/content headers as appropriate for the product app
+[ ] Do not start from a purple SaaS template and “recolor” it
+
+================================================================================
+17. ANTI-PATTERNS (VIBECODE BLACKLIST)
+================================================================================
+  ✗ Purple-on-white / purple-to-indigo themes
+  ✗ Cream + terracotta “AI default” look
+  ✗ Broadsheet / dense newspaper columns as a gimmick
+  ✗ Dark mode by default without a product reason
+  ✗ Glow effects, glassmorphism stacks, multi-layer neon shadows
+  ✗ rounded-full status pills above the headline
+  ✗ Fake counters / fake waitlist ranks / fake deadlines
+  ✗ “X — not just Y” contrast sentence on every feature line
+  ✗ Icon-per-feature bento grids
+  ✗ Motion on everything with staggered delays
+  ✗ Decorative badges that restate the page (“Pre-launch”)
+  ✗ Equal-weight primary + secondary CTAs
+  ✗ Em-dash spam in marketing copy
+  ✗ Emoji as design
+
+================================================================================
+18. QUICK COPY-PASTE TOKEN BLOCK
+================================================================================
+Paste into globals.css of the product app as a starting kit:
+
+:root {
+  --background: #f5f9fc;
+  --foreground: #14181c;
+  --muted: #5a6570;
+  --muted-strong: #3a4450;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #f2f5f8;
+  --line: rgba(20, 24, 28, 0.1);
+  --brand-red: #c23b32;
+  --brand-red-hover: #a8322a;
+  --brand-blue: #4a8eb8;
+  --brand-blue-soft: #d4e8f4;
+  --brand-blue-strong: #3a7aa3;
+  --accent: #c23b32;
+  --accent-hover: #a8322a;
+  --accent-soft: #f8e8e6;
+  --field: #ffffff;
+  --field-border: rgba(20, 24, 28, 0.14);
+}
+
+Easing:
+  entrance: cubic-bezier(0.22, 1, 0.36, 1)
+  structured: cubic-bezier(0.4, 0, 0.2, 1)
+
+Primary CTA: red filled
+Secondary CTA: blue outline/ghost
+Radius: rounded-lg controls, rounded-2xl large panels
+Type: Source Sans 3 UI / Source Serif 4 display
+Motif: 46px coordinate grid on access-themed surfaces only
+
+================================================================================
+END OF DESIGN SYSTEM
+================================================================================
+When in doubt: match the waitlist site’s tokens first, then extend carefully.
+If a new pattern can’t explain why it’s Causey-specific, don’t ship it.

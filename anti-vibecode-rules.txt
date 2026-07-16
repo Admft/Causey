@@ -1,0 +1,243 @@
+================================================================================
+ANTI-VIBECODE RULESET
+Standing design + code constraints for AI coding agents (Cursor, Claude, etc.)
+Purpose: prevent output that looks AI-generated / template-default.
+Drop this file in the project root. Treat every rule as a hard constraint
+unless the user explicitly overrides it for a specific case.
+================================================================================
+
+CORE PRINCIPLE
+--------------------------------------------------------------------------------
+Every visual, structural, and copy decision must trace back to a reason
+specific to THIS product. "It's the library default," "it looked modern," or
+"other sites do this" are not reasons. If you cannot justify an element in one
+sentence tied to the product's actual purpose, brand, or content — cut it.
+
+Before generating any new UI, ask: does a pattern/style for this already exist
+in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
+
+
+1. COLOR
+--------------------------------------------------------------------------------
+1.1  Never use purple/blue gradients unless they are the documented brand
+     colors. This includes buttons, text highlights, and backgrounds.
+1.2  Never add blurred gradient blobs, glow orbs, or radial-gradient ellipses
+     behind heroes or sections. If a background element is needed, it must
+     reference something in the product's domain, or be flat.
+1.3  Maximum ONE accent color doing primary-action work. A second accent is
+     allowed only if it encodes consistent meaning (e.g. category colors used
+     identically everywhere). No colors that exist for variety.
+1.4  No glow effects, no colored drop shadows, no gradient text unless the
+     brand explicitly calls for it.
+1.5  Body text contrast must meet WCAG 4.5:1 minimum. No light-gray-on-white
+     that fails this.
+1.6  Every color must come from a defined token/palette. No one-off hex values
+     inline in components.
+1.7  Avoid the current AI-default palettes unless the brief asks for them:
+     (a) warm cream + high-contrast serif + terracotta accent,
+     (b) near-black + single acid-green or vermilion accent,
+     (c) broadsheet hairline-rule newspaper look.
+
+2. TYPOGRAPHY
+--------------------------------------------------------------------------------
+2.1  Define ONE type scale at project start (e.g. 12/14/16/18/20/24/32/48).
+     Every text size must come from it. No arbitrary values like text-[13px],
+     text-[15px], text-[17px].
+2.2  Define line-heights per scale step, once. Do not mix leading-[1.1],
+     leading-relaxed, leading-snug, leading-[1.65] across similar blocks.
+2.3  Max 2 font families (3 only if one is a monospace doing data/label work).
+     The pairing must contrast clearly (serif vs sans, geometric vs humanist).
+     Never two near-identical sans-serifs.
+2.4  No extreme weight gaps: do not pair ultra-bold (800-900) headings with
+     thin (100-300) body text.
+2.5  Body text line length: 60-75 characters (~max-w-prose / 55-65ch). Never
+     run paragraphs full-width across a wide container.
+2.6  Don't default to Inter. If Inter (or any font) is used, it must be a
+     choice, and used consistently with a defined scale.
+
+3. SPACING & LAYOUT
+--------------------------------------------------------------------------------
+3.1  Define ONE spacing scale (e.g. 4/8/12/16/24/32/48/64/96). All padding,
+     margin, and gap values come from it. No px-3.5, py-1.5, gap-[18px]
+     eyeballed one-offs.
+3.2  Border-radius: pick ONE radius value (or a 2-step scale: small/large) for
+     the entire project. Buttons, cards, inputs, badges, images all use it.
+     Never a 9999px pill inside a 4px-radius card.
+33.  Not every section is a centered max-w-* container with symmetric padding.
+     At least one section per page must break the pattern: full-bleed,
+     asymmetric columns, offset content, or a different shape entirely.
+3.4  Sections must NOT all follow the same recipe (eyebrow -> headline ->
+     subhead -> card grid). If two sections share a structure, the third must
+     differ. Vary rhythm deliberately.
+3.5  Establish visual hierarchy per page: exactly one element wins the hero,
+     one primary CTA wins the page. Nothing else competes at equal weight.
+3.6  No section that restates a previous section's content in a different
+     format (e.g. prose steps followed by icon-cards saying the same thing).
+     One argument, made once, made well.
+
+4. COMPONENTS
+--------------------------------------------------------------------------------
+4.1  PILLS / BADGES / TAGS:
+     a. No rounded-full by default; use the project radius.
+     b. Every badge must be functional (real status, real category, real
+        filter) or be deleted. No badges that restate nearby content.
+     c. No status pill ("Beta", "Coming soon", "Pre-launch", "New") above the
+        H1 in a hero. Status info goes in nav, footer, or a sentence.
+     d. Ban in badges unless paired with a specific date/number/name:
+        "New", "Beta", "AI-powered", "Live", "Coming soon", any sparkle emoji.
+4.2  ICONS:
+     a. No icon-per-feature-card as decoration. An icon must clarify something
+        the text does not, or it goes.
+     b. Never generic-interchangeable mappings: lightning=fast, shield=secure,
+        checkmark=easy, rocket=launch, magnifier=find, clock=save-time.
+     c. One icon set, one style (all outline OR all filled), one stroke
+        weight, one size scale. Never mixed sources.
+     d. No icons in soft rounded pastel squares, one per card, identical
+        treatment. That whole pattern is banned.
+     e. Icon size must be proportionate to adjacent text. No giant icon +
+        tiny caption.
+4.3  CARDS:
+     a. Cards need a reason to be cards (grouping interactive/repeating
+        units). Prose does not go in cards.
+     b. No bento grids of feature cards unless the content is genuinely
+        grid-shaped data.
+     c. No hover lift + shadow growth as default. If a card is clickable,
+        indicate it with one subtle change, with a real easing curve.
+4.4  BUTTONS / CTAs:
+     a. One visually dominant primary CTA per view. Secondary actions are
+        outline/ghost/text weight. Two equal-weight buttons in different
+        colors is banned.
+     b. Button labels say what happens: "Join the waitlist", "Download the
+        report" — never bare "Get started", "Learn more", "Submit" without
+        context.
+4.5  No ✨ sparkle emoji anywhere in UI. No emoji as icon substitutes in
+     production UI.
+
+5. MOTION
+--------------------------------------------------------------------------------
+5.1  Motion budget: maximum 2-3 intentional moments per page. Each must have a
+     stated job (guide attention, show state change, express the product's
+     core idea). "Presence" or "polish" is not a job.
+5.2  No blanket scroll-reveal fade-ins on every section/card.
+5.3  No staggered index-based delays (delay = i * 80ms) on card grids.
+5.4  Every animation uses a real easing curve (cubic-bezier), never linear or
+     unspecified defaults. Durations 150-400ms for UI state, longer only for
+     deliberate hero/narrative moments.
+5.5  Scroll-linked values are driven by requestAnimationFrame writing directly
+     to the DOM/CSS vars. Never a CSS transition on a scroll-linked property
+     (causes rubber-banding), never per-frame React state re-renders.
+5.6  prefers-reduced-motion must be respected: animations disabled or replaced
+     with instant final states.
+5.7  No bobbing/floating idle animations on buttons, arrows, or icons.
+
+6. CONTENT & COPY
+--------------------------------------------------------------------------------
+6.1  No grandiose vague headlines: "Unlock your potential", "Build without
+     limits", "Empowering the next generation of X", "Launch faster",
+     "Seamlessly connect". Every headline must contain something only this
+     product could say.
+6.2  Feature lines must not share one sentence formula (e.g. "X — not just Y"
+     repeated). Vary structure deliberately.
+6.3  Limit em-dashes. If most sentences on a page contain one, rewrite.
+6.4  A tagline appears in exactly ONE place on a page, not repeated across
+     hero, footer, and metadata copy visible to users.
+6.5  Never ship placeholder content: no lorem ipsum, no "coming soon" bios,
+     no "Your headline here", no unfinished team cards, no stock photos that
+     don't match the brand.
+6.6  NEVER fabricate: no fake testimonials, fake customer names/headshots,
+     fake user counts, fake waitlist positions, fake activity feeds, fake
+     "X people viewing now", fake deadlines, or referral mechanics that claim
+     effects they don't have ("refer to move up" when nothing moves). If real
+     data doesn't exist yet, hide the element behind a real-data threshold or
+     label examples clearly as illustrative.
+6.7  CTAs and microcopy name what happens next in plain active voice. An
+     action keeps the same name through the whole flow (button "Publish" ->
+     toast "Published").
+6.8  Errors say what went wrong and how to fix it. No vague "Something went
+     wrong" as the only handler. Empty states invite a specific action.
+6.9  Copy is written from the user's side of the screen: name things by what
+     people recognize, not how the system is built.
+
+7. UX BEHAVIOR (the facade layer — where AI sites break on first click)
+--------------------------------------------------------------------------------
+7.1  Every async action shows a loading state: submitting forms, fetching
+     data, copying links. Buttons disable while pending.
+7.2  Every form input has validation with visible, specific feedback, shown at
+     the right time (on blur/submit, not on first keystroke).
+7.3  Success states confirm specifically: "Copied", "You're on the list" — a
+     visible change, not silent completion.
+7.4  Data-heavy sections use skeletons or progressive rendering, not sudden
+     pop-in.
+7.5  Zero dead elements: no footer social icons linking to "#", no toggles
+     that don't toggle, no carousels that don't slide, no nav links to
+     nonexistent pages. If it isn't wired, it doesn't ship.
+7.6  Custom 404 and error pages exist. No framework defaults.
+7.7  Keyboard navigation works: visible focus states on all interactive
+     elements, logical tab order, Escape closes modals.
+7.8  Test at real breakpoints (360px, 768px, 1024px, 1440px). No overflow,
+     no overlap, no text running off screen. Mobile is not an afterthought.
+
+8. TECHNICAL BASELINE
+--------------------------------------------------------------------------------
+8.1  SEO: unique title + meta description per page, OpenGraph image, canonical
+     URLs, sitemap, robots.txt, JSON-LD structured data where applicable.
+8.2  Heading hierarchy is semantic: one h1 per page, h2/h3 nested correctly,
+     never chosen for font size.
+8.3  Accessibility: alt text on meaningful images, aria-labels on icon-only
+     buttons, form inputs associated with labels.
+8.4  Performance: no unused libraries, lazy-load below-the-fold heavy assets,
+     optimize images (next/image or equivalent), check Core Web Vitals.
+8.5  No localStorage for critical state without fallbacks; no console.log
+     left in production paths.
+
+9. STRUCTURE & STRATEGY
+--------------------------------------------------------------------------------
+9.1  Section order is derived from what THIS page must accomplish, not from
+     the hero/features/testimonials/CTA template. Justify the order.
+9.2  Every page has ONE job (convert to waitlist, book a call, read the
+     thing). Every section either advances that job or gets cut.
+9.3  The hero is a thesis: it opens with the most characteristic thing in the
+     product's world. Pill badge + headline + subhead + floating product mock
+     is the template answer — only use it if you can argue it's genuinely
+     best here.
+9.4  Numbered markers (01/02/03), eyebrows, and dividers are only used when
+     they encode true structure (a real sequence, a real taxonomy) — never as
+     decoration.
+9.5  Strip test: if you removed the logo and product name, could a stranger
+     tell what company this page belongs to? If not, the design has no
+     identity — add one element (visual motif, copy angle, layout signature)
+     that could only exist for this product.
+9.6  Spend boldness in ONE place. Pick a single signature element per page and
+     keep everything else quiet and disciplined. Then remove one decoration
+     before shipping (Chanel rule).
+
+10. PROCESS RULES FOR THE AGENT
+--------------------------------------------------------------------------------
+10.1 Work in explicit batches. Propose, show a diff, wait for approval. Never
+     "fix everything" in one pass.
+10.2 When auditing, report violations with file + line first; do not fix until
+     the human scopes the batch.
+10.3 Never restructure, rename, or "improve" things outside the stated task.
+     Surgical edits over broad rewrites.
+10.4 When told a design element is fixed (a signature feature, a founder
+     story, a brand mark), never modify it, even during refactors.
+10.5 If a rule here conflicts with an explicit user instruction, the user
+     wins — but say which rule is being overridden.
+10.6 Before adding any new dependency, component library, or pattern, check
+     whether the project already solves this. Consistency beats novelty.
+
+================================================================================
+QUICK PRE-SHIP CHECKLIST (run before calling anything done)
+--------------------------------------------------------------------------------
+[ ] No purple gradients, blobs, glows, or sparkle emoji
+[ ] All colors/type/spacing/radius from defined tokens and scales
+[ ] No two sections share the same structural recipe
+[ ] One primary CTA wins; labels say what happens
+[ ] Icons: none decorative, one style, or none at all
+[ ] Motion: <=3 moments, each with a job, reduced-motion respected
+[ ] Zero fabricated data, zero placeholders, zero dead elements
+[ ] Forms: loading, validation, and success states all visible
+[ ] Mobile checked at 360px; contrast passes 4.5:1
+[ ] Custom 404/error pages; SEO + JSON-LD present
+[ ] Strip test passes: the page could only belong to this product
+================================================================================
