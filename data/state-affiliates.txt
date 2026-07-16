@@ -1,0 +1,85 @@
+Causey — US Chess state affiliate websites
+==========================================
+Compiled for scraping / pathway coverage. Every USCF state affiliate sends
+representatives to Denker, Barber, Rockefeller, Haring, and related national
+invitationals — so these calendars matter even when volume is low.
+
+Verify URLs before wiring a scraper; affiliates redesign calendars often.
+Shared hubs are noted inline.
+
+-------------------------------------------------------------------------------
+TIER 1 — The Big Five (highest volume + scholastic pathway complexity)
+-------------------------------------------------------------------------------
+New York          New York State Chess Association (NYSCA)     https://nysca.net
+California North  CalChess                                     https://calchess.org
+California South  Southern California Chess Federation (SCCF)  https://scchess.com
+Texas             Texas Chess Association (TCA)                https://texaschess.org
+Florida           Florida Chess Association (FCA)              https://floridachess.org
+
+-------------------------------------------------------------------------------
+TIER 2 — Major powerhouses (dense circuits, explicit state-championship rules)
+-------------------------------------------------------------------------------
+Illinois          Illinois Chess Association (ICA)             https://ilchess.org
+New Jersey        New Jersey State Chess Federation (NJSCF)    https://njscf.org
+Pennsylvania      Pennsylvania State Chess Federation (PSCF)   https://pscfchess.org
+Massachusetts     Massachusetts Chess Association (MACA)       https://masschess.org
+Washington        Washington Chess Federation (WCF)            https://washingtonchess.com
+Ohio              Ohio Chess Association (OCA)                 https://ohiochess.org
+
+-------------------------------------------------------------------------------
+TIER 3 — Active mid-size (regional scholastic qualifiers → state)
+-------------------------------------------------------------------------------
+Arizona           Arizona Chess Federation (ACF)               https://azchess.org
+Colorado          Colorado State Chess Association (CSCA)      https://coloradochess.com
+Connecticut       Connecticut State Chess Association (CSCA)   https://chessct.org
+Georgia           Georgia Chess Association (GCA)              https://georgiachess.org
+Maryland          Maryland Chess Association (MCA)             https://mdchess.com
+Michigan          Michigan Chess Association (MCA)             https://michess.org
+Missouri          Missouri Chess Association (MCA)             https://mochess.org
+North Carolina    North Carolina Chess Association (NCCA)      https://ncchess.org
+Virginia          Virginia Chess Federation (VCF)              https://vachess.org
+
+-------------------------------------------------------------------------------
+TIER 4 — Rest of the country (alphabetical; required for national invite paths)
+-------------------------------------------------------------------------------
+Alabama           Alabama Chess Federation (ACF)               https://alabamachess.org
+Alaska            Alaska Chess                                 https://alaskachess.org
+Arkansas          Arkansas Chess Association (ACA)             https://arkansaschess.net
+Delaware          Delaware Chess Association (DCA)             https://delawarechess.org
+District of Col.  DC Chess League                              https://dcchess.org
+Hawaii            Hawaii Chess Federation (HCF)                https://hawaiichess.org
+Idaho             Idaho Chess Association (ICA)                https://idahochessassociation.com
+Indiana           Indiana State Chess Association (ISCA)       https://indianachess.org
+Iowa              Iowa State Chess Association (IASCA)         https://iowachess.org
+Kansas            Kansas Chess Association (KCA)               https://kansaschess.org
+Kentucky          Kentucky Chess Association (KCA)             https://kychess.org
+Louisiana         Louisiana Chess Association (LCA)            https://louisianachess.org
+Maine             Maine Chess Association (MECA)               https://chessmaine.net
+Minnesota         Minnesota State Chess Association (MSCA)     https://minnesotachess.com
+Mississippi       Mississippi Chess Association (MCA)          https://mcachess.org
+Montana           Montana Chess Association (MCA)              https://montanachess.org
+Nebraska          Nebraska State Chess Association (NSCA)      https://nebraskachess.com
+Nevada            Nevada Chess                                 https://nevadachess.org
+New Hampshire     New Hampshire Chess Association (NHCA)       https://nhchess.org
+New Mexico        New Mexico Chess Organization (NMCO)         https://nmchess.org
+North Dakota      North Dakota Chess Association (NDCA)        https://ndchess.com
+Oklahoma          Oklahoma Chess Association (OCA)             https://ochess.org
+Oregon            Oregon Chess Federation (OCF)                https://nwchess.com
+                  (Shared Northwest hub with Washington)
+Rhode Island      Rhode Island Chess Association (RICA)        https://richess.org
+South Carolina    South Carolina Chess Association (SCCA)      https://scchess.org
+South Dakota      South Dakota Chess Association (SDCA)        https://sdchess.org
+Tennessee         Tennessee Chess Association (TCA)            https://tnchess.us
+Utah              Utah Chess Association (UCA)                 https://utahchess.com
+Vermont           Vermont Chess Association (VCA)              https://vtchess.info
+West Virginia     West Virginia Chess Association (WVCA)       https://wvchess.org
+Wisconsin         Wisconsin Chess Association (WCA)            https://wischess.org
+Wyoming           Wyoming Chess Association (WCA)              https://wyomingchess.com
+
+-------------------------------------------------------------------------------
+Notes
+-------------------------------------------------------------------------------
+- National hubs (live / planned scrapers): see data/tournament-sources.txt
+- US Chess States & Affiliates Committee webinars are useful context for how
+  affiliates structure calendars and report events to USCF.
+- Prefer official affiliate domains over Facebook-only calendars when both exist.

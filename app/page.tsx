@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { TournamentSources } from "@/components/TournamentSources";
 
 export const metadata: Metadata = {
   title: "Find student competitions",
@@ -95,6 +96,8 @@ export default function CompetitionTypesPage() {
           </div>
         </div>
       </section>
+
+      <TournamentSources />
     </>
   );
 }

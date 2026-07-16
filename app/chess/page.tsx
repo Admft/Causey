@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { CategorySwitcher } from "@/components/CategorySwitcher";
 import { SearchClient } from "@/components/SearchClient";
+import { TournamentSources } from "@/components/TournamentSources";
 
 export const metadata: Metadata = {
   title: "Scholastic chess competitions",
@@ -22,6 +23,7 @@ export default function ChessSearchPage() {
       <Suspense>
         <SearchClient />
       </Suspense>
+      <TournamentSources />
     </>
   );
 }

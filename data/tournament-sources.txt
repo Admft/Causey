@@ -1,0 +1,65 @@
+Causey — tournament data sources
+================================
+Formal APIs for live/upcoming OTB calendars barely exist. Causey indexes
+public tournament hubs via scrapers (TypeScript + Cheerio), not organizer APIs.
+
+Status key:
+  LIVE     — scraper shipping; events may appear on /chess
+  SOON     — planned; not wired yet
+  AFFILIATE — state calendars; full list in data/state-affiliates.txt
+
+-------------------------------------------------------------------------------
+LIVE (scraping now)
+-------------------------------------------------------------------------------
+US Chess Federation — Tournament Life Announcements (TLA)
+  https://new.uschess.org/upcoming-tournaments
+  Official directory of USCF-rated events. Primary US supply feed.
+  Pipeline: source = tla_scrape  |  npm run scrape:tla
+
+Continental Chess Association (CCA)
+  https://www.chesstour.com/refs.html
+  Major US opens (World Open, National Chess Congress, etc.).
+  Pipeline: source = cca_scrape  |  npm run scrape:cca
+
+-------------------------------------------------------------------------------
+SOON (adding next — national / registration hubs)
+-------------------------------------------------------------------------------
+OnlineRegistration.cc
+  https://onlineregistration.cc
+  Organizer registration hub used by many US events.
+
+Chess-Results.com
+  https://chess-results.com
+  Global pairings/results hub (Swiss-Manager publishes here).
+  Target: Tournament Search for upcoming USA / FIDE events.
+
+FIDE Calendar
+  https://fide.com/calendar
+  Official international events (World Cup, Candidates, Grand Swiss, etc.).
+
+-------------------------------------------------------------------------------
+SOON (adding — all USCF state affiliates)
+-------------------------------------------------------------------------------
+USCF state affiliates (directory page)
+  /sources/state-affiliates  (opens in-app list; see also data/state-affiliates.txt)
+  All 50 states + DC — calendars for scholastic qualifiers and state championships.
+
+Start order (full URLs on /sources/state-affiliates and in data/state-affiliates.txt):
+
+  Tier 1 — Big Five
+    NYSCA (NY), CalChess (CA-N), SCCF (CA-S), TCA (TX), FCA (FL)
+
+  Tier 2 — Major powerhouses
+    ICA (IL), NJSCF (NJ), PSCF (PA), MACA (MA), WCF (WA), OCA (OH)
+
+  Tier 3 — Active mid-size
+    AZ, CO, CT, GA, MD, MI, MO, NC, VA
+
+  Tier 4 — Remaining states + DC
+    Full alphabetical coverage in data/state-affiliates.txt
+
+-------------------------------------------------------------------------------
+Not in scope (wrong product)
+-------------------------------------------------------------------------------
+Lichess / Chess.com APIs — online play only, not OTB discovery.
+USCF MUIR/Leago TD APIs — rating/TD tools, not a public calendar feed.

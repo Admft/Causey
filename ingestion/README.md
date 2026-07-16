@@ -125,5 +125,9 @@ hand or a future detail parser — pathways still work via `series_id`.
 
 ## Other sources (later)
 
+See `data/tournament-sources.txt` (live vs soon hubs, including
+OnlineRegistration.cc) and `data/state-affiliates.txt` (all USCF state affiliate
+calendars by tier). The product advertises the same list via `TournamentSources`.
+
 New scraper → new `source` value → write `competition_sources` → same fingerprint
 pipeline. Prefer extending `SOURCE_PRIORITY` in `ingestion/fingerprint.ts`.
