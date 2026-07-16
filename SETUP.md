@@ -84,7 +84,9 @@ Notes:
 - `npm test` — run tests
 - `npm run seed:generate` — regenerate seed files
 - `npm run seed:supabase` — load seed data into Supabase
-- `npm run scrape:tla` — scrape US Chess TLAs into draft rows
+- `npm run scrape:tla` — scrape US Chess upcoming-tournaments into Supabase
+- `SCRAPE_HTML_FILE=... npm run scrape:tla` — parse a local HTML fixture
+- `SCRAPE_MAX_PAGES=2 npm run scrape:tla` — limit pagination while testing
 
 ## What still needs to be built or integrated before launch
 
@@ -109,6 +111,12 @@ Why this matters:
 - This is the real persistence layer for production.
 - The migration creates tables, indexes, RLS policies, and enables `cube` plus
   `earthdistance`.
+
+## 1b. Add scraper provenance column (if not already)
+
+Run `supabase/migrations/0002_source_url.sql` in the SQL editor. This adds
+`competitions.source_url` so every scraped row stores the exact upstream page
+alongside `source` (`tla_scrape` for the US Chess upcoming-tournaments scraper).
 
 ## 2. Load the full US zip-to-lat/lng dataset
 

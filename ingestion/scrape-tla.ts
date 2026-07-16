@@ -1,26 +1,41 @@
 /**
- * US Chess TLA (Tournament Life Announcements) scraper — the primary supply
- * feed. There is no API; this parses the public HTML listing.
+ * US Chess upcoming-tournaments scraper — primary supply feed.
  *
- * Runs ONLY via `npm run scrape:tla` or the (disabled) GitHub Actions cron —
- * never during build or dev. Output is staged, never published directly:
- *   - Supabase configured → inserts competitions with status='draft'
- *   - otherwise           → writes data/staging/tla-drafts.json
- * A human reviews drafts (enrich zip/coords/fee, add sections) and flips
- * status to 'published'. See ingestion/README.md.
+ * Source site: https://new.uschess.org/upcoming-tournaments
+ * Pipeline id stored on every row: source = 'tla_scrape'
+ * Provenance URL stored on every row: source_url = the event's US Chess page
  *
- * TODO: verify selectors against the live US Chess TLA page before first
- * real run — the markup changes periodically and this was coded to the best
- * known structure (a Drupal views table), defensively.
+ * Flow:
+ *   1. Paginate the listing (Cheerio — Drupal server-renders the cards)
+ *   2. For each event, fetch the detail page for address / zip / organizer site
+ *   3. Resolve lat/lng via the Supabase zips table when zip is known
+ *   4. Upsert into competitions (published when location resolves, else draft)
+ *
+ * Runs ONLY via `npm run scrape:tla` or the GitHub Actions cron — never during
+ * build or page requests.
+ *
+ * Local fixture (no network listing fetch):
+ *   SCRAPE_HTML_FILE=ingestion/fixtures/upcoming-tournaments-page0.html npm run scrape:tla
  */
 import { load } from "cheerio";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
-import { normalizeRawTla, RawTlaSchema, type RawTla } from "./normalize";
+import {
+  normalizeRawTla,
+  SCRAPER_SITE,
+  type DetailEnrichment,
+  type RawTla,
+} from "./normalize";
+import {
+  LISTING_URL,
+  maxPagerPage,
+  parseDetailHtml,
+  parseListingHtml,
+} from "./parse-uschess";
 
-// Load .env for plain-script runs (Next does this itself, tsx doesn't).
 try {
   for (const line of readFileSync(join(process.cwd(), ".env"), "utf8").split("\n")) {
     const m = line.match(/^([A-Z_]+)=(.*)$/);
@@ -30,97 +45,180 @@ try {
   /* no .env — fine */
 }
 
-const TLA_URL = "https://new.uschess.org/tournaments";
+const USER_AGENT = "CauseyBot/0.1 (+https://causey.dev; tournament discovery indexing)";
+const DETAIL_DELAY_MS = 350;
+const MAX_PAGES = Number(process.env.SCRAPE_MAX_PAGES ?? "40");
+const SKIP_DETAIL = process.env.SCRAPE_SKIP_DETAIL === "1";
 
-async function fetchListing(): Promise<string> {
-  const res = await fetch(TLA_URL, {
-    headers: {
-      // Identify ourselves honestly; this is a public listing.
-      "User-Agent": "CauseyBot/0.1 (+https://causey.dev; tournament discovery indexing)",
-    },
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function fetchHtml(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": USER_AGENT, Accept: "text/html" },
   });
-  if (!res.ok) {
-    throw new Error(`TLA fetch failed: HTTP ${res.status} from ${TLA_URL}`);
-  }
+  if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status} from ${url}`);
   return res.text();
 }
 
-function parseListing(html: string): RawTla[] {
-  const $ = load(html);
-  const raws: RawTla[] = [];
+async function loadListingPages(): Promise<RawTla[]> {
+  const fixture = process.env.SCRAPE_HTML_FILE;
+  if (fixture) {
+    const path = fixture.startsWith("/") ? fixture : join(process.cwd(), fixture);
+    console.log(`Using local fixture: ${path}`);
+    return parseListingHtml(readFileSync(path, "utf8"));
+  }
 
-  // TODO: verify selectors against live page. Coded against the Drupal
-  // "views" table US Chess has used: one <tr> per event with date, linked
-  // name, and location cells. Every access below is defensive — a missing
-  // cell skips the row instead of throwing.
-  $("table tbody tr").each((_, row) => {
-    const cells = $(row).find("td");
-    if (cells.length < 3) return;
+  const byUrl = new Map<string, RawTla>();
+  let page = 0;
+  let lastPage = 0;
 
-    const dateText = $(cells[0]).text().trim();
-    const link = $(cells[1]).find("a").first();
-    const name = (link.text() || $(cells[1]).text()).trim();
-    const href = link.attr("href");
-    const locationText = $(cells[2]).text().trim();
+  while (page <= lastPage && page < MAX_PAGES) {
+    const url = page === 0 ? LISTING_URL : `${LISTING_URL}?page=${page}`;
+    console.log(`Fetching listing page ${page}: ${url}`);
+    const html = await fetchHtml(url);
+    const $ = load(html);
+    if (page === 0) lastPage = maxPagerPage($);
+    const rows = parseListingHtml(html);
+    console.log(`  → ${rows.length} events (pager max page=${lastPage})`);
+    if (rows.length === 0) break;
+    for (const r of rows) byUrl.set(r.detailUrl, r);
+    page += 1;
+    await sleep(200);
+  }
 
-    // "City, ST" (tolerate extra venue text before the city)
-    const loc = locationText.match(/([A-Za-z .'-]+),\s*([A-Z]{2})\b/);
-    if (!name || !href || !loc || !dateText) return;
-
-    const detailUrl = href.startsWith("http") ? href : new URL(href, TLA_URL).toString();
-    const candidate = {
-      name,
-      dateText,
-      city: loc[1].trim(),
-      state: loc[2],
-      detailUrl,
-    };
-    const parsed = RawTlaSchema.safeParse(candidate);
-    if (parsed.success) raws.push(parsed.data);
-    else console.warn(`skipping row (failed validation): ${JSON.stringify(candidate)}`);
-  });
-
-  return raws;
+  return [...byUrl.values()];
 }
 
 async function main() {
-  console.log(`Fetching ${TLA_URL} …`);
-  const html = await fetchListing();
-  const raws = parseListing(html);
-  console.log(`Parsed ${raws.length} raw TLA rows.`);
+  console.log(`Scraper: ${SCRAPER_SITE} → source='tla_scrape'`);
+  const raws = await loadListingPages();
+  console.log(`Parsed ${raws.length} unique listing events.`);
   if (raws.length === 0) {
     console.error(
-      "0 rows parsed — the page structure has probably changed. " +
-        "Inspect the live page and fix the selectors in ingestion/scrape-tla.ts."
+      "0 rows parsed — listing markup may have changed. " +
+        "Update selectors in ingestion/parse-uschess.ts using the saved HTML fixture."
     );
     process.exit(1);
   }
 
-  const drafts = raws
-    .map((raw) => normalizeRawTla(raw, randomUUID()))
-    .filter((d): d is NonNullable<typeof d> => d !== null);
-  console.log(`Normalized ${drafts.length} drafts (${raws.length - drafts.length} skipped).`);
-
   const client = getServiceRoleClient();
+  const zipCache = new Map<string, { lat: number; lng: number } | null>();
+
+  async function coordsForZip(zip: string | null) {
+    if (!zip || !client) return null;
+    if (zipCache.has(zip)) return zipCache.get(zip)!;
+    const { data, error } = await client
+      .from("zips")
+      .select("lat,lng")
+      .eq("zip", zip)
+      .maybeSingle();
+    if (error) {
+      console.warn(`zip lookup failed for ${zip}: ${error.message}`);
+      zipCache.set(zip, null);
+      return null;
+    }
+    const coords = data ? { lat: data.lat as number, lng: data.lng as number } : null;
+    zipCache.set(zip, coords);
+    return coords;
+  }
+
+  const drafts = [];
+  let skippedOnline = 0;
+  let skippedNormalize = 0;
+
+  for (let i = 0; i < raws.length; i++) {
+    const raw = raws[i]!;
+    let detail: DetailEnrichment | null = null;
+    if (!SKIP_DETAIL) {
+      try {
+        process.stdout.write(
+          `\rDetail ${i + 1}/${raws.length}: ${raw.name.slice(0, 48).padEnd(48)}`
+        );
+        const html = await fetchHtml(raw.detailUrl);
+        detail = parseDetailHtml(html);
+        await sleep(DETAIL_DELAY_MS);
+      } catch (err) {
+        console.warn(`\ndetail fetch failed for ${raw.detailUrl}:`, err);
+      }
+    }
+    if (detail?.online) {
+      skippedOnline += 1;
+      continue;
+    }
+    const coords = await coordsForZip(detail?.zip ?? null);
+    const row = normalizeRawTla(raw, {
+      id: randomUUID(),
+      detail,
+      coords,
+    });
+    if (!row) {
+      skippedNormalize += 1;
+      continue;
+    }
+    drafts.push(row);
+  }
+  if (!SKIP_DETAIL) process.stdout.write("\n");
+
+  console.log(
+    `Normalized ${drafts.length} rows ` +
+      `(skipped online=${skippedOnline}, normalize=${skippedNormalize}).`
+  );
+  const published = drafts.filter((d) => d.status === "published").length;
+  console.log(`  ready to show (published): ${published}`);
+  console.log(`  needs location review (draft): ${drafts.length - published}`);
+
   if (client) {
-    // Stage into the competitions table as drafts; ignore slugs we already
-    // have so re-runs don't duplicate.
-    const { error } = await client
+    const { data: existing, error: existingErr } = await client
       .from("competitions")
-      .upsert(drafts as never[], { onConflict: "slug", ignoreDuplicates: true });
-    if (error) throw new Error(`Supabase staging insert failed: ${error.message}`);
-    console.log(`Staged ${drafts.length} drafts in Supabase (status='draft').`);
+      .select("id, slug")
+      .eq("source", "tla_scrape");
+    if (existingErr) throw new Error(`lookup existing failed: ${existingErr.message}`);
+    const idBySlug = new Map(
+      (existing ?? []).map((r) => [r.slug as string, r.id as string])
+    );
+
+    const payload = drafts.map((d) => ({
+      ...d,
+      id: idBySlug.get(d.slug) ?? d.id,
+    }));
+
+    let { error } = await client
+      .from("competitions")
+      .upsert(payload as never[], { onConflict: "slug" });
+
+    if (error?.message?.includes("source_url")) {
+      console.warn(
+        "competitions.source_url missing — run supabase/migrations/0002_source_url.sql, then re-scrape. " +
+          "Upserting without source_url for now (source='tla_scrape' + reg_url still identify origin)."
+      );
+      const stripped = payload.map(({ source_url: _drop, ...rest }) => rest);
+      ({ error } = await client
+        .from("competitions")
+        .upsert(stripped as never[], { onConflict: "slug" }));
+    }
+
+    if (error) throw new Error(`Supabase upsert failed: ${error.message}`);
+    console.log(`Upserted ${payload.length} competitions (source='tla_scrape').`);
   } else {
     const outDir = join(process.cwd(), "data", "staging");
     mkdirSync(outDir, { recursive: true });
     const outPath = join(outDir, "tla-drafts.json");
     writeFileSync(outPath, JSON.stringify(drafts, null, 2) + "\n");
-    console.log(`No Supabase configured — wrote ${drafts.length} drafts to ${outPath}.`);
+    console.log(`No Supabase configured — wrote ${drafts.length} rows to ${outPath}.`);
   }
-  console.log("Next: human review → enrich zip/coords/fee/sections → flip status to 'published'.");
+  console.log(
+    "Done. Every row has source='tla_scrape' and source_url set to its US Chess page."
+  );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const isDirectRun =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectRun) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

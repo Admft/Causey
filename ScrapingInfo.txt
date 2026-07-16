@@ -1,0 +1,93 @@
+Building a centralized database of every OTB (Over The Board) chess tournament in the US, along with FIDE events and qualification pathways, is a massive but highly valuable project.
+
+The short answer on APIs: **The chess world is notoriously behind on modern tech.** There is no centralized API for FIDE or US Chess Federation (USCF) tournament calendars. You will be relying heavily on web scraping.
+
+Here is your complete guide on what to scrape, where to get the data, and how to automate it.
+
+---
+
+## 1. Where to Get the Data (APIs vs. Scraping)
+
+Because formal APIs for live/upcoming OTB tournament calendars don't really exist, you will need to target specific hubs where organizers post their events.
+
+### Websites You Must Scrape
+
+* **US Chess Federation TLA (Tournament Life Announcements):** `new.uschess.org/upcoming-tournaments`
+* *What it is:* The official directory of USCF-rated events.
+* *Tech needed:* Python (BeautifulSoup/Playwright). USCF's site requires parsing HTML listings.
+
+
+* **Continental Chess Association (CCA):** `chesstour.com`
+* *What it is:* The biggest organizer in the US (World Open, National Chess Congress, etc.).
+* *Tech needed:* Simple HTML parsing (BeautifulSoup). Their site looks like it was built in 1998, which ironically makes it very easy to scrape.
+
+
+* **Chess-Results.com:** `chess-results.com`
+* *What it is:* The global hub for tournament pairings and results. Most organizers use a software called Swiss-Manager, which automatically publishes to this site.
+* *Tech needed:* Scrape the "Tournament Search" parameters for upcoming USA/FIDE events.
+
+
+* **FIDE Calendar:** `[fide.com/calendar](https://fide.com/calendar)`
+* *What it is:* Official international events (World Cup, Candidates, Grand Swiss).
+
+
+* **State Affiliates:** (e.g., Texas Chess Association, CalChess, NYSCA)
+* *What it is:* State-level championships usually host the qualifiers for National events. You'll need to compile a list of the 50 state affiliate websites and scrape their specific calendars.
+
+
+
+### Are There Any APIs?
+
+Not for what you are trying to do.
+
+* **USCF** is currently migrating to a new system (MUIR/Leago), but API access is strictly limited to Tournament Directors (TDs) for player rating lookups, not public calendar listings.
+* **FIDE** does not have an open API. Existing open-source tools (like the Python package `fideparser`) actually just do HTML scraping under the hood.
+* **Lichess / Chess.com** have robust APIs, but they are exclusively for *online* games, not OTB tournaments.
+
+---
+
+## 2. What Data Stuff to Scrape
+
+To build a useful relational database (and map out pathways), you need to extract the following fields for each event:
+
+* **Core Metadata:** Tournament Name, Start/End Dates, City, State, Venue.
+* **Format:** Time Control (e.g., G/90+30), Sections (Open, U2000, U1500, Scholastic).
+* **Affiliation:** USCF Rated? FIDE Rated? Both?
+* **Financials:** Entry Fee, Prize Fund.
+* **Registration:** Link to the organizer's registration portal.
+* **Raw Description Text:** *Crucial for Pathways.* You must scrape the full text description of the event.
+
+### The "Pathways" Problem
+
+Mapping out "If you place Top 3 here, you go here" cannot be scraped as clean, structured data because organizers just type it out in plain English.
+
+**How to solve this:** You will need to scrape the *Raw Description Text* and pass it through an LLM (like the Gemini API) to extract the logic.
+
+* *Example Prompt:* "Read this chess tournament description. Does it mention any qualification pathways? If yes, output JSON with the target tournament and the required placement."
+
+---
+
+## 3. How to Run and Automate the Scrapers
+
+You do not want to do this manually. You can fully automate the extraction, transformation, and loading (ETL) of this data into your website.
+
+### Step 1: The Scraping Stack
+
+Write your scrapers in **Python**.
+
+* **BeautifulSoup & Requests:** For static sites like CCA (`chesstour.com`).
+* **Playwright or Selenium:** For dynamic, JavaScript-heavy sites (like the USCF TLA search).
+
+### Step 2: The Automation (Cron / Schedulers)
+
+You need a server to run these scripts on a schedule (e.g., every night at 2:00 AM).
+
+* **Easy/Free Tier:** **GitHub Actions**. You can set a `.yml` workflow to run your Python scraping scripts once a day for free, output the data to a JSON/CSV file, and commit it back to your repo.
+* **Robust/Pro Tier:** Rent a cheap VPS (Virtual Private Server) on **DigitalOcean** or **AWS EC2**. Set up a **Cron Job** (Linux task scheduler) to run your scripts daily and push the data directly into your database (PostgreSQL/MongoDB).
+
+### Step 3: Serving the Website
+
+* Have your scrapers push the cleaned data to a database (like **Supabase** or **Firebase**).
+* Build your frontend (using React, Next.js, or just plain HTML/JS) to read from that database.
+
+This means your website is completely hands-off. The cron job wakes up, scrapes the internet, updates the database, and your website users instantly see the new tournaments.

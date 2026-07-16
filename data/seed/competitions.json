@@ -21,7 +21,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002002",
@@ -45,7 +46,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002003",
@@ -69,7 +71,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002004",
@@ -93,7 +96,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000111",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002005",
@@ -117,7 +121,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002006",
@@ -141,7 +146,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002007",
@@ -165,7 +171,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002008",
@@ -189,7 +196,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002009",
@@ -197,7 +205,7 @@
     "name": "Texas Scholastic Championship 2027",
     "category": "chess",
     "organizer_name": "Texas Chess Association",
-    "venue_name": "Henry B. González Convention Center",
+    "venue_name": "Henry B. Gonz\u00e1lez Convention Center",
     "address": "900 E Market St",
     "city": "San Antonio",
     "state": "TX",
@@ -213,7 +221,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000106",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002010",
@@ -237,7 +246,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002011",
@@ -261,7 +271,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002012",
@@ -285,7 +296,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002013",
@@ -309,7 +321,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002014",
@@ -333,7 +346,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002015",
@@ -357,7 +371,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000107",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002016",
@@ -381,7 +396,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002017",
@@ -405,7 +421,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002018",
@@ -429,7 +446,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002019",
@@ -453,7 +471,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002020",
@@ -477,7 +496,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002021",
@@ -501,7 +521,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002022",
@@ -525,7 +546,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000108",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002023",
@@ -549,12 +571,13 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002024",
     "slug": "chicago-scholastic-series-fall-2026",
-    "name": "Chicago Scholastic Championship Series — Fall",
+    "name": "Chicago Scholastic Championship Series \u2014 Fall",
     "category": "chess",
     "organizer_name": "Illinois Chess Association",
     "venue_name": "UIC Forum",
@@ -573,7 +596,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000112",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002025",
@@ -597,7 +621,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002026",
@@ -621,12 +646,13 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000109",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002027",
     "slug": "chicago-scholastic-series-winter-2027",
-    "name": "Chicago Scholastic Championship Series — Winter",
+    "name": "Chicago Scholastic Championship Series \u2014 Winter",
     "category": "chess",
     "organizer_name": "Illinois Chess Association",
     "venue_name": "UIC Forum",
@@ -645,7 +671,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000112",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002028",
@@ -669,7 +696,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002029",
@@ -693,7 +721,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002030",
@@ -717,7 +746,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002031",
@@ -741,7 +771,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000110",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002032",
@@ -765,7 +796,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002033",
@@ -789,7 +821,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002034",
@@ -813,7 +846,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002035",
@@ -837,7 +871,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002036",
@@ -861,7 +896,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002037",
@@ -885,7 +921,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002038",
@@ -909,7 +946,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002039",
@@ -933,7 +971,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002040",
@@ -957,7 +996,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002041",
@@ -981,7 +1021,8 @@
     "rating_system": "uschess",
     "series_id": null,
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002042",
@@ -1005,7 +1046,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000101",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002043",
@@ -1029,7 +1071,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000102",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002044",
@@ -1053,7 +1096,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000103",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002045",
@@ -1077,7 +1121,8 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000104",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   },
   {
     "id": "00000000-0000-4000-8000-000000002046",
@@ -1101,6 +1146,7 @@
     "rating_system": "uschess",
     "series_id": "00000000-0000-4000-8000-000000000105",
     "source": "manual",
-    "status": "published"
+    "status": "published",
+    "source_url": null
   }
 ]

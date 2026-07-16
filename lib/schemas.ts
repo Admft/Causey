@@ -38,7 +38,15 @@ export const CompetitionSchema = z.object({
   rated: z.boolean(),
   rating_system: z.string().default("uschess"),
   series_id: z.string().uuid().nullable(),
+  /**
+   * Which ingestion pipeline wrote this row.
+   * - manual: hand-entered / seed
+   * - tla_scrape: US Chess upcoming-tournaments scraper
+   * - organizer: future partner / registration-platform feeds
+   */
   source: z.enum(["manual", "tla_scrape", "organizer"]),
+  /** Exact upstream page the scraper read (null for hand-entered rows). */
+  source_url: z.string().url().nullable().default(null),
   status: CompetitionStatus.default("published"),
 });
 

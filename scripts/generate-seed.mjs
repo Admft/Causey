@@ -413,6 +413,7 @@ COMPETITIONS.forEach((c, i) => {
     rating_system: "uschess",
     series_id: c.series ? seriesId(c.series) : null,
     source: "manual",
+    source_url: null,
     status: "published",
   });
 
