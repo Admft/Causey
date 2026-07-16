@@ -14,6 +14,7 @@ import {
 } from "@/lib/schemas";
 import { haversineMiles } from "@/lib/geo";
 import {
+  competitionNameRank,
   competitionInDateWindow,
   matchingSectionIds,
 } from "@/lib/data/filtering";
@@ -56,6 +57,7 @@ export class SupabaseDataSource implements DataSource {
       .from("competitions")
       .select("*, sections(*), series(*)")
       .eq("status", "published");
+    if (filters.q) query = query.ilike("name", `%${filters.q}%`);
     if (filters.state) query = query.eq("state", filters.state);
     if (filters.date_from) query = query.gte("start_date", filters.date_from);
     if (filters.date_to) query = query.lte("start_date", filters.date_to);
@@ -96,6 +98,11 @@ export class SupabaseDataSource implements DataSource {
     }
 
     results.sort((a, b) => {
+      if (filters.q) {
+        const rankDelta =
+          competitionNameRank(a.name, filters.q) - competitionNameRank(b.name, filters.q);
+        if (rankDelta !== 0) return rankDelta;
+      }
       if (a.distance_miles !== null && b.distance_miles !== null) {
         if (Math.abs(a.distance_miles - b.distance_miles) > 0.5) {
           return a.distance_miles - b.distance_miles;

@@ -19,6 +19,7 @@ import {
 } from "@/lib/schemas";
 import { haversineMiles } from "@/lib/geo";
 import {
+  competitionNameRank,
   competitionInDateWindow,
   matchingSectionIds,
 } from "@/lib/data/filtering";
@@ -58,6 +59,7 @@ export class MockDataSource implements DataSource {
     const results: CompetitionResult[] = [];
     for (const c of competitions) {
       if (c.status !== "published") continue;
+      if (filters.q && !c.name.toLowerCase().includes(filters.q.toLowerCase())) continue;
       if (filters.state && c.state !== filters.state) continue;
       if (!competitionInDateWindow(c, filters)) continue;
 
@@ -85,6 +87,11 @@ export class MockDataSource implements DataSource {
     }
 
     results.sort((a, b) => {
+      if (filters.q) {
+        const rankDelta =
+          competitionNameRank(a.name, filters.q) - competitionNameRank(b.name, filters.q);
+        if (rankDelta !== 0) return rankDelta;
+      }
       if (a.distance_miles !== null && b.distance_miles !== null) {
         if (Math.abs(a.distance_miles - b.distance_miles) > 0.5) {
           return a.distance_miles - b.distance_miles;

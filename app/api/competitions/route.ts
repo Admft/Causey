@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/competitions — search published competitions.
- * Query params mirror SearchFiltersSchema (zip, radius_miles, state,
+ * Query params mirror SearchFiltersSchema (q, zip, radius_miles, state,
  * grade_band, rating_band, max_fee_cents, date_from, date_to).
  */
 export async function GET(request: NextRequest) {

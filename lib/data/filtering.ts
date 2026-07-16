@@ -73,3 +73,13 @@ export function competitionInDateWindow(
   if (filters.date_to && competition.start_date > filters.date_to) return false;
   return true;
 }
+
+/** Lower is better: exact title → title prefix → title containing the query. */
+export function competitionNameRank(name: string, query?: string): number {
+  if (!query) return 0;
+  const normalizedName = name.toLowerCase().trim();
+  const normalizedQuery = query.toLowerCase().trim();
+  if (normalizedName === normalizedQuery) return 0;
+  if (normalizedName.startsWith(normalizedQuery)) return 1;
+  return 2;
+}

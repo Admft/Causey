@@ -22,8 +22,14 @@ type Status =
   | { kind: "error"; message: string }
   | { kind: "ready"; results: CompetitionResult[] };
 
-function readParams(params: URLSearchParams): { zip: string; radius: string; filters: FilterState } {
+function readParams(params: URLSearchParams): {
+  keyword: string;
+  zip: string;
+  radius: string;
+  filters: FilterState;
+} {
   return {
+    keyword: params.get("q") ?? "",
     zip: params.get("zip") ?? "",
     radius: params.get("radius") ?? "50",
     filters: {
@@ -43,6 +49,7 @@ export function SearchClient() {
   const searchParams = useSearchParams();
   const initial = useMemo(() => readParams(new URLSearchParams(searchParams)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [keyword, setKeyword] = useState(initial.keyword);
   // zipInput is what's typed; zip is the validated, applied value.
   const [zipInput, setZipInput] = useState(initial.zip);
   const [zip, setZip] = useState(initial.zip);
@@ -70,6 +77,7 @@ export function SearchClient() {
   // One place builds the query — URL bar and API always agree.
   const query = useMemo(() => {
     const p = new URLSearchParams();
+    if (keyword.trim()) p.set("q", keyword.trim());
     if (zip) {
       p.set("zip", zip);
       p.set("radius", radius);
@@ -81,7 +89,7 @@ export function SearchClient() {
     if (filters.date_from) p.set("date_from", filters.date_from);
     if (filters.date_to) p.set("date_to", filters.date_to);
     return p;
-  }, [zip, radius, filters]);
+  }, [keyword, zip, radius, filters]);
 
   const abortRef = useRef<AbortController | null>(null);
   useEffect(() => {
@@ -141,8 +149,21 @@ export function SearchClient() {
             Enter a zip code to see what&rsquo;s in reach, with the entry fee and
             who can play shown before you commit to anything.
           </p>
+          <div className="mt-6 max-w-lg">
+            <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
+              Search by tournament name
+            </label>
+            <input
+              id="tournament-search"
+              type="search"
+              className="field mt-1"
+              placeholder="Try World Open, state championship, or scholastic"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
+          </div>
           <form
-            className="mt-6 flex max-w-lg flex-col gap-2.5 sm:flex-row sm:items-start"
+            className="mt-3 flex max-w-lg flex-col gap-2.5 sm:flex-row sm:items-start"
             onSubmit={(e) => {
               e.preventDefault();
               applyZip();
@@ -245,6 +266,7 @@ export function SearchClient() {
                       <span className="font-semibold text-foreground">
                         {total} tournament{total === 1 ? "" : "s"}
                       </span>
+                      {keyword.trim() && ` matching “${keyword.trim()}”`}
                       {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
                       , soonest and closest first.
                       {shown < total && (

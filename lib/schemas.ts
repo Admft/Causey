@@ -118,6 +118,7 @@ export const RATING_BANDS = {
 export type RatingBand = keyof typeof RATING_BANDS;
 
 export const SearchFiltersSchema = z.object({
+  q: z.string().trim().min(1).max(100).optional(),
   zip: z.string().regex(/^\d{5}$/).optional(),
   radius_miles: z.coerce.number().positive().max(3000).optional(),
   state: z.string().length(2).optional(),
