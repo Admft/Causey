@@ -43,11 +43,18 @@ async function upsert(table: string, rows: unknown[], conflict = "id") {
   console.log(`seeded ${table}: ${rows.length} rows`);
 }
 
-// Order matters: FKs point series ← competitions ← sections / rules.
-await upsert("series", load("data/seed/series.json"));
-await upsert("competitions", load("data/seed/competitions.json"));
-await upsert("sections", load("data/seed/sections.json"));
-await upsert("qualification_rules", load("data/seed/qualification_rules.json"));
-await upsert("zips", load("data/zips.sample.json"), "zip");
+async function main() {
+  // Order matters: FKs point series ← competitions ← sections / rules.
+  await upsert("series", load("data/seed/series.json"));
+  await upsert("competitions", load("data/seed/competitions.json"));
+  await upsert("sections", load("data/seed/sections.json"));
+  await upsert("qualification_rules", load("data/seed/qualification_rules.json"));
+  await upsert("zips", load("data/zips.sample.json"), "zip");
 
-console.log("Done. Remember: seeded qualification_rules are scaffolding — see SETUP.md step 6.");
+  console.log("Done. Remember: seeded qualification_rules are scaffolding — see SETUP.md step 6.");
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
