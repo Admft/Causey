@@ -1,0 +1,241 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Causey design tokens — copied verbatim from CAUSEY-DESIGN-SYSTEM.txt §3/§18.
+ * Every color, size, radius, and shadow in the app resolves to these; no
+ * one-off hex values in components.
+ * ------------------------------------------------------------------------- */
+:root {
+  --background: #f5f9fc;
+  --foreground: #14181c;
+  --muted: #5a6570;
+  --muted-strong: #3a4450;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-soft: #f2f5f8;
+  --line: rgba(20, 24, 28, 0.1);
+  --brand-red: #c23b32;
+  --brand-red-hover: #a8322a;
+  --brand-blue: #4a8eb8;
+  --brand-blue-soft: #d4e8f4;
+  --brand-blue-strong: #3a7aa3;
+  --accent: #c23b32;
+  --accent-hover: #a8322a;
+  --accent-soft: #f8e8e6;
+  --field: #ffffff;
+  --field-border: rgba(20, 24, 28, 0.14);
+}
+
+@theme {
+  --color-*: initial;
+  --color-background: #f5f9fc;
+  --color-foreground: #14181c;
+  --color-muted: #5a6570;
+  --color-muted-strong: #3a4450;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f2f5f8;
+  --color-line: rgba(20, 24, 28, 0.1);
+  --color-brand-red: #c23b32;
+  --color-brand-red-hover: #a8322a;
+  --color-brand-blue: #4a8eb8;
+  --color-brand-blue-soft: #d4e8f4;
+  --color-brand-blue-strong: #3a7aa3;
+  --color-accent: #c23b32;
+  --color-accent-hover: #a8322a;
+  --color-accent-soft: #f8e8e6;
+  --color-field: #ffffff;
+  --color-field-border: rgba(20, 24, 28, 0.14);
+  --color-white: #ffffff;
+  --color-error: #dc2626; /* validation text — design system's text-red-600 */
+
+  /* Type scale — CAUSEY-DESIGN-SYSTEM.txt §4.2. Named tokens only. */
+  --text-*: initial;
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1.4;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.6;
+  --text-md: 1rem;
+  --text-md--line-height: 1.6;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.6;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.35;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.25;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.2;
+  --text-display-sm: clamp(1.5rem, 3vw, 2rem);
+  --text-display-sm--line-height: 1.1;
+  --text-display: clamp(1.75rem, 3.6vw, 2.5rem);
+  --text-display--line-height: 1.1;
+  --text-display-lg: clamp(1.9rem, 3.8vw, 2.75rem);
+  --text-display-lg--line-height: 1.1;
+  --text-display-xl: clamp(2.1rem, 5vw, 3.25rem);
+  --text-display-xl--line-height: 1.12;
+
+  /* Shadows — CAUSEY-DESIGN-SYSTEM.txt §5.4. Soft and cool, never neon. */
+  --shadow-panel: 0 12px 40px rgba(20, 24, 28, 0.06);
+  --shadow-panel-lg: 0 20px 60px rgba(20, 24, 28, 0.08);
+  --shadow-card: 0 14px 40px rgba(27, 33, 32, 0.1);
+  --shadow-card-hover: 0 18px 44px rgba(27, 33, 32, 0.1);
+  --shadow-cta: 0 6px 20px rgba(194, 59, 50, 0.28);
+
+  /* Brand easing curves — §10. */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-structured: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fonts are loaded by next/font in app/layout.tsx onto these variables. */
+@theme inline {
+  --font-sans: var(--font-source), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-serif), ui-serif, Georgia, serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-source), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand-blue) 35%, white);
+  color: var(--foreground);
+}
+
+/* Shared field styling — §8.6. One class, reused by every input/select. */
+.field {
+  height: 2.75rem;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--field-border);
+  background: var(--field);
+  padding-inline: 0.875rem;
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 200ms var(--ease-structured), box-shadow 200ms var(--ease-structured);
+}
+.field::placeholder {
+  color: var(--muted);
+}
+.field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.field[aria-invalid="true"] {
+  border-color: rgba(239, 68, 68, 0.7);
+}
+select.field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%235a6570' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+}
+
+/* Primary CTA — §8.2. */
+.cta-enabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: var(--text-base);
+  transition: background-color 200ms var(--ease-brand), transform 200ms var(--ease-brand),
+    box-shadow 200ms var(--ease-brand);
+}
+.cta-enabled:hover {
+  background: var(--brand-red-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-cta);
+}
+.cta-disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+  color: var(--brand-red);
+  border: 1px solid color-mix(in srgb, var(--brand-red) 25%, transparent);
+  font-weight: 600;
+  font-size: var(--text-base);
+  cursor: not-allowed;
+}
+
+/* Hairline rule between major bands — §5.3. */
+.section-rule {
+  border-top: 1px solid var(--line);
+}
+
+/* Interactive-card hover lift — §10, only on cards that are links. */
+.card-lift {
+  transition: transform 200ms var(--ease-brand), box-shadow 200ms var(--ease-brand);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Coordinate-grid motif — §7. Access shouldn't depend on where you live;
+ * the grid is the zip-code map. ::before layer only so the mask never fades
+ * text. Used on the search band, nowhere else. */
+.access-grid {
+  position: relative;
+}
+.access-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(to right, rgba(20, 24, 28, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(20, 24, 28, 0.05) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 20%, black 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 90% at 50% 20%, black 40%, transparent 100%);
+}
+
+/* Skeleton shimmer for result loading — one job: show data is on its way. */
+.skeleton {
+  background: var(--surface-soft);
+  border-radius: var(--radius-lg);
+  animation: skeleton-pulse 1.6s var(--ease-structured) infinite;
+}
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-enabled,
+  .card-lift,
+  .field {
+    transition: none;
+  }
+  .cta-enabled:hover,
+  .card-lift:hover {
+    transform: none;
+  }
+  .skeleton {
+    animation: none;
+  }
+}
