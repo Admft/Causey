@@ -11,7 +11,8 @@
     "seed:generate": "node scripts/generate-seed.mjs",
     "seed:supabase": "tsx scripts/seed-supabase.ts",
     "seed:zips": "tsx scripts/load-zips.ts",
-    "scrape:tla": "tsx ingestion/scrape-tla.ts"
+    "scrape:tla": "tsx ingestion/scrape-tla.ts",
+    "scrape:cca": "tsx ingestion/scrape-cca.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",

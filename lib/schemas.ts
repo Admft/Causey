@@ -42,9 +42,10 @@ export const CompetitionSchema = z.object({
    * Which ingestion pipeline wrote this row.
    * - manual: hand-entered / seed
    * - tla_scrape: US Chess upcoming-tournaments scraper
+   * - cca_scrape: Continental Chess Association (chesstour.com)
    * - organizer: future partner / registration-platform feeds
    */
-  source: z.enum(["manual", "tla_scrape", "organizer"]),
+  source: z.enum(["manual", "tla_scrape", "cca_scrape", "organizer"]),
   /** Exact upstream page the scraper read (null for hand-entered rows). */
   source_url: z.string().url().nullable().default(null),
   status: CompetitionStatus.default("published"),

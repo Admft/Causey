@@ -67,9 +67,25 @@ Fees and sections are **not** auto-parsed from prose yet (`entry_fee_cents` may 
 2. Add repo secrets: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 3. Rename to `ingest.yml`
 
+## Continental Chess Association (`scrape-cca.ts`)
+
+Schedule hub: https://www.chesstour.com/refs.html
+
+```bash
+npm run scrape:cca
+
+# Listing fixture only (no listing network call)
+SCRAPE_HTML_FILE=ingestion/fixtures/cca-refs.html npm run scrape:cca
+
+# Re-upsert last staged file without re-scraping
+SCRAPE_UPSERT_ONLY=1 npm run scrape:cca
+```
+
+- Sets `source='cca_scrape'` and `source_url` to the CCA event page
+- Sets `reg_url` to https://www.chessaction.com/ (CCA's ENTER NOW target)
+- Stages to `data/staging/cca-drafts.json` before upsert
+- Requires `supabase/migrations/0003_cca_source.sql` once (adds `cca_scrape` to the source check)
+
 ## Other sources (later)
 
 Same pattern: new scraper file → new `source` value → `source_url` set to that site’s event page.
-
-- State affiliates, CCA (`chesstour.com`), chess-results.com, FIDE calendar
-- US Chess MSA ratings: `lib/ratings.ts` stub only

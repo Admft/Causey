@@ -32,3 +32,4 @@ yarn-error.log*
 # browser "Save Page As" dumps (use ingestion/fixtures/ instead)
 /Upcoming Tournaments _ US Chess.org.html
 /Upcoming Tournaments _ US Chess.org_files/
+/WebsiteHTMLs/

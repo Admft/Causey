@@ -67,9 +67,12 @@ export function parseCcaDateRange(
 
 export function slugFromCcaUrl(url: string, fallback: string): string {
   try {
-    const leaf = new URL(url).pathname.replace(/^\/+|\/+$/g, "").toLowerCase();
+    const u = new URL(url);
+    const leaf = u.pathname.replace(/^\/+|\/+$/g, "").toLowerCase();
     const base = leaf.replace(/\.html?$/i, "");
-    const cleaned = base.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const hash = u.hash.replace(/^#/, "").toLowerCase();
+    const combined = hash ? `${base}-${hash}` : base;
+    const cleaned = combined.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     if (cleaned.length >= 2) return `cca-${cleaned}`.slice(0, 80);
   } catch {
     /* fall through */
