@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (!zipRow) {
       return NextResponse.json(
         {
-          error: `Zip ${filters.zip} isn't in our lookup table yet. The MVP ships a sample of ~40 zips around seeded events — try 75201 (Dallas), 10001 (New York), 90012 (Los Angeles), or 60602 (Chicago).`,
+          error: `Zip ${filters.zip} isn't in our lookup table. If you're on mock data, only the sample zips work — run DATA_SOURCE=supabase after npm run seed:zips for full US coverage.`,
           code: "zip_not_found",
         },
         { status: 422 }

@@ -114,11 +114,16 @@ Why this matters:
 
 What exists already:
 
-- `data/zips.sample.json` with a small demo subset.
+- `data/zips.sample.json` with a small demo subset (mock mode only).
+- `scripts/load-zips.ts` — downloads the GeoNames US postal dump and upserts into Supabase.
 
 What still needs to happen:
 
-- Load the full US zip dataset into the `zips` table.
+```bash
+npm run seed:zips
+```
+
+That downloads ~40k unique 5-digit US zips into the `zips` table (idempotent). Cached extract lands in `data/staging/` (gitignored). Re-run anytime.
 
 Why this matters:
 
@@ -288,9 +293,9 @@ If you want the simplest summary:
 If someone is taking this from MVP to launch, do the work in this order:
 
 1. Stand up Supabase
-2. Load full zip data
+2. Load full zip data (`npm run seed:zips`)
 3. Fill `.env` and switch to `DATA_SOURCE=supabase`
-4. Seed the database
+4. Seed the database (`npm run seed:supabase`)
 5. Verify scraper and ingestion workflow
 6. Replace seeded qualification rules with verified ones
 7. Deploy and connect `app.causey.com`
