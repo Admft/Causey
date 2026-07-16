@@ -1,27 +1,29 @@
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   CompetitionSchema,
+  DEFAULT_SEARCH_LIMIT,
   QualificationRuleSchema,
   SectionSchema,
   SeriesSchema,
   ZipSchema,
-  type Competition,
   type QualificationRule,
   type SearchFilters,
-  type Section,
   type Series,
   type ZipRow,
 } from "@/lib/schemas";
-import { haversineMiles } from "@/lib/geo";
 import {
-  competitionNameRank,
-  competitionInDateWindow,
-  matchingSectionIds,
-} from "@/lib/data/filtering";
+  buildCompetitionResult,
+  haversineMiles,
+  paginateResults,
+  parseCompetitionRow,
+  radiusBoundingBox,
+  sortCompetitionResults,
+} from "@/lib/data/search";
 import type {
   CompetitionDetail,
   CompetitionRef,
   CompetitionResult,
+  CompetitionSearchPage,
   DataSource,
 } from "@/lib/data/types";
 
@@ -29,13 +31,10 @@ import type {
  * Supabase DataSource. Selected with DATA_SOURCE=supabase; requires
  * NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.
  *
- * Coarse predicates (status, state, date window) are pushed into SQL.
- * Radius filtering currently happens in JS over the candidate set after the
- * cheap filters — correct, and fine at MVP data volumes (hundreds of rows).
- * TODO(perf): switch to the earthdistance index in 0001_init.sql via an RPC
- * (`earth_box(ll_to_earth(...), radius)`) once the table is large enough to
- * matter. Section eligibility matching is shared with mock mode via
- * lib/data/filtering.ts so the two modes can never diverge.
+ * Coarse predicates (status, state, date, optional lat/lng box) are pushed
+ * into SQL. Without a zip we page in SQL (limit/offset). With a zip we bound
+ * the box then sort by distance in JS and page. Section eligibility matching
+ * is shared with mock mode via lib/data/filtering.ts.
  */
 
 function requireClient() {
@@ -49,70 +48,92 @@ function requireClient() {
   return client;
 }
 
+function hasSectionFilters(filters: SearchFilters): boolean {
+  return Boolean(
+    filters.grade_band || filters.rating_band || filters.max_fee_cents !== undefined
+  );
+}
+
 export class SupabaseDataSource implements DataSource {
-  async searchCompetitions(filters: SearchFilters): Promise<CompetitionResult[]> {
+  async searchCompetitions(filters: SearchFilters): Promise<CompetitionSearchPage> {
     const client = requireClient();
+    const limit = filters.limit ?? DEFAULT_SEARCH_LIMIT;
+    const offset = filters.offset ?? 0;
+    const origin = filters.zip ? await this.getZip(filters.zip) : null;
+    const radius = filters.radius_miles ?? 50;
+
+    // Fast path: no geo sort needed — page in SQL by start_date.
+    // Skip when section filters need JS (might under-fill a page).
+    const canPageInSql = !origin && !hasSectionFilters(filters) && !filters.q;
 
     let query = client
       .from("competitions")
-      .select("*, sections(*), series(*)")
+      .select("*, sections(*), series(*)", canPageInSql ? { count: "exact" } : undefined)
       .eq("status", "published");
+
     if (filters.q) query = query.ilike("name", `%${filters.q}%`);
     if (filters.state) query = query.eq("state", filters.state);
     if (filters.date_from) query = query.gte("start_date", filters.date_from);
     if (filters.date_to) query = query.lte("start_date", filters.date_to);
 
-    const { data, error } = await query;
-    if (error) throw new Error(`Supabase search failed: ${error.message}`);
+    if (origin) {
+      const box = radiusBoundingBox(origin.lat, origin.lng, radius);
+      query = query
+        .gte("lat", box.minLat)
+        .lte("lat", box.maxLat)
+        .gte("lng", box.minLng)
+        .lte("lng", box.maxLng);
+    }
 
-    const origin = filters.zip ? await this.getZip(filters.zip) : null;
-    const radius = filters.radius_miles ?? 50;
+    if (canPageInSql) {
+      query = query
+        .order("start_date", { ascending: true })
+        .range(offset, offset + limit - 1);
+    } else {
+      query = query.order("start_date", { ascending: true });
+    }
+
+    const { data, error, count } = await query;
+    if (error) throw new Error(`Supabase search failed: ${error.message}`);
 
     const results: CompetitionResult[] = [];
     for (const row of data ?? []) {
-      // Dedupe: archived secondaries (canonical_id set) stay out of search.
-      if (row.canonical_id) continue;
-      const { sections: rawSections, series: rawSeries, ...rawComp } = row;
-      const c: Competition = CompetitionSchema.parse(rawComp);
-      if (!competitionInDateWindow(c, filters)) continue;
+      const parsed = parseCompetitionRow(row as Record<string, unknown>);
+      if (!parsed) continue;
 
       let distance_miles: number | null = null;
       if (origin) {
-        distance_miles = haversineMiles(origin.lat, origin.lng, c.lat, c.lng);
+        distance_miles = haversineMiles(
+          origin.lat,
+          origin.lng,
+          parsed.competition.lat,
+          parsed.competition.lng
+        );
         if (distance_miles > radius) continue;
       }
 
-      const compSections: Section[] = (rawSections ?? []).map((s: unknown) =>
-        SectionSchema.parse(s)
-      );
-      const matching = matchingSectionIds(c, compSections, filters);
-      const hasSectionFilters =
-        filters.grade_band || filters.rating_band || filters.max_fee_cents !== undefined;
-      if (hasSectionFilters && matching.length === 0) continue;
-
-      results.push({
-        ...c,
-        sections: compSections,
-        series: rawSeries ? SeriesSchema.parse(rawSeries) : null,
+      const hit = buildCompetitionResult({
+        competition: parsed.competition,
+        sections: parsed.sections,
+        series: parsed.series,
         distance_miles,
-        matching_section_ids: matching,
+        filters,
       });
+      if (hit) results.push(hit);
     }
 
-    results.sort((a, b) => {
-      if (filters.q) {
-        const rankDelta =
-          competitionNameRank(a.name, filters.q) - competitionNameRank(b.name, filters.q);
-        if (rankDelta !== 0) return rankDelta;
-      }
-      if (a.distance_miles !== null && b.distance_miles !== null) {
-        if (Math.abs(a.distance_miles - b.distance_miles) > 0.5) {
-          return a.distance_miles - b.distance_miles;
-        }
-      }
-      return a.start_date.localeCompare(b.start_date);
-    });
-    return results;
+    if (canPageInSql) {
+      // Already paged in SQL; keep date order (no distance). Name search uses slow path.
+      return {
+        results,
+        total: count ?? results.length + offset,
+        limit,
+        offset,
+      };
+    }
+
+    sortCompetitionResults(results, filters);
+    return paginateResults(results, { ...filters, limit, offset });
   }
 
   async getCompetitionBySlug(slug: string): Promise<CompetitionDetail | null> {

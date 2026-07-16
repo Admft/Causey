@@ -17,16 +17,17 @@ import {
   type Series,
   type ZipRow,
 } from "@/lib/schemas";
-import { haversineMiles } from "@/lib/geo";
 import {
-  competitionNameRank,
-  competitionInDateWindow,
-  matchingSectionIds,
-} from "@/lib/data/filtering";
+  buildCompetitionResult,
+  paginateResults,
+  sortCompetitionResults,
+} from "@/lib/data/search";
+import { haversineMiles } from "@/lib/geo";
 import type {
   CompetitionDetail,
   CompetitionRef,
   CompetitionResult,
+  CompetitionSearchPage,
   DataSource,
 } from "@/lib/data/types";
 
@@ -52,16 +53,15 @@ const seriesById = new Map(series.map((s) => [s.id, s]));
 const zipByCode = new Map(zips.map((z) => [z.zip, z]));
 
 export class MockDataSource implements DataSource {
-  async searchCompetitions(filters: SearchFilters): Promise<CompetitionResult[]> {
+  async searchCompetitions(filters: SearchFilters): Promise<CompetitionSearchPage> {
     const origin = filters.zip ? zipByCode.get(filters.zip) ?? null : null;
     const radius = filters.radius_miles ?? 50;
 
     const results: CompetitionResult[] = [];
     for (const c of competitions) {
       if (c.status !== "published") continue;
-      if (filters.q && !c.name.toLowerCase().includes(filters.q.toLowerCase())) continue;
+      if (filters.q && !c.name.toLowerCase().includes(filters.q.trim().toLowerCase())) continue;
       if (filters.state && c.state !== filters.state) continue;
-      if (!competitionInDateWindow(c, filters)) continue;
 
       let distance_miles: number | null = null;
       if (origin) {
@@ -69,37 +69,18 @@ export class MockDataSource implements DataSource {
         if (distance_miles > radius) continue;
       }
 
-      const compSections = sectionsByCompetition.get(c.id) ?? [];
-      const matching = matchingSectionIds(c, compSections, filters);
-      // Grade/rating/fee filters are section-level: a competition with zero
-      // eligible sections is not a result.
-      const hasSectionFilters =
-        filters.grade_band || filters.rating_band || filters.max_fee_cents !== undefined;
-      if (hasSectionFilters && matching.length === 0) continue;
-
-      results.push({
-        ...c,
-        sections: compSections,
+      const hit = buildCompetitionResult({
+        competition: c,
+        sections: sectionsByCompetition.get(c.id) ?? [],
         series: c.series_id ? seriesById.get(c.series_id) ?? null : null,
         distance_miles,
-        matching_section_ids: matching,
+        filters,
       });
+      if (hit) results.push(hit);
     }
 
-    results.sort((a, b) => {
-      if (filters.q) {
-        const rankDelta =
-          competitionNameRank(a.name, filters.q) - competitionNameRank(b.name, filters.q);
-        if (rankDelta !== 0) return rankDelta;
-      }
-      if (a.distance_miles !== null && b.distance_miles !== null) {
-        if (Math.abs(a.distance_miles - b.distance_miles) > 0.5) {
-          return a.distance_miles - b.distance_miles;
-        }
-      }
-      return a.start_date.localeCompare(b.start_date);
-    });
-    return results;
+    sortCompetitionResults(results, filters);
+    return paginateResults(results, filters);
   }
 
   async getCompetitionBySlug(slug: string): Promise<CompetitionDetail | null> {

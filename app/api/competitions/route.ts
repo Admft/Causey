@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataSource } from "@/lib/data";
-import { SearchFiltersSchema } from "@/lib/schemas";
+import { DEFAULT_SEARCH_LIMIT, SearchFiltersSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/competitions — search published competitions.
  * Query params mirror SearchFiltersSchema (q, zip, radius_miles, state,
- * grade_band, rating_band, max_fee_cents, date_from, date_to).
+ * grade_band, rating_band, max_fee_cents, date_from, date_to, limit, offset).
+ * Returns { results, total, limit, offset, count } — tiles page in chunks
+ * (default limit 20) so the first load stays fast.
  */
 export async function GET(request: NextRequest) {
   const raw = Object.fromEntries(
@@ -26,7 +28,11 @@ export async function GET(request: NextRequest) {
   }
 
   const data = getDataSource();
-  const filters = parsed.data;
+  const filters = {
+    ...parsed.data,
+    limit: parsed.data.limit ?? DEFAULT_SEARCH_LIMIT,
+    offset: parsed.data.offset ?? 0,
+  };
 
   // A zip the lookup table doesn't know is a user-fixable problem — report
   // it specifically instead of silently searching the whole country.
@@ -43,6 +49,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const results = await data.searchCompetitions(filters);
-  return NextResponse.json({ results, count: results.length });
+  const page = await data.searchCompetitions(filters);
+  return NextResponse.json({
+    results: page.results,
+    total: page.total,
+    limit: page.limit,
+    offset: page.offset,
+    count: page.results.length,
+  });
 }

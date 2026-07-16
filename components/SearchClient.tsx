@@ -4,23 +4,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
 import { CompetitionCard } from "@/components/CompetitionCard";
-import { EMPTY_FILTERS, SearchFilters, type FilterState } from "@/components/SearchFilters";
+import { SearchFilters, type FilterState } from "@/components/SearchFilters";
 
 /**
  * The whole search experience: zip + radius up top, filter rail, results.
  * Filter state mirrors into the URL so searches are shareable, and every
  * fetch goes through /api/competitions — the same endpoint external clients
- * would use.
+ * would use. Tiles load in pages (default 20) so the first paint stays fast.
  */
 
 const RADII = ["10", "25", "50", "100", "250"];
-const PAGE_SIZES = ["20", "50", "100", "all"] as const;
-const DEFAULT_PAGE_SIZE = "20";
+const PAGE_SIZES = ["20", "50", "100"] as const;
+const DEFAULT_PAGE_SIZE = 20;
 
 type Status =
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "ready"; results: CompetitionResult[] };
+  | {
+      kind: "ready";
+      results: CompetitionResult[];
+      total: number;
+    };
 
 function readParams(params: URLSearchParams): {
   keyword: string;
@@ -57,7 +61,8 @@ export function SearchClient() {
   const [radius, setRadius] = useState(initial.radius);
   const [filters, setFilters] = useState<FilterState>(initial.filters);
   const [status, setStatus] = useState<Status>({ kind: "loading" });
-  const [pageSize, setPageSize] = useState<string>(DEFAULT_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const applyZip = useCallback(() => {
     const trimmed = zipInput.trim();
@@ -91,41 +96,59 @@ export function SearchClient() {
     return p;
   }, [keyword, zip, radius, filters]);
 
+  const buildApiParams = useCallback(
+    (limit: number, offset: number) => {
+      const apiParams = new URLSearchParams(query);
+      if (zip) {
+        apiParams.set("radius_miles", radius);
+        apiParams.delete("radius");
+      }
+      const fee = apiParams.get("max_fee");
+      if (fee) {
+        apiParams.set("max_fee_cents", String(Number(fee) * 100));
+        apiParams.delete("max_fee");
+      }
+      apiParams.set("limit", String(limit));
+      apiParams.set("offset", String(offset));
+      return apiParams;
+    },
+    [query, zip, radius]
+  );
+
   const abortRef = useRef<AbortController | null>(null);
   useEffect(() => {
     router.replace(query.size ? `${pathname}?${query}` : pathname, { scroll: false });
-
-    const apiParams = new URLSearchParams(query);
-    if (zip) {
-      apiParams.set("radius_miles", radius);
-      apiParams.delete("radius");
-    }
-    const fee = apiParams.get("max_fee");
-    if (fee) {
-      apiParams.set("max_fee_cents", String(Number(fee) * 100));
-      apiParams.delete("max_fee");
-    }
 
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     setStatus({ kind: "loading" });
+    setLoadingMore(false);
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/competitions?${apiParams}`, { signal: controller.signal });
+        const res = await fetch(`/api/competitions?${buildApiParams(pageSize, 0)}`, {
+          signal: controller.signal,
+        });
         const body = await res.json();
         if (!res.ok) {
-          setStatus({ kind: "error", message: body.error ?? "Search failed. Reload and try again." });
+          setStatus({
+            kind: "error",
+            message: body.error ?? "Search failed. Reload and try again.",
+          });
           return;
         }
-        setStatus({ kind: "ready", results: body.results });
-        setPageSize(DEFAULT_PAGE_SIZE);
-      } catch (err) {
+        setStatus({
+          kind: "ready",
+          results: body.results ?? [],
+          total: body.total ?? body.results?.length ?? 0,
+        });
+      } catch {
         if (controller.signal.aborted) return;
         setStatus({
           kind: "error",
-          message: "Couldn't reach the search API. Check that the dev server is still running, then retry.",
+          message:
+            "Couldn't reach the search API. Check that the dev server is still running, then retry.",
         });
       }
     }, 250);
@@ -134,7 +157,42 @@ export function SearchClient() {
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+  }, [query, pageSize]);
+
+  const loadMore = useCallback(async () => {
+    if (status.kind !== "ready" || loadingMore) return;
+    const offset = status.results.length;
+    if (offset >= status.total) return;
+
+    setLoadingMore(true);
+    try {
+      const res = await fetch(`/api/competitions?${buildApiParams(pageSize, offset)}`);
+      const body = await res.json();
+      if (!res.ok) {
+        setStatus({
+          kind: "error",
+          message: body.error ?? "Couldn't load more tournaments.",
+        });
+        return;
+      }
+      setStatus({
+        kind: "ready",
+        results: [...status.results, ...(body.results ?? [])],
+        total: body.total ?? status.total,
+      });
+    } catch {
+      setStatus({
+        kind: "error",
+        message: "Couldn't load more tournaments. Check the connection and try again.",
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [status, loadingMore, buildApiParams, pageSize]);
+
+  const shown = status.kind === "ready" ? status.results.length : 0;
+  const total = status.kind === "ready" ? status.total : 0;
+  const hasMore = status.kind === "ready" && shown < total;
 
   return (
     <>
@@ -257,62 +315,62 @@ export function SearchClient() {
               </div>
             )}
 
-            {status.kind === "ready" && status.results.length > 0 && (() => {
-              const total = status.results.length;
-              const limit = pageSize === "all" ? total : Number(pageSize);
-              const shown = Math.min(limit, total);
-              const visible = status.results.slice(0, shown);
-              return (
-                <>
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm text-muted">
-                      <span className="font-semibold text-foreground">
-                        {total} tournament{total === 1 ? "" : "s"}
+            {status.kind === "ready" && status.results.length > 0 && (
+              <>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-muted">
+                    <span className="font-semibold text-foreground">
+                      {total} tournament{total === 1 ? "" : "s"}
+                    </span>
+                    {keyword.trim() && ` matching “${keyword.trim()}”`}
+                    {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
+                    , soonest and closest first.
+                    {shown < total && (
+                      <span className="text-muted">
+                        {" "}
+                        Showing {shown}.
                       </span>
-                      {keyword.trim() && ` matching “${keyword.trim()}”`}
-                      {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
-                      , soonest and closest first.
-                      {shown < total && (
-                        <span className="text-muted"> Showing {shown}.</span>
-                      )}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
-                        Show
-                      </label>
-                      <select
-                        id="page-size"
-                        className="field h-9 w-auto py-0 pr-8 text-sm"
-                        value={pageSize}
-                        onChange={(e) => setPageSize(e.target.value)}
-                      >
-                        {PAGE_SIZES.map((size) => (
-                          <option key={size} value={size}>
-                            {size === "all" ? "All" : size}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
+                      Load
+                    </label>
+                    <select
+                      id="page-size"
+                      className="field h-9 w-auto py-0 pr-8 text-sm"
+                      value={String(pageSize)}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                    >
+                      {PAGE_SIZES.map((size) => (
+                        <option key={size} value={size}>
+                          {size} at a time
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    {visible.map((r) => (
-                      <CompetitionCard key={r.id} result={r} />
-                    ))}
+                </div>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  {status.results.map((r) => (
+                    <CompetitionCard key={r.id} result={r} />
+                  ))}
+                </div>
+                {hasMore && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red disabled:cursor-wait disabled:opacity-60"
+                    >
+                      {loadingMore
+                        ? "Loading…"
+                        : `Load ${Math.min(pageSize, total - shown)} more`}
+                    </button>
                   </div>
-                  {shown < total && (
-                    <div className="mt-6 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => setPageSize("all")}
-                        className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red"
-                      >
-                        Show all {total}
-                      </button>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+                )}
+              </>
+            )}
           </div>
         </div>
       </section>

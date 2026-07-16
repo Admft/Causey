@@ -28,6 +28,14 @@ export interface CompetitionResult extends Competition {
   matching_section_ids: string[];
 }
 
+/** Paginated search response — tiles load in chunks, not all at once. */
+export interface CompetitionSearchPage {
+  results: CompetitionResult[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface CompetitionDetail extends Competition {
   sections: Section[];
   series: Series | null;
@@ -44,7 +52,7 @@ export interface CompetitionRef {
 
 export interface DataSource {
   /** Published competitions matching the filters, sorted distance → date. */
-  searchCompetitions(filters: SearchFilters): Promise<CompetitionResult[]>;
+  searchCompetitions(filters: SearchFilters): Promise<CompetitionSearchPage>;
   getCompetitionBySlug(slug: string): Promise<CompetitionDetail | null>;
   /** Lightweight list for pickers (pathway explorer). */
   listCompetitionRefs(): Promise<CompetitionRef[]>;

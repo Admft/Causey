@@ -133,5 +133,10 @@ export const SearchFiltersSchema = z.object({
   max_fee_cents: z.coerce.number().int().nonnegative().optional(),
   date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  /** Page size for tile loading. Defaults to 20; max 100 per request. */
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  offset: z.coerce.number().int().nonnegative().optional(),
 });
 export type SearchFilters = z.infer<typeof SearchFiltersSchema>;
+
+export const DEFAULT_SEARCH_LIMIT = 20;
