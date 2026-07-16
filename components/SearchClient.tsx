@@ -14,6 +14,8 @@ import { EMPTY_FILTERS, SearchFilters, type FilterState } from "@/components/Sea
  */
 
 const RADII = ["10", "25", "50", "100", "250"];
+const PAGE_SIZES = ["20", "50", "100", "all"] as const;
+const DEFAULT_PAGE_SIZE = "20";
 
 type Status =
   | { kind: "loading" }
@@ -48,6 +50,7 @@ export function SearchClient() {
   const [radius, setRadius] = useState(initial.radius);
   const [filters, setFilters] = useState<FilterState>(initial.filters);
   const [status, setStatus] = useState<Status>({ kind: "loading" });
+  const [pageSize, setPageSize] = useState<string>(DEFAULT_PAGE_SIZE);
 
   const applyZip = useCallback(() => {
     const trimmed = zipInput.trim();
@@ -109,6 +112,7 @@ export function SearchClient() {
           return;
         }
         setStatus({ kind: "ready", results: body.results });
+        setPageSize(DEFAULT_PAGE_SIZE);
       } catch (err) {
         if (controller.signal.aborted) return;
         setStatus({
@@ -229,22 +233,61 @@ export function SearchClient() {
               </div>
             )}
 
-            {status.kind === "ready" && status.results.length > 0 && (
-              <>
-                <p className="mb-4 text-sm text-muted">
-                  <span className="font-semibold text-foreground">
-                    {status.results.length} tournament{status.results.length === 1 ? "" : "s"}
-                  </span>
-                  {zip ? ` within ${radius} miles of ${zip}` : " across all seeded states"}
-                  , soonest and closest first.
-                </p>
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  {status.results.map((r) => (
-                    <CompetitionCard key={r.id} result={r} />
-                  ))}
-                </div>
-              </>
-            )}
+            {status.kind === "ready" && status.results.length > 0 && (() => {
+              const total = status.results.length;
+              const limit = pageSize === "all" ? total : Number(pageSize);
+              const shown = Math.min(limit, total);
+              const visible = status.results.slice(0, shown);
+              return (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-muted">
+                      <span className="font-semibold text-foreground">
+                        {total} tournament{total === 1 ? "" : "s"}
+                      </span>
+                      {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
+                      , soonest and closest first.
+                      {shown < total && (
+                        <span className="text-muted"> Showing {shown}.</span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
+                        Show
+                      </label>
+                      <select
+                        id="page-size"
+                        className="field h-9 w-auto py-0 pr-8 text-sm"
+                        value={pageSize}
+                        onChange={(e) => setPageSize(e.target.value)}
+                      >
+                        {PAGE_SIZES.map((size) => (
+                          <option key={size} value={size}>
+                            {size === "all" ? "All" : size}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    {visible.map((r) => (
+                      <CompetitionCard key={r.id} result={r} />
+                    ))}
+                  </div>
+                  {shown < total && (
+                    <div className="mt-6 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setPageSize("all")}
+                        className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red"
+                      >
+                        Show all {total}
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       </section>
