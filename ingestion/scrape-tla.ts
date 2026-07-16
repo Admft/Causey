@@ -23,6 +23,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
+import type { Competition } from "../lib/schemas";
 import {
   normalizeRawTla,
   SCRAPER_SITE,
@@ -93,6 +94,21 @@ async function loadListingPages(): Promise<RawTla[]> {
 
 async function main() {
   console.log(`Scraper: ${SCRAPER_SITE} → source='tla_scrape'`);
+
+  // Re-upsert last successful scrape without re-fetching the web.
+  if (process.env.SCRAPE_UPSERT_ONLY === "1") {
+    const outPath = join(process.cwd(), "data", "staging", "tla-drafts.json");
+    const drafts = JSON.parse(readFileSync(outPath, "utf8")) as Competition[];
+    console.log(`Upsert-only mode: loading ${drafts.length} rows from ${outPath}`);
+    const client = getServiceRoleClient();
+    if (!client) {
+      console.error("Need Supabase env vars for upsert-only.");
+      process.exit(1);
+    }
+    await upsertDrafts(client, drafts);
+    return;
+  }
+
   const raws = await loadListingPages();
   console.log(`Parsed ${raws.length} unique listing events.`);
   if (raws.length === 0) {
@@ -124,7 +140,7 @@ async function main() {
     return coords;
   }
 
-  const drafts = [];
+  const drafts: Competition[] = [];
   let skippedOnline = 0;
   let skippedNormalize = 0;
 
@@ -192,9 +208,7 @@ async function main() {
 
 async function upsertDrafts(
   client: NonNullable<ReturnType<typeof getServiceRoleClient>>,
-  drafts: Awaited<ReturnType<typeof normalizeRawTla>>[] extends (infer T)[]
-    ? NonNullable<T>[]
-    : never
+  drafts: Competition[]
 ) {
   const { data: existing, error: existingErr } = await client
     .from("competitions")
@@ -205,7 +219,7 @@ async function upsertDrafts(
     (existing ?? []).map((r) => [r.slug as string, r.id as string])
   );
 
-  const bySlug = new Map<string, (typeof drafts)[number]>();
+  const bySlug = new Map<string, Competition>();
   for (const d of drafts) bySlug.set(d.slug, d);
   if (bySlug.size < drafts.length) {
     console.warn(
