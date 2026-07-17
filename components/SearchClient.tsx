@@ -10,13 +10,15 @@ import {
   resultsGridClass,
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
-import Image from "next/image";
+import { ChessHeroGraphic } from "@/components/ChessHeroGraphic";
 
 /**
  * The whole search experience: zip + radius up top, filter rail, results.
  * Filter state mirrors into the URL so searches are shareable, and every
  * fetch goes through /api/competitions — the same endpoint external clients
  * would use. Tiles load in pages (default 20) so the first paint stays fast.
+ *
+ * Chess graphic size: edit CHESS_GRAPHIC_SCALE in ChessHeroGraphic.tsx
  */
 
 const RADII = ["10", "25", "50", "100", "250"];
@@ -281,24 +283,7 @@ export function SearchClient() {
             </button>
           </form>
 
-          {/* Scattered pieces photo — centered in the right half of the hero.
-              Width tracks the viewport (~20% above the previous fixed size).
-              Decorative only. */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-[46%] right-0 hidden items-center justify-center lg:flex"
-          >
-            <Image
-              src="/chess-pieces.png"
-              alt=""
-              width={2112}
-              height={2016}
-              priority
-              sizes="(min-width: 1280px) 370px, (min-width: 1024px) 341px, 0px"
-              draggable={false}
-              className="h-auto w-[clamp(21.37rem,28.9vw,23.68rem)] max-w-[90%] translate-y-1.5 select-none"
-            />
-          </div>
+          <ChessHeroGraphic />
         </div>
       </section>
 
