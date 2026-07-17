@@ -281,8 +281,9 @@ export function SearchClient() {
             </button>
           </form>
 
-          {/* Scattered pieces photo — vertically and horizontally centered
-              in the right half of the hero. Decorative only. */}
+          {/* Scattered pieces photo — centered in the right half of the hero.
+              Width tracks the viewport (~20% above the previous fixed size).
+              Decorative only. */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-0 left-[46%] right-0 hidden items-center justify-center lg:flex"
@@ -290,12 +291,12 @@ export function SearchClient() {
             <Image
               src="/chess-pieces.png"
               alt=""
-              width={660}
-              height={899}
+              width={2112}
+              height={2016}
               priority
-              sizes="(min-width: 1280px) 300px, 275px"
+              sizes="(min-width: 1280px) 370px, (min-width: 1024px) 341px, 0px"
               draggable={false}
-              className="h-auto w-[275px] select-none xl:w-[300px]"
+              className="h-auto w-[clamp(21.37rem,28.9vw,23.68rem)] max-w-[90%] translate-y-1.5 select-none"
             />
           </div>
         </div>
