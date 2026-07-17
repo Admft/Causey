@@ -62,7 +62,7 @@ export function ResultsLayoutToggle({
     <div
       role="group"
       aria-label="Result layout"
-      className="inline-flex items-center gap-1 rounded-lg border border-line bg-white p-1"
+      className="hidden items-center gap-1 rounded-lg border border-line bg-white p-1 lg:inline-flex"
     >
       {MODES.map((mode) => {
         const active = value === mode.id;
