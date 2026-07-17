@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
  * Change CHESS_GRAPHIC_SCALE only. 1 = current default.
  * Examples: 0.9 smaller · 1.05 a bit bigger · 1.1 · 1.2
  */
-export const CHESS_GRAPHIC_SCALE = 1;
+export const CHESS_GRAPHIC_SCALE = 1.2;
 
 /** Vertical nudge in rem. Positive = lower. */
 const OFFSET_Y_REM = 0.375;
