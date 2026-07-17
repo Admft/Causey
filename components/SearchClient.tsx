@@ -5,6 +5,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
 import { CompetitionCard } from "@/components/CompetitionCard";
 import { SearchFilters, type FilterState } from "@/components/SearchFilters";
+import {
+  ResultsLayoutToggle,
+  resultsGridClass,
+  type ResultsLayout,
+} from "@/components/ResultsLayoutToggle";
+import Image from "next/image";
 
 /**
  * The whole search experience: zip + radius up top, filter rail, results.
@@ -63,6 +69,7 @@ export function SearchClient() {
   const [status, setStatus] = useState<Status>({ kind: "loading" });
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [layout, setLayout] = useState<ResultsLayout>("grid2");
 
   const applyZip = useCallback(() => {
     const trimmed = zipInput.trim();
@@ -199,7 +206,7 @@ export function SearchClient() {
       {/* Zip + radius: the one bold moment on this page, on the coordinate-
           grid motif (access shouldn't depend on where you live). */}
       <section className="access-grid section-rule">
-        <div className="relative mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
+        <div className="relative mx-auto min-h-[400px] max-w-6xl px-5 py-14 sm:px-8 sm:py-16 lg:min-h-[440px]">
           <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
             Chess
           </p>
@@ -273,6 +280,24 @@ export function SearchClient() {
               Search tournaments
             </button>
           </form>
+
+          {/* Scattered pieces photo — vertically and horizontally centered
+              in the right half of the hero. Decorative only. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-[46%] right-0 hidden items-center justify-center lg:flex"
+          >
+            <Image
+              src="/chess-pieces.png"
+              alt=""
+              width={660}
+              height={899}
+              priority
+              sizes="(min-width: 1280px) 300px, 275px"
+              draggable={false}
+              className="h-auto w-[275px] select-none xl:w-[300px]"
+            />
+          </div>
         </div>
       </section>
 
@@ -284,9 +309,12 @@ export function SearchClient() {
 
           <div aria-live="polite">
             {status.kind === "loading" && (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2" aria-label="Loading results">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <div key={i} className="skeleton h-36" />
+              <div className={resultsGridClass(layout)} aria-label="Loading results">
+                {Array.from({ length: layout === "grid3" ? 9 : layout === "list" ? 5 : 6 }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`skeleton ${layout === "list" ? "h-20" : "h-36"}`}
+                  />
                 ))}
               </div>
             )}
@@ -332,27 +360,30 @@ export function SearchClient() {
                       </span>
                     )}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
-                      Load
-                    </label>
-                    <select
-                      id="page-size"
-                      className="field h-9 w-auto py-0 pr-8 text-sm"
-                      value={String(pageSize)}
-                      onChange={(e) => setPageSize(Number(e.target.value))}
-                    >
-                      {PAGE_SIZES.map((size) => (
-                        <option key={size} value={size}>
-                          {size} at a time
-                        </option>
-                      ))}
-                    </select>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <ResultsLayoutToggle value={layout} onChange={setLayout} />
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
+                        Load
+                      </label>
+                      <select
+                        id="page-size"
+                        className="field h-9 w-auto py-0 pr-8 text-sm"
+                        value={String(pageSize)}
+                        onChange={(e) => setPageSize(Number(e.target.value))}
+                      >
+                        {PAGE_SIZES.map((size) => (
+                          <option key={size} value={size}>
+                            {size} at a time
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className={resultsGridClass(layout)}>
                   {status.results.map((r) => (
-                    <CompetitionCard key={r.id} result={r} />
+                    <CompetitionCard key={r.id} result={r} layout={layout} />
                   ))}
                 </div>
                 {hasMore && (
