@@ -25,6 +25,7 @@ export type CcaDetailEnrichment = {
   titleName: string | null;
   dateText: string | null;
   endDate: string | null;
+  imageUrl: string | null;
 };
 
 const MONTHS: Record<string, number> = {
@@ -125,6 +126,7 @@ export function normalizeRawCca(
     series_id: null,
     source: CCA_SCRAPER_ID,
     source_url: raw.detailUrl,
+    image_url: detail?.imageUrl ?? null,
     status: ready ? ("published" as const) : ("draft" as const),
   };
 

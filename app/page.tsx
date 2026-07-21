@@ -32,13 +32,13 @@ export default function CompetitionTypesPage() {
     <>
       <section className="access-grid">
         <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
-          <p className="text-sm font-semibold text-brand-red">Competition discovery</p>
+          <p className="text-sm font-semibold text-brand-red">Early product preview</p>
           <h1 className="mt-2 max-w-[16ch] font-display text-display-xl font-bold tracking-tight text-foreground">
             What do you want to compete in?
           </h1>
           <p className="mt-4 max-w-xl text-md text-muted">
-            Choose a competition type to see opportunities, eligibility, costs,
-            and the paths they can open.
+            Chess is live enough to explore. Other competition types are still
+            being built. Pick a type to see what we have so far.
           </p>
         </div>
       </section>
@@ -53,7 +53,7 @@ export default function CompetitionTypesPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-                    Available now
+                    Chess first
                   </p>
                   <h2 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
                     Chess
@@ -82,7 +82,7 @@ export default function CompetitionTypesPage() {
                 aria-disabled="true"
               >
                 <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                  Coming soon
+                  Not built yet
                 </p>
                 <h2 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
                   {type.name}

@@ -170,7 +170,7 @@ async function main() {
           `\rDetail ${i + 1}/${raws.length}: ${raw.name.slice(0, 48).padEnd(48)}`
         );
         const page = await fetchHtml(raw.detailUrl);
-        detail = parseCcaDetailHtml(page);
+        detail = parseCcaDetailHtml(page, raw.detailUrl);
         await sleep(DETAIL_DELAY_MS);
       } catch (err) {
         console.warn(`\ndetail fetch failed for ${raw.detailUrl}:`, err);

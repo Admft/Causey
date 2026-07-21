@@ -73,6 +73,21 @@ describe("US Chess detail parser", () => {
       state: "TX",
       online: false,
       organizerWebsite: "https://www.texaschesscenter.com/",
+      imageUrl: null,
     });
+  });
+
+  it("extracts og:image when present on the detail page", () => {
+    const html = `
+      <html><head>
+        <meta property="og:image" content="https://cdn.example.com/events/houston-open.jpg" />
+      </head><body>
+        <div class="views-field views-field-field-event-address">
+          <p class="address"><span class="postal-code">77002</span></p>
+        </div>
+      </body></html>
+    `;
+    const detail = parseDetailHtml(html, "https://new.uschess.org/houston-open");
+    expect(detail.imageUrl).toBe("https://cdn.example.com/events/houston-open.jpg");
   });
 });

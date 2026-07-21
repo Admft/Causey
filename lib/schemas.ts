@@ -49,6 +49,11 @@ export const CompetitionSchema = z.object({
   /** Exact upstream page the scraper read (null for hand-entered rows). */
   source_url: z.string().url().nullable().default(null),
   /**
+   * Optional cover from the event/organizer page. Null is normal — UI must
+   * not reserve empty image chrome when missing.
+   */
+  image_url: z.string().url().nullable().default(null),
+  /**
    * Cross-source identity (ingestion/fingerprint.ts). Null until a scrape
    * stamps it. Search ignores rows with canonical_id set (archived dupes).
    */

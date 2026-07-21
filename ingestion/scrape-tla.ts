@@ -24,6 +24,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import type { Competition } from "../lib/schemas";
+import { extractPageImage } from "./extract-page-image";
 import {
   normalizeRawTla,
   SCRAPER_SITE,
@@ -154,7 +155,17 @@ async function main() {
           `\rDetail ${i + 1}/${raws.length}: ${raw.name.slice(0, 48).padEnd(48)}`
         );
         const html = await fetchHtml(raw.detailUrl);
-        detail = parseDetailHtml(html);
+        detail = parseDetailHtml(html, raw.detailUrl);
+        // US Chess pages often lack event photos — try the organizer site.
+        if (!detail.imageUrl && detail.organizerWebsite) {
+          try {
+            await sleep(DETAIL_DELAY_MS);
+            const orgHtml = await fetchHtml(detail.organizerWebsite);
+            detail.imageUrl = extractPageImage(orgHtml, detail.organizerWebsite);
+          } catch {
+            /* organizer sites are optional; null image is fine */
+          }
+        }
         await sleep(DETAIL_DELAY_MS);
       } catch (err) {
         console.warn(`\ndetail fetch failed for ${raw.detailUrl}:`, err);

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
+import { EarlyBuildBanner } from "@/components/EarlyBuildBanner";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -42,60 +43,63 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
       <body className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-50 border-b border-line bg-background/90 backdrop-blur-md">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-            <Link href="/" aria-label="Causey home — browse competition types">
-              <CauseyLogo size="sm" />
-            </Link>
-            <nav className="flex items-center gap-5" aria-label="Primary">
-              <Link
-                href="/"
-                className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
-              >
-                Competitions
+        <div className="sticky top-0 z-50">
+          <EarlyBuildBanner />
+          <header className="border-b border-line bg-background/90 backdrop-blur-md">
+            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
+              <Link href="/" aria-label="Causey home — browse competition types">
+                <CauseyLogo size="sm" />
               </Link>
-              <Link
-                href="/chess"
-                className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
-              >
-                Chess
-              </Link>
-              <Link
-                href="/pathways"
-                className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
-              >
-                Pathways
-              </Link>
-              <a
-                href={MARKETING.howItWorks}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="How it works — opens causey.dev in a new tab"
-                className="hidden text-sm font-medium text-muted-strong transition-colors hover:text-foreground sm:inline-flex sm:items-center sm:gap-1"
-              >
-                How it works <ExternalMark />
-              </a>
-              <a
-                href={MARKETING.team}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Team — opens causey.dev in a new tab"
-                className="hidden text-sm font-medium text-muted-strong transition-colors hover:text-foreground md:inline-flex md:items-center md:gap-1"
-              >
-                Team <ExternalMark />
-              </a>
-              <a
-                href={MARKETING.book}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Book a meeting — opens causey.dev in a new tab"
-                className="hidden items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red sm:inline-flex"
-              >
-                Book a meeting <ExternalMark />
-              </a>
-            </nav>
-          </div>
-        </header>
+              <nav className="flex items-center gap-5" aria-label="Primary">
+                <Link
+                  href="/"
+                  className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+                >
+                  Competitions
+                </Link>
+                <Link
+                  href="/chess"
+                  className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+                >
+                  Chess
+                </Link>
+                <Link
+                  href="/pathways"
+                  className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+                >
+                  Pathways
+                </Link>
+                <a
+                  href={MARKETING.howItWorks}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="How it works — opens causey.dev in a new tab"
+                  className="hidden text-sm font-medium text-muted-strong transition-colors hover:text-foreground sm:inline-flex sm:items-center sm:gap-1"
+                >
+                  How it works <ExternalMark />
+                </a>
+                <a
+                  href={MARKETING.team}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Team — opens causey.dev in a new tab"
+                  className="hidden text-sm font-medium text-muted-strong transition-colors hover:text-foreground md:inline-flex md:items-center md:gap-1"
+                >
+                  Team <ExternalMark />
+                </a>
+                <a
+                  href={MARKETING.book}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Book a meeting — opens causey.dev in a new tab"
+                  className="hidden items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red sm:inline-flex"
+                >
+                  Book a meeting <ExternalMark />
+                </a>
+              </nav>
+            </div>
+          </header>
+        </div>
 
         <main className="flex-1">{children}</main>
 
@@ -104,10 +108,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex flex-col gap-2">
               <CauseyLogo size="sm" />
               <p className="max-w-sm text-xs text-muted">
-                Events shown are illustrative seed data while Causey is
-                pre-launch — details and qualification rules are not yet
-                verified with organizers. Registration always happens on the
-                organizer&rsquo;s own site.
+                Causey is an early build. Listings and pathways may be
+                incomplete, wrong, or out of date. Always confirm details and
+                register on the organizer&rsquo;s own site.
               </p>
             </div>
             <div className="flex flex-col gap-2 text-xs">

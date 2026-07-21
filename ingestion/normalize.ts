@@ -38,6 +38,8 @@ export type DetailEnrichment = {
   organizerWebsite: string | null;
   online: boolean;
   endDate: string | null;
+  /** Best-effort cover; null when the page has nothing usable. */
+  imageUrl: string | null;
 };
 
 const MONTHS: Record<string, number> = {
@@ -183,6 +185,7 @@ export function normalizeRawTla(
     series_id: null,
     source: SCRAPER_ID,
     source_url: raw.detailUrl,
+    image_url: detail?.imageUrl ?? null,
     // Publish when we have a real location so search works; otherwise draft.
     status: ready ? ("published" as const) : ("draft" as const),
   };

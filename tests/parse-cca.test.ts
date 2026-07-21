@@ -51,6 +51,7 @@ describe("CCA listing parser", () => {
           titleName: "Southern Open",
           dateText: "July 17-19 or 18-19, 2026",
           endDate: "2026-07-19",
+          imageUrl: null,
         },
         coords: { lat: 28.3, lng: -81.5 },
       }

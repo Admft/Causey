@@ -4,6 +4,7 @@
  * without kicking off a network job.
  */
 import { load, type CheerioAPI } from "cheerio";
+import { extractPageImage } from "./extract-page-image";
 import {
   parseDateRange,
   RawTlaSchema,
@@ -86,7 +87,7 @@ export function maxPagerPage($: CheerioAPI): number {
   return max;
 }
 
-export function parseDetailHtml(html: string): DetailEnrichment {
+export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichment {
   const $ = load(html);
 
   const venueName =
@@ -123,6 +124,8 @@ export function parseDetailHtml(html: string): DetailEnrichment {
     .filter((d): d is string => Boolean(d));
   const endDate = dateTimes.length >= 2 ? dateTimes[dateTimes.length - 1]! : null;
 
+  const imageUrl = extractPageImage(html, pageUrl || LISTING_URL);
+
   return {
     venueName,
     address,
@@ -132,5 +135,6 @@ export function parseDetailHtml(html: string): DetailEnrichment {
     organizerWebsite,
     online,
     endDate,
+    imageUrl,
   };
 }

@@ -4,6 +4,7 @@
  * Detail:  https://www.chesstour.com/so26.htm etc. (old Word HTML)
  */
 import { load } from "cheerio";
+import { extractPageImage } from "./extract-page-image";
 import { stateToCode } from "./normalize";
 import {
   CCA_LISTING_URL,
@@ -162,7 +163,7 @@ export function parseCcaComingEvents(html: string, defaultYear = 2026): RawCca[]
   return rows;
 }
 
-export function parseCcaDetailHtml(html: string): CcaDetailEnrichment {
+export function parseCcaDetailHtml(html: string, pageUrl?: string): CcaDetailEnrichment {
   const $ = load(html);
   const title = $("title").first().text().replace(/\s+/g, " ").trim();
   const titleName =
@@ -230,5 +231,6 @@ export function parseCcaDetailHtml(html: string): CcaDetailEnrichment {
     titleName,
     dateText,
     endDate: dates?.end ?? null,
+    imageUrl: extractPageImage(html, pageUrl || CCA_LISTING_URL),
   };
 }

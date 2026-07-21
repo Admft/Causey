@@ -20,6 +20,7 @@ Run these in the Supabase SQL editor if not already applied:
 
 1. `0001_init.sql` … `0004_competition_name_search.sql` (existing)
 2. **`0005_ingestion_ops.sql`** — `competition_sources`, `scrape_runs`, `fingerprint`, `canonical_id`
+3. **`0006_competition_image_url.sql`** — optional `image_url` cover from scrape
 
 ## Provenance
 

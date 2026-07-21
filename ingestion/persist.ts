@@ -201,6 +201,17 @@ export async function upsertCompetitions(
         .upsert(stripped as never[], { onConflict: "slug" }));
     }
 
+    if (error?.message?.includes("image_url")) {
+      console.warn(
+        "competitions.image_url missing — run supabase/migrations/0006_competition_image_url.sql. " +
+          "Upserting without image_url for now."
+      );
+      const stripped = chunk.map(({ image_url: _drop, ...rest }) => rest);
+      ({ error } = await client
+        .from("competitions")
+        .upsert(stripped as never[], { onConflict: "slug" }));
+    }
+
     if (error?.message?.includes("cca_scrape") || error?.message?.includes("check constraint")) {
       throw new Error(
         `${error.message}\n` +

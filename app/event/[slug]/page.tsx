@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDataSource } from "@/lib/data";
 import { walkPathways } from "@/lib/qualification";
+import { CompetitionCoverImage } from "@/components/CompetitionCoverImage";
 import { EligibilityBadges } from "@/components/EligibilityBadges";
 import { PathwayList } from "@/components/PathwayList";
 import { formatDateRange, formatFeeCents } from "@/lib/format";
@@ -52,6 +53,12 @@ export default async function EventPage({ params }: Params) {
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
         {/* Left: the event itself */}
         <div>
+          <CompetitionCoverImage
+            src={competition.image_url}
+            alt=""
+            aspectClass="aspect-[2/1]"
+            className="mb-6 max-w-2xl rounded-2xl"
+          />
           <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
             Chess{competition.series ? ` · ${competition.series.name}` : ""}
           </p>
