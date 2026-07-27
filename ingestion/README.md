@@ -7,10 +7,11 @@ hand curation of **pathways** (series + qualification rules).
 listing + detail scrape
   → Zod normalize (source + source_url)
   → stage JSON under data/staging/
-  → upsert competitions (fingerprint stamped)
+  → upsert competitions (fingerprint stamped; pathway fields preserved)
   → write competition_sources (per-upstream identity)
   → link fingerprint duplicates (archive secondary, keep TLA preferred)
   → attach high-confidence series_id matches
+  → pathway enrich (heuristic majority + Claude Haiku batches for suspects)
   → log scrape_runs row
 ```
 
@@ -21,6 +22,7 @@ Run these in the Supabase SQL editor if not already applied:
 1. `0001_init.sql` … `0004_competition_name_search.sql` (existing)
 2. **`0005_ingestion_ops.sql`** — `competition_sources`, `scrape_runs`, `fingerprint`, `canonical_id`
 3. **`0006_competition_image_url.sql`** — optional `image_url` cover from scrape
+4. **`0007_pathway_enrichment.sql`** — `ingestion_sources` logos, `pathway_*` columns, `enrichment_runs`
 
 ## Provenance
 
@@ -61,16 +63,42 @@ After each scrape, `ingestion/series-match.ts` attaches **high-confidence** name
 patterns (e.g. “Texas Scholastic” in TX → Texas Scholastic series). Everything
 else stays `series_id=null` for hand linking in Supabase.
 
+Then `ingestion/enrich-pathways.ts` labels every event:
+
+| `pathway_status` | Meaning in UI |
+| --- | --- |
+| `none` | Default majority — no pathway in our data |
+| `uncertain` | Possible qualifier — tell user to check organizer site |
+| `known` | Linked series / described related tournaments |
+
+**Cost controls (OpenAI gpt-4.1-mini):**
+
+1. Free heuristic triage skips weekend opens / Swiss / blitz (no tokens).
+2. `pathway_input_hash` cache — unchanged events are not re-billed.
+3. Batched structured output (~20 events per `generateText` call).
+4. Cap: `ENRICH_MAX_AI` (default 80) suspects per run.
+5. Model default: `gpt-4.1-mini` (`ENRICH_MODEL` to override).
+
+```bash
+# After migration 0007 + OPENAI_API_KEY in .env:
+npm run enrich:pathways
+ENRICH_SOURCE=tla_scrape ENRICH_MAX_AI=40 npm run enrich:pathways
+```
+
+Scrapes call enrichment automatically when `OPENAI_API_KEY` is set.
+Set `ENRICH_PATHWAYS=0` to disable.
+
 Product surfaces:
 
 - `/pathways` — explorer (placement → unlocks)
-- Event page sidebar — “What winning here unlocks”
+- Event page sidebar — none / uncertain / known organized panel
+- Source logos on cards + Data sources section (`public/sources/`)
 - Engine: `lib/qualification.ts` (unit-tested)
 
 **Ops cadence for pathways:** review `qualification_rules` yearly when US Chess /
 state affiliates publish new criteria; bump `verified_on`. Add new `series` rows
 before inventing rules. Extend `SERIES_MATCH_RULES` when a recurring scrape
-pattern is stable.
+pattern is stable. Never let the model write `qualification_rules` directly.
 
 ## Duplicates
 

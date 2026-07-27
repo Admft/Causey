@@ -5,8 +5,13 @@ import { getDataSource } from "@/lib/data";
 import { walkPathways } from "@/lib/qualification";
 import { CompetitionCoverImage } from "@/components/CompetitionCoverImage";
 import { EligibilityBadges } from "@/components/EligibilityBadges";
-import { PathwayList } from "@/components/PathwayList";
+import { PathwayStatusPanel } from "@/components/PathwayStatusPanel";
+import { SourceBadge } from "@/components/SourceBadge";
 import { formatDateRange, formatFeeCents } from "@/lib/format";
+import type { PathwayStatus } from "@/lib/schemas";
+import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
+import { EventStandingLabel } from "@/components/EventStandingLabel";
+import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +45,13 @@ export default async function EventPage({ params }: Params) {
 
   const regHost = new URL(competition.reg_url).hostname.replace(/^www\./, "");
   const isInvitational = competition.entry_fee_cents === 0;
+  const pathwayStatus = (competition.pathway_status ??
+    (competition.series_id || unlocks.length > 0 ? "known" : "none")) as PathwayStatus;
+  const standing = eventStanding({
+    name: competition.name,
+    source: competition.source,
+    series: competition.series,
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -51,20 +63,38 @@ export default async function EventPage({ params }: Params) {
       </Link>
 
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
-        {/* Left: the event itself */}
         <div>
-          <CompetitionCoverImage
-            src={competition.image_url}
-            alt=""
-            aspectClass="aspect-[2/1]"
-            className="mb-6 max-w-2xl rounded-2xl"
-          />
-          <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-            Chess{competition.series ? ` · ${competition.series.name}` : ""}
-          </p>
+          <div className="relative mb-6 max-w-2xl">
+            {isFeaturedStanding(standing) ? (
+              <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-6 w-6" />
+            ) : null}
+            {competition.image_url ? (
+              <CompetitionCoverImage
+                src={competition.image_url}
+                alt=""
+                aspectClass="aspect-[2/1]"
+                className="rounded-2xl"
+              />
+            ) : (
+              <div
+                className="aspect-[2/1] rounded-2xl bg-surface-soft"
+                aria-hidden="true"
+              />
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+              Chess{competition.series ? ` · ${competition.series.name}` : ""}
+            </p>
+            <SourceBadge source={competition.source} />
+          </div>
           <h1 className="mt-1 max-w-[24ch] font-display text-display font-bold tracking-tight text-foreground">
             {competition.name}
           </h1>
+
+          <div className="mt-4 max-w-lg border-l-2 border-brand-red/40 pl-3">
+            <EventStandingLabel standing={standing} showHint />
+          </div>
 
           <dl className="mt-6 grid max-w-lg grid-cols-1 gap-x-8 gap-y-3 text-base sm:grid-cols-2">
             <div>
@@ -153,34 +183,14 @@ export default async function EventPage({ params }: Params) {
           </section>
         </div>
 
-        {/* Right: what a result here leads to */}
         <aside className="lg:pt-16">
-          <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6">
-            <h2 className="text-lead font-semibold text-foreground">
-              What winning here unlocks
-            </h2>
-            {unlocks.length > 0 ? (
-              <div className="mt-4">
-                <PathwayList nodes={unlocks} />
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-muted">
-                No qualification rules point out of this event in our current
-                data. Most tournaments are open entry — the invitational chains
-                start at regionals and state championships.
-              </p>
-            )}
-            <p className="mt-4 border-t border-line pt-3 text-2xs text-muted">
-              Pathway rules are seeded scaffolding pending verification against
-              official US Chess announcements.
-            </p>
-            <Link
-              href="/pathways"
-              className="mt-3 inline-block text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red"
-            >
-              Explore other placements →
-            </Link>
-          </div>
+          <PathwayStatusPanel
+            status={pathwayStatus}
+            summary={competition.pathway_summary}
+            related={competition.pathway_related}
+            unlocks={unlocks}
+            sourceUrl={competition.source_url ?? competition.reg_url}
+          />
         </aside>
       </div>
     </div>

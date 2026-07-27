@@ -13,10 +13,13 @@
     "seed:zips": "tsx scripts/load-zips.ts",
     "scrape:tla": "tsx ingestion/scrape-tla.ts",
     "scrape:cca": "tsx ingestion/scrape-cca.ts",
-    "scrape:all": "tsx ingestion/scrape-all.ts"
+    "scrape:all": "tsx ingestion/scrape-all.ts",
+    "enrich:pathways": "tsx ingestion/enrich-pathways-cli.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.20",
     "@supabase/supabase-js": "^2.50.0",
+    "ai": "^7.0.37",
     "next": "^15.3.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

@@ -8,11 +8,10 @@ import {
 } from "@/lib/schemas";
 import rulesJson from "@/data/seed/qualification_rules.json";
 import seriesJson from "@/data/seed/series.json";
-import competitionsJson from "@/data/seed/competitions.json";
 
 /**
- * The engine is tested against the real seed data — the same rules the demo
- * runs on — so a seed regression breaks tests, not just the UI.
+ * The engine is tested against the real seed series/rules graph — the same
+ * pathway scaffolding the product uses — so a seed regression breaks tests.
  */
 
 const rules: QualificationRule[] = rulesJson.map((r) => QualificationRuleSchema.parse(r));
@@ -90,12 +89,19 @@ describe("walkPathways", () => {
   });
 
   it("supports rules keyed on a single competition (from_competition_id)", () => {
-    const loneStar = competitionsJson.find(
-      (c) => c.slug === "lone-star-open-scholastic-2026"
-    )!;
+    const competitionId = "00000000-0000-4000-8000-00000000c0ff";
+    const loneStarRule: QualificationRule = {
+      id: "00000000-0000-4000-8000-00000000c001",
+      from_series_id: null,
+      from_competition_id: competitionId,
+      required_placement: 3,
+      to_series_id: TX_STATE.id,
+      notes: "test — event-scoped qualifier",
+      verified_on: "2026-01-01",
+    };
     const result = walkPathways(
-      { competition_id: loneStar.id, series_id: null, placement: 2 },
-      rules,
+      { competition_id: competitionId, series_id: null, placement: 2 },
+      [...rules, loneStarRule],
       seriesById
     );
     expect(result.map((n) => n.to_series.name)).toEqual(["Texas Scholastic Championship"]);

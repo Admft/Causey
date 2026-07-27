@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { LIVE_SOURCES, SOON_SOURCES } from "@/lib/tournament-sources";
 
 /**
@@ -25,56 +26,67 @@ export function TournamentSources() {
         </p>
 
         <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
-          <div>
-            <h3 className="text-xs font-semibold text-muted-strong">Indexing now</h3>
-            <ul className="mt-4 space-y-5">
-              {LIVE_SOURCES.map((source) => (
-                <li key={source.href}>
-                  <a
-                    href={source.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-baseline gap-1.5 text-base font-semibold text-foreground transition-colors hover:text-brand-red"
-                  >
-                    {source.name}
-                    <span aria-hidden="true" className="text-sm font-medium text-muted">
-                      ↗
-                    </span>
-                  </a>
-                  <p className="mt-0.5 max-w-md text-sm text-muted">{source.blurb}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-xs font-semibold text-muted-strong">Adding soon</h3>
-            <ul className="mt-4 space-y-5">
-              {SOON_SOURCES.map((source) => (
-                <li key={source.href}>
-                  <p className="flex flex-wrap items-baseline gap-2">
-                    <a
-                      href={source.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group inline-flex items-baseline gap-1.5 text-base font-semibold text-foreground transition-colors hover:text-brand-red"
-                    >
-                      {source.name}
-                      <span aria-hidden="true" className="text-sm font-medium text-muted">
-                        ↗
-                      </span>
-                    </a>
-                    <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                      Soon
-                    </span>
-                  </p>
-                  <p className="mt-0.5 max-w-md text-sm text-muted">{source.blurb}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <SourceColumn title="Indexing now" sources={LIVE_SOURCES} />
+          <SourceColumn title="Adding soon" sources={SOON_SOURCES} soon />
         </div>
       </div>
     </section>
+  );
+}
+
+function SourceColumn({
+  title,
+  sources,
+  soon = false,
+}: {
+  title: string;
+  sources: typeof LIVE_SOURCES;
+  soon?: boolean;
+}) {
+  return (
+    <div>
+      <h3 className="text-xs font-semibold text-muted-strong">{title}</h3>
+      <ul className="mt-4 space-y-5">
+        {sources.map((source) => {
+          const external = source.href.startsWith("http");
+          return (
+            <li key={source.id} className="flex gap-3">
+                <Image
+                  src={source.logoUrl}
+                  alt=""
+                  width={40}
+                  height={40}
+                  unoptimized
+                  className="mt-0.5 h-10 w-10 shrink-0 rounded-lg"
+                />
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-baseline gap-2">
+                  <a
+                    href={source.href}
+                    {...(external
+                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      : {})}
+                    className="group inline-flex items-baseline gap-1.5 text-base font-semibold text-foreground transition-colors hover:text-brand-red"
+                  >
+                    {source.name}
+                    {external ? (
+                      <span aria-hidden="true" className="text-sm font-medium text-muted">
+                        ↗
+                      </span>
+                    ) : null}
+                  </a>
+                  {soon ? (
+                    <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
+                      Soon
+                    </span>
+                  ) : null}
+                </p>
+                <p className="mt-0.5 max-w-md text-sm text-muted">{source.blurb}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

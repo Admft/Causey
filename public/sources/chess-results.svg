@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none" role="img" aria-label="Chess-Results">
+  <rect width="96" height="96" rx="16" fill="#2F4A3A"/>
+  <path d="M30 58V34l18-8 18 8v24l-18 8-18-8z" stroke="#F5F9FC" stroke-width="2.5" fill="none"/>
+  <path d="M48 26v40M30 34l18 8 18-8" stroke="#F5F9FC" stroke-width="2"/>
+  <text x="48" y="80" text-anchor="middle" fill="#F5F9FC" font-family="system-ui,sans-serif" font-size="8" font-weight="700">Chess-Results</text>
+</svg>

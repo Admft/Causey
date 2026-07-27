@@ -1,0 +1,21 @@
+---
+description: Causey ingestion — scrapers, dedupe, persist, scrape runs
+globs: "ingestion/**/*.{ts,tsx,md}"
+alwaysApply: false
+---
+
+# Causey ingestion
+
+## Pipeline
+1. Scrape → normalize → stage JSON under `data/staging/`
+2. Persist via `persistScrapeBatch` (not one-off upserts)
+3. Fingerprint + `competition_sources` + cross-source dedupe (`dedupe.ts`)
+4. Series match for pathways (`series-match.ts`)
+5. Log start/finish in `scrape_runs` (`scrape-run.ts`)
+
+## Rules
+- Reuse `eventFingerprint` / `SOURCE_PRIORITY` — do not invent a second dedupe scheme.
+- Publish only when location is usable; otherwise keep `draft`.
+- Automation: GitHub Actions `.github/workflows/ingest.yml` (twice weekly). Docker is optional, not primary.
+- After schema changes, update `supabase/migrations/` and `lib/schemas.ts` together.
+- Read `ingestion/README.md` + `SETUP.md` before adding a new source (Chess-Results, FIDE, state affiliates, etc.).

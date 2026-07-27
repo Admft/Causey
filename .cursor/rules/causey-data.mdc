@@ -1,0 +1,21 @@
+---
+description: Causey data layer — search API, schemas, mock vs Supabase
+globs: "{lib,app/api}/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Causey data & API
+
+## Seam
+- All product reads go through the data-source interface (`lib/data/`). Mock and Supabase must stay behavior-aligned.
+- Search returns paginated `CompetitionSearchPage` (`limit` / `offset`). Default page size ~20 — do not load everything on first paint.
+
+## Schemas
+- Zod in `lib/schemas.ts` is the contract. API routes validate inputs; do not accept raw unchecked query bags.
+- Competition fields like `fingerprint` / `canonical_id` matter for dedupe — preserve them through parse/serialize.
+
+## API routes
+- `/api/competitions`, `/api/competitions/[slug]`, `/api/pathways` — keep these the single external surface; UI should call them rather than importing DB clients in client components.
+
+## Honesty
+- Do not surface unverified organizer rules as fact. Prefer incomplete + labeled over confident wrong data.

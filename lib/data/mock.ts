@@ -23,6 +23,7 @@ import {
   sortCompetitionResults,
 } from "@/lib/data/search";
 import { haversineMiles } from "@/lib/geo";
+import { competitionIsFeatured } from "@/lib/event-standing";
 import type {
   CompetitionDetail,
   CompetitionRef,
@@ -62,6 +63,15 @@ export class MockDataSource implements DataSource {
       if (c.status !== "published") continue;
       if (filters.q && !c.name.toLowerCase().includes(filters.q.trim().toLowerCase())) continue;
       if (filters.state && c.state !== filters.state) continue;
+      if (filters.source && c.source !== filters.source) continue;
+
+      const seriesRow = c.series_id ? seriesById.get(c.series_id) ?? null : null;
+      if (
+        filters.featured &&
+        !competitionIsFeatured({ name: c.name, source: c.source, series: seriesRow })
+      ) {
+        continue;
+      }
 
       let distance_miles: number | null = null;
       if (origin) {
@@ -72,7 +82,7 @@ export class MockDataSource implements DataSource {
       const hit = buildCompetitionResult({
         competition: c,
         sections: sectionsByCompetition.get(c.id) ?? [],
-        series: c.series_id ? seriesById.get(c.series_id) ?? null : null,
+        series: seriesRow,
         distance_miles,
         filters,
       });

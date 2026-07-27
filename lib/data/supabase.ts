@@ -19,6 +19,7 @@ import {
   radiusBoundingBox,
   sortCompetitionResults,
 } from "@/lib/data/search";
+import { competitionIsFeatured } from "@/lib/event-standing";
 import type {
   CompetitionDetail,
   CompetitionRef,
@@ -63,8 +64,9 @@ export class SupabaseDataSource implements DataSource {
     const radius = filters.radius_miles ?? 50;
 
     // Fast path: no geo sort needed — page in SQL by start_date.
-    // Skip when section filters need JS (might under-fill a page).
-    const canPageInSql = !origin && !hasSectionFilters(filters) && !filters.q;
+    // Skip when JS filters need the full set (sections, name, featured).
+    const canPageInSql =
+      !origin && !hasSectionFilters(filters) && !filters.q && !filters.featured;
 
     let query = client
       .from("competitions")
@@ -73,6 +75,7 @@ export class SupabaseDataSource implements DataSource {
 
     if (filters.q) query = query.ilike("name", `%${filters.q}%`);
     if (filters.state) query = query.eq("state", filters.state);
+    if (filters.source) query = query.eq("source", filters.source);
     if (filters.date_from) query = query.gte("start_date", filters.date_from);
     if (filters.date_to) query = query.lte("start_date", filters.date_to);
 
@@ -100,6 +103,22 @@ export class SupabaseDataSource implements DataSource {
     for (const row of data ?? []) {
       const parsed = parseCompetitionRow(row as Record<string, unknown>);
       if (!parsed) continue;
+
+      if (filters.featured) {
+        const series =
+          parsed.series && typeof parsed.series === "object"
+            ? (parsed.series as { level: "local" | "state" | "national" | "international"; name: string })
+            : null;
+        if (
+          !competitionIsFeatured({
+            name: parsed.competition.name,
+            source: parsed.competition.source,
+            series,
+          })
+        ) {
+          continue;
+        }
+      }
 
       let distance_miles: number | null = null;
       if (origin) {

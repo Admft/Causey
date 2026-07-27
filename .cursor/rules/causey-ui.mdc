@@ -1,0 +1,33 @@
+---
+description: Causey UI — brand tokens, anti-vibecode, layout/copy constraints
+globs: "{app,components}/**/*.{tsx,css}"
+alwaysApply: false
+---
+
+# Causey UI
+
+Before new UI: reuse an existing pattern in this repo. If none fits, follow tokens below — do not invent a variant "because it looks modern."
+
+## Brand
+- Fonts: Source Sans 3 (UI/body), Source Serif 4 (`font-display` for headlines/wordmark). Never Inter/Roboto/system-as-brand.
+- Colors: only CSS tokens (`brand-red`, `brand-blue`, `surface`, `muted`, etc.). Red = primary action; blue = secondary/calm. Never equal-weight red+blue CTAs.
+- Banned looks: purple/indigo gradients, cream+terracotta AI default, broadsheet newspaper gimmick, dark mode by default, glow/glass/neon shadows.
+
+## Layout & components
+- One job per section; one dominant CTA per view.
+- Cards only when they hold interaction or repeating units. Default: no cards. No icon-per-feature bento grids.
+- No `rounded-full` status pills above heroes. Badges must be functional (real filter/status/category) or deleted.
+- Results layout toggle: desktop (`lg+`) only — mobile stays single column.
+- Chess hero graphic: tune via `CHESS_GRAPHIC_SCALE` in `ChessHeroGraphic.tsx`; hidden on phones, shown md+.
+
+## Copy
+- Direct, specific, student-access focused. Headlines must say something only Causey can say.
+- Avoid em-dash spam and banned filler alone: "New", "Beta", "Coming soon", "AI-powered", "Live", "Pre-launch".
+- No fake data, no ✨, no placeholder lorem. Empty/error states say what to do next.
+
+## Motion
+- Max 2–3 intentional motions per page with a real job. No staggered card fade-ins. Respect `prefers-reduced-motion`.
+
+## Full briefs
+- `CAUSEY-DESIGN-SYSTEM.txt`
+- `anti-vibecode-rules.txt`

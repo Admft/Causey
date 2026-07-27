@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
+import { SEARCH_LOAD_ALL_LIMIT } from "@/lib/schemas";
 import { CompetitionCard } from "@/components/CompetitionCard";
 import { SearchFilters, type FilterState } from "@/components/SearchFilters";
 import {
@@ -22,8 +23,19 @@ import { ChessHeroGraphic } from "@/components/ChessHeroGraphic";
  */
 
 const RADII = ["10", "25", "50", "100", "250"];
-const PAGE_SIZES = ["20", "50", "100"] as const;
+const PAGE_SIZES = [
+  { value: 20, label: "20 at a time" },
+  { value: 50, label: "50 at a time" },
+  { value: 100, label: "100 at a time" },
+  { value: "all", label: "All matching" },
+] as const;
 const DEFAULT_PAGE_SIZE = 20;
+
+type PageSize = number | "all";
+
+function resolvePageLimit(size: PageSize): number {
+  return size === "all" ? SEARCH_LOAD_ALL_LIMIT : size;
+}
 
 type Status =
   | { kind: "loading" }
@@ -46,6 +58,8 @@ function readParams(params: URLSearchParams): {
     radius: params.get("radius") ?? "50",
     filters: {
       state: params.get("state") ?? "",
+      source: params.get("source") ?? "",
+      featured: params.get("featured") === "1",
       grade_band: params.get("grade_band") ?? "",
       rating_band: params.get("rating_band") ?? "",
       max_fee_dollars: params.get("max_fee") ?? "",
@@ -69,7 +83,7 @@ export function SearchClient() {
   const [radius, setRadius] = useState(initial.radius);
   const [filters, setFilters] = useState<FilterState>(initial.filters);
   const [status, setStatus] = useState<Status>({ kind: "loading" });
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
   const [layout, setLayout] = useState<ResultsLayout>("grid2");
 
@@ -97,6 +111,8 @@ export function SearchClient() {
       p.set("radius", radius);
     }
     if (filters.state) p.set("state", filters.state);
+    if (filters.source) p.set("source", filters.source);
+    if (filters.featured) p.set("featured", "1");
     if (filters.grade_band) p.set("grade_band", filters.grade_band);
     if (filters.rating_band) p.set("rating_band", filters.rating_band);
     if (filters.max_fee_dollars) p.set("max_fee", filters.max_fee_dollars);
@@ -136,9 +152,10 @@ export function SearchClient() {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/competitions?${buildApiParams(pageSize, 0)}`, {
-          signal: controller.signal,
-        });
+        const res = await fetch(
+          `/api/competitions?${buildApiParams(resolvePageLimit(pageSize), 0)}`,
+          { signal: controller.signal }
+        );
         const body = await res.json();
         if (!res.ok) {
           setStatus({
@@ -175,7 +192,8 @@ export function SearchClient() {
 
     setLoadingMore(true);
     try {
-      const res = await fetch(`/api/competitions?${buildApiParams(pageSize, offset)}`);
+      const chunk = resolvePageLimit(pageSize);
+      const res = await fetch(`/api/competitions?${buildApiParams(chunk, offset)}`);
       const body = await res.json();
       if (!res.ok) {
         setStatus({
@@ -356,11 +374,14 @@ export function SearchClient() {
                         id="page-size"
                         className="field h-9 w-auto py-0 pr-8 text-sm"
                         value={String(pageSize)}
-                        onChange={(e) => setPageSize(Number(e.target.value))}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setPageSize(v === "all" ? "all" : Number(v));
+                        }}
                       >
                         {PAGE_SIZES.map((size) => (
-                          <option key={size} value={size}>
-                            {size} at a time
+                          <option key={String(size.value)} value={String(size.value)}>
+                            {size.label}
                           </option>
                         ))}
                       </select>
@@ -382,7 +403,9 @@ export function SearchClient() {
                     >
                       {loadingMore
                         ? "Loading…"
-                        : `Load ${Math.min(pageSize, total - shown)} more`}
+                        : pageSize === "all"
+                          ? `Load remaining ${total - shown}`
+                          : `Load ${Math.min(resolvePageLimit(pageSize), total - shown)} more`}
                     </button>
                   </div>
                 )}

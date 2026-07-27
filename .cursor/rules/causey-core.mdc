@@ -1,0 +1,29 @@
+---
+description: Causey project core — stack, early-build honesty, where truth lives
+alwaysApply: true
+---
+
+# Causey core
+
+Student competition discovery app. Chess is the working surface today; other types are not ready.
+
+## Stack
+- Next.js App Router, React 19, Tailwind v4, Zod, Supabase
+- `DATA_SOURCE=mock` locally by default; Supabase when configured
+- Scrapers live in `ingestion/` (TLA, CCA); do not invent new scrape paths without reading existing ones
+
+## Early-build honesty
+- Product is unfinished. Do not write copy that implies a polished, complete, or fully verified product.
+- Prefer specific truth: "Chess search is usable; expect incomplete data" over empty "Beta" / "Coming soon" / "Live" / "Now available" badges.
+- Site-wide status lives in `EarlyBuildBanner` + footer. Do not add decorative status pills above H1s.
+- Never fabricate listings, fees, pathways, testimonials, or counts. Label illustrative seed data when it is not verified.
+
+## Sources of truth (read before inventing)
+- Design: `CAUSEY-DESIGN-SYSTEM.txt` + `app/globals.css` tokens
+- Anti-AI-slop UI: `anti-vibecode-rules.txt`
+- Setup / ops: `SETUP.md`, `ingestion/README.md`
+
+## Defaults
+- Reuse existing components, class patterns (`.field`, `.cta-enabled`, `.section-rule`, `.card-lift`), and tokens. No one-off hex or `text-[13px]`.
+- External links: new-tab mark + aria-label.
+- CTAs name the next action ("Search tournaments", "Book a meeting"), not "Learn more" / "Get started".

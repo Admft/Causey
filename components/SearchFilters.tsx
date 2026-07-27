@@ -1,6 +1,8 @@
 "use client";
 
 import { GRADE_BANDS, RATING_BANDS } from "@/lib/schemas";
+import { INGESTION_SOURCES } from "@/lib/ingestion-sources";
+import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 
 /**
  * Filter sidebar for the search page. Controlled component — state lives in
@@ -9,6 +11,8 @@ import { GRADE_BANDS, RATING_BANDS } from "@/lib/schemas";
 
 export interface FilterState {
   state: string;
+  source: string;
+  featured: boolean;
   grade_band: string;
   rating_band: string;
   max_fee_dollars: string;
@@ -18,6 +22,8 @@ export interface FilterState {
 
 export const EMPTY_FILTERS: FilterState = {
   state: "",
+  source: "",
+  featured: false,
   grade_band: "",
   rating_band: "",
   max_fee_dollars: "",
@@ -33,6 +39,15 @@ const FEE_CEILINGS = [
   { value: "40", label: "$40 or less" },
   { value: "60", label: "$60 or less" },
   { value: "100", label: "$100 or less" },
+];
+
+/** Live scrape hubs + manual seed rows — values match competitions.source. */
+const SOURCE_OPTIONS = [
+  ...INGESTION_SOURCES.filter((s) => s.competitionSource).map((s) => ({
+    value: s.competitionSource as string,
+    label: s.name,
+  })),
+  { value: "manual", label: "Hand-entered / seed" },
 ];
 
 function Field({
@@ -64,7 +79,9 @@ export function SearchFilters({
   const set = (key: keyof FilterState) => (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) =>
     onChange({ ...filters, [key]: e.target.value });
 
-  const active = Object.values(filters).some((v) => v !== "");
+  const active =
+    filters.featured ||
+    Object.entries(filters).some(([key, v]) => key !== "featured" && v !== "");
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,6 +97,31 @@ export function SearchFilters({
           </button>
         )}
       </div>
+
+      <button
+        type="button"
+        aria-pressed={filters.featured}
+        onClick={() => onChange({ ...filters, featured: !filters.featured })}
+        className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors ${
+          filters.featured
+            ? "border-brand-red/40 bg-accent-soft text-brand-red"
+            : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
+        }`}
+      >
+        <FeaturedAwardMark className="h-4 w-4" />
+        Featured only
+      </button>
+
+      <Field id="filter-source" label="Data source">
+        <select id="filter-source" className="field" value={filters.source} onChange={set("source")}>
+          <option value="">All sources</option>
+          {SOURCE_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </Field>
 
       <Field id="filter-grade" label="Grade">
         <select id="filter-grade" className="field" value={filters.grade_band} onChange={set("grade_band")}>

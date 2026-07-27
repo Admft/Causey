@@ -1,0 +1,15 @@
+---
+description: Pathway enrichment + source logos — cost-aware OpenAI usage
+globs: "ingestion/**/*.{ts,md}"
+alwaysApply: false
+---
+
+# Pathway enrichment
+
+- Model: `gpt-4.1-mini` via `@ai-sdk/openai` (`OPENAI_API_KEY` in `.env`).
+- Never write `qualification_rules` from the model. Proposals stay on `pathway_*` columns / related JSON.
+- Always triage with `pathway-triage.ts` first — majority must be `none` without tokens.
+- Cache with `pathway_input_hash` + `PROMPT_VERSION`; do not re-bill unchanged rows.
+- Batch structured `generateText` + `Output.object` (~20/call). Cap with `ENRICH_MAX_AI`.
+- Upsert scrapes must strip `pathway_*` so enrichment is not wiped.
+- Source logos: `public/sources/*.svg` + `lib/ingestion-sources.ts` + migration `0007`.

@@ -17,6 +17,14 @@ export const SeriesSchema = z.object({
 
 export const CompetitionStatus = z.enum(["draft", "published", "archived"]);
 
+/** Pathway honesty for scraped events — default majority is none. */
+export const PathwayStatusSchema = z.enum(["none", "uncertain", "known"]);
+
+export const PathwayRelatedSchema = z.object({
+  name: z.string().min(1),
+  note: z.string().optional(),
+});
+
 export const CompetitionSchema = z.object({
   id: z.string().uuid(),
   slug: z.string().min(1),
@@ -59,6 +67,16 @@ export const CompetitionSchema = z.object({
    */
   fingerprint: z.string().nullable().optional(),
   canonical_id: z.string().uuid().nullable().optional(),
+  /**
+   * Pathway enrichment (ingestion/enrich-pathways.ts). Scrapers leave defaults;
+   * upsert must not wipe these on every scrape.
+   */
+  pathway_status: PathwayStatusSchema.default("none"),
+  pathway_summary: z.string().nullable().optional().default(null),
+  pathway_related: z.array(PathwayRelatedSchema).optional().default([]),
+  pathway_input_hash: z.string().nullable().optional(),
+  pathway_model: z.string().nullable().optional(),
+  pathway_enriched_at: z.string().nullable().optional(),
   status: CompetitionStatus.default("published"),
 });
 
@@ -100,10 +118,13 @@ export const ZipSchema = z.object({
 });
 
 export type Series = z.infer<typeof SeriesSchema>;
+export type SeriesLevel = z.infer<typeof SeriesLevel>;
 export type Competition = z.infer<typeof CompetitionSchema>;
 export type Section = z.infer<typeof SectionSchema>;
 export type QualificationRule = z.infer<typeof QualificationRuleSchema>;
 export type ZipRow = z.infer<typeof ZipSchema>;
+export type PathwayStatus = z.infer<typeof PathwayStatusSchema>;
+export type PathwayRelated = z.infer<typeof PathwayRelatedSchema>;
 
 /** Grade bands offered as search filters. Values are inclusive grade ranges. */
 export const GRADE_BANDS = {
@@ -133,15 +154,24 @@ export const SearchFiltersSchema = z.object({
   zip: z.string().regex(/^\d{5}$/).optional(),
   radius_miles: z.coerce.number().positive().max(3000).optional(),
   state: z.string().length(2).optional(),
+  /** Which scrape hub wrote the row — e.g. tla_scrape (US Chess), cca_scrape. */
+  source: z.enum(["manual", "tla_scrape", "cca_scrape", "organizer"]).optional(),
+  /** Only national / international / named major opens (award-tier). */
+  featured: z
+    .union([z.literal("1"), z.literal("true"), z.boolean()])
+    .optional()
+    .transform((v) => v === true || v === "1" || v === "true"),
   grade_band: z.enum(["k3", "k6", "k8", "hs"]).optional(),
   rating_band: z.enum(["unrated", "u800", "u1200", "u1600", "open"]).optional(),
   max_fee_cents: z.coerce.number().int().nonnegative().optional(),
   date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  /** Page size for tile loading. Defaults to 20; max 100 per request. */
-  limit: z.coerce.number().int().positive().max(100).optional(),
+  /** Page size for tile loading. Defaults to 20; max 2000 (for “load all”). */
+  limit: z.coerce.number().int().positive().max(2000).optional(),
   offset: z.coerce.number().int().nonnegative().optional(),
 });
 export type SearchFilters = z.infer<typeof SearchFiltersSchema>;
 
 export const DEFAULT_SEARCH_LIMIT = 20;
+/** Cap used when the UI asks for every matching row. */
+export const SEARCH_LOAD_ALL_LIMIT = 2000;

@@ -9,6 +9,7 @@ import type { Competition } from "../lib/schemas";
 import { linkFingerprintDuplicates, writeCompetitionSources } from "./dedupe";
 import { eventFingerprint } from "./fingerprint";
 import { attachSeriesMatches } from "./series-match";
+import { enrichPathways } from "./enrich-pathways";
 import {
   finishScrapeRun,
   startScrapeRun,
@@ -44,6 +45,7 @@ export type PersistResult = {
   upserted: number;
   duplicatesLinked: number;
   seriesAttached: number;
+  pathwaysEnriched: number;
 };
 
 /**
@@ -133,15 +135,28 @@ export async function persistScrapeBatch(
       );
     }
 
+    let pathwaysEnriched = 0;
+    try {
+      const enrich = await enrichPathways(client, {
+        competitionIds: resolved.map((d) => d.id),
+        source,
+      });
+      pathwaysEnriched = enrich.updated;
+    } catch (err) {
+      console.warn(
+        `Pathway enrich skipped: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+
     await finishScrapeRun(client, runId, "succeeded", {
       rows_staged: drafts.length,
       rows_upserted: upserted,
       duplicates_linked: duplicatesLinked,
       series_attached: seriesAttached,
-      meta: opts.meta,
+      meta: { ...opts.meta, pathways_enriched: pathwaysEnriched },
     });
 
-    return { upserted, duplicatesLinked, seriesAttached };
+    return { upserted, duplicatesLinked, seriesAttached, pathwaysEnriched };
   } catch (err) {
     await finishScrapeRun(
       client,
@@ -177,10 +192,22 @@ export async function upsertCompetitions(
     );
   }
 
-  const payload = [...bySlug.values()].map((d) => ({
-    ...d,
-    id: idBySlug.get(d.slug) ?? d.id,
-  }));
+  const payload = [...bySlug.values()].map((d) => {
+    // Pathway fields are owned by enrich-pathways — never wipe on scrape upsert.
+    const {
+      pathway_status: _ps,
+      pathway_summary: _psum,
+      pathway_related: _pr,
+      pathway_input_hash: _ph,
+      pathway_model: _pm,
+      pathway_enriched_at: _pe,
+      ...rest
+    } = d;
+    return {
+      ...rest,
+      id: idBySlug.get(d.slug) ?? d.id,
+    };
+  });
 
   const BATCH = 200;
   let upserted = 0;

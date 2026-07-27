@@ -205,14 +205,5 @@
     "to_series_id": "00000000-0000-4000-8000-000000000105",
     "notes": "Denker champion receives an invitation to the U.S. Junior Championship. SEED SCAFFOLDING — the real Denker prize is a scholarship; this edge exists to demonstrate a 3-hop chain and must be replaced with a verified rule.",
     "verified_on": "2026-07-01"
-  },
-  {
-    "id": "00000000-0000-4000-8000-000000000424",
-    "from_series_id": null,
-    "from_competition_id": "00000000-0000-4000-8000-000000002006",
-    "required_placement": 3,
-    "to_series_id": "00000000-0000-4000-8000-000000000106",
-    "notes": "Top 3 in the Lone Star Open Scholastic Championship section earn a qualifier seed into the Texas Scholastic Championship. SEED SCAFFOLDING — example of a rule attached to a single event rather than a series.",
-    "verified_on": "2026-07-01"
   }
 ]

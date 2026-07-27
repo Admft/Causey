@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none" role="img" aria-label="State affiliates">
+  <rect width="96" height="96" rx="16" fill="#4A5A6A"/>
+  <path d="M28 58c0-12 9-22 20-22s20 10 20 22" stroke="#F5F9FC" stroke-width="2.5" fill="none"/>
+  <circle cx="48" cy="30" r="8" stroke="#F5F9FC" stroke-width="2.5" fill="none"/>
+  <text x="48" y="78" text-anchor="middle" fill="#F5F9FC" font-family="system-ui,sans-serif" font-size="9" font-weight="700">States</text>
+</svg>
