@@ -118,7 +118,7 @@ export function SearchFilters({
         <div
           role="group"
           aria-labelledby="filter-timing-label"
-          className="grid grid-cols-3 gap-1 rounded-lg border border-line bg-surface-soft p-1"
+          className="flex rounded-lg border border-line bg-surface-soft p-1"
         >
           {TIMING_OPTIONS.map((opt) => {
             const selected = filters.timing === opt.value;
@@ -128,7 +128,7 @@ export function SearchFilters({
                 type="button"
                 aria-pressed={selected}
                 onClick={() => onChange({ ...filters, timing: opt.value })}
-                className={`rounded-md px-2 py-2 text-xs font-semibold transition-colors ${
+                className={`flex flex-1 items-center justify-center rounded-md px-1.5 py-1.5 text-xs font-semibold leading-none transition-colors ${
                   selected
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-strong hover:text-foreground"
