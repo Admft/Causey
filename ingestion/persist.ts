@@ -1,5 +1,5 @@
 /**
- * Shared scrape persistence: stage → upsert → provenance → dedupe → series.
+ * Shared scrape persistence: stage → upsert → sections → provenance → dedupe → series.
  * Use SCRAPE_UPSERT_ONLY=1 with the staging file to skip the network scrape.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -11,23 +11,42 @@ import { eventFingerprint } from "./fingerprint";
 import { attachSeriesMatches } from "./series-match";
 import { enrichPathways } from "./enrich-pathways";
 import {
+  toSectionRows,
+  type ParsedSectionDraft,
+} from "./parse-sections";
+import {
   finishScrapeRun,
   startScrapeRun,
   type ScrapeRunSource,
 } from "./scrape-run";
 
+export type StagedCompetition = Competition & {
+  sections?: ParsedSectionDraft[];
+};
+
 export function loadDotEnv(): void {
   try {
     for (const line of readFileSync(join(process.cwd(), ".env"), "utf8").split("\n")) {
-      const m = line.match(/^([A-Z_]+)=(.*)$/);
-      if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const m = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+      if (!m) continue;
+      if (process.env[m[1]]) continue;
+      let value = m[2].trim();
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+      process.env[m[1]] = value;
     }
   } catch {
     /* no .env */
   }
 }
 
-export function stageCompetitions(filename: string, rows: Competition[]): string {
+export function stageCompetitions(filename: string, rows: StagedCompetition[]): string {
   const outDir = join(process.cwd(), "data", "staging");
   mkdirSync(outDir, { recursive: true });
   const outPath = join(outDir, filename);
@@ -36,13 +55,14 @@ export function stageCompetitions(filename: string, rows: Competition[]): string
   return outPath;
 }
 
-export function loadStagedCompetitions(filename: string): Competition[] {
+export function loadStagedCompetitions(filename: string): StagedCompetition[] {
   const path = join(process.cwd(), "data", "staging", filename);
-  return JSON.parse(readFileSync(path, "utf8")) as Competition[];
+  return JSON.parse(readFileSync(path, "utf8")) as StagedCompetition[];
 }
 
 export type PersistResult = {
   upserted: number;
+  sectionsWritten: number;
   duplicatesLinked: number;
   seriesAttached: number;
   pathwaysEnriched: number;
@@ -50,11 +70,11 @@ export type PersistResult = {
 
 /**
  * Upsert competitions for one source, then run the shared post-pipeline:
- * fingerprints, competition_sources, cross-source dedupe, series matching.
+ * sections, fingerprints, competition_sources, cross-source dedupe, series matching.
  */
 export async function persistScrapeBatch(
   client: SupabaseClient,
-  drafts: Competition[],
+  drafts: StagedCompetition[],
   source: Competition["source"],
   opts: { scrapeRunSource?: ScrapeRunSource; meta?: Record<string, unknown> } = {}
 ): Promise<PersistResult> {
@@ -65,15 +85,18 @@ export async function persistScrapeBatch(
   );
 
   try {
-    const withFp = drafts.map((d) => ({
-      ...d,
-      fingerprint: eventFingerprint({
-        name: d.name,
-        start_date: d.start_date,
-        state: d.state,
-        zip: d.zip,
-      }),
-    }));
+    const withFp = drafts.map((d) => {
+      const { sections: _s, ...comp } = d;
+      return {
+        ...comp,
+        fingerprint: eventFingerprint({
+          name: d.name,
+          start_date: d.start_date,
+          state: d.state,
+          zip: d.zip,
+        }),
+      };
+    });
 
     const upserted = await upsertCompetitions(client, withFp, source);
 
@@ -87,10 +110,20 @@ export async function persistScrapeBatch(
       (existing ?? []).map((r) => [r.slug as string, r.id as string])
     );
 
-    const resolved = withFp.map((d) => ({
+    const resolved = drafts.map((d) => ({
       ...d,
       id: idBySlug.get(d.slug) ?? d.id,
     }));
+
+    let sectionsWritten = 0;
+    try {
+      sectionsWritten = await replaceSectionsForCompetitions(client, resolved);
+      console.log(`Wrote ${sectionsWritten} section row(s).`);
+    } catch (err) {
+      console.warn(
+        `Sections write failed: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
 
     try {
       await writeCompetitionSources(
@@ -110,7 +143,18 @@ export async function persistScrapeBatch(
 
     let duplicatesLinked = 0;
     try {
-      duplicatesLinked = await linkFingerprintDuplicates(client, resolved);
+      duplicatesLinked = await linkFingerprintDuplicates(
+        client,
+        resolved.map(({ sections: _s, ...c }) => ({
+          ...c,
+          fingerprint: eventFingerprint({
+            name: c.name,
+            start_date: c.start_date,
+            state: c.state,
+            zip: c.zip,
+          }),
+        }))
+      );
       if (duplicatesLinked > 0) {
         console.log(`Linked ${duplicatesLinked} cross-source duplicate(s).`);
       }
@@ -153,10 +197,20 @@ export async function persistScrapeBatch(
       rows_upserted: upserted,
       duplicates_linked: duplicatesLinked,
       series_attached: seriesAttached,
-      meta: { ...opts.meta, pathways_enriched: pathwaysEnriched },
+      meta: {
+        ...opts.meta,
+        pathways_enriched: pathwaysEnriched,
+        sections_written: sectionsWritten,
+      },
     });
 
-    return { upserted, duplicatesLinked, seriesAttached, pathwaysEnriched };
+    return {
+      upserted,
+      sectionsWritten,
+      duplicatesLinked,
+      seriesAttached,
+      pathwaysEnriched,
+    };
   } catch (err) {
     await finishScrapeRun(
       client,
@@ -167,6 +221,32 @@ export async function persistScrapeBatch(
     );
     throw err;
   }
+}
+
+/** Delete prior sections for these competitions, then insert parsed (or Open) rows. */
+export async function replaceSectionsForCompetitions(
+  client: SupabaseClient,
+  drafts: StagedCompetition[]
+): Promise<number> {
+  const ids = drafts.map((d) => d.id);
+  if (ids.length === 0) return 0;
+
+  const BATCH = 100;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    const chunk = ids.slice(i, i + BATCH);
+    const { error } = await client.from("sections").delete().in("competition_id", chunk);
+    if (error) throw new Error(`section delete failed: ${error.message}`);
+  }
+
+  const rows = drafts.flatMap((d) => toSectionRows(d.id, d.sections ?? []));
+  let written = 0;
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const chunk = rows.slice(i, i + BATCH);
+    const { error } = await client.from("sections").insert(chunk as never[]);
+    if (error) throw new Error(`section insert failed: ${error.message}`);
+    written += chunk.length;
+  }
+  return written;
 }
 
 export async function upsertCompetitions(
@@ -194,6 +274,8 @@ export async function upsertCompetitions(
 
   const payload = [...bySlug.values()].map((d) => {
     // Pathway fields are owned by enrich-pathways — never wipe on scrape upsert.
+    // series_id is owned by curation / series-match — omit null so re-scrape
+    // does not clear a hand-linked or previously attached series.
     const {
       pathway_status: _ps,
       pathway_summary: _psum,
@@ -201,12 +283,15 @@ export async function upsertCompetitions(
       pathway_input_hash: _ph,
       pathway_model: _pm,
       pathway_enriched_at: _pe,
+      series_id,
       ...rest
     } = d;
-    return {
+    const row: Record<string, unknown> = {
       ...rest,
       id: idBySlug.get(d.slug) ?? d.id,
     };
+    if (series_id) row.series_id = series_id;
+    return row;
   });
 
   const BATCH = 200;
@@ -251,16 +336,25 @@ export async function upsertCompetitions(
       error?.message?.includes("fingerprint") ||
       error?.message?.includes("canonical_id")
     ) {
-      console.warn(
-        "fingerprint/canonical_id columns missing — run 0005_ingestion_ops.sql. " +
-          "Upserting without those fields for now (dedupe will be skipped)."
+      throw new Error(
+        `${error.message}\n` +
+          "Run supabase/migrations/0005_ingestion_ops.sql (required for scrape reliability).\n" +
+          "Then: npm run scrape:preflight"
       );
-      const stripped = chunk.map(
-        ({ fingerprint: _f, canonical_id: _c, ...rest }) => rest
+    }
+
+    if (error?.message?.includes("pathway_")) {
+      throw new Error(
+        `${error.message}\n` +
+          "Run supabase/migrations/0007_pathway_enrichment.sql, then retry."
       );
-      ({ error } = await client
-        .from("competitions")
-        .upsert(stripped as never[], { onConflict: "slug" }));
+    }
+
+    if (error?.message?.includes("entry_fee_cents") && error.message.includes("null")) {
+      throw new Error(
+        `${error.message}\n` +
+          "Run supabase/migrations/0008_nullable_entry_fee.sql so unknown fees can be null."
+      );
     }
 
     if (error) throw new Error(`Supabase upsert failed: ${error.message}`);

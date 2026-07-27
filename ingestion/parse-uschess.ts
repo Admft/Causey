@@ -126,6 +126,10 @@ export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichmen
 
   const imageUrl = extractPageImage(html, pageUrl || LISTING_URL);
 
+  const bodyText =
+    $(".views-field-body .field-content").first().text().replace(/\s+/g, " ").trim() ||
+    null;
+
   return {
     venueName,
     address,
@@ -136,5 +140,6 @@ export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichmen
     online,
     endDate,
     imageUrl,
+    bodyText,
   };
 }

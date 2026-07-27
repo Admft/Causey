@@ -15,7 +15,8 @@
     "scrape:cca": "tsx ingestion/scrape-cca.ts",
     "scrape:all": "tsx ingestion/scrape-all.ts",
     "enrich:pathways": "tsx ingestion/enrich-pathways-cli.ts",
-    "purge:stale": "tsx ingestion/purge-stale.ts"
+    "purge:stale": "tsx ingestion/purge-stale.ts",
+    "scrape:preflight": "tsx scripts/check-scrape-ready.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.20",

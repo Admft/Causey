@@ -42,7 +42,8 @@ export const CompetitionSchema = z.object({
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   reg_deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   reg_url: z.string().url(),
-  entry_fee_cents: z.number().int().nonnegative(),
+  /** null = fee not listed on source; 0 = explicitly free. */
+  entry_fee_cents: z.number().int().nonnegative().nullable(),
   rated: z.boolean(),
   rating_system: z.string().default("uschess"),
   series_id: z.string().uuid().nullable(),

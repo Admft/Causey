@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { CompetitionSchema, type Competition } from "../lib/schemas";
+import {
+  parseEventTextExtras,
+  type ParsedSectionDraft,
+} from "./parse-sections";
 
 /**
  * Maps raw scraped US Chess upcoming-tournament rows → validated Competition
@@ -40,6 +44,8 @@ export type DetailEnrichment = {
   endDate: string | null;
   /** Best-effort cover; null when the page has nothing usable. */
   imageUrl: string | null;
+  /** Free-text body used for section / fee extraction. */
+  bodyText: string | null;
 };
 
 const MONTHS: Record<string, number> = {
@@ -145,12 +151,20 @@ export type NormalizeOptions = {
   coords?: { lat: number; lng: number } | null;
 };
 
+export type NormalizedTla = {
+  competition: Competition;
+  sections: ParsedSectionDraft[];
+};
+
 export function normalizeRawTla(
   raw: RawTla,
   opts: NormalizeOptions
-): Competition | null {
+): NormalizedTla | null {
   const dates = parseDateRange(raw.dateText);
-  if (!dates) return null;
+  if (!dates) {
+    console.warn(`normalize skip (bad date): ${raw.name} — ${raw.dateText}`);
+    return null;
+  }
 
   const detail = opts.detail ?? null;
   if (detail?.online) return null; // OTB discovery product — skip online events
@@ -161,6 +175,10 @@ export function normalizeRawTla(
   const state = (detail?.state && stateToCode(detail.state)) || raw.state;
   const regUrl = detail?.organizerWebsite || raw.detailUrl;
   const ready = zip !== NEEDS_REVIEW.zip && hasCoords;
+
+  const extras = parseEventTextExtras(
+    [raw.blurb, detail?.bodyText].filter(Boolean).join("\n")
+  );
 
   const candidate = {
     id: opts.id,
@@ -179,9 +197,10 @@ export function normalizeRawTla(
     end_date: detail?.endDate ?? dates.end,
     reg_deadline: null,
     reg_url: regUrl,
-    entry_fee_cents: 0, // fees live in free text; fill later / by hand
-    rated: true,
+    entry_fee_cents: extras.entry_fee_cents,
+    rated: extras.rated,
     rating_system: "uschess",
+    // Never wipe curated series on re-scrape — omit by leaving null out of upsert.
     series_id: null,
     source: SCRAPER_ID,
     source_url: raw.detailUrl,
@@ -191,5 +210,13 @@ export function normalizeRawTla(
   };
 
   const parsed = CompetitionSchema.safeParse(candidate);
-  return parsed.success ? parsed.data : null;
+  if (!parsed.success) {
+    console.warn(
+      `normalize skip (zod): ${raw.name} — ${parsed.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; ")}`
+    );
+    return null;
+  }
+  return { competition: parsed.data, sections: extras.sections };
 }

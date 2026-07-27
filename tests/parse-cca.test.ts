@@ -52,15 +52,16 @@ describe("CCA listing parser", () => {
           dateText: "July 17-19 or 18-19, 2026",
           endDate: "2026-07-19",
           imageUrl: null,
+          bodyText: null,
         },
         coords: { lat: 28.3, lng: -81.5 },
       }
     );
-    expect(row?.source).toBe("cca_scrape");
-    expect(row?.source_url).toContain("so26.htm");
-    expect(row?.reg_url).toContain("chessaction.com");
-    expect(row?.status).toBe("published");
-    expect(row?.slug).toMatch(/^cca-/);
+    expect(row?.competition.source).toBe("cca_scrape");
+    expect(row?.competition.source_url).toContain("so26.htm");
+    expect(row?.competition.reg_url).toContain("chessaction.com");
+    expect(row?.competition.status).toBe("published");
+    expect(row?.competition.slug).toMatch(/^cca-/);
   });
 });
 

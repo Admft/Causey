@@ -49,7 +49,8 @@ export function sectionMatchesFilters(
 
   if (filters.max_fee_cents !== undefined) {
     const fee = section.entry_fee_cents ?? competition.entry_fee_cents;
-    if (fee > filters.max_fee_cents) return false;
+    // Unknown fees stay visible — don't hide events just because EF wasn't listed.
+    if (fee !== null && fee > filters.max_fee_cents) return false;
   }
 
   return true;

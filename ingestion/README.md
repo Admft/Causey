@@ -149,8 +149,13 @@ the same DB on the same schedule.
 
 ## Fees / sections
 
-Not auto-parsed yet (`entry_fee_cents` may be 0; no sections written). Enrich by
-hand or a future detail parser — pathways still work via `series_id`.
+Parsed from TLA detail body text and CCA event pages when the copy is clear
+(U1000 / Under 1800 / Major / grade bands, `$N entry fee`, free). When nothing
+is found the competition gets a single **Open** section (so rating filters
+still work) and `entry_fee_cents = null` (“Fee not listed”).
+
+Requires migrations through `0008_nullable_entry_fee.sql`. Run
+`npm run scrape:preflight` before a full scrape.
 
 ## Other sources (later)
 

@@ -45,7 +45,12 @@ export default async function EventPage({ params }: Params) {
   );
 
   const regHost = new URL(competition.reg_url).hostname.replace(/^www\./, "");
-  const isInvitational = competition.entry_fee_cents === 0;
+  const feeLabel =
+    competition.entry_fee_cents === null || competition.entry_fee_cents === undefined
+      ? "Fee not listed"
+      : competition.entry_fee_cents === 0
+        ? "No entry fee"
+        : formatFeeCents(competition.entry_fee_cents);
   const pathwayStatus = (competition.pathway_status ??
     (competition.series_id || unlocks.length > 0 ? "known" : "none")) as PathwayStatus;
   const standing = eventStanding({
@@ -113,9 +118,7 @@ export default async function EventPage({ params }: Params) {
             <div>
               <dt className="text-xs font-semibold text-muted-strong">Entry fee</dt>
               <dd className="font-semibold text-foreground">
-                {isInvitational
-                  ? "By invitation — no entry fee"
-                  : formatFeeCents(competition.entry_fee_cents)}
+                {feeLabel}
               </dd>
             </div>
             <div>
@@ -179,11 +182,11 @@ export default async function EventPage({ params }: Params) {
                       <EligibilityBadges section={section} />
                     </div>
                   </div>
-                  {section.entry_fee_cents !== null && (
+                  {section.entry_fee_cents !== null ? (
                     <p className="shrink-0 text-sm text-muted-strong">
                       {formatFeeCents(section.entry_fee_cents)} for this section
                     </p>
-                  )}
+                  ) : null}
                 </li>
               ))}
             </ul>

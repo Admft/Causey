@@ -19,7 +19,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
-import type { Competition } from "../lib/schemas";
 import {
   CCA_LISTING_URL,
   CCA_SCRAPER_ID,
@@ -37,6 +36,7 @@ import {
   loadStagedCompetitions,
   persistScrapeBatch,
   stageCompetitions,
+  type StagedCompetition,
 } from "./persist";
 
 loadDotEnv();
@@ -156,8 +156,9 @@ async function main() {
     return coords;
   }
 
-  const drafts: Competition[] = [];
+  const drafts: StagedCompetition[] = [];
   let skippedNormalize = 0;
+  let sectionsParsed = 0;
 
   for (let i = 0; i < raws.length; i++) {
     const raw = raws[i]!;
@@ -189,12 +190,17 @@ async function main() {
       skippedNormalize += 1;
       continue;
     }
-    drafts.push(row);
+    if (row.sections.length > 0) sectionsParsed += 1;
+    drafts.push({ ...row.competition, sections: row.sections });
   }
   if (!SKIP_DETAIL) process.stdout.write("\n");
 
   console.log(
     `Normalized ${drafts.length} rows (skipped normalize=${skippedNormalize}).`
+  );
+  console.log(
+    `  sections parsed on ${sectionsParsed}/${drafts.length} events ` +
+      `(others get Open fallback).`
   );
   console.log(
     `  published: ${drafts.filter((d) => d.status === "published").length}`

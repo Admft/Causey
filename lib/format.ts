@@ -1,6 +1,8 @@
 /** Display helpers shared across pages. */
 
-export function formatFeeCents(cents: number): string {
+/** null/undefined = not listed on the source page; 0 = free. */
+export function formatFeeCents(cents: number | null | undefined): string {
+  if (cents === null || cents === undefined) return "Fee not listed";
   if (cents === 0) return "No entry fee";
   return (cents / 100) % 1 === 0
     ? `$${cents / 100}`

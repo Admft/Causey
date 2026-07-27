@@ -8,6 +8,7 @@ import { extractPageImage } from "./extract-page-image";
 import { stateToCode } from "./normalize";
 import {
   CCA_LISTING_URL,
+  defaultCcaYear,
   parseCcaDateRange,
   RawCcaSchema,
   type CcaDetailEnrichment,
@@ -121,7 +122,7 @@ function parseScheduleSnippet(
     /\b((?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\.?\s+\d{1,2}(?:\s*[-–]\s*\d{1,2})?(?:[^:]{0,40})?):\s*([^,]+),\s*([^,]+?),\s*([A-Z]{2})\b/i
   );
   if (!m) return null;
-  const dateText = `${m[1].trim()}, 2026`;
+  const dateText = `${m[1].trim()}, ${defaultCcaYear()}`;
   let name = m[2].replace(/\s+/g, " ").trim();
   name = name.replace(/\bENTER NOW\b/gi, "").trim();
   if (isBlitz && !/blitz/i.test(name)) name = `${name} Blitz`;
@@ -133,7 +134,10 @@ function parseScheduleSnippet(
 }
 
 /** Harvest "COMING EVENTS" plain lines that may not have detail pages yet. */
-export function parseCcaComingEvents(html: string, defaultYear = 2026): RawCca[] {
+export function parseCcaComingEvents(
+  html: string,
+  defaultYear = defaultCcaYear()
+): RawCca[] {
   const $ = load(html);
   const text = $("body").text().replace(/\s+/g, " ");
   const rows: RawCca[] = [];
@@ -232,5 +236,6 @@ export function parseCcaDetailHtml(html: string, pageUrl?: string): CcaDetailEnr
     dateText,
     endDate: dates?.end ?? null,
     imageUrl: extractPageImage(html, pageUrl || CCA_LISTING_URL),
+    bodyText: bodyText || null,
   };
 }

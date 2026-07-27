@@ -7,10 +7,9 @@ export function normalizeEventName(name: string): string {
     .toLowerCase()
     .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, " ")
-    .replace(
-      /\b(the|a|an|chess|tournament|championships?|open|scholastic|invitational)\b/g,
-      " "
-    )
+    // Keep open / championship / scholastic — stripping them collided
+    // Dallas Open with Dallas Championship on the same weekend.
+    .replace(/\b(the|a|an|chess|tournament|invitational)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { CompetitionSchema, type Competition } from "../lib/schemas";
 import { stateToCode, slugify, NEEDS_REVIEW } from "./normalize";
+import {
+  parseEventTextExtras,
+  type ParsedSectionDraft,
+} from "./parse-sections";
 
 export const CCA_SCRAPER_ID = "cca_scrape" as const;
 export const CCA_LISTING_URL = "https://www.chesstour.com/refs.html";
@@ -26,6 +30,7 @@ export type CcaDetailEnrichment = {
   dateText: string | null;
   endDate: string | null;
   imageUrl: string | null;
+  bodyText: string | null;
 };
 
 const MONTHS: Record<string, number> = {
@@ -36,6 +41,11 @@ const MONTHS: Record<string, number> = {
 };
 
 const pad = (n: number | string) => String(n).padStart(2, "0");
+
+/** Current UTC year — CCA listings are almost always this year or next. */
+export function defaultCcaYear(now = new Date()): number {
+  return now.getUTCFullYear();
+}
 
 /**
  * CCA date lines look like:
@@ -50,7 +60,7 @@ export function parseCcaDateRange(
 ): { start: string; end: string | null } | null {
   const cleaned = text.replace(/\s+/g, " ").trim();
   const yearMatch = cleaned.match(/\b(20\d{2})\b/);
-  const year = yearMatch ? Number(yearMatch[1]) : fallbackYear;
+  const year = yearMatch ? Number(yearMatch[1]) : fallbackYear ?? defaultCcaYear();
   if (!year) return null;
 
   const m = cleaned.match(
@@ -81,6 +91,11 @@ export function slugFromCcaUrl(url: string, fallback: string): string {
   return `cca-${fallback}`.slice(0, 80);
 }
 
+export type NormalizedCca = {
+  competition: Competition;
+  sections: ParsedSectionDraft[];
+};
+
 export function normalizeRawCca(
   raw: RawCca,
   opts: {
@@ -88,10 +103,13 @@ export function normalizeRawCca(
     detail?: CcaDetailEnrichment | null;
     coords?: { lat: number; lng: number } | null;
   }
-): Competition | null {
+): NormalizedCca | null {
   const dateText = opts.detail?.dateText || raw.dateText;
   const dates = parseCcaDateRange(dateText);
-  if (!dates) return null;
+  if (!dates) {
+    console.warn(`normalize CCA skip (bad date): ${raw.name} — ${dateText}`);
+    return null;
+  }
 
   const detail = opts.detail ?? null;
   const zip =
@@ -102,6 +120,8 @@ export function normalizeRawCca(
     (detail?.state && stateToCode(detail.state)) || raw.state;
   const name = detail?.titleName?.trim() || raw.name;
   const ready = zip !== NEEDS_REVIEW.zip && hasCoords;
+
+  const extras = parseEventTextExtras(detail?.bodyText ?? "");
 
   const candidate = {
     id: opts.id,
@@ -120,8 +140,8 @@ export function normalizeRawCca(
     end_date: detail?.endDate ?? dates.end,
     reg_deadline: null,
     reg_url: CCA_REG_URL,
-    entry_fee_cents: 0,
-    rated: true,
+    entry_fee_cents: extras.entry_fee_cents,
+    rated: extras.rated,
     rating_system: "uschess",
     series_id: null,
     source: CCA_SCRAPER_ID,
@@ -131,5 +151,13 @@ export function normalizeRawCca(
   };
 
   const parsed = CompetitionSchema.safeParse(candidate);
-  return parsed.success ? parsed.data : null;
+  if (!parsed.success) {
+    console.warn(
+      `normalize CCA skip (zod): ${name} — ${parsed.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; ")}`
+    );
+    return null;
+  }
+  return { competition: parsed.data, sections: extras.sections };
 }

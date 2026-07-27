@@ -33,6 +33,22 @@ describe("eventFingerprint", () => {
     expect(a).not.toBe(b);
   });
 
+  it("keeps open/championship distinct (no false merges)", () => {
+    const open = eventFingerprint({
+      name: "Dallas Open",
+      start_date: "2026-08-01",
+      state: "TX",
+      zip: "75201",
+    });
+    const champ = eventFingerprint({
+      name: "Dallas Championship",
+      start_date: "2026-08-01",
+      state: "TX",
+      zip: "75201",
+    });
+    expect(open).not.toBe(champ);
+  });
+
   it("omits review-sentinel zip from the fingerprint", () => {
     const withSentinel = eventFingerprint({
       name: "Dallas Open",
@@ -67,5 +83,11 @@ describe("matchSeriesId", () => {
 
   it("leaves ordinary opens unattached", () => {
     expect(matchSeriesId("Irving Swiss", "TX")).toBeNull();
+  });
+
+  it("does not false-match Barber shop or junior open qualifier", () => {
+    expect(matchSeriesId("Local Barber Swiss", "NY")).toBeNull();
+    expect(matchSeriesId("US Junior Open Qualifier", "CA")).toBeNull();
+    expect(matchSeriesId("Illinois State Fair Chess", "IL")).toBeNull();
   });
 });

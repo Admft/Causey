@@ -30,7 +30,7 @@ export const SERIES_MATCH_RULES: SeriesMatchRule[] = [
     label: "Denker Tournament of High School Champions",
   },
   {
-    match: /barber/i,
+    match: /\bbarber\s+(?:tournament|of\s+k)/i,
     state: null,
     seriesId: "00000000-0000-4000-8000-000000000102",
     label: "Barber Tournament of K-8 Champions",
@@ -48,7 +48,7 @@ export const SERIES_MATCH_RULES: SeriesMatchRule[] = [
     label: "Haring Tournament of Girls State Champions",
   },
   {
-    match: /u\.?\s*s\.?\s*junior/i,
+    match: /\bu\.?\s*s\.?\s*junior\s+(?:championship|closed)\b/i,
     state: null,
     seriesId: "00000000-0000-4000-8000-000000000105",
     label: "U.S. Junior Championship",
@@ -72,7 +72,7 @@ export const SERIES_MATCH_RULES: SeriesMatchRule[] = [
     label: "CalChess State Scholastic Championship",
   },
   {
-    match: /illinois\s+(k-?12\s+)?state/i,
+    match: /illinois\s+(?:k-?12\s+)?state\s+(?:chess\s+)?championship/i,
     state: "IL",
     seriesId: "00000000-0000-4000-8000-000000000109",
     label: "Illinois K-12 State Championship",
