@@ -26,16 +26,7 @@ export const metadata: Metadata = {
     "Discover student competitions with eligibility, costs, and qualification pathways shown clearly.",
 };
 
-// TODO: confirm the marketing site's section anchors once causey.dev ships
-// its final nav (see SETUP.md step 7).
-const MARKETING = {
-  howItWorks: "https://causey.dev/#how-it-works",
-  team: "https://causey.dev/#team",
-  book: "https://causey.dev/#book",
-};
-
 function ExternalMark() {
-  // Always-visible new-tab mark on external links (design system §2/§8.4).
   return <span aria-hidden="true">↗</span>;
 }
 
@@ -52,25 +43,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Link>
               <nav className="flex items-center gap-5" aria-label="Primary">
                 <Link
-                  href="/"
-                  className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
-                >
-                  Competitions
-                </Link>
-                <Link
                   href="/chess"
                   className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
                 >
                   Chess
                 </Link>
-                <Link
-                  href="/pathways"
-                  className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
-                >
-                  Pathways
-                </Link>
                 <a
-                  href={MARKETING.howItWorks}
+                  href="https://causey.dev"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="How it works — opens causey.dev in a new tab"
@@ -79,16 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   How it works <ExternalMark />
                 </a>
                 <a
-                  href={MARKETING.team}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Team — opens causey.dev in a new tab"
-                  className="hidden text-sm font-medium text-muted-strong transition-colors hover:text-foreground md:inline-flex md:items-center md:gap-1"
-                >
-                  Team <ExternalMark />
-                </a>
-                <a
-                  href={MARKETING.book}
+                  href="https://causey.dev"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Book a meeting — opens causey.dev in a new tab"
@@ -114,21 +84,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </p>
             </div>
             <div className="flex flex-col gap-2 text-xs">
-              <a
-                href="https://causey.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="causey.dev — opens in a new tab"
+              <Link
+                href="/chess"
                 className="font-medium text-muted-strong transition-colors hover:text-brand-red"
               >
-                causey.dev <ExternalMark />
-              </a>
+                Chess tournaments
+              </Link>
               <Link
                 href="/pathways"
                 className="font-medium text-muted-strong transition-colors hover:text-brand-red"
               >
                 Qualification pathways
               </Link>
+              <a
+                href="https://causey.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="About Causey — opens causey.dev in a new tab"
+                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+              >
+                About Causey <ExternalMark />
+              </a>
               <p className="text-muted">© {new Date().getFullYear()} Causey</p>
             </div>
           </div>

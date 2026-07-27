@@ -12,6 +12,7 @@ import type { PathwayStatus } from "@/lib/schemas";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { EventStandingLabel } from "@/components/EventStandingLabel";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
+import { ChessSubnavBar } from "@/components/ChessSubnav";
 import { isCompetitionEnded } from "@/lib/competition-timing";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +62,9 @@ export default async function EventPage({ params }: Params) {
   const ended = isCompetitionEnded(competition);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <>
+      <ChessSubnavBar tool="tournaments" />
+      <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <Link
         href="/chess"
         className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
@@ -204,5 +207,6 @@ export default async function EventPage({ params }: Params) {
         </aside>
       </div>
     </div>
+    </>
   );
 }
