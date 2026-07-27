@@ -20,6 +20,7 @@ import {
   sortCompetitionResults,
 } from "@/lib/data/search";
 import { competitionIsFeatured } from "@/lib/event-standing";
+import { todayIsoDate } from "@/lib/competition-timing";
 import type {
   CompetitionDetail,
   CompetitionRef,
@@ -78,6 +79,20 @@ export class SupabaseDataSource implements DataSource {
     if (filters.source) query = query.eq("source", filters.source);
     if (filters.date_from) query = query.gte("start_date", filters.date_from);
     if (filters.date_to) query = query.lte("start_date", filters.date_to);
+
+    // Push upcoming/ended into SQL so paged counts stay correct.
+    // End date = end_date when set, else start_date.
+    const today = todayIsoDate();
+    const timing = filters.timing ?? "upcoming";
+    if (timing === "upcoming") {
+      query = query.or(
+        `end_date.gte.${today},and(end_date.is.null,start_date.gte.${today})`
+      );
+    } else if (timing === "ended") {
+      query = query.or(
+        `end_date.lt.${today},and(end_date.is.null,start_date.lt.${today})`
+      );
+    }
 
     if (origin) {
       const box = radiusBoundingBox(origin.lat, origin.lng, radius);

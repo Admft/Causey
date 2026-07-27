@@ -94,24 +94,35 @@ export function PathwayExplorer() {
               </option>
               {options && (
                 <>
-                  <optgroup label="Recurring series (rules attach here)">
-                    {options.series.map((s) => (
-                      <option key={s.id} value={`series:${s.id}`}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Individual events">
-                    {options.competitions.map((c) => (
-                      <option key={c.id} value={`competition:${c.id}`}>
-                        {c.name} ({c.state})
-                      </option>
-                    ))}
-                  </optgroup>
+                  {options.series.length > 0 ? (
+                    <optgroup label="Recurring series (rules attach here)">
+                      {options.series.map((s) => (
+                        <option key={s.id} value={`series:${s.id}`}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                  {options.competitions.length > 0 ? (
+                    <optgroup label="Events with a pathway">
+                      {options.competitions.map((c) => (
+                        <option key={c.id} value={`competition:${c.id}`}>
+                          {c.name} ({c.state})
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
                 </>
               )}
             </select>
           )}
+          {options &&
+            options.series.length === 0 &&
+            options.competitions.length === 0 && (
+              <p className="mt-1.5 text-xs text-muted">
+                No events with qualification pathways in the current data yet.
+              </p>
+            )}
         </div>
 
         <fieldset>
@@ -164,9 +175,9 @@ export function PathwayExplorer() {
               Pick an event to trace its pathway.
             </p>
             <p className="mt-1 max-w-prose text-sm text-muted">
-              Try the North Texas Scholastic Regional with 1st place — it chains
-              through the Texas Scholastic Championship to the Denker and
-              beyond.
+              Only series and events that unlock something at 1st place are listed.
+              Try a state championship series with 1st place to see the national
+              invitational chain.
             </p>
           </div>
         )}

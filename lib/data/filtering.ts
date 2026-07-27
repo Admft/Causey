@@ -5,6 +5,7 @@ import {
   type SearchFilters,
   type Section,
 } from "@/lib/schemas";
+import { matchesTimingFilter } from "@/lib/competition-timing";
 
 /**
  * Section-level eligibility matching, shared by both DataSource
@@ -64,13 +65,14 @@ export function matchingSectionIds(
     .map((s) => s.id);
 }
 
-/** Date-window predicate on the competition row. */
+/** Date-window + timing (upcoming / ended / all) predicate on the competition row. */
 export function competitionInDateWindow(
   competition: Competition,
   filters: SearchFilters
 ): boolean {
   if (filters.date_from && competition.start_date < filters.date_from) return false;
   if (filters.date_to && competition.start_date > filters.date_to) return false;
+  if (!matchesTimingFilter(competition, filters.timing)) return false;
   return true;
 }
 

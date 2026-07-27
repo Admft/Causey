@@ -16,7 +16,8 @@ const QuerySchema = z.object({
 
 /**
  * GET /api/pathways
- *   without ?source → picker options: every series and competition.
+ *   without ?source → picker options: series and competitions that unlock
+ *   at least one pathway hop (1st-place walk). Empty-pathway events stay out.
  *   with ?source=series:<id>|competition:<id>&placement=N → the pathway walk.
  */
 export async function GET(request: NextRequest) {
@@ -33,11 +34,30 @@ export async function GET(request: NextRequest) {
   const data = getDataSource();
 
   if (!parsed.data.source) {
-    const [series, competitions] = await Promise.all([
+    const [series, competitions, rules] = await Promise.all([
       data.listSeries(),
       data.listCompetitionRefs(),
+      data.listQualificationRules(),
     ]);
-    return NextResponse.json({ series, competitions });
+    const seriesById = new Map(series.map((s) => [s.id, s]));
+
+    const seriesWithPathways = series.filter(
+      (s) =>
+        walkPathways({ series_id: s.id, placement: 1 }, rules, seriesById).length > 0
+    );
+    const competitionsWithPathways = competitions.filter(
+      (c) =>
+        walkPathways(
+          { competition_id: c.id, series_id: c.series_id, placement: 1 },
+          rules,
+          seriesById
+        ).length > 0
+    );
+
+    return NextResponse.json({
+      series: seriesWithPathways,
+      competitions: competitionsWithPathways,
+    });
   }
 
   const [kind, id] = parsed.data.source.split(":");

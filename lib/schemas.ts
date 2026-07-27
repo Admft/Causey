@@ -166,6 +166,11 @@ export const SearchFiltersSchema = z.object({
   max_fee_cents: z.coerce.number().int().nonnegative().optional(),
   date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  /**
+   * Calendar slice: upcoming (default) = not yet ended; ended = past end;
+   * all = both. End date is end_date ?? start_date.
+   */
+  timing: z.enum(["upcoming", "ended", "all"]).optional().default("upcoming"),
   /** Page size for tile loading. Defaults to 20; max 2000 (for “load all”). */
   limit: z.coerce.number().int().positive().max(2000).optional(),
   offset: z.coerce.number().int().nonnegative().optional(),

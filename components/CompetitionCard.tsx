@@ -8,6 +8,7 @@ import { formatMiles } from "@/lib/geo";
 import { sourceByCompetitionSource } from "@/lib/ingestion-sources";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
+import { isCompetitionEnded } from "@/lib/competition-timing";
 
 /**
  * Search-result card. Layout prop densifies for list / 2×2 / 3×3 grids.
@@ -32,6 +33,7 @@ export function CompetitionCard({
     series: result.series,
   });
   const featured = isFeaturedStanding(standing);
+  const ended = isCompetitionEnded(result);
   const pathwayHint =
     result.pathway_status === "uncertain"
       ? "Pathway unconfirmed"
@@ -46,7 +48,7 @@ export function CompetitionCard({
         className="card-lift relative flex flex-col gap-3 rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:gap-4"
       >
         {featured ? (
-          <FeaturedAwardMark className="absolute left-2.5 top-2.5 z-10 h-5 w-5" />
+          <FeaturedAwardMark className="absolute left-2.5 top-2.5 z-10 h-7 w-7" />
         ) : null}
         {cover ? (
           <CompetitionCoverImage
@@ -74,6 +76,11 @@ export function CompetitionCard({
               <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted-strong">
                 {standing.label}
               </span>
+              {ended ? (
+                <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
+                  Ended
+                </span>
+              ) : null}
               <span className="text-sm font-semibold text-foreground">
                 {formatFeeCents(result.entry_fee_cents)}
               </span>
@@ -111,7 +118,7 @@ export function CompetitionCard({
       className="card-lift relative block overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]"
     >
       {featured ? (
-        <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-5 w-5" />
+        <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-8 w-8" />
       ) : null}
       {cover ? (
         <CompetitionCoverImage
@@ -144,6 +151,7 @@ export function CompetitionCard({
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
             Chess · {standing.label}
+            {ended ? " · Ended" : ""}
           </span>
           <span className={`font-semibold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
             {formatFeeCents(result.entry_fee_cents)}

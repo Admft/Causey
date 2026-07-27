@@ -60,6 +60,7 @@ function readParams(params: URLSearchParams): {
       state: params.get("state") ?? "",
       source: params.get("source") ?? "",
       featured: params.get("featured") === "1",
+      timing: parseTiming(params.get("timing")),
       grade_band: params.get("grade_band") ?? "",
       rating_band: params.get("rating_band") ?? "",
       max_fee_dollars: params.get("max_fee") ?? "",
@@ -67,6 +68,11 @@ function readParams(params: URLSearchParams): {
       date_to: params.get("date_to") ?? "",
     },
   };
+}
+
+function parseTiming(raw: string | null): FilterState["timing"] {
+  if (raw === "ended" || raw === "all" || raw === "upcoming") return raw;
+  return "upcoming";
 }
 
 export function SearchClient() {
@@ -113,6 +119,7 @@ export function SearchClient() {
     if (filters.state) p.set("state", filters.state);
     if (filters.source) p.set("source", filters.source);
     if (filters.featured) p.set("featured", "1");
+    if (filters.timing !== "upcoming") p.set("timing", filters.timing);
     if (filters.grade_band) p.set("grade_band", filters.grade_band);
     if (filters.rating_band) p.set("rating_band", filters.rating_band);
     if (filters.max_fee_dollars) p.set("max_fee", filters.max_fee_dollars);

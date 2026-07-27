@@ -3,6 +3,7 @@
 import { GRADE_BANDS, RATING_BANDS } from "@/lib/schemas";
 import { INGESTION_SOURCES } from "@/lib/ingestion-sources";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
+import type { TimingFilter } from "@/lib/competition-timing";
 
 /**
  * Filter sidebar for the search page. Controlled component — state lives in
@@ -13,6 +14,8 @@ export interface FilterState {
   state: string;
   source: string;
   featured: boolean;
+  /** Default upcoming — ended events are hidden until you ask for them. */
+  timing: TimingFilter;
   grade_band: string;
   rating_band: string;
   max_fee_dollars: string;
@@ -24,6 +27,7 @@ export const EMPTY_FILTERS: FilterState = {
   state: "",
   source: "",
   featured: false,
+  timing: "upcoming",
   grade_band: "",
   rating_band: "",
   max_fee_dollars: "",
@@ -48,6 +52,12 @@ const SOURCE_OPTIONS = [
     label: s.name,
   })),
   { value: "manual", label: "Hand-entered / seed" },
+];
+
+const TIMING_OPTIONS: { value: TimingFilter; label: string }[] = [
+  { value: "upcoming", label: "Upcoming" },
+  { value: "ended", label: "Ended" },
+  { value: "all", label: "Both" },
 ];
 
 function Field({
@@ -81,7 +91,10 @@ export function SearchFilters({
 
   const active =
     filters.featured ||
-    Object.entries(filters).some(([key, v]) => key !== "featured" && v !== "");
+    filters.timing !== "upcoming" ||
+    Object.entries(filters).some(
+      ([key, v]) => key !== "featured" && key !== "timing" && v !== ""
+    );
 
   return (
     <div className="flex flex-col gap-4">
@@ -98,6 +111,36 @@ export function SearchFilters({
         )}
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <p className="text-xs font-semibold text-muted-strong" id="filter-timing-label">
+          When
+        </p>
+        <div
+          role="group"
+          aria-labelledby="filter-timing-label"
+          className="grid grid-cols-3 gap-1 rounded-lg border border-line bg-surface-soft p-1"
+        >
+          {TIMING_OPTIONS.map((opt) => {
+            const selected = filters.timing === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onChange({ ...filters, timing: opt.value })}
+                className={`rounded-md px-2 py-2 text-xs font-semibold transition-colors ${
+                  selected
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-strong hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <button
         type="button"
         aria-pressed={filters.featured}
@@ -108,7 +151,7 @@ export function SearchFilters({
             : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
         }`}
       >
-        <FeaturedAwardMark className="h-4 w-4" />
+        <FeaturedAwardMark className="h-5 w-5" />
         Featured only
       </button>
 

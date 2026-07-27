@@ -34,3 +34,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ENRICH_MAX_AI: "80"
           ENRICH_BATCH_SIZE: "20"
+      - name: Purge competitions ended over a year ago
+        run: npm run purge:stale
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -12,6 +12,7 @@ import type { PathwayStatus } from "@/lib/schemas";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { EventStandingLabel } from "@/components/EventStandingLabel";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
+import { isCompetitionEnded } from "@/lib/competition-timing";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default async function EventPage({ params }: Params) {
     source: competition.source,
     series: competition.series,
   });
+  const ended = isCompetitionEnded(competition);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -66,7 +68,7 @@ export default async function EventPage({ params }: Params) {
         <div>
           <div className="relative mb-6 max-w-2xl">
             {isFeaturedStanding(standing) ? (
-              <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-6 w-6" />
+              <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-9 w-9" />
             ) : null}
             {competition.image_url ? (
               <CompetitionCoverImage
@@ -86,6 +88,11 @@ export default async function EventPage({ params }: Params) {
             <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
               Chess{competition.series ? ` · ${competition.series.name}` : ""}
             </p>
+            {ended ? (
+              <span className="rounded-md border border-line bg-surface-soft px-2 py-0.5 text-2xs font-semibold uppercase tracking-[0.06em] text-muted-strong">
+                Ended
+              </span>
+            ) : null}
             <SourceBadge source={competition.source} />
           </div>
           <h1 className="mt-1 max-w-[24ch] font-display text-display font-bold tracking-tight text-foreground">
