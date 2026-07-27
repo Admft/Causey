@@ -29,6 +29,22 @@ describe("extractPageImage", () => {
     expect(extractPageImage(html, base)).toBeNull();
   });
 
+  it("rejects US Chess sales banner ads so organizer fallback can run", () => {
+    const html = `
+      <html><body>
+        <div class="field field-name-body">
+          <p><a href="https://www.uscfsales.com"><img
+            alt="Banner Ad: US Chess Sales"
+            src="/sites/default/files/media/images/stalemate-save10.jpg"
+            width="728" height="90" /></a></p>
+        </div>
+      </body></html>
+    `;
+    expect(
+      extractPageImage(html, "https://new.uschess.org/some-event")
+    ).toBeNull();
+  });
+
   it("falls back to a large content image", () => {
     const html = `
       <html><body>

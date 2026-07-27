@@ -4,12 +4,14 @@ import { load } from "cheerio";
  * Pull a usable cover image from a scraped HTML page.
  *
  * Prefer Open Graph / Twitter cards, then a large-looking content image.
- * Return null liberally — a missing image is better than a favicon or
- * site chrome showing up as a tournament photo.
+ * Return null liberally — a missing image is better than a favicon,
+ * banner ad, or site chrome showing up as a tournament photo.
  */
 
-const REJECT_RE =
-  /favicon|sprite|pixel|tracking|1x1|badge|button|icon[-_]?|logo|avatar|emoji|spinner|placeholder|clo-logo|uschess\.org\/sites\/default\/files\/favicons/i;
+const REJECT_URL_RE =
+  /favicon|sprite|pixel|tracking|1x1|badge|button|icon[-_]?|logo|avatar|emoji|spinner|placeholder|clo-logo|banner|advert|ad[-_]?banner|stalemate-save|uscfsales|uschess\.org\/sites\/default\/files\/favicons/i;
+
+const REJECT_ALT_RE = /banner\s*ad|advertisement|sponsor|us\s*chess\s*sales/i;
 
 function absolutize(href: string, baseUrl: string): string | null {
   try {
@@ -21,9 +23,10 @@ function absolutize(href: string, baseUrl: string): string | null {
   }
 }
 
-function looksUsable(url: string): boolean {
+function looksUsable(url: string, alt?: string | null): boolean {
   if (!url || url.startsWith("data:")) return false;
-  if (REJECT_RE.test(url)) return false;
+  if (REJECT_URL_RE.test(url)) return false;
+  if (alt && REJECT_ALT_RE.test(alt)) return false;
   // Tiny SVGs are almost always icons; raster covers are what we want.
   if (/\.svg(\?|#|$)/i.test(url)) return false;
   return true;
@@ -76,8 +79,9 @@ export function extractPageImage(html: string, baseUrl: string): string | null {
     const h = Number(img.attr("height") || 0);
     if ((w > 0 && w < 120) || (h > 0 && h < 80)) continue;
 
+    const alt = img.attr("alt") ?? null;
     const abs = absolutize(src, baseUrl);
-    if (abs && looksUsable(abs)) return abs;
+    if (abs && looksUsable(abs, alt)) return abs;
   }
 
   return null;

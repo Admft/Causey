@@ -7,6 +7,7 @@
  * on `series` / `qualification_rules` (never auto-invented by scrapers).
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { chunkIds } from "./chunk-ids";
 
 export type SeriesMatchRule = {
   /** Case-insensitive substring / regex tested against competition name. */
@@ -117,32 +118,41 @@ export async function attachSeriesMatches(
   client: SupabaseClient,
   competitionIds?: string[]
 ): Promise<number> {
-  let query = client
-    .from("competitions")
-    .select("id, name, state, series_id")
-    .is("series_id", null);
-
-  if (competitionIds?.length) {
-    query = query.in("id", competitionIds);
-  }
-
-  const { data, error } = await query;
-  if (error) throw new Error(`series match lookup failed: ${error.message}`);
+  const idChunks = competitionIds?.length
+    ? chunkIds(competitionIds)
+    : [null as string[] | null];
 
   let attached = 0;
-  for (const row of data ?? []) {
-    const hit = matchSeriesId(row.name as string, row.state as string);
-    if (!hit) continue;
-    const { error: updErr } = await client
+  for (const ids of idChunks) {
+    let query = client
       .from("competitions")
-      .update({ series_id: hit.seriesId })
-      .eq("id", row.id)
+      .select("id, name, state, series_id")
       .is("series_id", null);
-    if (updErr) {
-      console.warn(`series attach failed for ${row.id}: ${updErr.message}`);
-      continue;
+
+    if (ids?.length) {
+      query = query.in("id", ids);
     }
-    attached += 1;
+
+    const { data, error } = await query;
+    if (error) throw new Error(`series match lookup failed: ${error.message}`);
+
+    for (const row of data ?? []) {
+      const hit = matchSeriesId(row.name as string, row.state as string);
+      if (!hit) continue;
+      const { error: updErr } = await client
+        .from("competitions")
+        .update({ series_id: hit.seriesId })
+        .eq("id", row.id)
+        .is("series_id", null);
+      if (updErr) {
+        console.warn(`series attach failed for ${row.id}: ${updErr.message}`);
+        continue;
+      }
+      attached += 1;
+    }
+
+    // No id filter → single full scan is enough.
+    if (!ids) break;
   }
   return attached;
 }

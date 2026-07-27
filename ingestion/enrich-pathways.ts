@@ -23,6 +23,7 @@ import {
   PROMPT_VERSION,
   triagePathway,
 } from "./pathway-triage";
+import { chunkIds } from "./chunk-ids";
 import { SERIES_MATCH_RULES } from "./series-match";
 
 /** Cheap OpenAI model for classification. Override with ENRICH_MODEL. */
@@ -50,7 +51,10 @@ const ItemOut = z.object({
     .array(
       z.object({
         name: z.string(),
-        note: z.string().optional(),
+        note: z
+          .string()
+          .nullable()
+          .describe("Optional short note; null when none"),
       })
     )
     .max(5)
@@ -160,29 +164,39 @@ export async function enrichPathways(
   const model = modelId();
   const runId = await startRun(client, opts.source, model);
 
-  let query = client
-    .from("competitions")
-    .select(
-      "id, name, city, state, organizer_name, source, source_url, series_id, pathway_status, pathway_input_hash"
-    )
-    .neq("status", "archived");
+  const selectCols =
+    "id, name, city, state, organizer_name, source, source_url, series_id, pathway_status, pathway_input_hash";
 
-  if (opts.competitionIds?.length) {
-    query = query.in("id", opts.competitionIds);
-  } else if (opts.source) {
-    query = query.eq("source", opts.source);
-  }
-
-  const { data, error } = await query;
-  if (error) {
+  const rows: Row[] = [];
+  try {
+    if (opts.competitionIds?.length) {
+      for (const ids of chunkIds(opts.competitionIds)) {
+        const { data, error } = await client
+          .from("competitions")
+          .select(selectCols)
+          .neq("status", "archived")
+          .in("id", ids);
+        if (error) throw new Error(error.message);
+        rows.push(...((data ?? []) as Row[]));
+      }
+    } else {
+      let query = client
+        .from("competitions")
+        .select(selectCols)
+        .neq("status", "archived");
+      if (opts.source) query = query.eq("source", opts.source);
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+      rows.push(...((data ?? []) as Row[]));
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     await finishRun(client, runId, {
       status: "failed",
-      error: error.message,
+      error: message,
     });
-    throw new Error(`pathway enrich lookup failed: ${error.message}`);
+    throw new Error(`pathway enrich lookup failed: ${message}`);
   }
-
-  const rows = (data ?? []) as Row[];
   const result: EnrichPathwayResult = {
     ...empty,
     considered: rows.length,

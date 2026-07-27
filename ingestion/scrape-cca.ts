@@ -19,6 +19,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
+import { fetchHtml } from "./fetch-html";
 import {
   CCA_LISTING_URL,
   CCA_SCRAPER_ID,
@@ -41,7 +42,6 @@ import {
 
 loadDotEnv();
 
-const USER_AGENT = "CauseyBot/0.1 (+https://causey.dev; tournament discovery indexing)";
 const DETAIL_DELAY_MS = 300;
 const SKIP_DETAIL = process.env.SCRAPE_SKIP_DETAIL === "1";
 const INCLUDE_COMING = process.env.SCRAPE_CCA_COMING !== "0";
@@ -49,14 +49,6 @@ const STAGING_FILE = "cca-drafts.json";
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-async function fetchHtml(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { "User-Agent": USER_AGENT, Accept: "text/html" },
-  });
-  if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status} from ${url}`);
-  return res.text();
 }
 
 function loadListing(): { html: string; raws: RawCca[] } {

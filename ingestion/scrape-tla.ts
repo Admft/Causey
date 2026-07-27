@@ -24,6 +24,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import { extractPageImage } from "./extract-page-image";
+import { fetchHtml } from "./fetch-html";
 import {
   normalizeRawTla,
   SCRAPER_SITE,
@@ -46,21 +47,12 @@ import {
 
 loadDotEnv();
 
-const USER_AGENT = "CauseyBot/0.1 (+https://causey.dev; tournament discovery indexing)";
 const DETAIL_DELAY_MS = 350;
 const MAX_PAGES = Number(process.env.SCRAPE_MAX_PAGES ?? "40");
 const SKIP_DETAIL = process.env.SCRAPE_SKIP_DETAIL === "1";
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-async function fetchHtml(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { "User-Agent": USER_AGENT, Accept: "text/html" },
-  });
-  if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status} from ${url}`);
-  return res.text();
 }
 
 async function loadListingPages(): Promise<RawTla[]> {
