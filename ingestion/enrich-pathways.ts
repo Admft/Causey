@@ -301,7 +301,10 @@ export async function enrichPathways(
         const ok = await applyPathway(client, row.id, {
           pathway_status: hit.status,
           pathway_summary: hit.summary,
-          pathway_related: hit.related,
+          pathway_related: hit.related.map((r) => ({
+            name: r.name,
+            ...(r.note ? { note: r.note } : {}),
+          })),
           pathway_input_hash: hash,
           pathway_model: model,
           ...(seriesId && !row.series_id ? { series_id: seriesId } : {}),
