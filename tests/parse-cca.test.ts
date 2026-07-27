@@ -1,15 +1,20 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { normalizeRawCca, parseCcaDateRange } from "@/ingestion/normalize-cca";
+import { decodeHtmlBuffer } from "@/ingestion/fetch-html";
 import {
+  normalizeRawCca,
+  parseCcaDateRange,
+  yearForCcaMonth,
+} from "@/ingestion/normalize-cca";
+import {
+  cleanCcaText,
   parseCcaDetailHtml,
   parseCcaListingHtml,
 } from "@/ingestion/parse-cca";
 
-const fixture = readFileSync(
-  join(process.cwd(), "ingestion/fixtures/cca-refs.html"),
-  "utf8"
+const fixture = decodeHtmlBuffer(
+  readFileSync(join(process.cwd(), "ingestion/fixtures/cca-refs.html"))
 );
 
 describe("CCA date parsing", () => {
@@ -18,6 +23,19 @@ describe("CCA date parsing", () => {
       start: "2026-07-17",
       end: "2026-07-19",
     });
+  });
+
+  it("rolls coming-event months in the past to next year", () => {
+    const july = new Date("2026-07-27T12:00:00Z");
+    expect(yearForCcaMonth("Jan", july)).toBe(2027);
+    expect(yearForCcaMonth("June", july)).toBe(2027);
+    expect(yearForCcaMonth("August", july)).toBe(2026);
+  });
+});
+
+describe("CCA text cleanup", () => {
+  it("strips Word bullets from names", () => {
+    expect(cleanCcaText("• Bradley Open")).toBe("Bradley Open");
   });
 });
 
@@ -82,5 +100,80 @@ describe("CCA detail parser", () => {
     expect(detail.city).toBe("Kissimmee");
     expect(detail.state).toBe("FL");
     expect(detail.titleName).toMatch(/Southern Open/i);
+  });
+
+  it("parses multi-option dates and City ST ZIP without a comma", () => {
+    const html = `
+      <body>
+        56th annual CONTINENTAL OPEN
+        August 13-16, 14-16 or 15-16, 2026
+        Hilton Boston/Woburn Hotel, 2 Forbes Road, Woburn, MA 01801
+      </body>
+    `;
+    const detail = parseCcaDetailHtml(html);
+    expect(detail.dateText).toMatch(/August 13-16/i);
+    expect(detail.zip).toBe("01801");
+    expect(detail.titleName).toMatch(/Continental Open/i);
+  });
+
+  it("parses Windsor Locks style addresses without comma before state", () => {
+    const html = `
+      <body>
+        31st annual Bradley Open
+        JULY 24-26 OR 25-26, 2026
+        Sheraton Hartford Hotel at Bradley Airport, 1 Bradley Airport, Windsor Locks CT 06096
+      </body>
+    `;
+    const detail = parseCcaDetailHtml(html);
+    expect(detail.zip).toBe("06096");
+    expect(detail.city).toMatch(/Windsor Locks/i);
+    expect(detail.state).toBe("CT");
+    expect(detail.titleName).toMatch(/Bradley Open/i);
+  });
+
+  it("strips (near …) notes so Irvine CA zips resolve", () => {
+    const html = `
+      <body>
+        31st annual Pacific Coast Open
+        August 1-2, 2026
+        Hilton Orange County Airport Hotel, 18800 Macarthur Blvd., Irvine (near Los Angeles), CA 92612
+      </body>
+    `;
+    const detail = parseCcaDetailHtml(html);
+    expect(detail.zip).toBe("92612");
+    expect(detail.city).toMatch(/Irvine/i);
+    expect(detail.state).toBe("CA");
+    expect(detail.titleName).toMatch(/Pacific Coast Open/i);
+  });
+
+  it("handles ATLANTICOPEN glue and NW street addresses", () => {
+    const html = `
+      <body>
+        58th annual ATLANTICOPEN August 21-23 or 22-23, 2026
+        Omni Shoreham Hotel, 2500 Calvert Street, NW., Washington, DC 20008
+      </body>
+    `;
+    const detail = parseCcaDetailHtml(html);
+    expect(detail.titleName).toBe("Atlantic Open");
+    expect(detail.zip).toBe("20008");
+    expect(detail.city).toMatch(/Washington/i);
+    expect(detail.state).toBe("DC");
+    expect(detail.venueName).toMatch(/Omni Shoreham/i);
+  });
+});
+
+describe("fetchHtml charset decode", () => {
+  it("decodes windows-1252 meta as bullets, not replacement chars", () => {
+    const bullet = Buffer.from([0x95]); // • in windows-1252
+    const html = Buffer.concat([
+      Buffer.from(
+        '<html><head><meta http-equiv=Content-Type content="text/html; charset=windows-1252"></head><body>'
+      ),
+      bullet,
+      Buffer.from(" Bradley Open</body></html>"),
+    ]);
+    const decoded = decodeHtmlBuffer(html);
+    expect(decoded).toContain("• Bradley Open");
+    expect(decoded).not.toContain("\uFFFD");
   });
 });

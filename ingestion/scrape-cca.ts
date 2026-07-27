@@ -5,13 +5,16 @@
  * Provenance:   source_url = CCA event detail page (or refs.html#coming-… )
  * Registration: reg_url = https://www.chessaction.com/
  *
- * Resilience (same as TLA scraper):
+ * Resilience (same lessons as TLA runs):
+ *   - Shared fetchHtml with timeout + windows-1252 charset decode
  *   - Always writes data/staging/cca-drafts.json BEFORE upsert
  *   - SCRAPE_UPSERT_ONLY=1 reloads that file and upserts (no re-fetch)
  *   - SCRAPE_HTML_FILE=… parses a local listing fixture
  *   - SCRAPE_SKIP_DETAIL=1 skips detail enrichment
+ *   - SCRAPE_MAX_EVENTS=N caps work for baby tests
  *
  *   npm run scrape:cca
+ *   SCRAPE_MAX_EVENTS=3 npm run scrape:cca
  *   SCRAPE_UPSERT_ONLY=1 npm run scrape:cca
  */
 import { randomUUID } from "node:crypto";
@@ -19,7 +22,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
-import { fetchHtml } from "./fetch-html";
+import { decodeHtmlBuffer, fetchHtml } from "./fetch-html";
 import {
   CCA_LISTING_URL,
   CCA_SCRAPER_ID,
@@ -45,34 +48,30 @@ loadDotEnv();
 const DETAIL_DELAY_MS = 300;
 const SKIP_DETAIL = process.env.SCRAPE_SKIP_DETAIL === "1";
 const INCLUDE_COMING = process.env.SCRAPE_CCA_COMING !== "0";
+const MAX_EVENTS = Number(process.env.SCRAPE_MAX_EVENTS ?? "0");
 const STAGING_FILE = "cca-drafts.json";
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function loadListing(): { html: string; raws: RawCca[] } {
-  const fixture = process.env.SCRAPE_HTML_FILE;
-  let html: string;
-  if (fixture) {
-    const path = fixture.startsWith("/") ? fixture : join(process.cwd(), fixture);
-    console.log(`Using local fixture: ${path}`);
-    html = readFileSync(path, "utf8");
-  } else {
-    throw new Error("INTERNAL: loadListing called without html — fetch first");
-  }
+function mergeListing(html: string): RawCca[] {
   const linked = parseCcaListingHtml(html);
   const coming = INCLUDE_COMING ? parseCcaComingEvents(html) : [];
-  // Prefer detail-linked events; add coming-only rows whose names aren't covered.
-  const linkedNames = new Set(linked.map((r) => r.name.toLowerCase()));
+  const linkedNames = new Set(
+    linked.map((r) => r.name.toLowerCase().replace(/ blitz$/, ""))
+  );
   const extras = coming.filter((c) => {
     const n = c.name.toLowerCase();
     for (const existing of linkedNames) {
-      if (existing.includes(n) || n.includes(existing.replace(/ blitz$/, ""))) return false;
+      if (existing.includes(n) || n.includes(existing)) return false;
     }
     return true;
   });
-  return { html, raws: [...linked, ...extras] };
+  console.log(
+    `Parsed ${linked.length} linked events + ${extras.length} coming-soon lines = ${linked.length + extras.length} total.`
+  );
+  return [...linked, ...extras];
 }
 
 async function main() {
@@ -98,32 +97,22 @@ async function main() {
   if (fixture) {
     const path = fixture.startsWith("/") ? fixture : join(process.cwd(), fixture);
     console.log(`Using local fixture: ${path}`);
-    html = readFileSync(path, "utf8");
+    // Fixture may be UTF-8 (browser save) or windows-1252 — sniff meta.
+    html = decodeHtmlBuffer(readFileSync(path));
   } else {
     console.log(`Fetching ${CCA_LISTING_URL}`);
     html = await fetchHtml(CCA_LISTING_URL);
   }
 
-  const linked = parseCcaListingHtml(html);
-  const coming = INCLUDE_COMING ? parseCcaComingEvents(html) : [];
-  const linkedNames = new Set(
-    linked.map((r) => r.name.toLowerCase().replace(/ blitz$/, ""))
-  );
-  const extras = coming.filter((c) => {
-    const n = c.name.toLowerCase();
-    for (const existing of linkedNames) {
-      if (existing.includes(n) || n.includes(existing)) return false;
-    }
-    // Skip near-term events already on the main schedule block
-    return true;
-  });
-
-  const raws = [...linked, ...extras];
-  console.log(
-    `Parsed ${linked.length} linked events + ${extras.length} coming-soon lines = ${raws.length} total.`
-  );
+  let raws = mergeListing(html);
+  // Main events before blitz so location inheritance works.
+  raws.sort((a, b) => Number(a.isBlitz) - Number(b.isBlitz));
+  if (MAX_EVENTS > 0 && raws.length > MAX_EVENTS) {
+    console.log(`SCRAPE_MAX_EVENTS=${MAX_EVENTS} — truncating from ${raws.length}.`);
+    raws = raws.slice(0, MAX_EVENTS);
+  }
   if (raws.length === 0) {
-    console.error("0 CCA rows parsed — check selectors / fixture.");
+    console.error("0 CCA rows parsed — check selectors / fixture / charset.");
     process.exit(1);
   }
 
@@ -151,6 +140,37 @@ async function main() {
   const drafts: StagedCompetition[] = [];
   let skippedNormalize = 0;
   let sectionsParsed = 0;
+  let withImage = 0;
+  let detailTimeouts = 0;
+  /** Blitz side-events often omit the hotel address — copy from the main event. */
+  const locationByKey = new Map<
+    string,
+    { zip: string; city: string; state: string; coords: { lat: number; lng: number } | null }
+  >();
+
+  function locationKey(raw: RawCca, detail?: CcaDetailEnrichment | null): string {
+    return (detail?.titleName || raw.name)
+      .toLowerCase()
+      .replace(/\s+blitz\b.*$/i, "")
+      .replace(/\bnew york\b/g, "ny")
+      .replace(/\bchampionships?\b/g, "")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  function findInherited(key: string) {
+    const direct = locationByKey.get(key);
+    if (direct) return direct;
+    for (const [k, v] of locationByKey) {
+      if (k.startsWith(key) || key.startsWith(k)) return v;
+    }
+    return undefined;
+  }
+
+  type DetailRow = {
+    raw: RawCca;
+    detail: CcaDetailEnrichment | null;
+  };
+  const enriched: DetailRow[] = [];
 
   for (let i = 0; i < raws.length; i++) {
     const raw = raws[i]!;
@@ -166,9 +186,33 @@ async function main() {
         detail = parseCcaDetailHtml(page, raw.detailUrl);
         await sleep(DETAIL_DELAY_MS);
       } catch (err) {
-        console.warn(`\ndetail fetch failed for ${raw.detailUrl}:`, err);
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/timed out/i.test(msg)) detailTimeouts += 1;
+        console.warn(`\ndetail fetch failed for ${raw.detailUrl}: ${msg}`);
       }
     }
+
+    enriched.push({ raw, detail });
+  }
+  if (!SKIP_DETAIL) process.stdout.write("\n");
+
+  // Seed locations from any sibling that resolved a zip (main or blitz).
+  for (const { raw, detail } of enriched) {
+    if (detail?.zip && /^\d{5}$/.test(detail.zip)) {
+      const key = locationKey(raw, detail);
+      if (!locationByKey.has(key) || !raw.isBlitz) {
+        locationByKey.set(key, {
+          zip: detail.zip,
+          city: detail.city ?? raw.city,
+          state: detail.state ?? raw.state,
+          coords: null,
+        });
+      }
+    }
+  }
+
+  for (const { raw, detail: detailIn } of enriched) {
+    let detail = detailIn;
 
     // Drop placeholder-only rows that never got a real date from detail.
     if (raw.dateText.includes("2099") && !detail?.dateText) {
@@ -176,24 +220,58 @@ async function main() {
       continue;
     }
 
-    const coords = await coordsForZip(detail?.zip ?? null);
+    const inherited = findInherited(locationKey(raw, detail));
+    if (detail && inherited && (!detail.zip || raw.isBlitz)) {
+      detail = {
+        ...detail,
+        zip: inherited.zip,
+        city: detail.city ?? inherited.city,
+        state: detail.state ?? inherited.state,
+      };
+    } else if (!detail && inherited && raw.isBlitz) {
+      detail = {
+        venueName: null,
+        address: null,
+        city: inherited.city,
+        state: inherited.state,
+        zip: inherited.zip,
+        titleName: null,
+        dateText: null,
+        endDate: null,
+        imageUrl: null,
+        bodyText: null,
+      };
+    }
+
+    let coords = await coordsForZip(detail?.zip ?? null);
+    if (!coords && inherited) {
+      if (!inherited.coords && inherited.zip) {
+        inherited.coords = await coordsForZip(inherited.zip);
+      }
+      coords = inherited.coords;
+    }
+    if (inherited && coords) inherited.coords = coords;
+
     const row = normalizeRawCca(raw, { id: randomUUID(), detail, coords });
     if (!row) {
       skippedNormalize += 1;
       continue;
     }
     if (row.sections.length > 0) sectionsParsed += 1;
+    if (row.competition.image_url) withImage += 1;
     drafts.push({ ...row.competition, sections: row.sections });
   }
-  if (!SKIP_DETAIL) process.stdout.write("\n");
 
   console.log(
-    `Normalized ${drafts.length} rows (skipped normalize=${skippedNormalize}).`
+    `Normalized ${drafts.length} rows (skipped normalize=${skippedNormalize}` +
+      (detailTimeouts ? `, detail timeouts=${detailTimeouts}` : "") +
+      `).`
   );
   console.log(
     `  sections parsed on ${sectionsParsed}/${drafts.length} events ` +
       `(others get Open fallback).`
   );
+  console.log(`  images: ${withImage}/${drafts.length} (CCA pages rarely have covers)`);
   console.log(
     `  published: ${drafts.filter((d) => d.status === "published").length}`
   );

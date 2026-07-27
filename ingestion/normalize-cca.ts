@@ -47,6 +47,27 @@ export function defaultCcaYear(now = new Date()): number {
   return now.getUTCFullYear();
 }
 
+const MONTH_NUM: Record<string, number> = {
+  jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3,
+  apr: 4, april: 4, may: 5, jun: 6, june: 6, jul: 7, july: 7,
+  aug: 8, august: 8, sep: 9, sept: 9, september: 9,
+  oct: 10, october: 10, nov: 11, november: 11, dec: 12, december: 12,
+};
+
+/**
+ * Coming-events lines often omit the year. If the month is clearly behind
+ * "now", roll forward (Jan on a July calendar → next year).
+ */
+export function yearForCcaMonth(monthToken: string, now = new Date()): number {
+  const mon = MONTH_NUM[monthToken.toLowerCase().replace(/\./g, "")];
+  const y = now.getUTCFullYear();
+  if (!mon) return y;
+  const currentMon = now.getUTCMonth() + 1;
+  // Listed month already passed this year → next year.
+  if (mon < currentMon) return y + 1;
+  return y;
+}
+
 /**
  * CCA date lines look like:
  *   "July 17-19 or 18-19, 2026"
@@ -115,10 +136,14 @@ export function normalizeRawCca(
   const zip =
     detail?.zip && /^\d{5}$/.test(detail.zip) ? detail.zip : NEEDS_REVIEW.zip;
   const hasCoords = Boolean(opts.coords);
-  const city = detail?.city?.trim() || raw.city;
+  const city = (detail?.city?.trim() || raw.city).replace(/\s+/g, " ").trim();
   const state =
     (detail?.state && stateToCode(detail.state)) || raw.state;
-  const name = detail?.titleName?.trim() || raw.name;
+  let name = (detail?.titleName?.trim() || raw.name).replace(/\s+/g, " ").trim();
+  // Listing placeholders until detail title is parsed.
+  if (/^CCA (Event|Blitz)\b/i.test(name) && detail?.titleName) {
+    name = detail.titleName.trim();
+  }
   const ready = zip !== NEEDS_REVIEW.zip && hasCoords;
 
   const extras = parseEventTextExtras(detail?.bodyText ?? "");
