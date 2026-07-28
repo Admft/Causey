@@ -32,11 +32,6 @@ export function SignupForm() {
   const [pending, setPending] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
 
-  const roleMeta = useMemo(
-    () => ROLE_OPTIONS.find((r) => r.value === role)!,
-    [role]
-  );
-
   const derivedBand = useMemo((): AgeBand | null => {
     if (!dateOfBirth || !parseDateOnly(dateOfBirth)) return null;
     try {
@@ -98,7 +93,9 @@ export function SignupForm() {
         return;
       }
 
-      router.push(role === "student" ? "/me" : "/me?pending=role");
+      router.push(
+        role === "coach" ? "/orgs" : role === "parent" ? "/family" : "/me"
+      );
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed.");
@@ -146,21 +143,10 @@ export function SignupForm() {
                   {opt.label}
                 </span>
                 <span className="mt-1 block text-2xs text-muted">{opt.description}</span>
-                {!opt.available ? (
-                  <span className="mt-2 inline-block text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                    Soon
-                  </span>
-                ) : null}
               </button>
             );
           })}
         </div>
-        {!roleMeta.available ? (
-          <p className="text-xs text-muted">
-            You can still create an account. {roleMeta.label} tools aren’t open
-            yet — you’ll browse as usual until we unlock this role.
-          </p>
-        ) : null}
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">

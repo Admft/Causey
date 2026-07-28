@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,7 +26,7 @@ export function LoginForm() {
         password,
       });
       if (signError) throw signError;
-      router.push("/me");
+      router.push(next ?? "/me");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed.");

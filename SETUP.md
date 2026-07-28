@@ -48,14 +48,16 @@ The following pieces are already implemented in this repository:
 
 These are not missing by accident; they are deliberate early constraints:
 
-- Coach / parent product tools (signup UI exists; maker/family locked)
-- School org dashboards / private hosted events UI (schema in `0010`)
-- Friends, in-app registration, payments
-- In-app admin dashboard
+- Friends graph between students (orgs + groups cover the social layer)
+- In-app registration/payments for scraped events (external `reg_url` only —
+  org-hosted events RSVP on Causey instead)
+- In-app admin dashboard / moderation queue for coach-created public events
 
-Student accounts (signup/login, profile, favorites, difficulty ratings) are in
-progress — run `0009_accounts.sql` and use `/signup`. Registration for scraped
-events still happens on organizer sites.
+Accounts are live for all three roles — run migrations `0009`–`0012` and use
+`/signup`. Coaches/organizers create orgs with Khan Academy-style join codes
+(`/orgs`), host private or public tournaments, and track RSVPs; students join
+with a code and RSVP; parents link to their children (`/family`) and can RSVP
+for them. Registration for scraped events still happens on organizer sites.
 
 ## How to run it right now
 

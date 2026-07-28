@@ -41,7 +41,8 @@ export const CompetitionSchema = z.object({
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   reg_deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
-  reg_url: z.string().url(),
+  /** null = no external registration — org events RSVP on Causey instead. */
+  reg_url: z.string().url().nullable(),
   /** null = fee not listed on source; 0 = explicitly free. */
   entry_fee_cents: z.number().int().nonnegative().nullable(),
   rated: z.boolean(),

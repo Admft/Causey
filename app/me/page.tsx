@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import { getParentLinks } from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatDateRange } from "@/lib/format";
 
@@ -11,12 +13,7 @@ export const metadata: Metadata = {
   description: "Your Causey profile, saved tournaments, and ratings.",
 };
 
-export default async function MePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ pending?: string }>;
-}) {
-  const params = await searchParams;
+export default async function MePage() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
 
@@ -50,6 +47,9 @@ export default async function MePage({
     .eq("user_id", profile.id)
     .order("updated_at", { ascending: false });
 
+  const parentLinks =
+    profile.role === "student" ? await getParentLinks(profile.id) : [];
+
   const roleLabel =
     profile.role === "coach"
       ? "Coach / Organizer"
@@ -65,15 +65,35 @@ export default async function MePage({
       </h1>
       <p className="mt-2 text-sm text-muted">
         {user.email} · {roleLabel}
-        {!profile.role_unlocked ? " · tools locked until this role opens" : null}
       </p>
 
-      {(params.pending === "role" || !profile.role_unlocked) && profile.role !== "student" ? (
-        <div className="mt-6 rounded-xl border border-line bg-surface-soft px-4 py-3 text-sm text-muted-strong">
-          {roleLabel} features aren&rsquo;t open yet. You can still browse and
-          save tournaments; hosting and family tools will unlock on this same
-          account later.
-        </div>
+      {parentLinks.length ? (
+        <section className="section-rule mt-10 pt-8">
+          <h2 className="text-sm font-semibold text-foreground">Family</h2>
+          <ul className="mt-4 flex flex-col gap-2">
+            {parentLinks.map((link) => (
+              <li
+                key={link.parent_profile_id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3"
+              >
+                <div>
+                  <span className="text-sm font-semibold text-foreground">
+                    {link.parent_name}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {link.status === "pending"
+                      ? "wants to link as your parent — they’ll see your clubs and can RSVP for you"
+                      : "linked as your parent"}
+                  </span>
+                </div>
+                <HouseholdRequestActions
+                  parentProfileId={link.parent_profile_id}
+                  linked={link.status === "active"}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       <section className="section-rule mt-10 pt-8">

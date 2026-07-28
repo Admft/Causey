@@ -6,7 +6,21 @@ export const metadata: Metadata = {
   description: "Sign in to your Causey account.",
 };
 
-export default function LoginPage() {
+/** Only same-site paths may be a post-login destination. */
+function sanitizeNext(next: string | undefined): string | undefined {
+  if (!next) return undefined;
+  if (!next.startsWith("/") || next.startsWith("//")) return undefined;
+  return next;
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const params = await searchParams;
+  const next = sanitizeNext(params.next);
+
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Account</p>
@@ -17,7 +31,7 @@ export default function LoginPage() {
         Use the email and password you created at signup.
       </p>
       <div className="section-rule mt-8 pt-8">
-        <LoginForm />
+        <LoginForm next={next} />
       </div>
     </div>
   );

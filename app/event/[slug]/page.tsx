@@ -20,6 +20,13 @@ import {
 import { isCompetitionEnded } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { RsvpButtons } from "@/components/RsvpButtons";
+import {
+  canManageCompetitionAsViewer,
+  getActiveChildren,
+  getCompetitionBySlugAuthed,
+  getEntrantsForCompetition,
+} from "@/lib/data/portal";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +34,10 @@ type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const competition = await getDataSource().getCompetitionBySlug(slug);
+  // Anon lookup first; fall back to the viewer's session for private org events.
+  const competition =
+    (await getDataSource().getCompetitionBySlug(slug)) ??
+    (await getCompetitionBySlugAuthed(slug));
   if (!competition) return { title: "Event not found" };
   return {
     title: competition.name,
@@ -38,7 +48,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function EventPage({ params }: Params) {
   const { slug } = await params;
   const data = getDataSource();
-  const competition = await data.getCompetitionBySlug(slug);
+  // Private org events are invisible to the anon data source — retry with
+  // the viewer's cookies and let RLS decide.
+  const competition =
+    (await data.getCompetitionBySlug(slug)) ??
+    (await getCompetitionBySlugAuthed(slug));
   if (!competition) notFound();
 
   const [rules, seriesList] = await Promise.all([
@@ -51,7 +65,9 @@ export default async function EventPage({ params }: Params) {
     new Map(seriesList.map((s) => [s.id, s]))
   );
 
-  const regHost = new URL(competition.reg_url).hostname.replace(/^www\./, "");
+  const regHost = competition.reg_url
+    ? new URL(competition.reg_url).hostname.replace(/^www\./, "")
+    : null;
   const feeLabel =
     competition.entry_fee_cents === null || competition.entry_fee_cents === undefined
       ? "Fee not listed"
@@ -70,7 +86,29 @@ export default async function EventPage({ params }: Params) {
   const user = await getSessionUser();
   let initiallySaved = false;
   let initialScore: number | null = null;
+  let canManage = false;
+  let rsvpTargets: {
+    profileId: string;
+    label: string;
+    status: "invited" | "going" | "not_going";
+  }[] = [];
   if (user) {
+    canManage = await canManageCompetitionAsViewer(competition, user.id);
+    const children = await getActiveChildren(user.id);
+    const entrants = await getEntrantsForCompetition(competition.id, [
+      user.id,
+      ...children.map((c) => c.profile_id),
+    ]);
+    rsvpTargets = entrants.map((entrant) => ({
+      profileId: entrant.profile_id,
+      label:
+        entrant.profile_id === user.id
+          ? "You"
+          : children.find((c) => c.profile_id === entrant.profile_id)
+              ?.display_name ?? "Your student",
+      status: entrant.status,
+    }));
+
     const supabase = await createServerSupabaseClient();
     const [{ data: saved }, { data: rating }] = await Promise.all([
       supabase
@@ -184,21 +222,37 @@ export default async function EventPage({ params }: Params) {
             </div>
           </dl>
 
-          <div className="mt-6">
-            <a
-              href={competition.reg_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cta-enabled"
-              aria-label={`Register on ${regHost} — opens in a new tab`}
-            >
-              Register on {regHost} <span aria-hidden="true">↗</span>
-            </a>
-            <p className="mt-2 text-2xs text-muted">
-              Registration and payment happen on the organizer&rsquo;s site, never on
-              Causey.
+          {competition.reg_url && regHost ? (
+            <div className="mt-6">
+              <a
+                href={competition.reg_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cta-enabled"
+                aria-label={`Register on ${regHost} — opens in a new tab`}
+              >
+                Register on {regHost} <span aria-hidden="true">↗</span>
+              </a>
+              <p className="mt-2 text-2xs text-muted">
+                Registration and payment happen on the organizer&rsquo;s site, never on
+                Causey.
+              </p>
+            </div>
+          ) : canManage ? (
+            <div className="mt-6">
+              <Link href={`/event/${competition.slug}/manage`} className="cta-enabled">
+                Manage entrants
+              </Link>
+              <p className="mt-2 text-2xs text-muted">
+                Invite your roster or a group and watch RSVPs come in.
+              </p>
+            </div>
+          ) : (
+            <p className="mt-6 text-sm text-muted">
+              This event is hosted on Causey — entry is by coach invitation and
+              RSVP, not open registration.
             </p>
-          </div>
+          )}
 
           <section className="mt-10">
             <h2 className="text-xl font-bold text-foreground">Sections &amp; who can enter</h2>
@@ -226,6 +280,37 @@ export default async function EventPage({ params }: Params) {
         </div>
 
         <aside className="flex flex-col gap-6 lg:pt-16">
+          {rsvpTargets.length ? (
+            <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+              <h2 className="text-sm font-semibold text-foreground">Your RSVP</h2>
+              <div className="mt-3 flex flex-col gap-4">
+                {rsvpTargets.map((target) => (
+                  <div key={target.profileId} className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-muted-strong">
+                      {target.label}
+                    </span>
+                    <RsvpButtons
+                      competitionId={competition.id}
+                      profileId={target.profileId}
+                      status={target.status}
+                      eventSlug={competition.slug}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {canManage && competition.reg_url ? (
+            <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+              <h2 className="text-sm font-semibold text-foreground">Hosting</h2>
+              <Link
+                href={`/event/${competition.slug}/manage`}
+                className="mt-2 inline-flex text-sm font-semibold text-brand-red hover:underline"
+              >
+                Manage entrants
+              </Link>
+            </div>
+          ) : null}
           <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
             <h2 className="text-sm font-semibold text-foreground">Your account</h2>
             <div className="mt-3 flex flex-col gap-4">

@@ -18,26 +18,22 @@ export const ROLE_OPTIONS: {
   value: AccountRole;
   label: string;
   description: string;
-  available: boolean;
 }[] = [
   {
     value: "student",
     label: "Student",
     description: "Find tournaments, save events, rate difficulty, build a profile.",
-    available: true,
   },
   {
     value: "coach",
     label: "Coach / Organizer",
     description:
-      "Create and host tournaments for your school, club, or team — opening soon.",
-    available: false,
+      "Start a club, invite students with a join code, and host tournaments.",
   },
   {
     value: "parent",
     label: "Parent",
-    description: "Connect with your child and recommend events — opening soon.",
-    available: false,
+    description: "Link with your child, follow their events, and RSVP for them.",
   },
 ];
 
