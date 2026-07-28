@@ -146,7 +146,7 @@ export function normalizeRawCca(
   }
   const ready = zip !== NEEDS_REVIEW.zip && hasCoords;
 
-  const extras = parseEventTextExtras(detail?.bodyText ?? "");
+  const extras = parseEventTextExtras(detail?.bodyText ?? "", name);
 
   const candidate = {
     id: opts.id,
@@ -172,6 +172,10 @@ export function normalizeRawCca(
     source: CCA_SCRAPER_ID,
     source_url: raw.detailUrl,
     image_url: detail?.imageUrl ?? null,
+    visibility: "public" as const,
+    org_id: null,
+    created_by: null,
+    details: {},
     status: ready ? ("published" as const) : ("draft" as const),
   };
 

@@ -117,17 +117,31 @@ export function parseSectionsFromText(text: string): ParsedSectionDraft[] {
     pushUnique(out, openSection("Open"));
   }
 
-  // Grade bands: K-3, K-6, Grades 4-6, K-12
-  const gradeRange =
-    /\b(?:Grades?\s+)?(K|Kindergarten|\d{1,2})\s*[-–]\s*(\d{1,2}|12)\b/gi;
-  while ((m = gradeRange.exec(t))) {
+  // Grade bands: require Grades/K so "rounds 1-2" never becomes Grades 1–2.
+  const gradeRangeLabeled =
+    /\bGrades?\s+(K|Kindergarten|\d{1,2})\s*[-–]\s*(\d{1,2}|12)\b/gi;
+  while ((m = gradeRangeLabeled.exec(t))) {
     const lo = parseGradeToken(m[1]);
     const hi = parseGradeToken(m[2]);
     if (lo === null || hi === null || lo > hi) continue;
-    const name =
-      lo === 0 ? `K-${hi}` : `Grades ${lo}-${hi}`;
+    const name = lo === 0 ? `K-${hi}` : `Grades ${lo}-${hi}`;
     pushUnique(out, {
       name,
+      min_rating: null,
+      max_rating: null,
+      min_grade: lo,
+      max_grade: hi,
+      entry_fee_cents: null,
+    });
+  }
+
+  const gradeRangeK = /\b(K|Kindergarten)\s*[-–]\s*(\d{1,2}|12)\b/gi;
+  while ((m = gradeRangeK.exec(t))) {
+    const lo = parseGradeToken(m[1]);
+    const hi = parseGradeToken(m[2]);
+    if (lo === null || hi === null || lo > hi) continue;
+    pushUnique(out, {
+      name: `K-${hi}`,
       min_rating: null,
       max_rating: null,
       min_grade: lo,
@@ -149,6 +163,56 @@ export function parseSectionsFromText(text: string): ParsedSectionDraft[] {
   }
 
   return out;
+}
+
+/** Adult / open events that are not scholastic. */
+export function isAdultOrientedEvent(text: string): boolean {
+  return (
+    /\b(?:adults?\s+only|adult\s+tournament|18\+|ages?\s*18\s*\+|open\s+to\s+(?:all\s+)?adults)\b/i.test(
+      text
+    ) ||
+    /\b(?:senior\s+(?:open|swiss|championship)|masters?\s+(?:open|section))\b/i.test(
+      text
+    )
+  );
+}
+
+export function isScholasticOrientedEvent(text: string): boolean {
+  return /\b(?:scholastic|elementary|middle\s+school|high\s+school|K-12|K–12|grades?\s+\d|junior\s+high|primary\s+school)\b/i.test(
+    text
+  );
+}
+
+function isElementaryGradeSection(s: ParsedSectionDraft): boolean {
+  if (s.min_rating != null || s.max_rating != null) return false;
+  if (s.min_grade === null && s.max_grade === null) return false;
+  const hi = s.max_grade ?? 12;
+  return hi <= 8;
+}
+
+/**
+ * Drop contradictory elementary grade sections on adult events
+ * (e.g. "rounds 1-3" formerly misread as Grades 1–3 / K–3).
+ */
+export function reconcileSectionsWithEvent(
+  eventName: string,
+  bodyText: string,
+  sections: ParsedSectionDraft[]
+): { sections: ParsedSectionDraft[]; droppedElementary: boolean } {
+  const blob = `${eventName}\n${bodyText}`;
+  const adult = isAdultOrientedEvent(blob);
+  const scholastic = isScholasticOrientedEvent(blob);
+
+  if (!adult || scholastic) {
+    return { sections, droppedElementary: false };
+  }
+
+  const kept = sections.filter((s) => !isElementaryGradeSection(s));
+  const droppedElementary = kept.length !== sections.length;
+  if (kept.length === 0 && sections.length > 0) {
+    return { sections: [openSection("Open")], droppedElementary: true };
+  }
+  return { sections: kept, droppedElementary };
 }
 
 /** Best-effort entry fee in cents. null = not found; 0 = explicitly free. */
@@ -210,8 +274,21 @@ export function parseRatedFlags(text: string): { rated: boolean; fideRated: bool
   return { rated, fideRated };
 }
 
-export function parseEventTextExtras(text: string): ParsedEventExtras {
-  const sections = parseSectionsFromText(text);
+export function parseEventTextExtras(
+  text: string,
+  eventName = ""
+): ParsedEventExtras {
+  const rawSections = parseSectionsFromText(text);
+  const { sections, droppedElementary } = reconcileSectionsWithEvent(
+    eventName,
+    text,
+    rawSections
+  );
+  if (droppedElementary) {
+    console.warn(
+      `section validation: dropped elementary grade band(s) on adult-oriented event "${eventName.slice(0, 60)}"`
+    );
+  }
   const entry_fee_cents = parseEntryFeeCents(text);
   const { rated, fideRated } = parseRatedFlags(text);
   return { sections, entry_fee_cents, rated, fideRated };

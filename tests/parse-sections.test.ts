@@ -3,6 +3,7 @@ import {
   parseEntryFeeCents,
   parseEventTextExtras,
   parseSectionsFromText,
+  reconcileSectionsWithEvent,
 } from "../ingestion/parse-sections";
 
 const IRVING = `
@@ -49,6 +50,39 @@ describe("parseSectionsFromText", () => {
     const sections = parseSectionsFromText("Sections: K-3, Grades 4-6, and K-12 Open");
     expect(sections.some((s) => s.min_grade === 0 && s.max_grade === 3)).toBe(true);
     expect(sections.some((s) => s.min_grade === 4 && s.max_grade === 6)).toBe(true);
+  });
+
+  it("does not treat round ranges like 1-2 as grade bands", () => {
+    const sections = parseSectionsFromText(
+      "5-round Swiss. 2-day option, rounds 1-2 G/60. Adult only open tournament."
+    );
+    expect(sections.some((s) => s.min_grade !== null || s.max_grade !== null)).toBe(
+      false
+    );
+  });
+});
+
+describe("reconcileSectionsWithEvent", () => {
+  it("strips elementary grades from adult-only events", () => {
+    const raw = [
+      {
+        name: "K-3",
+        min_rating: null,
+        max_rating: null,
+        min_grade: 0,
+        max_grade: 3,
+        entry_fee_cents: null,
+      },
+    ];
+    const { sections, droppedElementary } = reconcileSectionsWithEvent(
+      "City Club Adult Only Swiss",
+      "Adults only. 4 rounds.",
+      raw
+    );
+    expect(droppedElementary).toBe(true);
+    expect(sections).toHaveLength(1);
+    expect(sections[0]?.name).toBe("Open");
+    expect(sections[0]?.min_grade).toBeNull();
   });
 });
 

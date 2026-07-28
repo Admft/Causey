@@ -177,7 +177,8 @@ export function normalizeRawTla(
   const ready = zip !== NEEDS_REVIEW.zip && hasCoords;
 
   const extras = parseEventTextExtras(
-    [raw.blurb, detail?.bodyText].filter(Boolean).join("\n")
+    [raw.blurb, detail?.bodyText].filter(Boolean).join("\n"),
+    raw.name
   );
 
   const candidate = {
@@ -206,6 +207,10 @@ export function normalizeRawTla(
     source_url: raw.detailUrl,
     image_url: detail?.imageUrl ?? null,
     // Publish when we have a real location so search works; otherwise draft.
+    visibility: "public" as const,
+    org_id: null,
+    created_by: null,
+    details: {},
     status: ready ? ("published" as const) : ("draft" as const),
   };
 

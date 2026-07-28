@@ -46,17 +46,16 @@ The following pieces are already implemented in this repository:
 
 ## What is intentionally not built
 
-These are not missing by accident; they are deliberate MVP constraints:
+These are not missing by accident; they are deliberate early constraints:
 
-- No accounts
-- No authentication
-- No student profiles
-- No stored student PII
-- No in-app registration or payments
-- No in-app admin dashboard
+- Coach / parent product tools (signup UI exists; maker/family locked)
+- School org dashboards / private hosted events UI (schema in `0010`)
+- Friends, in-app registration, payments
+- In-app admin dashboard
 
-The current MVP assumes registration happens on organizer sites, and admin work
-happens in Supabase directly.
+Student accounts (signup/login, profile, favorites, difficulty ratings) are in
+progress — run `0009_accounts.sql` and use `/signup`. Registration for scraped
+events still happens on organizer sites.
 
 ## How to run it right now
 

@@ -78,6 +78,18 @@ export const CompetitionSchema = z.object({
   pathway_input_hash: z.string().nullable().optional(),
   pathway_model: z.string().nullable().optional(),
   pathway_enriched_at: z.string().nullable().optional(),
+  /**
+   * Multi-tenant visibility. Scraped events are always public.
+   * Coach-hosted private events require org membership (RLS).
+   */
+  visibility: z.enum(["public", "private"]).default("public"),
+  org_id: z.string().uuid().nullable().optional().default(null),
+  created_by: z.string().uuid().nullable().optional().default(null),
+  /** Category-specific extras (STEM/debate later) without new columns. */
+  details: z
+    .record(z.unknown())
+    .nullish()
+    .transform((v) => v ?? {}),
   status: CompetitionStatus.default("published"),
 });
 

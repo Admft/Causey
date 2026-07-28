@@ -324,6 +324,30 @@ export async function upsertCompetitions(
         .upsert(stripped as never[], { onConflict: "slug" }));
     }
 
+    if (
+      error?.message?.includes("visibility") ||
+      error?.message?.includes("org_id") ||
+      error?.message?.includes("created_by") ||
+      error?.message?.includes("details")
+    ) {
+      console.warn(
+        "competitions visibility/org columns missing — run supabase/migrations/0010_organizations.sql. " +
+          "Upserting without tenancy columns for now."
+      );
+      const stripped = chunk.map(
+        ({
+          visibility: _v,
+          org_id: _o,
+          created_by: _c,
+          details: _d,
+          ...rest
+        }) => rest
+      );
+      ({ error } = await client
+        .from("competitions")
+        .upsert(stripped as never[], { onConflict: "slug" }));
+    }
+
     if (error?.message?.includes("cca_scrape") || error?.message?.includes("check constraint")) {
       throw new Error(
         `${error.message}\n` +
