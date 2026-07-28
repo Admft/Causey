@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import {
-  AGE_BAND_OPTIONS,
-  ROLE_OPTIONS,
-  type AccountRole,
-  type AgeBand,
-} from "@/lib/auth/types";
+  ageBandFromDateOfBirth,
+  ageBandLabel,
+  parseDateOnly,
+} from "@/lib/auth/age-band";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { ROLE_OPTIONS, type AccountRole, type AgeBand } from "@/lib/auth/types";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -24,7 +24,7 @@ export function SignupForm() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [ageBand, setAgeBand] = useState<AgeBand | "">("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
   const [chessInterest, setChessInterest] = useState(true);
@@ -36,6 +36,15 @@ export function SignupForm() {
     () => ROLE_OPTIONS.find((r) => r.value === role)!,
     [role]
   );
+
+  const derivedBand = useMemo((): AgeBand | null => {
+    if (!dateOfBirth || !parseDateOnly(dateOfBirth)) return null;
+    try {
+      return ageBandFromDateOfBirth(dateOfBirth);
+    } catch {
+      return null;
+    }
+  }, [dateOfBirth]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -49,8 +58,12 @@ export function SignupForm() {
       if (password.length < 8) {
         throw new Error("Password must be at least 8 characters.");
       }
-      if (role === "student" && !ageBand) {
-        throw new Error("Pick an age band for your student profile.");
+      let ageBand: AgeBand | null = null;
+      if (role === "student") {
+        if (!dateOfBirth) {
+          throw new Error("Enter your date of birth.");
+        }
+        ageBand = ageBandFromDateOfBirth(dateOfBirth);
       }
       if (zip && !/^\d{5}$/.test(zip)) {
         throw new Error("Zip must be 5 digits.");
@@ -68,7 +81,8 @@ export function SignupForm() {
           data: {
             role,
             display_name: displayName.trim(),
-            age_band: ageBand || null,
+            date_of_birth: role === "student" ? dateOfBirth : null,
+            age_band: ageBand,
             state: state || null,
             zip: zip || null,
             interests,
@@ -186,21 +200,24 @@ export function SignupForm() {
 
         {role === "student" ? (
           <>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-semibold text-muted-strong">Age band</span>
-              <select
+            <label className="flex flex-col gap-1 sm:col-span-2">
+              <span className="text-xs font-semibold text-muted-strong">
+                Date of birth
+              </span>
+              <input
                 className="field"
+                type="date"
                 required
-                value={ageBand}
-                onChange={(e) => setAgeBand(e.target.value as AgeBand | "")}
-              >
-                <option value="">Select</option>
-                {AGE_BAND_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+                value={dateOfBirth}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                autoComplete="bday"
+              />
+              {derivedBand ? (
+                <span className="text-2xs text-muted">
+                  Age band: {ageBandLabel(derivedBand)}
+                </span>
+              ) : null}
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-xs font-semibold text-muted-strong">State</span>
@@ -229,7 +246,7 @@ export function SignupForm() {
                 placeholder="Optional"
               />
             </label>
-            <label className="flex items-center gap-2 pt-6 text-sm text-foreground">
+            <label className="flex items-center gap-2 pt-6 text-sm text-foreground sm:col-span-2">
               <input
                 type="checkbox"
                 checked={chessInterest}

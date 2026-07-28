@@ -15,8 +15,9 @@ export default function SignupPage() {
         Create your Causey account
       </h1>
       <p className="mt-3 text-sm text-muted">
-        Students can save events and rate difficulty today. Teacher/coach and
-        parent tools are shown so the path is clear — they unlock later.
+        Students can save events and rate difficulty today. Coach/organizer
+        (tournament hosts) and parent tools are shown so the path is clear —
+        they unlock later.
       </p>
       <div className="section-rule mt-8 pt-8">
         <SignupForm />

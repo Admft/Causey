@@ -1,9 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ageBandFromDateOfBirth,
+  ageBandLabel,
+  parseDateOnly,
+} from "@/lib/auth/age-band";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { AGE_BAND_OPTIONS, type AgeBand, type Profile } from "@/lib/auth/types";
+import type { AgeBand, Profile } from "@/lib/auth/types";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -15,7 +20,7 @@ const STATES = [
 export function ProfileEditor({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name);
-  const [ageBand, setAgeBand] = useState<AgeBand | "">(profile.age_band ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(profile.date_of_birth ?? "");
   const [state, setState] = useState(profile.state ?? "");
   const [zip, setZip] = useState(profile.zip ?? "");
   const [chessInterest, setChessInterest] = useState(
@@ -24,6 +29,15 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
+
+  const derivedBand = useMemo((): AgeBand | null => {
+    if (!dateOfBirth || !parseDateOnly(dateOfBirth)) return null;
+    try {
+      return ageBandFromDateOfBirth(dateOfBirth);
+    } catch {
+      return null;
+    }
+  }, [dateOfBirth]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -34,12 +48,17 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       if (zip && !/^\d{5}$/.test(zip)) {
         throw new Error("Zip must be 5 digits.");
       }
+      let ageBand: AgeBand | null = null;
+      if (dateOfBirth) {
+        ageBand = ageBandFromDateOfBirth(dateOfBirth);
+      }
       const supabase = createBrowserSupabaseClient();
       const { error: updError } = await supabase
         .from("profiles")
         .update({
           display_name: displayName.trim(),
-          age_band: ageBand || null,
+          date_of_birth: dateOfBirth || null,
+          age_band: ageBand,
           state: state || null,
           zip: zip || null,
           interests: chessInterest ? ["chess"] : [],
@@ -68,19 +87,25 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-muted-strong">Age band</span>
-        <select
+        <span className="text-xs font-semibold text-muted-strong">Date of birth</span>
+        <input
           className="field"
-          value={ageBand}
-          onChange={(e) => setAgeBand(e.target.value as AgeBand | "")}
-        >
-          <option value="">Not set</option>
-          {AGE_BAND_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          type="date"
+          value={dateOfBirth}
+          max={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+          autoComplete="bday"
+        />
+        {derivedBand ? (
+          <span className="text-2xs text-muted">
+            Age band: {ageBandLabel(derivedBand)}
+          </span>
+        ) : profile.age_band && !dateOfBirth ? (
+          <span className="text-2xs text-muted">
+            Current age band: {ageBandLabel(profile.age_band)} — set a birth date
+            to keep it accurate.
+          </span>
+        ) : null}
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1">

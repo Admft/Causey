@@ -28,8 +28,9 @@ export const ROLE_OPTIONS: {
   },
   {
     value: "coach",
-    label: "Teacher / Coach",
-    description: "Create events, invite a class, award placements — opening soon.",
+    label: "Coach / Organizer",
+    description:
+      "Create and host tournaments for your school, club, or team — opening soon.",
     available: false,
   },
   {
@@ -44,6 +45,7 @@ export type Profile = {
   id: string;
   role: AccountRole;
   display_name: string;
+  date_of_birth: string | null;
   age_band: AgeBand | null;
   state: string | null;
   zip: string | null;

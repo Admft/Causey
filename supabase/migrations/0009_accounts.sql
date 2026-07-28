@@ -6,6 +6,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   role text not null check (role in ('student', 'coach', 'parent')),
   display_name text not null default '',
+  date_of_birth date,
   age_band text check (
     age_band is null
     or age_band in ('u10', 'u12', 'u14', 'u18', '18plus')
@@ -18,8 +19,18 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+-- Safe if 0009 was already applied without date_of_birth.
+alter table public.profiles
+  add column if not exists date_of_birth date;
+
 comment on column public.profiles.role_unlocked is
   'Students are unlocked on signup. Coach/parent stay false until maker/family ships.';
+
+comment on column public.profiles.date_of_birth is
+  'Source of truth for age; age_band is derived at signup/profile save.';
+
+comment on column public.profiles.age_band is
+  'Derived from date_of_birth (u10/u12/u14/u18/18plus).';
 
 create table if not exists public.saved_competitions (
   user_id uuid not null references public.profiles (id) on delete cascade,
@@ -98,18 +109,49 @@ as $$
 declare
   chosen_role text := coalesce(new.raw_user_meta_data->>'role', 'student');
   unlocked boolean;
+  dob date;
+  band text;
+  years int;
 begin
   if chosen_role not in ('student', 'coach', 'parent') then
     chosen_role := 'student';
   end if;
   unlocked := (chosen_role = 'student');
 
-  insert into public.profiles (id, role, display_name, age_band, state, zip, interests, role_unlocked)
+  begin
+    dob := nullif(new.raw_user_meta_data->>'date_of_birth', '')::date;
+  exception when others then
+    dob := null;
+  end;
+
+  band := nullif(new.raw_user_meta_data->>'age_band', '');
+  if band is null and dob is not null then
+    years := date_part('year', age(current_date, dob))::int;
+    if years < 10 then
+      band := 'u10';
+    elsif years < 12 then
+      band := 'u12';
+    elsif years < 14 then
+      band := 'u14';
+    elsif years < 18 then
+      band := 'u18';
+    else
+      band := '18plus';
+    end if;
+  end if;
+  if band is not null and band not in ('u10', 'u12', 'u14', 'u18', '18plus') then
+    band := null;
+  end if;
+
+  insert into public.profiles (
+    id, role, display_name, date_of_birth, age_band, state, zip, interests, role_unlocked
+  )
   values (
     new.id,
     chosen_role,
     coalesce(new.raw_user_meta_data->>'display_name', ''),
-    nullif(new.raw_user_meta_data->>'age_band', ''),
+    dob,
+    band,
     nullif(new.raw_user_meta_data->>'state', ''),
     nullif(new.raw_user_meta_data->>'zip', ''),
     case

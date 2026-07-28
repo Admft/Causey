@@ -52,7 +52,7 @@ export default async function MePage({
 
   const roleLabel =
     profile.role === "coach"
-      ? "Teacher / Coach"
+      ? "Coach / Organizer"
       : profile.role === "parent"
         ? "Parent"
         : "Student";
@@ -71,7 +71,7 @@ export default async function MePage({
       {(params.pending === "role" || !profile.role_unlocked) && profile.role !== "student" ? (
         <div className="mt-6 rounded-xl border border-line bg-surface-soft px-4 py-3 text-sm text-muted-strong">
           {roleLabel} features aren&rsquo;t open yet. You can still browse and
-          save tournaments; maker / family tools will unlock on this same
+          save tournaments; hosting and family tools will unlock on this same
           account later.
         </div>
       ) : null}
