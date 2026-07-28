@@ -20,12 +20,15 @@ import {
 import { isCompetitionEnded } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import {
   canManageCompetitionAsViewer,
   getActiveChildren,
+  getCoachOrgsWithAttendance,
   getCompetitionBySlugAuthed,
   getEntrantsForCompetition,
+  type CoachOrgAttendance,
 } from "@/lib/data/portal";
 
 export const dynamic = "force-dynamic";
@@ -92,8 +95,16 @@ export default async function EventPage({ params }: Params) {
     label: string;
     status: "invited" | "going" | "not_going";
   }[] = [];
+  let coachOrgs: CoachOrgAttendance[] = [];
   if (user) {
     canManage = await canManageCompetitionAsViewer(competition, user.id);
+    if (competition.visibility === "public") {
+      coachOrgs = await getCoachOrgsWithAttendance(
+        user.id,
+        competition.id,
+        competition.org_id
+      );
+    }
     const children = await getActiveChildren(user.id);
     const entrants = await getEntrantsForCompetition(competition.id, [
       user.id,
@@ -310,6 +321,13 @@ export default async function EventPage({ params }: Params) {
                 Manage entrants
               </Link>
             </div>
+          ) : null}
+          {coachOrgs.length ? (
+            <OrgAttendancePanel
+              competitionId={competition.id}
+              eventSlug={competition.slug}
+              orgs={coachOrgs}
+            />
           ) : null}
           <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
             <h2 className="text-sm font-semibold text-foreground">Your account</h2>

@@ -23,6 +23,19 @@ function rangesIntersect(
   return (bMin ?? Number.NEGATIVE_INFINITY) <= aMax && (bMax ?? Number.POSITIVE_INFINITY) >= aMin;
 }
 
+/**
+ * Ages a grade band can plausibly contain: grade g spans roughly ages g+5
+ * to g+6, padded a year each side so a legal section is never hidden. Only
+ * used to EXCLUDE sections whose explicit age limits can't overlap the band —
+ * without this, an 18+ adults-only section (null grades) matched "K–3".
+ */
+function gradeBandAgeRange(band: { min: number; max: number }): {
+  min: number;
+  max: number;
+} {
+  return { min: band.min + 4, max: band.max + 7 };
+}
+
 export function sectionMatchesFilters(
   section: Section,
   competition: Competition,
@@ -31,6 +44,10 @@ export function sectionMatchesFilters(
   if (filters.grade_band) {
     const band = GRADE_BANDS[filters.grade_band];
     if (!rangesIntersect(band.min, band.max, section.min_grade, section.max_grade)) {
+      return false;
+    }
+    const ages = gradeBandAgeRange(band);
+    if (!rangesIntersect(ages.min, ages.max, section.min_age, section.max_age)) {
       return false;
     }
   }

@@ -8,6 +8,7 @@ import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   getMyEntrantRows,
+  getOrgAttendedEvents,
   getOrgBySlugForViewer,
   isSupabaseConfigured,
   isUpcomingEvent,
@@ -42,7 +43,10 @@ export default async function OrgPage({
   if (!view) notFound();
   const { org, membership, isCoach, activeMemberCount, events } = view;
 
-  const entrantRows = isCoach ? [] : await getMyEntrantRows(user.id);
+  const [entrantRows, attendedEvents] = await Promise.all([
+    isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
+    getOrgAttendedEvents(org.id),
+  ]);
   const myRsvpByCompetition = new Map(
     entrantRows.map((row) => [row.competition_id, row])
   );
@@ -50,6 +54,9 @@ export default async function OrgPage({
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = events.filter((e) => isUpcomingEvent(e, today));
   const past = events.filter((e) => !isUpcomingEvent(e, today));
+  const attendingUpcoming = attendedEvents.filter((e) =>
+    isUpcomingEvent(e, today)
+  );
 
   return (
     <>
@@ -136,6 +143,57 @@ export default async function OrgPage({
             </ul>
           )}
         </section>
+
+        {attendingUpcoming.length ? (
+          <section className="section-rule mt-10 pt-8">
+            <h2 className="text-sm font-semibold text-foreground">
+              We&rsquo;re attending
+            </h2>
+            <p className="mt-1 text-xs text-muted">
+              Public tournaments this organization is going to.
+            </p>
+            <ul className="mt-4 flex flex-col gap-3">
+              {attendingUpcoming.map((event) => {
+                const rsvp = myRsvpByCompetition.get(event.id);
+                return (
+                  <li
+                    key={event.id}
+                    className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <Link
+                        href={`/event/${event.slug}`}
+                        className="font-semibold text-foreground hover:text-brand-red"
+                      >
+                        {event.name}
+                      </Link>
+                      <span className="mt-1 block text-xs text-muted">
+                        {formatDateRange(event.start_date, event.end_date)}
+                        {event.city ? ` · ${event.city}, ${event.state}` : ""}
+                        {` · ${formatFeeCents(event.entry_fee_cents)}`}
+                      </span>
+                    </div>
+                    {rsvp ? (
+                      <RsvpButtons
+                        competitionId={event.id}
+                        profileId={user.id}
+                        status={rsvp.status}
+                        eventSlug={event.slug}
+                      />
+                    ) : isCoach ? (
+                      <Link
+                        href={`/event/${event.slug}/manage`}
+                        className="text-sm font-semibold text-brand-red hover:underline"
+                      >
+                        Manage entrants
+                      </Link>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
 
         {past.length ? (
           <section className="section-rule mt-10 pt-8">

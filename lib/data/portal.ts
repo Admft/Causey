@@ -300,6 +300,62 @@ export async function getOrgRoster(orgId: string): Promise<RosterRow[]> {
   return (data ?? []) as RosterRow[];
 }
 
+export type CoachOrgAttendance = {
+  org: { id: string; slug: string; name: string };
+  attending: boolean;
+};
+
+/**
+ * For the event page: orgs the viewer coaches, with whether each is marked
+ * as attending this competition. Excludes the hosting org (it doesn't
+ * "attend" its own event).
+ */
+export async function getCoachOrgsWithAttendance(
+  userId: string,
+  competitionId: string,
+  hostingOrgId: string | null
+): Promise<CoachOrgAttendance[]> {
+  const coached = (await getMyOrgs(userId)).filter(
+    (row) => row.isCoach && row.org.id !== hostingOrgId
+  );
+  if (!coached.length) return [];
+
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("org_competition_attendance")
+    .select("org_id")
+    .eq("competition_id", competitionId)
+    .in(
+      "org_id",
+      coached.map((row) => row.org.id)
+    );
+  const attending = new Set((data ?? []).map((row) => row.org_id as string));
+
+  return coached.map(({ org }) => ({
+    org: { id: org.id, slug: org.slug, name: org.name },
+    attending: attending.has(org.id),
+  }));
+}
+
+/** Public events this org has marked as "we're going". */
+export async function getOrgAttendedEvents(
+  orgId: string
+): Promise<OrgEventRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("org_competition_attendance")
+    .select(
+      "competitions(id, slug, name, city, state, start_date, end_date, visibility, entry_fee_cents)"
+    )
+    .eq("org_id", orgId);
+  return (data ?? [])
+    .flatMap((row) => {
+      const event = row.competitions as unknown as OrgEventRow | null;
+      return event ? [event] : [];
+    })
+    .sort((a, b) => a.start_date.localeCompare(b.start_date));
+}
+
 export type ChildSummary = {
   profile_id: string;
   display_name: string;

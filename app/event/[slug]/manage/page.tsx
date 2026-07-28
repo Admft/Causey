@@ -5,6 +5,7 @@ import { EntrantManager, RemoveEntrantButton } from "@/components/EntrantManager
 import { getSessionUser } from "@/lib/auth/session";
 import {
   canManageCompetitionAsViewer,
+  getCoachOrgsWithAttendance,
   getCompetitionBySlugAuthed,
   getEventAttendance,
   getOrgGroups,
@@ -34,19 +35,42 @@ export default async function ManageEventPage({
   const competition = await getCompetitionBySlugAuthed(slug);
   if (!competition) notFound();
   const canManage = await canManageCompetitionAsViewer(competition, user.id);
-  if (!canManage) redirect(`/event/${slug}`);
+  // Coaches whose org "attends" this public event can also invite their roster.
+  const attendingOrgs =
+    competition.visibility === "public"
+      ? (
+          await getCoachOrgsWithAttendance(
+            user.id,
+            competition.id,
+            competition.org_id
+          )
+        ).filter((entry) => entry.attending)
+      : [];
+  if (!canManage && !attendingOrgs.length) redirect(`/event/${slug}`);
 
   const attendance = await getEventAttendance(competition.id);
-  const [roster, groups] = competition.org_id
-    ? await Promise.all([
-        getOrgRoster(competition.org_id),
-        getOrgGroups(competition.org_id),
-      ])
-    : [[], []];
+  const rosterOrgIds = [
+    ...(canManage && competition.org_id ? [competition.org_id] : []),
+    ...attendingOrgs.map((entry) => entry.org.id),
+  ];
+  const [rosterLists, groupLists] = await Promise.all([
+    Promise.all(rosterOrgIds.map((orgId) => getOrgRoster(orgId))),
+    Promise.all(rosterOrgIds.map((orgId) => getOrgGroups(orgId))),
+  ]);
+  const roster = rosterLists.flat();
+  const groups = groupLists.flat();
 
   const invitedIds = new Set(attendance.map((row) => row.profile_id));
+  const seenCandidates = new Set<string>();
   const candidates = roster
-    .filter((row) => row.member_status === "active" && !invitedIds.has(row.profile_id))
+    .filter((row) => {
+      if (row.member_status !== "active" || invitedIds.has(row.profile_id)) {
+        return false;
+      }
+      if (seenCandidates.has(row.profile_id)) return false;
+      seenCandidates.add(row.profile_id);
+      return true;
+    })
     .map((row) => ({ profile_id: row.profile_id, display_name: row.display_name }));
   const summary = summarizeAttendance(attendance);
 
