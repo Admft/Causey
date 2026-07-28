@@ -9,7 +9,7 @@ create table if not exists public.organizations (
   type text not null default 'school'
     check (type in ('school', 'club', 'team', 'district')),
   state text check (state is null or char_length(state) = 2),
-  created_by uuid references public.profiles (id) on delete set null,
+  created_by uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -46,7 +46,8 @@ alter table public.competitions
   add column if not exists org_id uuid references public.organizations (id) on delete set null;
 
 alter table public.competitions
-  add column if not exists created_by uuid references public.profiles (id) on delete set null;
+  add column if not exists created_by uuid default auth.uid()
+    references public.profiles (id) on delete set null;
 
 alter table public.competitions
   add column if not exists details jsonb not null default '{}'::jsonb;
