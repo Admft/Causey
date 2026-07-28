@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
+import { AuthNav } from "@/components/AuthNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { EarlyBuildBanner } from "@/components/EarlyBuildBanner";
 import "./globals.css";
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 >
                   Book a meeting <ExternalMark />
                 </a>
+                <AuthNav />
               </nav>
             </div>
           </header>

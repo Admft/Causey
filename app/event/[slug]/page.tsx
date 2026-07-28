@@ -13,7 +13,13 @@ import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { EventStandingLabel } from "@/components/EventStandingLabel";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import { ChessSubnavBar } from "@/components/ChessSubnav";
+import {
+  DifficultyRating,
+  SaveCompetitionButton,
+} from "@/components/AccountCompetitionActions";
 import { isCompetitionEnded } from "@/lib/competition-timing";
+import { getSessionUser } from "@/lib/auth/session";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +66,29 @@ export default async function EventPage({ params }: Params) {
     series: competition.series,
   });
   const ended = isCompetitionEnded(competition);
+
+  const user = await getSessionUser();
+  let initiallySaved = false;
+  let initialScore: number | null = null;
+  if (user) {
+    const supabase = await createServerSupabaseClient();
+    const [{ data: saved }, { data: rating }] = await Promise.all([
+      supabase
+        .from("saved_competitions")
+        .select("competition_id")
+        .eq("user_id", user.id)
+        .eq("competition_id", competition.id)
+        .maybeSingle(),
+      supabase
+        .from("competition_ratings")
+        .select("score")
+        .eq("user_id", user.id)
+        .eq("competition_id", competition.id)
+        .maybeSingle(),
+    ]);
+    initiallySaved = Boolean(saved);
+    initialScore = rating?.score ?? null;
+  }
 
   return (
     <>
@@ -196,7 +225,22 @@ export default async function EventPage({ params }: Params) {
           </section>
         </div>
 
-        <aside className="lg:pt-16">
+        <aside className="flex flex-col gap-6 lg:pt-16">
+          <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+            <h2 className="text-sm font-semibold text-foreground">Your account</h2>
+            <div className="mt-3 flex flex-col gap-4">
+              <SaveCompetitionButton
+                competitionId={competition.id}
+                initiallySaved={initiallySaved}
+                signedIn={Boolean(user)}
+              />
+              <DifficultyRating
+                competitionId={competition.id}
+                initialScore={initialScore}
+                signedIn={Boolean(user)}
+              />
+            </div>
+          </div>
           <PathwayStatusPanel
             status={pathwayStatus}
             summary={competition.pathway_summary}
