@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HomeHeroGraphic } from "@/components/HomeHeroGraphic";
 import { TournamentSources } from "@/components/TournamentSources";
 
 export const metadata: Metadata = {
@@ -31,15 +32,20 @@ export default function CompetitionTypesPage() {
   return (
     <>
       <section className="access-grid">
-        <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
-          <p className="text-sm font-semibold text-brand-red">Early product preview</p>
-          <h1 className="mt-2 max-w-[16ch] font-display text-display-xl font-bold tracking-tight text-foreground">
-            What do you want to compete in?
-          </h1>
-          <p className="mt-4 max-w-xl text-md text-muted">
-            Chess is live enough to explore. Other competition types are still
-            being built. Pick a type to see what we have so far.
-          </p>
+        <div className="relative mx-auto min-h-[380px] max-w-6xl px-5 py-16 sm:px-8 sm:py-20 md:min-h-[420px]">
+          <div className="relative z-10 max-w-xl">
+            <p className="animate-rise text-sm font-semibold text-brand-red">
+              Early product preview
+            </p>
+            <h1 className="animate-rise animate-rise-delay-1 mt-2 max-w-[16ch] font-display text-display-xl font-bold tracking-tight text-foreground">
+              What do you want to compete in?
+            </h1>
+            <p className="animate-rise animate-rise-delay-1 mt-4 max-w-xl text-md text-muted">
+              Chess is live enough to explore. Other competition types are still
+              being built. Pick a type to see what we have so far.
+            </p>
+          </div>
+          <HomeHeroGraphic />
         </div>
       </section>
 

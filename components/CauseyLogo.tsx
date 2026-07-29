@@ -4,8 +4,17 @@
  * 32×32 viewBox, mark scales with the wordmark's em size, and the mark and
  * wordmark always travel together on branded surfaces.
  */
-export function CauseyLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
-  const textSize = { sm: "text-lead", md: "text-xl", lg: "text-2xl" }[size];
+export function CauseyLogo({
+  size = "md",
+}: {
+  size?: "sm" | "md" | "lg" | "hero";
+}) {
+  const textSize = {
+    sm: "text-lead",
+    md: "text-xl",
+    lg: "text-2xl",
+    hero: "text-display",
+  }[size];
   return (
     <span className={`inline-flex items-center gap-2 ${textSize}`}>
       <svg

@@ -225,6 +225,27 @@ select.field {
   }
 }
 
+/* Hero first-paint rise — §10. Guide attention into the first viewport. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: rise 520ms var(--ease-brand) both;
+}
+.animate-rise-delay-1 {
+  animation-delay: 90ms;
+}
+.animate-rise-delay-2 {
+  animation-delay: 180ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cta-enabled,
   .card-lift,
@@ -236,6 +257,11 @@ select.field {
     transform: none;
   }
   .skeleton {
+    animation: none;
+  }
+  .animate-rise,
+  .animate-rise-delay-1,
+  .animate-rise-delay-2 {
     animation: none;
   }
 }
