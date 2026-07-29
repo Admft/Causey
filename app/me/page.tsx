@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
-import { getParentLinks } from "@/lib/data/portal";
+import {
+  getMyEntrantRows,
+  getParentLinks,
+  isUpcomingEvent,
+} from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatDateRange } from "@/lib/format";
 
@@ -49,6 +53,14 @@ export default async function MePage() {
 
   const parentLinks =
     profile.role === "student" ? await getParentLinks(profile.id) : [];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const schedule = (await getMyEntrantRows(profile.id)).filter(
+    (row) =>
+      row.status === "going" &&
+      row.competition &&
+      isUpcomingEvent(row.competition, today)
+  );
 
   const roleLabel =
     profile.role === "coach"
@@ -102,6 +114,37 @@ export default async function MePage() {
           <ProfileEditor profile={profile} />
         </div>
       </section>
+
+      {schedule.length ? (
+        <section className="section-rule mt-10 pt-8">
+          <h2 className="text-sm font-semibold text-foreground">
+            You&rsquo;re going to
+          </h2>
+          <ul className="mt-4 flex flex-col gap-3">
+            {schedule.map((row) => (
+              <li key={row.competition_id}>
+                <Link
+                  href={`/event/${row.competition!.slug}`}
+                  className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
+                >
+                  <span className="font-semibold text-foreground">
+                    {row.competition!.name}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted">
+                    {formatDateRange(
+                      row.competition!.start_date,
+                      row.competition!.end_date
+                    )}
+                    {row.competition!.city
+                      ? ` · ${row.competition!.city}, ${row.competition!.state}`
+                      : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="section-rule mt-10 pt-8">
         <h2 className="text-sm font-semibold text-foreground">Saved tournaments</h2>

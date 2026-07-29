@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { createTournament } from "@/lib/actions/tournaments";
+import { createTournament, updateTournament } from "@/lib/actions/tournaments";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -22,29 +22,56 @@ function feeToCents(raw: string): { cents: number | null } | { error: string } {
   return { cents: Math.round(dollars * 100) };
 }
 
+/** Prefill values when editing an existing tournament. */
+export type TournamentFormInitial = {
+  name: string;
+  start_date: string;
+  end_date: string | null;
+  reg_deadline: string | null;
+  venue_name: string | null;
+  address: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  entry_fee_cents: number | null;
+  reg_url: string | null;
+  visibility: "public" | "private";
+  rated: boolean;
+};
+
 export function TournamentCreateForm({
   orgId,
   orgSlug,
   orgState,
+  initial,
+  edit,
 }: {
   orgId: string;
   orgSlug: string;
   orgState: string | null;
+  initial?: TournamentFormInitial;
+  edit?: { competitionId: string; eventSlug: string };
 }) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [regDeadline, setRegDeadline] = useState("");
-  const [venueName, setVenueName] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState(orgState ?? "");
-  const [zip, setZip] = useState("");
-  const [entryFee, setEntryFee] = useState("");
-  const [regUrl, setRegUrl] = useState("");
-  const [visibility, setVisibility] = useState<"private" | "public">("private");
-  const [rated, setRated] = useState(false);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [startDate, setStartDate] = useState(initial?.start_date ?? "");
+  const [endDate, setEndDate] = useState(initial?.end_date ?? "");
+  const [regDeadline, setRegDeadline] = useState(initial?.reg_deadline ?? "");
+  const [venueName, setVenueName] = useState(initial?.venue_name ?? "");
+  const [address, setAddress] = useState(initial?.address ?? "");
+  const [city, setCity] = useState(initial?.city ?? "");
+  const [state, setState] = useState(initial?.state ?? orgState ?? "");
+  const [zip, setZip] = useState(initial?.zip ?? "");
+  const [entryFee, setEntryFee] = useState(
+    initial && initial.entry_fee_cents !== null
+      ? String(initial.entry_fee_cents / 100)
+      : ""
+  );
+  const [regUrl, setRegUrl] = useState(initial?.reg_url ?? "");
+  const [visibility, setVisibility] = useState<"private" | "public">(
+    initial?.visibility ?? "private"
+  );
+  const [rated, setRated] = useState(initial?.rated ?? false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -60,9 +87,7 @@ export function TournamentCreateForm({
 
     setPending(true);
     try {
-      const result = await createTournament({
-        orgId,
-        orgSlug,
+      const fields = {
         name,
         startDate,
         endDate: endDate || null,
@@ -76,7 +101,15 @@ export function TournamentCreateForm({
         regUrl,
         visibility,
         rated,
-      });
+      };
+      const result = edit
+        ? await updateTournament({
+            competitionId: edit.competitionId,
+            eventSlug: edit.eventSlug,
+            orgSlug,
+            ...fields,
+          })
+        : await createTournament({ orgId, orgSlug, ...fields });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -277,7 +310,13 @@ export function TournamentCreateForm({
       ) : null}
 
       <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
-        {pending ? "Creating…" : "Create tournament"}
+        {pending
+          ? edit
+            ? "Saving…"
+            : "Creating…"
+          : edit
+            ? "Save changes"
+            : "Create tournament"}
       </button>
     </form>
   );

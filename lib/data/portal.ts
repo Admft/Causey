@@ -300,6 +300,144 @@ export async function getOrgRoster(orgId: string): Promise<RosterRow[]> {
   return (data ?? []) as RosterRow[];
 }
 
+export type RecommendTarget = {
+  profile_id: string;
+  display_name: string;
+  context: string; // "Your child" or the org name
+};
+
+/**
+ * Who the viewer can recommend an event to: linked children plus everyone
+ * on the rosters of orgs they belong to or coach. Names come from the
+ * PII-light roster RPC / household reads.
+ */
+export async function getRecommendTargets(
+  userId: string
+): Promise<RecommendTarget[]> {
+  const [children, myOrgs] = await Promise.all([
+    getActiveChildren(userId),
+    getMyOrgs(userId),
+  ]);
+  const targets = new Map<string, RecommendTarget>();
+  for (const child of children) {
+    targets.set(child.profile_id, {
+      profile_id: child.profile_id,
+      display_name: child.display_name,
+      context: "Your child",
+    });
+  }
+  const rosters = await Promise.all(
+    myOrgs.map(async ({ org }) => ({
+      org,
+      roster: await getOrgRoster(org.id),
+    }))
+  );
+  for (const { org, roster } of rosters) {
+    for (const row of roster) {
+      if (row.profile_id === userId || row.member_status !== "active") continue;
+      if (!targets.has(row.profile_id)) {
+        targets.set(row.profile_id, {
+          profile_id: row.profile_id,
+          display_name: row.display_name || "Unnamed student",
+          context: org.name,
+        });
+      }
+    }
+  }
+  return [...targets.values()].sort((a, b) =>
+    a.display_name.localeCompare(b.display_name)
+  );
+}
+
+export type RecommendationRow = {
+  id: string;
+  competition_id: string;
+  from_name: string;
+  note: string | null;
+  created_at: string;
+  competition: Pick<
+    OrgEventRow,
+    "slug" | "name" | "city" | "state" | "start_date" | "end_date"
+  > | null;
+};
+
+/** Recommendations sent to the viewer, sender names resolved via RPC. */
+export async function getMyRecommendations(
+  userId: string
+): Promise<RecommendationRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("event_recommendations")
+    .select(
+      "id, competition_id, from_profile_id, note, created_at, competitions(slug, name, city, state, start_date, end_date)"
+    )
+    .eq("to_profile_id", userId)
+    .eq("status", "sent")
+    .order("created_at", { ascending: false });
+  const rows = (data ?? []).filter((row) => row.competitions);
+  if (!rows.length) return [];
+
+  const senderIds = [...new Set(rows.map((row) => row.from_profile_id as string))];
+  const { data: names } = await supabase.rpc("get_connected_names", {
+    p_ids: senderIds,
+  });
+  const nameById = new Map(
+    ((names ?? []) as { profile_id: string; display_name: string }[]).map(
+      (row) => [row.profile_id, row.display_name]
+    )
+  );
+
+  return rows.map((row) => ({
+    id: row.id as string,
+    competition_id: row.competition_id as string,
+    from_name: nameById.get(row.from_profile_id as string) || "Someone you know",
+    note: (row.note as string | null) ?? null,
+    created_at: row.created_at as string,
+    competition:
+      (row.competitions as unknown as RecommendationRow["competition"]) ?? null,
+  }));
+}
+
+export type RatingSummary = { avg_score: number; rating_count: number };
+
+export async function getRatingSummary(
+  competitionId: string
+): Promise<RatingSummary | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_rating_summary", {
+    p_competition_id: competitionId,
+  });
+  if (error || !data?.length || !data[0].rating_count) return null;
+  return {
+    avg_score: Number(data[0].avg_score),
+    rating_count: data[0].rating_count as number,
+  };
+}
+
+export type ClubGoingGroup = { org_name: string; names: string[] };
+
+/** Teammates from the viewer's orgs who RSVP'd going, grouped by org. */
+export async function getClubGoing(
+  competitionId: string
+): Promise<ClubGoingGroup[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_club_going", {
+    p_competition_id: competitionId,
+  });
+  if (error) return [];
+  const groups = new Map<string, string[]>();
+  for (const row of (data ?? []) as { org_name: string; display_name: string }[]) {
+    const list = groups.get(row.org_name) ?? [];
+    list.push(row.display_name || "Unnamed student");
+    groups.set(row.org_name, list);
+  }
+  return [...groups.entries()].map(([org_name, names]) => ({
+    org_name,
+    names: names.sort(),
+  }));
+}
+
 export type CoachOrgAttendance = {
   org: { id: string; slug: string; name: string };
   attending: boolean;

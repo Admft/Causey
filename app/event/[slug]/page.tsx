@@ -21,14 +21,20 @@ import { isCompetitionEnded } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
+import { RecommendEventPanel } from "@/components/RecommendEventPanel";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import {
   canManageCompetitionAsViewer,
   getActiveChildren,
+  getClubGoing,
   getCoachOrgsWithAttendance,
   getCompetitionBySlugAuthed,
   getEntrantsForCompetition,
+  getRatingSummary,
+  getRecommendTargets,
+  type ClubGoingGroup,
   type CoachOrgAttendance,
+  type RecommendTarget,
 } from "@/lib/data/portal";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +102,9 @@ export default async function EventPage({ params }: Params) {
     status: "invited" | "going" | "not_going";
   }[] = [];
   let coachOrgs: CoachOrgAttendance[] = [];
+  let recommendTargets: RecommendTarget[] = [];
+  let clubGoing: ClubGoingGroup[] = [];
+  const ratingSummary = await getRatingSummary(competition.id);
   if (user) {
     canManage = await canManageCompetitionAsViewer(competition, user.id);
     if (competition.visibility === "public") {
@@ -105,6 +114,10 @@ export default async function EventPage({ params }: Params) {
         competition.org_id
       );
     }
+    [recommendTargets, clubGoing] = await Promise.all([
+      getRecommendTargets(user.id),
+      getClubGoing(competition.id),
+    ]);
     const children = await getActiveChildren(user.id);
     const entrants = await getEntrantsForCompetition(competition.id, [
       user.id,
@@ -265,6 +278,15 @@ export default async function EventPage({ params }: Params) {
             </p>
           )}
 
+          <p className="mt-3">
+            <a
+              href={`/event/${competition.slug}/ics`}
+              className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+            >
+              Add to calendar (.ics)
+            </a>
+          </p>
+
           <section className="mt-10">
             <h2 className="text-xl font-bold text-foreground">Sections &amp; who can enter</h2>
             <ul className="mt-4 flex flex-col">
@@ -329,6 +351,30 @@ export default async function EventPage({ params }: Params) {
               orgs={coachOrgs}
             />
           ) : null}
+          {clubGoing.length ? (
+            <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
+              <h2 className="text-sm font-semibold text-foreground">
+                Going from your club
+              </h2>
+              <div className="mt-2 flex flex-col gap-2">
+                {clubGoing.map((group) => (
+                  <p key={group.org_name} className="text-sm text-muted-strong">
+                    <span className="font-semibold text-foreground">
+                      {group.org_name}:
+                    </span>{" "}
+                    {group.names.join(", ")}
+                  </p>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {user && recommendTargets.length ? (
+            <RecommendEventPanel
+              competitionId={competition.id}
+              eventSlug={competition.slug}
+              targets={recommendTargets}
+            />
+          ) : null}
           <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
             <h2 className="text-sm font-semibold text-foreground">Your account</h2>
             <div className="mt-3 flex flex-col gap-4">
@@ -342,6 +388,16 @@ export default async function EventPage({ params }: Params) {
                 initialScore={initialScore}
                 signedIn={Boolean(user)}
               />
+              {ratingSummary ? (
+                <p className="text-xs text-muted">
+                  Students rate this{" "}
+                  <span className="font-semibold text-foreground">
+                    {ratingSummary.avg_score}/10
+                  </span>{" "}
+                  ({ratingSummary.rating_count}{" "}
+                  {ratingSummary.rating_count === 1 ? "rating" : "ratings"})
+                </p>
+              ) : null}
             </div>
           </div>
           <PathwayStatusPanel

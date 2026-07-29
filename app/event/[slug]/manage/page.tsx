@@ -91,6 +91,17 @@ export default async function ManageEventPage({
         {competition.visibility === "private"
           ? " · private to your organization"
           : " · listed publicly"}
+        {canManage ? (
+          <>
+            {" · "}
+            <Link
+              href={`/event/${competition.slug}/edit`}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Edit details
+            </Link>
+          </>
+        ) : null}
       </p>
 
       <section className="section-rule mt-10 pt-8">

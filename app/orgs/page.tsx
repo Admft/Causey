@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DismissRecommendationButton } from "@/components/DismissRecommendationButton";
 import { JoinOrgForm } from "@/components/JoinOrgForm";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
   getMyEntrantRows,
   getMyOrgs,
+  getMyRecommendations,
   isSupabaseConfigured,
   isUpcomingEvent,
 } from "@/lib/data/portal";
@@ -46,9 +48,10 @@ export default async function OrgsPage() {
   const profile = await getCurrentProfile();
   const isCoachRole = canCreateOrg(profile);
 
-  const [myOrgs, entrantRows] = await Promise.all([
+  const [myOrgs, entrantRows, recommendations] = await Promise.all([
     getMyOrgs(user.id),
     getMyEntrantRows(user.id),
+    getMyRecommendations(user.id),
   ]);
   const today = new Date().toISOString().slice(0, 10);
   const upcomingInvites = entrantRows.filter(
@@ -181,6 +184,40 @@ export default async function OrgsPage() {
           </ul>
         )}
       </section>
+
+      {recommendations.length ? (
+        <section className="section-rule mt-10 pt-8">
+          <h2 className="text-sm font-semibold text-foreground">
+            Recommended to you
+          </h2>
+          <ul className="mt-4 flex flex-col gap-3">
+            {recommendations.map((rec) => (
+              <li
+                key={rec.id}
+                className="flex flex-col gap-2 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <Link
+                    href={`/event/${rec.competition!.slug}`}
+                    className="font-semibold text-foreground hover:text-brand-red"
+                  >
+                    {rec.competition!.name}
+                  </Link>
+                  <span className="mt-1 block text-xs text-muted">
+                    {formatDateRange(
+                      rec.competition!.start_date,
+                      rec.competition!.end_date
+                    )}
+                    {` · from ${rec.from_name}`}
+                    {rec.note ? ` — “${rec.note}”` : ""}
+                  </span>
+                </div>
+                <DismissRecommendationButton id={rec.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {profile?.role === "parent" ? (
         <p className="mt-8 text-sm text-muted">

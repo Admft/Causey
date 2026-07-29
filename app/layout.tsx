@@ -40,33 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="border-b border-line bg-background/90 backdrop-blur-md">
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
               <Link href="/" aria-label="Causey home — browse competition types">
-                <CauseyLogo size="sm" />
+                <CauseyLogo size="md" />
               </Link>
               <nav className="flex items-center gap-5" aria-label="Primary">
-                <Link
-                  href="/chess"
-                  className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
-                >
-                  Chess
-                </Link>
-                <a
-                  href="https://causey.dev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="How it works — opens causey.dev in a new tab"
-                  className="hidden text-sm font-medium text-muted-strong transition-colors hover:text-foreground sm:inline-flex sm:items-center sm:gap-1"
-                >
-                  How it works <ExternalMark />
-                </a>
-                <a
-                  href="https://causey.dev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Book a meeting — opens causey.dev in a new tab"
-                  className="hidden items-center gap-1.5 rounded-lg border border-line bg-white px-3.5 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red sm:inline-flex"
-                >
-                  Book a meeting <ExternalMark />
-                </a>
                 <AuthNav />
               </nav>
             </div>

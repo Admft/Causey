@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-export function LoginForm({ next }: { next?: string }) {
-  const router = useRouter();
+export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -21,18 +19,34 @@ export function LoginForm({ next }: { next?: string }) {
         throw new Error("Supabase is not configured in .env.");
       }
       const supabase = createBrowserSupabaseClient();
-      const { error: signError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (signError) throw signError;
-      router.push(next ?? "/me");
-      router.refresh();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        }
+      );
+      if (resetError) throw resetError;
+      setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed.");
+      setError(err instanceof Error ? err.message : "Could not send the email.");
     } finally {
       setPending(false);
     }
+  }
+
+  if (done) {
+    return (
+      <div className="rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
+        <h2 className="font-display text-display-sm font-bold text-foreground">
+          Check your email
+        </h2>
+        <p className="mt-3 text-sm text-muted">
+          If <strong className="text-foreground">{email}</strong> has an
+          account, a reset link is on its way. Open it to choose a new
+          password.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -48,39 +62,18 @@ export function LoginForm({ next }: { next?: string }) {
           autoComplete="email"
         />
       </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-muted-strong">Password</span>
-        <input
-          className="field"
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
-      </label>
-
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">
           {error}
         </p>
       ) : null}
-
       <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Sending…" : "Send reset link"}
       </button>
-
       <p className="text-sm text-muted">
-        New here?{" "}
-        <Link href="/signup" className="font-semibold text-brand-red hover:underline">
-          Create an account
-        </Link>
-        {" · "}
-        <Link
-          href="/forgot-password"
-          className="font-medium text-muted-strong hover:text-foreground"
-        >
-          Forgot password?
+        Remembered it?{" "}
+        <Link href="/login" className="font-semibold text-brand-red hover:underline">
+          Sign in
         </Link>
       </p>
     </form>

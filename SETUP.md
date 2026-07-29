@@ -53,13 +53,14 @@ These are not missing by accident; they are deliberate early constraints:
   org-hosted events RSVP on Causey instead)
 - In-app admin dashboard / moderation queue for coach-created public events
 
-Accounts are live for all three roles — run migrations `0009`–`0013` and use
+Accounts are live for all three roles — run migrations `0009`–`0014` and use
 `/signup`. Coaches/organizers create orgs with Khan Academy-style join codes
-(`/orgs`), host private or public tournaments, mark any public event as
-"we're attending" and invite their roster to it, and track RSVPs; students
-join with a code and RSVP; parents link to their children (`/family`) and can
-RSVP for them. Registration for scraped events still happens on organizer
-sites.
+(`/orgs`), host private or public tournaments (edit or cancel them later),
+mark any public event as "we're attending" and invite their roster to it, and
+track RSVPs; students join with a code and RSVP; parents link to their
+children (`/family`) and can RSVP for them. Anyone can recommend an event to
+a connected account. Registration for scraped events still happens on
+organizer sites — see `ROADMAP.md` for what's next.
 
 ## How to run it right now
 

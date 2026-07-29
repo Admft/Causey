@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DismissRecommendationButton } from "@/components/DismissRecommendationButton";
 import { LinkChildForm } from "@/components/LinkChildForm";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
   getChildrenWithEvents,
+  getMyRecommendations,
   getPendingChildRequestCount,
   isSupabaseConfigured,
   isUpcomingEvent,
@@ -40,9 +42,10 @@ export default async function FamilyPage() {
   const profile = await getCurrentProfile();
   if (profile && profile.role !== "parent") redirect("/me");
 
-  const [children, pendingCount] = await Promise.all([
+  const [children, pendingCount, recommendations] = await Promise.all([
     getChildrenWithEvents(user.id),
     getPendingChildRequestCount(user.id),
+    getMyRecommendations(user.id),
   ]);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -56,6 +59,40 @@ export default async function FamilyPage() {
         Link with your child&rsquo;s account to follow their clubs and RSVP to
         tournaments for them.
       </p>
+
+      {recommendations.length ? (
+        <section className="section-rule mt-10 pt-8">
+          <h2 className="text-sm font-semibold text-foreground">
+            Recommended to you
+          </h2>
+          <ul className="mt-4 flex flex-col gap-3">
+            {recommendations.map((rec) => (
+              <li
+                key={rec.id}
+                className="flex flex-col gap-2 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <Link
+                    href={`/event/${rec.competition!.slug}`}
+                    className="font-semibold text-foreground hover:text-brand-red"
+                  >
+                    {rec.competition!.name}
+                  </Link>
+                  <span className="mt-1 block text-xs text-muted">
+                    {formatDateRange(
+                      rec.competition!.start_date,
+                      rec.competition!.end_date
+                    )}
+                    {` · from ${rec.from_name}`}
+                    {rec.note ? ` — “${rec.note}”` : ""}
+                  </span>
+                </div>
+                <DismissRecommendationButton id={rec.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="section-rule mt-10 pt-8">
         <h2 className="text-sm font-semibold text-foreground">Link a child</h2>
