@@ -185,63 +185,61 @@ export function SignupForm() {
         </label>
 
         {role === "student" ? (
-          <>
-            <label className="flex flex-col gap-1 sm:col-span-2">
-              <span className="text-xs font-semibold text-muted-strong">
-                Date of birth
+          <label className="flex flex-col gap-1 sm:col-span-2">
+            <span className="text-xs font-semibold text-muted-strong">
+              Date of birth
+            </span>
+            <input
+              className="field"
+              type="date"
+              required
+              value={dateOfBirth}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              autoComplete="bday"
+            />
+            {derivedBand ? (
+              <span className="text-2xs text-muted">
+                Age band: {ageBandLabel(derivedBand)}
               </span>
-              <input
-                className="field"
-                type="date"
-                required
-                value={dateOfBirth}
-                max={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                autoComplete="bday"
-              />
-              {derivedBand ? (
-                <span className="text-2xs text-muted">
-                  Age band: {ageBandLabel(derivedBand)}
-                </span>
-              ) : null}
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-semibold text-muted-strong">State</span>
-              <select
-                className="field"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-              >
-                <option value="">Optional</option>
-                {STATES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-semibold text-muted-strong">Zip</span>
-              <input
-                className="field"
-                inputMode="numeric"
-                pattern="\d{5}"
-                maxLength={5}
-                value={zip}
-                onChange={(e) => setZip(e.target.value)}
-                placeholder="Optional"
-              />
-            </label>
-            <label className="flex items-center gap-2 pt-6 text-sm text-foreground sm:col-span-2">
-              <input
-                type="checkbox"
-                checked={chessInterest}
-                onChange={(e) => setChessInterest(e.target.checked)}
-              />
-              Interested in chess
-            </label>
-          </>
+            ) : null}
+          </label>
         ) : null}
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-muted-strong">State</span>
+          <select
+            className="field"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+          >
+            <option value="">Optional</option>
+            {STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-muted-strong">Zip</span>
+          <input
+            className="field"
+            inputMode="numeric"
+            pattern="\d{5}"
+            maxLength={5}
+            value={zip}
+            onChange={(e) => setZip(e.target.value)}
+            placeholder="Optional"
+          />
+        </label>
+        <label className="flex items-center gap-2 pt-6 text-sm text-foreground sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={chessInterest}
+            onChange={(e) => setChessInterest(e.target.checked)}
+          />
+          Interested in chess
+        </label>
       </div>
 
       {error ? (
