@@ -17,7 +17,6 @@ export function HomeHeroGraphic({ className }: { className?: string }) {
   const state = { x: 212, y: 172 };
   const national = { x: 336, y: 156 };
 
-  // Slight isometric lift: draw a faint base plane under the hubs.
   return (
     <div
       aria-hidden="true"
@@ -29,38 +28,6 @@ export function HomeHeroGraphic({ className }: { className?: string }) {
         className="h-auto w-[min(100%,24rem)] lg:w-[26rem]"
         role="presentation"
       >
-        {/* Base plane — subtle isometric grid ground, keeps it structural, not blobby */}
-        <g className="opacity-60">
-          {Array.from({ length: 7 }, (_, i) => {
-            const x = 40 + i * 52;
-            return (
-              <line
-                key={`iso-x-${i}`}
-                x1={x}
-                y1="70"
-                x2={x - 30}
-                y2="250"
-                className="stroke-foreground/8"
-                strokeWidth="1"
-              />
-            );
-          })}
-          {Array.from({ length: 5 }, (_, i) => {
-            const y = 82 + i * 44;
-            return (
-              <line
-                key={`iso-y-${i}`}
-                x1="36"
-                y1={y}
-                x2="368"
-                y2={y - 12}
-                className="stroke-foreground/8"
-                strokeWidth="1"
-              />
-            );
-          })}
-        </g>
-
         {/* Edges: local → state */}
         {local.map((p, i) => (
           <line
