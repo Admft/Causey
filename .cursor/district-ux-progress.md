@@ -2,14 +2,14 @@
 
 Living backlog for the continuous improvement loop. Mark items done with date + short note.
 
-## Collaboration note (two agents run in parallel — user requested)
-- **UX agent** (gpt-5.6-sol xhigh): workflow/IA/role tasks from the P0/P1 UX list.
-- **Frontend polish agent** (kimi-k3 max): visual feel, responsiveness, composition, tournament display.
-- Prefer **bigger shippable wins** over tiny chrome (a whole surface or flow slice, not “nudge one arrow”).
-- Own different files when possible. If you both need the same file, prefer the smallest change or skip and take another item.
-- Before committing, `git pull origin dev` and run tests so parallel work merges cleanly.
+## Collaboration note
+- **Primary loop (2026-08-06):** persona-audit → big-batch. Playbook: `.cursor/persona-audit-loop.md`.
+- Emulate every role each tick; gather findings; ship one **surface-level** batch — not micro chrome.
+- Prefer bigger shippable wins (whole role landing / flow / portal shell).
+- Before committing, `git pull origin/dev` and run tests.
 - Commit as Adam only — no Co-authored-by. Push `origin/dev`. Never touch `main` unless asked.
-- Update this file every tick.
+- Update this file + persona-audit-loop Active batch every tick.
+- Old dual “one nit every 2m” UX/polish loops are retired.
 
 ## Major UI backlog (kimi-k3-max — prefer these)
 - [x] Visual hierarchy overhaul: consistent spacing/typography rhythm across home, search, event, account; kill template-default feel (event/account section heads shipped in fc953a4; home + search shipped 2026-08-05)
@@ -17,7 +17,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
-- [x] Search filter rail: sticky sidebar scrollbar no longer overlays filter controls (stable gutter + right padding; column 220→240px) — 2026-08-06
+- [x] Role workspaces differentiated: parent desk (`/family` action inbox), student plan (`/me` + nav/homePath), coach mission (`/orgs`), portal primitives — 2026-08-06
+- [x] Search filter rail: sticky sidebar scrollbar no longer overlays filter controls (inner `pr-4` inset + soft-scroll thumb; column 240→256px — overlay bars ignore padding on the scroller) — 2026-08-06
 - [x] Navigation chrome: chess search is now one tap away in the global header for everyone (signed out included), with active-state awareness across Chess/Family-or-orgs/Account/Admin links; mobile keeps a short "Chess" label so the cluster fits phones — 2026-08-05
 - [x] Org workspace: one mission panel leads (resume freshest draft → next tournament with manage/RSVP → create-first-tournament empty state); extra drafts, other upcoming, and attending events demote to quiet hairline rows; "Create another tournament" drops to a text link when a mission exists — 2026-08-05 (426148a)
 - [x] Search composition: applied rail filters restate as removable chips above the results (visible in every state, even with the rail collapsed/scrolled away), desktop rail goes sticky, and paging moves to the bottom row where "load more" happens — 2026-08-05
@@ -96,8 +97,8 @@ Pick these before polish. One major end-to-end win per tick.
 
 ### Biggest gap — role workspaces
 - [x] Coach org home panel soup → one mission panel (426148a)
-- [ ] `/family`, `/me`, `/orgs` still share one recipe: red eyebrow → H1 → section rule → stacked rows in `max-w-3xl`
-- [ ] Nothing reads as “parent desk” vs “student plan” vs “coach mission” vs “district overview”
+- [x] `/family`, `/me`, `/orgs` no longer share one recipe — parent desk / student plan / coach mission (2026-08-06)
+- [x] Parent desk vs student plan vs coach mission differentiated (district overview still open)
 
 ### Chrome / IA
 - [x] Header chess link for signed-in/out discovery (partial)
@@ -156,3 +157,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Next UX: start sequence item 1 — `0018` hierarchy + role-split helpers + staff/provision tables (then app mirrors).
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.
+- Last persona batch (2026-08-06): role workspace differentiation shipped. Next: event next-action tree or invite-first join auth.

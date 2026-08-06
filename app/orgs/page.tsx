@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DismissRecommendationButton } from "@/components/DismissRecommendationButton";
 import { JoinOrgForm } from "@/components/JoinOrgForm";
+import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
@@ -30,7 +31,7 @@ const ORG_TYPE_LABEL: Record<string, string> = {
 export default async function OrgsPage() {
   if (!isSupabaseConfigured()) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
         <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
           Organizations
         </h1>
@@ -55,43 +56,41 @@ export default async function OrgsPage() {
     getMyRecommendations(user.id),
   ]);
   const today = new Date().toISOString().slice(0, 10);
-  const upcomingInvites = entrantRows.filter(
-    (row) => row.competition && isUpcomingEvent(row.competition, today)
-  ).sort((a, b) => {
-    if (a.status === b.status) {
-      return (a.competition?.start_date ?? "").localeCompare(
-        b.competition?.start_date ?? ""
-      );
-    }
-    return a.status === "invited" ? -1 : 1;
-  });
+  const upcomingInvites = entrantRows
+    .filter((row) => row.competition && isUpcomingEvent(row.competition, today))
+    .sort((a, b) => {
+      if (a.status === b.status) {
+        return (a.competition?.start_date ?? "").localeCompare(
+          b.competition?.start_date ?? ""
+        );
+      }
+      return a.status === "invited" ? -1 : 1;
+    });
   const pendingInviteCount = upcomingInvites.filter(
     (row) => row.status === "invited"
   ).length;
-  const showInvitationsAfterOrganizations = isCoachRole
-    ? upcomingInvites.length > 0
-    : pendingInviteCount === 0;
+  const coachedOrgs = myOrgs.filter(({ isCoach }) => isCoach);
+  const primaryOrg = coachedOrgs[0] ?? myOrgs[0];
 
   const invitationsSection = (
-    <section id="rsvps" className="section-rule mt-10 scroll-mt-24 pt-8">
-      <h2 className="text-sm font-semibold text-foreground">
+    <section id="rsvps" className="mt-10 scroll-mt-24">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
         {pendingInviteCount
           ? `${pendingInviteCount} ${
               pendingInviteCount === 1 ? "RSVP needs" : "RSVPs need"
             } your response`
-          : "Invitations & RSVPs"}
+          : "Your invitations"}
       </h2>
       {!upcomingInvites.length ? (
         <p className="mt-3 text-sm text-muted">
-          When your coach invites you to a tournament, it shows up here for you
-          to RSVP.
+          When a coach invites you to a tournament, it shows up here.
         </p>
       ) : (
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="mt-2">
           {upcomingInvites.map((row) => (
             <li
               key={`${row.competition_id}-${row.profile_id}`}
-              className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
                 <Link
@@ -124,26 +123,115 @@ export default async function OrgsPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      <p className="text-sm font-semibold text-brand-red">Organizations</p>
-      <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        {isCoachRole ? "Your organizations" : "Your clubs"}
-      </h1>
-      <p className="mt-2 text-sm text-muted">
-        {isCoachRole
-          ? "Run rosters, share join codes, and host tournaments."
-          : "Join your school or club with the code your coach shared."}
-      </p>
+    <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
+      {isCoachRole ? (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            Coach mission
+          </p>
+          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+            What to run next
+          </h1>
+          <p className="mt-2 max-w-prose text-sm text-muted">
+            Open the organization that needs work. Your directory stays below.
+          </p>
 
-      {!isCoachRole && pendingInviteCount ? invitationsSection : null}
+          <div className="mt-8">
+            <PortalMission
+              title={
+                !myOrgs.length
+                  ? "Start your first organization"
+                  : primaryOrg
+                    ? `Continue with ${primaryOrg.org.name}`
+                    : "Open an organization"
+              }
+              description={
+                !myOrgs.length
+                  ? "Create a school or club workspace to get a join code, roster, and tournament tools."
+                  : pendingInviteCount
+                    ? `You also have ${pendingInviteCount} personal ${
+                        pendingInviteCount === 1 ? "invitation" : "invitations"
+                      } waiting — answer those after org work, or jump to them below.`
+                    : "Rosters, invites, and tournaments live inside each organization workspace."
+              }
+              action={
+                !myOrgs.length
+                  ? { href: "/orgs/new", label: "Start an organization" }
+                  : primaryOrg
+                    ? {
+                        href: `/orgs/${primaryOrg.org.slug}`,
+                        label: "Open workspace",
+                      }
+                    : undefined
+              }
+              secondary={
+                pendingInviteCount
+                  ? { href: "#rsvps", label: "Review my RSVPs" }
+                  : myOrgs.length
+                    ? { href: "/orgs/new", label: "Start another" }
+                    : undefined
+              }
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            Clubs
+          </p>
+          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+            Your clubs
+          </h1>
+          <p className="mt-2 max-w-prose text-sm text-muted">
+            Join with the code your coach shared. Tournament RSVPs live on{" "}
+            <Link href="/me" className="font-semibold text-brand-red hover:underline">
+              My tournaments
+            </Link>
+            .
+          </p>
 
-      <section
-        id="organizations"
-        className="section-rule mt-10 scroll-mt-24 pt-8"
-      >
+          <div className="mt-8">
+            <PortalMission
+              title={
+                pendingInviteCount
+                  ? `${pendingInviteCount} ${
+                      pendingInviteCount === 1 ? "invite needs" : "invites need"
+                    } your RSVP`
+                  : myOrgs.length
+                    ? "You’re on a roster"
+                    : "Join your school or club"
+              }
+              description={
+                pendingInviteCount
+                  ? "Answer on your tournament plan, then come back here for club codes and membership."
+                  : myOrgs.length
+                    ? "Open a club to see teammates and public org pages. Use a join code to add another."
+                    : "Ask your coach for a join code and enter it below."
+              }
+              action={
+                pendingInviteCount
+                  ? { href: "/me#plan", label: "Open my tournaments" }
+                  : myOrgs.length
+                    ? {
+                        href: `/orgs/${myOrgs[0].org.slug}`,
+                        label: "Open club",
+                      }
+                    : { href: "#join-code", label: "Enter a join code" }
+              }
+              secondary={
+                pendingInviteCount
+                  ? { href: "#join-code", label: "Join another club" }
+                  : { href: "/me", label: "Back to my tournaments" }
+              }
+            />
+          </div>
+        </>
+      )}
+
+      <section id="organizations" className="mt-10 scroll-mt-24">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-sm font-semibold text-foreground">
-            {isCoachRole ? "Organizations you run or belong to" : "Where you belong"}
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+            {isCoachRole ? "Organizations" : "Where you belong"}
           </h2>
           {isCoachRole && myOrgs.length ? (
             <Link
@@ -157,91 +245,73 @@ export default async function OrgsPage() {
 
         {!myOrgs.length ? (
           isCoachRole ? (
-            <div className="mt-4">
-              <p className="text-sm text-muted">
-                No organizations yet. Start one for your school or club — you
-                get a join code to share with students right away.
-              </p>
-              <Link href="/orgs/new" className="cta-enabled mt-4 inline-flex">
-                Start an organization
-              </Link>
-            </div>
+            <p className="mt-3 text-sm text-muted">
+              No organizations yet — use the mission above to start one.
+            </p>
           ) : (
             <p className="mt-3 text-sm text-muted">
-              You haven&rsquo;t joined an organization yet. Ask your coach for
-              a join code and enter it below.
+              You haven&rsquo;t joined an organization yet.
             </p>
           )
         ) : (
-          <ul className="mt-4 flex flex-col gap-3">
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {myOrgs.map(({ org, isCoach }) => (
               <li key={org.id}>
                 <Link
                   href={`/orgs/${org.slug}`}
-                  className="card-lift block rounded-xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-card)]"
+                  className="card-lift block h-full rounded-xl border border-line bg-surface px-4 py-4 shadow-[var(--shadow-card)]"
                 >
                   <span className="font-semibold text-foreground">{org.name}</span>
                   <span className="mt-1 block text-xs text-muted">
                     {ORG_TYPE_LABEL[org.type] ?? org.type}
                     {org.state ? ` · ${org.state}` : ""}
-                    {isCoach ? " · you coach this organization" : ""}
+                    {isCoach ? " · you coach here" : ""}
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
         )}
-
       </section>
 
       {!isCoachRole ? (
-        <section
-          id="join-code"
-          className="section-rule mt-10 scroll-mt-24 pt-8"
-        >
-          <h2 className="text-sm font-semibold text-foreground">Join with a code</h2>
-          <div className="mt-4">
+        <section id="join-code" className="mt-10 scroll-mt-24">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+            Join with a code
+          </h2>
+          <div className="mt-4 max-w-md">
             <JoinOrgForm />
           </div>
         </section>
       ) : null}
 
-      {showInvitationsAfterOrganizations ? invitationsSection : null}
+      {upcomingInvites.length || (!isCoachRole && !pendingInviteCount)
+        ? invitationsSection
+        : null}
 
       {recommendations.length ? (
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">
+        <section className="mt-12 border-t border-line pt-8">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
             Recommended to you
           </h2>
-          <ul className="mt-4 flex flex-col gap-3">
+          <ul className="mt-2">
             {recommendations.map((rec) => (
-              <li
+              <PortalListRow
                 key={rec.id}
-                className="flex flex-col gap-2 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <Link
-                    href={`/event/${rec.competition!.slug}`}
-                    className="font-semibold text-foreground hover:text-brand-red"
-                  >
-                    {rec.competition!.name}
-                  </Link>
-                  <span className="mt-1 block text-xs text-muted">
-                    {formatDateRange(
-                      rec.competition!.start_date,
-                      rec.competition!.end_date
-                    )}
-                    {` · from ${rec.from_name}`}
-                    {rec.note ? ` — “${rec.note}”` : ""}
-                  </span>
-                </div>
-                <DismissRecommendationButton id={rec.id} />
-              </li>
+                href={`/event/${rec.competition!.slug}`}
+                title={rec.competition!.name}
+                meta={`${formatDateRange(
+                  rec.competition!.start_date,
+                  rec.competition!.end_date
+                )} · from ${rec.from_name}${
+                  rec.note ? ` — “${rec.note}”` : ""
+                }`}
+                trailing={<DismissRecommendationButton id={rec.id} />}
+              />
             ))}
           </ul>
         </section>
       ) : null}
-
     </div>
   );
 }

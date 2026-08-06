@@ -93,14 +93,17 @@ export function AuthNav() {
     router.refresh();
   }
 
-  const portalLink =
+  const portalLinks =
     role === "parent"
-      ? { href: "/family", label: "Family" }
+      ? [{ href: "/family", label: "Family" }]
       : role === "coach"
-        ? { href: "/orgs", label: "My organizations" }
+        ? [{ href: "/orgs", label: "My organizations" }]
         : role === "student"
-          ? { href: "/orgs", label: "My clubs" }
-          : null;
+          ? [
+              { href: "/me", label: "My tournaments" },
+              { href: "/orgs", label: "My clubs" },
+            ]
+          : [];
 
   return (
     <div className="flex items-center gap-3 sm:gap-5">
@@ -113,17 +116,28 @@ export function AuthNav() {
           Admin
         </Link>
       ) : null}
-      {portalLink ? (
+      {portalLinks.map((link) => (
         <Link
-          href={portalLink.href}
+          key={link.href}
+          href={link.href}
           aria-current={
-            pathname.startsWith(portalLink.href) ? "page" : undefined
+            link.href === "/me"
+              ? pathname === "/me"
+                ? "page"
+                : undefined
+              : pathname.startsWith(link.href)
+                ? "page"
+                : undefined
           }
-          className={navLinkClass(pathname.startsWith(portalLink.href))}
+          className={navLinkClass(
+            link.href === "/me"
+              ? pathname === "/me"
+              : pathname.startsWith(link.href)
+          )}
         >
-          {portalLink.label}
+          {link.label}
         </Link>
-      ) : null}
+      ))}
       <Link
         href="/me/notifications"
         aria-current={
@@ -135,13 +149,15 @@ export function AuthNav() {
       >
         Notifications
       </Link>
-      <Link
-        href="/me"
-        aria-current={pathname === "/me" ? "page" : undefined}
-        className={navLinkClass(pathname === "/me")}
-      >
-        Account
-      </Link>
+      {role !== "student" ? (
+        <Link
+          href="/me"
+          aria-current={pathname === "/me" ? "page" : undefined}
+          className={navLinkClass(pathname === "/me")}
+        >
+          Account
+        </Link>
+      ) : null}
       <button
         type="button"
         onClick={signOut}

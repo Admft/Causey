@@ -26,7 +26,7 @@ const ROLE_SIGNUP_COPY: Record<
   student: {
     nameLabel: "Student name",
     nameHelp: "This is the name coaches see on school and club rosters.",
-    confirmationNext: "open My clubs to join a school or club.",
+    confirmationNext: "open My tournaments to track invites, then join a club.",
   },
   parent: {
     nameLabel: "Your name",

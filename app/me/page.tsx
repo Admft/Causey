@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
+import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
@@ -17,8 +18,8 @@ import { formatDateRange } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your account",
-  description: "Your Causey profile, saved tournaments, and ratings.",
+  title: "Your plan",
+  description: "Your Causey tournament invitations, registration, and profile.",
 };
 
 type AccountTournament = {
@@ -70,7 +71,7 @@ const ROLE_NEXT_ACTION: Record<
   student: {
     title: "Find your next chess tournament",
     description:
-      "Search scholastic events, save the ones that fit, and keep your club invitations together.",
+      "Search scholastic events, save the ones that fit, and keep club invitations here.",
     href: "/chess",
     label: "Search tournaments",
     secondary: { href: "/orgs", label: "Open my clubs" },
@@ -78,9 +79,9 @@ const ROLE_NEXT_ACTION: Record<
   parent: {
     title: "See which student needs you",
     description:
-      "Review each linked student’s clubs, tournament invitations, and RSVP status.",
+      "Your parent desk shows each linked student’s invitations and RSVP status.",
     href: "/family",
-    label: "Review family activity",
+    label: "Open family desk",
   },
   coach: {
     title: "Run your next team task",
@@ -216,6 +217,7 @@ export default async function MePage() {
     registrationNeeded.length > 0 ||
     upcomingPlans.length > 0 ||
     pastPlans.length > 0;
+  const actionCount = upcomingInvitations.length + registrationNeeded.length;
   const planStatus = (plan: TournamentPlan, past: boolean) =>
     plan.going && plan.registrationMarked
       ? past
@@ -233,48 +235,89 @@ export default async function MePage() {
       : profile.role === "parent"
         ? "Parent"
         : "Student";
+  const isStudent = profile.role === "student";
   const nextAction = ROLE_NEXT_ACTION[profile.role];
+  const studentMission =
+    actionCount > 0
+      ? {
+          title:
+            upcomingInvitations.length > 0
+              ? `${upcomingInvitations.length} ${
+                  upcomingInvitations.length === 1 ? "invite needs" : "invites need"
+                } your RSVP`
+              : `${registrationNeeded.length} ${
+                  registrationNeeded.length === 1
+                    ? "registration is"
+                    : "registrations are"
+                } unfinished`,
+          description:
+            upcomingInvitations.length > 0
+              ? "Tell your coach whether you can attend, then finish any organizer registration still open."
+              : "Finish registration and payment on each organizer’s site, then mark it complete here.",
+          action: {
+            href: "#plan",
+            label:
+              upcomingInvitations.length > 0
+                ? "Answer invitations"
+                : "Finish registration",
+          },
+          secondary: { href: "/chess", label: "Search more tournaments" },
+        }
+      : nextAction;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      <p className="text-sm font-semibold text-brand-red">Account</p>
-      <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        {profile.display_name || "Your profile"}
-      </h1>
-      <p className="mt-2 text-sm text-muted">
-        {user.email} · {roleLabel}
-      </p>
+      {isStudent ? (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            Student plan
+          </p>
+          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+            Your tournaments
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            {profile.display_name || "Your profile"} · {user.email}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-semibold text-brand-red">Account</p>
+          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+            {profile.display_name || "Your profile"}
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            {user.email} · {roleLabel}
+          </p>
+        </>
+      )}
 
-      <section className="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-6">
-        <h2 className="font-display text-xl font-bold text-foreground">
-          {nextAction.title}
-        </h2>
-        <p className="mt-2 max-w-prose text-sm text-muted">
-          {nextAction.description}
-        </p>
-        <div className="mt-5 flex flex-wrap items-center gap-4">
-          <Link href={nextAction.href} className="cta-enabled inline-flex">
-            {nextAction.label}
-          </Link>
-          {nextAction.secondary ? (
-            <Link
-              href={nextAction.secondary.href}
-              className="text-sm font-semibold text-muted-strong hover:text-brand-red"
-            >
-              {nextAction.secondary.label}
-            </Link>
-          ) : null}
-        </div>
-      </section>
+      <div className="mt-8">
+        <PortalMission
+          title={isStudent ? studentMission.title : nextAction.title}
+          description={
+            isStudent ? studentMission.description : nextAction.description
+          }
+          action={
+            isStudent
+              ? studentMission.action
+              : { href: nextAction.href, label: nextAction.label }
+          }
+          secondary={
+            isStudent ? studentMission.secondary : nextAction.secondary
+          }
+        />
+      </div>
 
-      <section className="section-rule mt-10 pt-8">
-        <h2 className="text-sm font-semibold text-foreground">
-          My tournaments
+      <section id="plan" className="mt-10 scroll-mt-24">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+          {isStudent ? "Plan" : "My tournaments"}
         </h2>
-        <p className="mt-2 max-w-prose text-sm text-muted">
-          Answer invitations, finish organizer registration, and keep
-          upcoming and past plans in one place.
-        </p>
+        {!isStudent ? (
+          <p className="mt-2 max-w-prose text-sm text-muted">
+            Answer invitations, finish organizer registration, and keep
+            upcoming and past plans in one place.
+          </p>
+        ) : null}
         {!hasTournamentWorkspace ? (
           <p className="mt-4 text-sm text-muted">
             You don&rsquo;t have tournament plans yet.{" "}
@@ -283,44 +326,41 @@ export default async function MePage() {
             </Link>
           </p>
         ) : (
-          <div className="mt-6 flex flex-col gap-7">
+          <div className="mt-4 flex flex-col gap-8">
             {upcomingInvitations.length ? (
               <div>
-                <h3 className="text-xs font-semibold text-muted-strong">
-                  Invited
+                <h3 className="text-sm font-semibold text-brand-red">
+                  Invited — needs your RSVP
                 </h3>
-                <p className="mt-1 text-sm text-muted">
-                  Your coach needs to know whether you can attend.
-                </p>
-                <ul className="mt-3 flex flex-col gap-3">
+                <ul className="mt-2">
                   {upcomingInvitations.map((row) => (
                     <li
                       key={row.competition_id}
-                      className="rounded-xl border border-line bg-surface px-4 py-3"
+                      className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0"
                     >
-                      <Link
-                        href={`/event/${row.competition!.slug}`}
-                        className="font-semibold text-foreground hover:text-brand-red"
-                      >
-                        {row.competition!.name}
-                      </Link>
-                      <span className="mt-1 block text-xs text-muted">
-                        {formatDateRange(
-                          row.competition!.start_date,
-                          row.competition!.end_date
-                        )}
-                        {row.competition!.city
-                          ? ` · ${row.competition!.city}, ${row.competition!.state}`
-                          : ""}
-                      </span>
-                      <div className="mt-3">
-                        <RsvpButtons
-                          competitionId={row.competition_id}
-                          profileId={profile.id}
-                          status={row.status}
-                          eventSlug={row.competition!.slug}
-                        />
+                      <div>
+                        <Link
+                          href={`/event/${row.competition!.slug}`}
+                          className="font-semibold text-foreground hover:text-brand-red"
+                        >
+                          {row.competition!.name}
+                        </Link>
+                        <span className="mt-1 block text-xs text-muted">
+                          {formatDateRange(
+                            row.competition!.start_date,
+                            row.competition!.end_date
+                          )}
+                          {row.competition!.city
+                            ? ` · ${row.competition!.city}, ${row.competition!.state}`
+                            : ""}
+                        </span>
                       </div>
+                      <RsvpButtons
+                        competitionId={row.competition_id}
+                        profileId={profile.id}
+                        status={row.status}
+                        eventSlug={row.competition!.slug}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -328,105 +368,81 @@ export default async function MePage() {
             ) : null}
             {registrationNeeded.length ? (
               <div>
-                <h3 className="text-xs font-semibold text-muted-strong">
+                <h3 className="text-sm font-semibold text-foreground">
                   Organizer registration needed
                 </h3>
                 <p className="mt-1 text-sm text-muted">
                   Finish registration and payment on each organizer&rsquo;s
                   site, then mark it complete on Causey.
                 </p>
-                <ul className="mt-3 flex flex-col gap-3">
+                <ul className="mt-2">
                   {registrationNeeded.map(({ competitionId, competition }) => (
-                    <li key={competitionId}>
-                      <Link
-                        href={`/event/${competition.slug}`}
-                        className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
-                      >
-                        <span className="font-semibold text-foreground">
-                          {competition.name}
+                    <PortalListRow
+                      key={competitionId}
+                      href={`/event/${competition.slug}`}
+                      title={competition.name}
+                      meta={`${formatDateRange(
+                        competition.start_date,
+                        competition.end_date
+                      )} · ${competition.city}, ${competition.state}`}
+                      trailing={
+                        <span className="text-sm font-semibold text-brand-red">
+                          Finish registration
                         </span>
-                        <span className="mt-1 block text-xs text-muted">
-                          {formatDateRange(
-                            competition.start_date,
-                            competition.end_date
-                          )}{" "}
-                          · {competition.city}, {competition.state}
-                        </span>
-                        <span className="mt-2 block text-sm font-semibold text-brand-red">
-                          Finish organizer registration
-                        </span>
-                      </Link>
-                    </li>
+                      }
+                    />
                   ))}
                 </ul>
               </div>
             ) : null}
             {upcomingPlans.length ? (
               <div>
-                <h3 className="text-xs font-semibold text-muted-strong">
+                <h3 className="text-sm font-semibold text-muted-strong">
                   Upcoming
                 </h3>
-                <ul className="mt-3 flex flex-col gap-3">
+                <ul className="mt-2">
                   {upcomingPlans.map((plan) => (
-                    <li key={plan.competitionId}>
-                      <Link
-                        href={`/event/${plan.competition.slug}`}
-                        className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
-                      >
-                        <span className="font-semibold text-foreground">
-                          {plan.competition.name}
-                        </span>
-                        <span className="mt-1 block text-xs text-muted">
-                          {formatDateRange(
-                            plan.competition.start_date,
-                            plan.competition.end_date
-                          )}
-                          {plan.competition.city
-                            ? ` · ${plan.competition.city}, ${plan.competition.state}`
-                            : ""}
-                        </span>
-                        <span className="mt-2 block text-xs font-semibold text-muted-strong">
-                          {planStatus(plan, false)}
-                        </span>
-                      </Link>
-                    </li>
+                    <PortalListRow
+                      key={plan.competitionId}
+                      href={`/event/${plan.competition.slug}`}
+                      title={plan.competition.name}
+                      meta={`${formatDateRange(
+                        plan.competition.start_date,
+                        plan.competition.end_date
+                      )}${
+                        plan.competition.city
+                          ? ` · ${plan.competition.city}, ${plan.competition.state}`
+                          : ""
+                      } · ${planStatus(plan, false)}`}
+                    />
                   ))}
                 </ul>
               </div>
             ) : null}
             {pastPlans.length ? (
               <div>
-                <h3 className="text-xs font-semibold text-muted-strong">
+                <h3 className="text-sm font-semibold text-muted-strong">
                   Past
                 </h3>
                 <p className="mt-1 text-sm text-muted">
-                  A history of plans you made in Causey. This does not confirm
-                  attendance or payment.
+                  History of plans you made in Causey — not confirmed attendance
+                  or payment.
                 </p>
-                <ul className="mt-3 flex flex-col gap-3">
+                <ul className="mt-2">
                   {pastPlans.map((plan) => (
-                    <li key={plan.competitionId}>
-                      <Link
-                        href={`/event/${plan.competition.slug}`}
-                        className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
-                      >
-                        <span className="font-semibold text-foreground">
-                          {plan.competition.name}
-                        </span>
-                        <span className="mt-1 block text-xs text-muted">
-                          {formatDateRange(
-                            plan.competition.start_date,
-                            plan.competition.end_date
-                          )}
-                          {plan.competition.city
-                            ? ` · ${plan.competition.city}, ${plan.competition.state}`
-                            : ""}
-                        </span>
-                        <span className="mt-2 block text-xs font-semibold text-muted-strong">
-                          {planStatus(plan, true)}
-                        </span>
-                      </Link>
-                    </li>
+                    <PortalListRow
+                      key={plan.competitionId}
+                      href={`/event/${plan.competition.slug}`}
+                      title={plan.competition.name}
+                      meta={`${formatDateRange(
+                        plan.competition.start_date,
+                        plan.competition.end_date
+                      )}${
+                        plan.competition.city
+                          ? ` · ${plan.competition.city}, ${plan.competition.state}`
+                          : ""
+                      } · ${planStatus(plan, true)}`}
+                    />
                   ))}
                 </ul>
               </div>
@@ -436,9 +452,11 @@ export default async function MePage() {
       </section>
 
       {parentLinks.length ? (
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">Family</h2>
-          <ul className="mt-4 flex flex-col gap-2">
+        <section className="mt-12 border-t border-line pt-8">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+            Family
+          </h2>
+          <ul className="mt-3 flex flex-col gap-2">
             {parentLinks.map((link) => (
               <li
                 key={link.parent_profile_id}
@@ -464,79 +482,90 @@ export default async function MePage() {
         </section>
       ) : null}
 
-      <section className="section-rule mt-10 pt-8">
-        <h2 className="text-sm font-semibold text-foreground">Profile</h2>
-        <div className="mt-4">
-          <ProfileEditor profile={profile} />
+      <details className="mt-12 border-t border-line pt-8">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-muted-strong">
+          Profile &amp; saved items
+        </summary>
+        <div className="mt-6 flex flex-col gap-10">
+          <section>
+            <h2 className="text-sm font-semibold text-foreground">Profile</h2>
+            <div className="mt-4">
+              <ProfileEditor profile={profile} />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-foreground">
+              Saved tournaments
+            </h2>
+            {!savedRows?.length ? (
+              <p className="mt-3 text-sm text-muted">
+                None yet. Open an event and tap{" "}
+                <span className="font-medium text-foreground">Save to profile</span>.
+              </p>
+            ) : (
+              <ul className="mt-3">
+                {savedRows.map((row) => {
+                  const c = row.competitions as unknown as {
+                    slug: string;
+                    name: string;
+                    city: string;
+                    state: string;
+                    start_date: string;
+                    end_date: string | null;
+                  } | null;
+                  if (!c) return null;
+                  return (
+                    <PortalListRow
+                      key={row.competition_id}
+                      href={`/event/${c.slug}`}
+                      title={c.name}
+                      meta={`${formatDateRange(c.start_date, c.end_date)} · ${c.city}, ${c.state}`}
+                    />
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-foreground">
+              Your difficulty ratings
+            </h2>
+            {!ratingRows?.length ? (
+              <p className="mt-3 text-sm text-muted">
+                Rate how hard an event feels (1–10) from its event page.
+              </p>
+            ) : (
+              <ul className="mt-3 flex flex-col gap-2">
+                {ratingRows.map((row) => {
+                  const c = row.competitions as unknown as {
+                    slug: string;
+                    name: string;
+                  } | null;
+                  if (!c) return null;
+                  return (
+                    <li
+                      key={c.slug}
+                      className="flex items-baseline justify-between gap-3 text-sm"
+                    >
+                      <Link
+                        href={`/event/${c.slug}`}
+                        className="font-medium text-foreground hover:text-brand-red"
+                      >
+                        {c.name}
+                      </Link>
+                      <span className="shrink-0 font-semibold text-muted-strong">
+                        {row.score}/10
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
         </div>
-      </section>
-
-      <section className="section-rule mt-10 pt-8">
-        <h2 className="text-sm font-semibold text-foreground">Saved tournaments</h2>
-        {!savedRows?.length ? (
-          <p className="mt-3 text-sm text-muted">
-            None yet. Open an event and tap{" "}
-            <span className="font-medium text-foreground">Save to profile</span>.{" "}
-            <Link href="/chess" className="font-semibold text-brand-red hover:underline">
-              Search tournaments
-            </Link>
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-3">
-            {savedRows.map((row) => {
-              const c = row.competitions as unknown as {
-                slug: string;
-                name: string;
-                city: string;
-                state: string;
-                start_date: string;
-                end_date: string | null;
-              } | null;
-              if (!c) return null;
-              return (
-                <li key={row.competition_id}>
-                  <Link
-                    href={`/event/${c.slug}`}
-                    className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
-                  >
-                    <span className="font-semibold text-foreground">{c.name}</span>
-                    <span className="mt-1 block text-xs text-muted">
-                      {formatDateRange(c.start_date, c.end_date)} · {c.city}, {c.state}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section className="section-rule mt-10 pt-8">
-        <h2 className="text-sm font-semibold text-foreground">Your difficulty ratings</h2>
-        {!ratingRows?.length ? (
-          <p className="mt-3 text-sm text-muted">
-            Rate how hard an event feels (1–10) from its event page.
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-2">
-            {ratingRows.map((row) => {
-              const c = row.competitions as unknown as {
-                slug: string;
-                name: string;
-              } | null;
-              if (!c) return null;
-              return (
-                <li key={c.slug} className="flex items-baseline justify-between gap-3 text-sm">
-                  <Link href={`/event/${c.slug}`} className="font-medium text-foreground hover:text-brand-red">
-                    {c.name}
-                  </Link>
-                  <span className="shrink-0 font-semibold text-muted-strong">{row.score}/10</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      </details>
     </div>
   );
 }
