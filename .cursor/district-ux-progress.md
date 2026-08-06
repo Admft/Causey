@@ -14,10 +14,11 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Responsive audit: phone/tablet/desktop without clashing grids, cramped cards, or orphaned CTAs
 - [ ] Alive feel: intentional micro-interaction (hover/focus states, smooth layout shifts) — max 2–3 per page, respect prefers-reduced-motion
 - [ ] Visual hierarchy: consistent spacing/typography rhythm; kill anything that reads template-default
-- [ ] Event page polish: hero/info/register actions feel composed, not stacked
+- [x] Event page polish: hero/info/register actions feel composed, not stacked — 2026-08-05 (hero half: no-image events go text-first; register-flow composition covered by UX P1 "External registration tracking")
 - [ ] Loading/empty states that feel designed (not dead)
 
 ## Done
+- [x] 2026-08-05 — Event pages without a cover image go text-first: dead grey 2:1 placeholder removed, featured mark moves inline with the eyebrow (same pattern as cards)
 - [x] 2026-08-05 — Tournament cards scan by weekend: date chip + weekday date line, venue/city/distance line, section levels (U900 · K-8 …), fee pinned top-right, no empty image chrome
 - [x] 2026-08-05 — Join links now survive login, signup, and email confirmation so new students return to the organization invitation
 - [x] 2026-08-05 — Tournament creation now separates details from audience review, with an explicit publish step
@@ -46,4 +47,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — preserved organization invitations through account creation (UX); scannable tournament cards (frontend polish)
+- Last tick: 2026-08-05 — preserved organization invitations through account creation (UX); event page drops empty image chrome, text-first header (frontend polish)

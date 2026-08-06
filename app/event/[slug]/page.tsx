@@ -23,6 +23,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
 import { RecommendEventPanel } from "@/components/RecommendEventPanel";
 import { RsvpButtons } from "@/components/RsvpButtons";
+import { ExternalRegistrationPanel } from "@/components/ExternalRegistrationPanel";
+import type { ExternalRegistrationStatus } from "@/lib/actions/external-registrations";
 import {
   canManageCompetitionAsViewer,
   getActiveChildren,
@@ -95,6 +97,7 @@ export default async function EventPage({ params }: Params) {
   const user = await getSessionUser();
   let initiallySaved = false;
   let initialScore: number | null = null;
+  let initialRegistrationStatus: ExternalRegistrationStatus | null = null;
   let canManage = false;
   let rsvpTargets: {
     profileId: string;
@@ -134,7 +137,8 @@ export default async function EventPage({ params }: Params) {
     }));
 
     const supabase = await createServerSupabaseClient();
-    const [{ data: saved }, { data: rating }] = await Promise.all([
+    const [{ data: saved }, { data: rating }, { data: registration }] =
+      await Promise.all([
       supabase
         .from("saved_competitions")
         .select("competition_id")
@@ -147,9 +151,17 @@ export default async function EventPage({ params }: Params) {
         .eq("user_id", user.id)
         .eq("competition_id", competition.id)
         .maybeSingle(),
+      supabase
+        .from("external_registrations")
+        .select("status")
+        .eq("user_id", user.id)
+        .eq("competition_id", competition.id)
+        .maybeSingle(),
     ]);
     initiallySaved = Boolean(saved);
     initialScore = rating?.score ?? null;
+    initialRegistrationStatus =
+      (registration?.status as ExternalRegistrationStatus | undefined) ?? null;
   }
 
   return (
@@ -165,25 +177,23 @@ export default async function EventPage({ params }: Params) {
 
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
         <div>
-          <div className="relative mb-6 max-w-2xl">
-            {isFeaturedStanding(standing) ? (
-              <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-9 w-9" />
-            ) : null}
-            {competition.image_url ? (
+          {competition.image_url ? (
+            <div className="relative mb-6 max-w-2xl">
+              {isFeaturedStanding(standing) ? (
+                <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-9 w-9" />
+              ) : null}
               <CompetitionCoverImage
                 src={competition.image_url}
                 alt=""
                 aspectClass="aspect-[2/1]"
                 className="rounded-2xl"
               />
-            ) : (
-              <div
-                className="aspect-[2/1] rounded-2xl bg-surface-soft"
-                aria-hidden="true"
-              />
-            )}
-          </div>
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-3">
+            {isFeaturedStanding(standing) && !competition.image_url ? (
+              <FeaturedAwardMark className="h-4 w-4" />
+            ) : null}
             <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
               Chess{competition.series ? ` · ${competition.series.name}` : ""}
             </p>
@@ -247,21 +257,13 @@ export default async function EventPage({ params }: Params) {
           </dl>
 
           {competition.reg_url && regHost ? (
-            <div className="mt-6">
-              <a
-                href={competition.reg_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cta-enabled"
-                aria-label={`Register on ${regHost} — opens in a new tab`}
-              >
-                Register on {regHost} <span aria-hidden="true">↗</span>
-              </a>
-              <p className="mt-2 text-2xs text-muted">
-                Registration and payment happen on the organizer&rsquo;s site, never on
-                Causey.
-              </p>
-            </div>
+            <ExternalRegistrationPanel
+              competitionId={competition.id}
+              eventSlug={competition.slug}
+              registrationHost={regHost}
+              initialStatus={initialRegistrationStatus}
+              signedIn={Boolean(user)}
+            />
           ) : canManage ? (
             <div className="mt-6">
               <Link href={`/event/${competition.slug}/manage`} className="cta-enabled">
