@@ -166,6 +166,26 @@ export default async function EventPage({ params }: Params) {
       (registration?.status as ExternalRegistrationStatus | undefined) ?? null;
   }
 
+  const needsRsvp = rsvpTargets.some((t) => t.status === "invited");
+  const hasAnsweredRsvp = rsvpTargets.some(
+    (t) => t.status === "going" || t.status === "not_going"
+  );
+  const registrationComplete = initialRegistrationStatus === "registered";
+  // One primary job in the main column; everything else demotes to the aside.
+  const primaryAction: "ended" | "manage" | "rsvp" | "register" | "invite_only" =
+    ended
+      ? "ended"
+      : canManage
+        ? "manage"
+        : needsRsvp
+          ? "rsvp"
+          : competition.reg_url
+            ? "register"
+            : "invite_only";
+  const showRsvpInAside =
+    rsvpTargets.length > 0 && primaryAction !== "rsvp";
+  const showManageInAside = canManage && primaryAction !== "manage";
+
   return (
     <>
       <ChessSubnavBar tool="tournaments" />
@@ -177,7 +197,7 @@ export default async function EventPage({ params }: Params) {
         ← All chess tournaments
       </Link>
 
-      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
+      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
         <div>
           {competition.image_url ? (
             <div className="relative mb-6 max-w-2xl">
@@ -258,29 +278,144 @@ export default async function EventPage({ params }: Params) {
             </div>
           </dl>
 
-          {competition.reg_url && regHost ? (
-            <ExternalRegistrationPanel
-              competitionId={competition.id}
-              eventSlug={competition.slug}
-              registrationHost={regHost}
-              initialStatus={initialRegistrationStatus}
-              signedIn={Boolean(user)}
-            />
-          ) : canManage ? (
-            <div className="mt-6">
-              <Link href={`/event/${competition.slug}/manage`} className="cta-enabled">
-                Manage entrants
-              </Link>
-              <p className="mt-2 text-2xs text-muted">
-                Invite your roster or a group and watch RSVPs come in.
-              </p>
-            </div>
-          ) : (
-            <p className="mt-6 text-sm text-muted">
-              This event is hosted on Causey — entry is by coach invitation and
-              RSVP, not open registration.
+          <section
+            className="mt-8 rounded-2xl border border-accent/25 bg-accent-soft/40 p-5 sm:p-6"
+            aria-labelledby="event-next-step"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+              What to do next
             </p>
-          )}
+            {primaryAction === "ended" ? (
+              <>
+                <h2
+                  id="event-next-step"
+                  className="mt-2 font-display text-xl font-bold text-foreground"
+                >
+                  This tournament has ended
+                </h2>
+                <p className="mt-2 max-w-prose text-sm text-muted">
+                  You can still review sections and save it for reference.
+                  Registration and new RSVPs are closed.
+                </p>
+              </>
+            ) : null}
+
+            {primaryAction === "manage" ? (
+              <>
+                <h2
+                  id="event-next-step"
+                  className="mt-2 font-display text-xl font-bold text-foreground"
+                >
+                  You&rsquo;re hosting this event
+                </h2>
+                <p className="mt-2 max-w-prose text-sm text-muted">
+                  Invite your roster, watch RSVPs, and keep attendance in one
+                  place. Families finish any organizer-site registration
+                  separately when a link is listed.
+                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-4">
+                  <Link
+                    href={`/event/${competition.slug}/manage`}
+                    className="cta-enabled inline-flex"
+                  >
+                    Manage entrants
+                  </Link>
+                  <Link
+                    href={`/event/${competition.slug}/edit`}
+                    className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                  >
+                    Edit listing
+                  </Link>
+                </div>
+              </>
+            ) : null}
+
+            {primaryAction === "rsvp" ? (
+              <>
+                <h2
+                  id="event-next-step"
+                  className="mt-2 font-display text-xl font-bold text-foreground"
+                >
+                  {rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
+                    ? "Your coach needs an RSVP"
+                    : "An RSVP needs your response"}
+                </h2>
+                <p className="mt-2 max-w-prose text-sm text-muted">
+                  Answer first so your organization knows who is coming.
+                  {competition.reg_url
+                    ? " After you mark Going, finish organizer registration if the event requires it."
+                    : " Entry for this event is through your club invite — not open registration."}
+                </p>
+                <div className="mt-5 flex flex-col gap-4">
+                  {rsvpTargets.map((target) => (
+                    <div key={target.profileId} className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-muted-strong">
+                        {target.label}
+                      </span>
+                      <RsvpButtons
+                        competitionId={competition.id}
+                        profileId={target.profileId}
+                        status={target.status}
+                        eventSlug={competition.slug}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : null}
+
+            {primaryAction === "register" && competition.reg_url && regHost ? (
+              <>
+                <h2
+                  id="event-next-step"
+                  className="mt-2 font-display text-xl font-bold text-foreground"
+                >
+                  {registrationComplete
+                    ? "Organizer registration is marked complete"
+                    : hasAnsweredRsvp
+                      ? "Finish organizer registration"
+                      : "Register on the organizer’s site"}
+                </h2>
+                <p className="mt-2 max-w-prose text-sm text-muted">
+                  Causey lists this tournament; entry and payment happen on the
+                  organizer&rsquo;s site. Save or rate below only after you know
+                  you want it.
+                </p>
+                <ExternalRegistrationPanel
+                  competitionId={competition.id}
+                  eventSlug={competition.slug}
+                  registrationHost={regHost}
+                  initialStatus={initialRegistrationStatus}
+                  signedIn={Boolean(user)}
+                  embedded
+                />
+              </>
+            ) : null}
+
+            {primaryAction === "invite_only" ? (
+              <>
+                <h2
+                  id="event-next-step"
+                  className="mt-2 font-display text-xl font-bold text-foreground"
+                >
+                  Entry is by club invitation
+                </h2>
+                <p className="mt-2 max-w-prose text-sm text-muted">
+                  This event is hosted on Causey — there is no open registration
+                  link. Ask your coach for an invite, or save it if you want to
+                  come back later.
+                </p>
+                {!user ? (
+                  <Link
+                    href={`/login?next=${encodeURIComponent(`/event/${competition.slug}`)}`}
+                    className="cta-enabled mt-5 inline-flex"
+                  >
+                    Sign in to save
+                  </Link>
+                ) : null}
+              </>
+            ) : null}
+          </section>
 
           <p className="mt-3">
             <a
@@ -316,10 +451,12 @@ export default async function EventPage({ params }: Params) {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-6 lg:pt-16">
-          {rsvpTargets.length ? (
-            <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-              <h2 className="text-sm font-semibold text-foreground">Your RSVP</h2>
+        <aside className="flex flex-col gap-5 lg:pt-8">
+          {showRsvpInAside ? (
+            <div className="border-b border-line pb-5">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+                Your RSVP
+              </h2>
               <div className="mt-3 flex flex-col gap-4">
                 {rsvpTargets.map((target) => (
                   <div key={target.profileId} className="flex flex-col gap-1.5">
@@ -337,9 +474,11 @@ export default async function EventPage({ params }: Params) {
               </div>
             </div>
           ) : null}
-          {canManage && competition.reg_url ? (
-            <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-              <h2 className="text-sm font-semibold text-foreground">Hosting</h2>
+          {showManageInAside ? (
+            <div className="border-b border-line pb-5">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+                Hosting
+              </h2>
               <Link
                 href={`/event/${competition.slug}/manage`}
                 className="mt-2 inline-flex text-sm font-semibold text-brand-red hover:underline"
@@ -356,8 +495,8 @@ export default async function EventPage({ params }: Params) {
             />
           ) : null}
           {clubGoing.length ? (
-            <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-              <h2 className="text-sm font-semibold text-foreground">
+            <div className="border-b border-line pb-5">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
                 Going from your club
               </h2>
               <div className="mt-2 flex flex-col gap-2">
@@ -379,8 +518,10 @@ export default async function EventPage({ params }: Params) {
               targets={recommendTargets}
             />
           ) : null}
-          <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
-            <h2 className="text-sm font-semibold text-foreground">Your account</h2>
+          <div className="border-b border-line pb-5">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+              Save &amp; rate
+            </h2>
             <div className="mt-3 flex flex-col gap-4">
               <SaveCompetitionButton
                 competitionId={competition.id}

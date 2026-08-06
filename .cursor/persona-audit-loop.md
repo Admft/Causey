@@ -50,27 +50,23 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
-- 2026-08-06 — Shipped role workspace differentiation: parent desk (`/family` action inbox + student rail), student plan (`/me` + homePath/nav “My tournaments”), coach mission (`/orgs`), shared `PortalMission`/`PortalListRow`, filter-rail soft-scroll inset.
+- 2026-08-06 — Event next-action tree: one “What to do next” by viewer state (host / RSVP / register / invite-only / ended); Save/rate demoted to aside.
+- 2026-08-06 — Role workspace differentiation (parent desk / student plan / coach mission).
 
-## Backlog candidates (from 2026-08-06 audit)
+## Backlog candidates (refreshed 2026-08-06 tick 2)
 
 ### P0 / first-session killers
-- `/family` `/me` `/orgs` share one recipe — **done 2026-08-06**
-- Student post-auth lands on empty `/orgs` — **done 2026-08-06**
-- Student nav hides schedule under Account — **done 2026-08-06**
-- Event page: no clear next-action tree (register vs invite vs save)
+- Event page: no clear next-action tree — **done 2026-08-06**
 - Join link forces Sign in before Create account
+- Coach `/orgs/[slug]` still panel soup (mission only on `/orgs` list)
 - Parent desk only counts RSVPs; organizer registration lives on `/me`
 
 ### P1 / trust & IA
-- Home: unfinished type cards compete with Chess
-- HomeAccountPitch: coach-weighted conversion on discovery home
-- `/chess` overclaims (“every tournament”)
-- Mobile: banner + header + subnav eat discovery/portal viewport
-- Coach org home still reads as panel soup / directory
+- HomeAccountPitch coach-weighted + `/chess` “every tournament” overclaim
+- Mobile: banner + header + subnav eat viewport
 - Manage tournament orphaned from org subnav
 - Admin home not moderation-first
-- District admin has no distinct landing (schema-dependent for full fix)
+- District admin has no distinct landing (schema-gated)
 
 ### Later / schema-gated
 - Real district shell + audience scopes + aggregate reporting

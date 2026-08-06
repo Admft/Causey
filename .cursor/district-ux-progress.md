@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Event next-action tree: one dominant step by viewer state; Save/rate demoted — 2026-08-06
 - [x] Role workspaces differentiated: parent desk (`/family` action inbox), student plan (`/me` + nav/homePath), coach mission (`/orgs`), portal primitives — 2026-08-06
 - [x] Search filter rail: sticky sidebar scrollbar no longer overlays filter controls (inner `pr-4` inset + soft-scroll thumb; column 240→256px — overlay bars ignore padding on the scroller) — 2026-08-06
 - [x] Navigation chrome: chess search is now one tap away in the global header for everyone (signed out included), with active-state awareness across Chess/Family-or-orgs/Account/Admin links; mobile keeps a short "Chess" label so the cluster fits phones — 2026-08-05
@@ -157,4 +158,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Next UX: start sequence item 1 — `0018` hierarchy + role-split helpers + staff/provision tables (then app mirrors).
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.
-- Last persona batch (2026-08-06): role workspace differentiation shipped. Next: event next-action tree or invite-first join auth.
+- Last persona batch (2026-08-06): event next-action tree shipped. Next: invite-first join auth or coach `/orgs/[slug]` mission.
