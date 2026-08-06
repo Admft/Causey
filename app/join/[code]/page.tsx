@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { JoinByCodeButton } from "@/components/JoinByCodeButton";
 import { getSessionUser } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/data/portal";
@@ -21,23 +20,52 @@ const ORG_TYPE_LABEL: Record<string, string> = {
   district: "District",
 };
 
-function NoMatch() {
+type OrgPreview = {
+  id: string;
+  name: string;
+  type: string;
+  state: string | null;
+};
+
+function NoMatch({ code }: { code?: string }) {
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
-      <p className="text-sm font-semibold text-brand-red">Join</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+        Join
+      </p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         That code didn&rsquo;t match
       </h1>
       <p className="mt-3 text-sm text-muted">
-        Codes look like BCDF-GHJK and come from your coach. Double-check it, or
-        ask your coach to share the link again — they may have rotated the
+        Codes look like BCDF-GHJK and come from your coach. Double-check the
+        link, or ask your coach to share it again — they may have rotated the
         code.
+        {code ? (
+          <>
+            {" "}
+            You opened <span className="font-semibold text-foreground">{formatJoinCode(code)}</span>.
+          </>
+        ) : null}
       </p>
-      <Link href="/orgs" className="cta-enabled mt-6 inline-flex">
-        Enter a code manually
-      </Link>
+      <p className="mt-6 text-sm text-muted">
+        Still have the right code? Ask your coach for a fresh link, or{" "}
+        <Link href="/chess" className="font-semibold text-brand-red hover:underline">
+          search tournaments
+        </Link>{" "}
+        while you wait.
+      </p>
     </div>
   );
+}
+
+async function loadOrgPreview(code: string): Promise<OrgPreview | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data: previews, error } = await supabase.rpc(
+    "get_org_preview_by_code",
+    { p_code: code }
+  );
+  if (error) return null;
+  return (previews?.[0] as OrgPreview | undefined) ?? null;
 }
 
 export default async function JoinPage({
@@ -61,23 +89,75 @@ export default async function JoinPage({
     );
   }
 
-  if (!isValidJoinCode(code)) return <NoMatch />;
+  if (!isValidJoinCode(code)) return <NoMatch code={code || undefined} />;
 
   const user = await getSessionUser();
-  if (!user) redirect(`/login?next=/join/${code}`);
+  const org = await loadOrgPreview(code);
+  // Invalid codes still 404 for signed-in users; unsigned visitors may hit a
+  // preview RPC that isn’t migrated yet — show a code-forward invite landing.
+  if (user && !org) return <NoMatch code={code} />;
 
-  const supabase = await createServerSupabaseClient();
-  const { data: previews } = await supabase.rpc("get_org_preview_by_code", {
-    p_code: code,
-  });
-  const org = previews?.[0] as
-    | { id: string; name: string; type: string; state: string | null }
-    | undefined;
-  if (!org) return <NoMatch />;
+  const joinPath = `/join/${code}`;
+  const signupHref = `/signup?next=${encodeURIComponent(joinPath)}`;
+  const loginHref = `/login?next=${encodeURIComponent(joinPath)}`;
+
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+          Student invite · {formatJoinCode(code)}
+        </p>
+        <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+          {org ? `Join ${org.name}` : "Join your school or club"}
+        </h1>
+        <p className="mt-2 text-sm text-muted">
+          {org ? (
+            <>
+              {ORG_TYPE_LABEL[org.type] ?? org.type}
+              {org.state ? ` · ${org.state}` : ""}
+            </>
+          ) : (
+            <>Your coach shared this join link.</>
+          )}
+        </p>
+        <p className="mt-4 text-sm text-muted">
+          Create a student account to get on the roster. Your coach will see
+          your display name and age band, and can invite you to tournaments.
+        </p>
+
+        <div className="mt-8 rounded-2xl border border-accent/25 bg-accent-soft/40 p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            What to do next
+          </p>
+          <h2 className="mt-2 font-display text-xl font-bold text-foreground">
+            New here? Create a student account
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            After you confirm your email, we&rsquo;ll bring you back here to
+            finish joining.
+          </p>
+          <Link href={signupHref} className="cta-enabled mt-5 inline-flex">
+            Create student account
+          </Link>
+          <p className="mt-4 text-sm text-muted">
+            Already have a student account?{" "}
+            <Link
+              href={loginHref}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!org) return <NoMatch code={code} />;
 
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
-      <p className="text-sm font-semibold text-brand-red">
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
         Join code {formatJoinCode(code)}
       </p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
