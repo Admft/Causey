@@ -324,7 +324,9 @@ export function SearchClient() {
                 {Array.from({ length: layout === "grid3" ? 9 : layout === "list" ? 5 : 6 }, (_, i) => (
                   <div
                     key={i}
-                    className={`skeleton ${layout === "list" ? "h-20" : "h-36"}`}
+                    className={`skeleton ${
+                      layout === "list" ? "h-32" : layout === "grid3" ? "h-80" : "h-96"
+                    }`}
                   />
                 ))}
               </div>

@@ -10,7 +10,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - Before committing, `git pull origin dev` and run tests so parallel work merges cleanly.
 
 ## Frontend polish backlog (kimi-k3 max)
-- [ ] Tournament display: make events easier to scan (date/venue/level sections, cleaner hierarchy on event cards)
+- [x] Tournament display: make events easier to scan (date/venue/level sections, cleaner hierarchy on event cards) — 2026-08-05
 - [ ] Responsive audit: phone/tablet/desktop without clashing grids, cramped cards, or orphaned CTAs
 - [ ] Alive feel: intentional micro-interaction (hover/focus states, smooth layout shifts) — max 2–3 per page, respect prefers-reduced-motion
 - [ ] Visual hierarchy: consistent spacing/typography rhythm; kill anything that reads template-default
@@ -18,6 +18,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Loading/empty states that feel designed (not dead)
 
 ## Done
+- [x] 2026-08-05 — Tournament cards scan by weekend: date chip + weekday date line, venue/city/distance line, section levels (U900 · K-8 …), fee pinned top-right, no empty image chrome
 - [x] 2026-08-05 — Join links now survive login, signup, and email confirmation so new students return to the organization invitation
 - [x] 2026-08-05 — Tournament creation now separates details from audience review, with an explicit publish step
 - [x] 2026-08-05 — Org workspace clarity: hosted tournaments lead the coach view, invite management is one click away, and join codes live with the roster
@@ -45,4 +46,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — preserved organization invitations through account creation
+- Last tick: 2026-08-05 — preserved organization invitations through account creation (UX); scannable tournament cards (frontend polish)
