@@ -18,9 +18,13 @@ const STATES = [
   "VA","WA","WV","WI","WY","DC",
 ];
 
-export function SignupForm() {
+export function SignupForm({
+  initialRole = "student",
+}: {
+  initialRole?: AccountRole;
+}) {
   const router = useRouter();
-  const [role, setRole] = useState<AccountRole>("student");
+  const [role, setRole] = useState<AccountRole>(initialRole);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

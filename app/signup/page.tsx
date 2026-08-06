@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignupForm } from "@/components/SignupForm";
+import { AccountRoleSchema } from "@/lib/auth/types";
 
 export const metadata: Metadata = {
   title: "Sign up",
   description: "Create a Causey account to save tournaments and build a student profile.",
 };
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string }>;
+}) {
+  const { role } = await searchParams;
+  const parsedRole = AccountRoleSchema.safeParse(role);
+
   return (
     <div className="mx-auto max-w-xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Account</p>
@@ -15,12 +23,12 @@ export default function SignupPage() {
         Create your Causey account
       </h1>
       <p className="mt-3 text-sm text-muted">
-        Students can save events and rate difficulty today. Coach/organizer
-        (tournament hosts) and parent tools are shown so the path is clear —
-        they unlock later.
+        Pick the account type that matches how you use tournaments. Students
+        save and rate events, parents RSVP for a linked child, and coaches run
+        a club and publish tournaments.
       </p>
       <div className="section-rule mt-8 pt-8">
-        <SignupForm />
+        <SignupForm initialRole={parsedRole.success ? parsedRole.data : "student"} />
       </div>
       <p className="mt-6 text-xs text-muted">
         Under 13? A parent should create the account for now.{" "}

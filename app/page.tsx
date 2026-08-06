@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HomeHeroGraphic } from "@/components/HomeHeroGraphic";
+import { HomeAccountPitch } from "@/components/HomeAccountPitch";
+import { HomeHeroSearch } from "@/components/HomeHeroSearch";
 import { TournamentSources } from "@/components/TournamentSources";
 
 export const metadata: Metadata = {
@@ -32,26 +33,36 @@ export default function CompetitionTypesPage() {
   return (
     <>
       <section className="access-grid">
-        <div className="relative mx-auto min-h-[380px] max-w-6xl px-5 py-16 sm:px-8 sm:py-20 md:min-h-[420px]">
-          <div className="relative z-10 max-w-xl">
-            <p className="animate-rise text-sm font-semibold text-brand-red">
-              Early product preview
-            </p>
-            <h1 className="animate-rise animate-rise-delay-1 mt-2 max-w-[16ch] font-display text-display-xl font-bold tracking-tight text-foreground">
-              What do you want to compete in?
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_minmax(0,26rem)] lg:gap-16">
+          <div className="relative z-10">
+            <h1 className="animate-rise max-w-[15ch] font-display text-display-xl font-bold tracking-tight text-foreground">
+              Start local. See where it leads.
             </h1>
-            <p className="animate-rise animate-rise-delay-1 mt-4 max-w-xl text-md text-muted">
-              Chess is live enough to explore. Other competition types are still
-              being built. Pick a type to see what we have so far.
+            <p className="animate-rise animate-rise-delay-1 mt-4 max-w-prose text-md text-muted">
+              Scholastic chess tournaments across the US, indexed in one place.
+              Search by zip to see what is actually within reach.
+            </p>
+            <p className="animate-rise animate-rise-delay-1 mt-3 max-w-prose text-sm text-muted">
+              Chess is the first competition type we have finished. Four more
+              are in progress below.
             </p>
           </div>
-          <HomeHeroGraphic />
+          <div className="animate-rise animate-rise-delay-2 relative z-10">
+            <HomeHeroSearch />
+          </div>
         </div>
       </section>
 
       <section className="section-rule">
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <h2 className="font-display text-display font-bold tracking-tight text-foreground">
+            What Causey covers
+          </h2>
+          <p className="mt-2 max-w-prose text-base text-muted">
+            Every type below is on the roadmap. Only chess has real listings
+            behind it today.
+          </p>
+          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
             <Link
               href="/chess"
               className="card-lift group rounded-2xl border border-brand-red/30 bg-surface p-6 shadow-[var(--shadow-card)]"
@@ -61,9 +72,9 @@ export default function CompetitionTypesPage() {
                   <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
                     Chess first
                   </p>
-                  <h2 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
+                  <h3 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
                     Chess
-                  </h2>
+                  </h3>
                 </div>
                 <span
                   aria-hidden="true"
@@ -90,9 +101,9 @@ export default function CompetitionTypesPage() {
                 <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
                   Not built yet
                 </p>
-                <h2 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
+                <h3 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
                   {type.name}
-                </h2>
+                </h3>
                 <p className="mt-3 max-w-md text-base text-muted">{type.description}</p>
                 <span className="mt-6 inline-flex text-sm font-semibold text-muted">
                   Not available yet
@@ -104,6 +115,8 @@ export default function CompetitionTypesPage() {
       </section>
 
       <TournamentSources />
+
+      <HomeAccountPitch />
     </>
   );
 }
