@@ -134,13 +134,19 @@ export async function saveTournamentDraft(
         .update(payload)
         .eq("id", values.draftId)
         .eq("org_id", values.orgId)
-    : await supabase.from("tournament_drafts").insert({
-        id: values.draftId,
-        org_id: values.orgId,
-        created_by: profile.id,
-        ...payload,
-      });
-  if (write.error) {
+        .select("id")
+        .maybeSingle()
+    : await supabase
+        .from("tournament_drafts")
+        .insert({
+          id: values.draftId,
+          org_id: values.orgId,
+          created_by: profile.id,
+          ...payload,
+        })
+        .select("id")
+        .maybeSingle();
+  if (write.error || !write.data) {
     return { ok: false, error: "Could not save the draft. Try again." };
   }
 
@@ -166,6 +172,20 @@ function draftFeeToCents(raw: string): ActionResult<{ cents: number | null }> {
   return { ok: true, cents: Math.round(dollars * 100) };
 }
 
+async function findPublishedDraftSlug(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  draftId: string,
+  orgId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("competitions")
+    .select("slug")
+    .eq("source_draft_id", draftId)
+    .eq("org_id", orgId)
+    .maybeSingle();
+  return (data?.slug as string | undefined) ?? null;
+}
+
 /** Validate the saved draft as a whole, publish it, then remove the draft row. */
 export async function publishTournamentDraft(
   input: z.input<typeof TournamentDraftPublishSchema>
@@ -189,6 +209,12 @@ export async function publishTournamentDraft(
     .eq("org_id", values.orgId)
     .maybeSingle();
   if (draftError || !draft) {
+    const publishedSlug = await findPublishedDraftSlug(
+      supabase,
+      values.draftId,
+      values.orgId
+    );
+    if (publishedSlug) return { ok: true, slug: publishedSlug };
     return { ok: false, error: "Draft not found. Return to the organization and resume it." };
   }
   const coverImagePath = draft.cover_image_path as string | null;
@@ -197,6 +223,9 @@ export async function publishTournamentDraft(
     return { ok: false, error: "Add a cover image before publishing." };
   }
   const coverFileName = coverImagePath.slice(expectedCoverPrefix.length);
+  if (!coverFileName || coverFileName.includes("/")) {
+    return { ok: false, error: "The cover image is invalid. Upload it again before publishing." };
+  }
   const { data: coverFiles, error: coverError } = await supabase.storage
     .from("tournament-covers")
     .list(`${values.orgId}/${values.draftId}`, {
@@ -263,7 +292,8 @@ export async function publishTournamentDraft(
     org.name,
     profile.id,
     zipRow,
-    coverImageUrl
+    coverImageUrl,
+    values.draftId
   );
   if (!published.ok) return published;
 
@@ -282,7 +312,8 @@ async function insertWithSlugRetry(
   orgName: string,
   profileId: string,
   zipRow: { lat: number; lng: number },
-  imageUrl: string
+  imageUrl: string,
+  sourceDraftId: string
 ): Promise<ActionResult<{ slug: string }>> {
   const base = slugify(values.name, values.startDate);
   for (let attempt = 1; attempt <= 5; attempt += 1) {
@@ -314,12 +345,21 @@ async function insertWithSlugRetry(
         visibility: values.visibility,
         org_id: values.orgId,
         created_by: profileId,
+        source_draft_id: sourceDraftId,
       })
       .select("id, slug")
       .single();
 
     if (error) {
-      if (error.code === "23505") continue; // slug taken — retry with suffix
+      if (error.code === "23505") {
+        const publishedSlug = await findPublishedDraftSlug(
+          supabase,
+          sourceDraftId,
+          values.orgId
+        );
+        if (publishedSlug) return { ok: true, slug: publishedSlug };
+        continue; // Slug taken by another tournament — retry with a suffix.
+      }
       return { ok: false, error: "Could not create the tournament. Try again." };
     }
 

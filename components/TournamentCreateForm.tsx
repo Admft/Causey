@@ -124,7 +124,6 @@ export function TournamentCreateForm({
   const [draftError, setDraftError] = useState<string | null>(null);
   const firstAutosave = useRef(true);
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
-  const latestSaveId = useRef(0);
   const draftUrlSet = useRef(Boolean(initialDraft));
   const leaving = useRef(false);
   const published = useRef(false);
@@ -184,6 +183,16 @@ export function TournamentCreateForm({
         setDraftStatus("saved");
         setDraftError(null);
         if (result.coverImageUrl) setCoverImageUrl(result.coverImageUrl);
+        if (!draftUrlSet.current) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("draft", result.draftId);
+          window.history.replaceState(
+            window.history.state,
+            "",
+            `${url.pathname}${url.search}${url.hash}`
+          );
+          draftUrlSet.current = true;
+        }
       } else {
         setDraftStatus("error");
         setDraftError(result.error);
@@ -193,7 +202,7 @@ export function TournamentCreateForm({
   }
 
   useEffect(() => {
-    if (edit) return;
+    if (edit || pending || leaving.current || published.current) return;
     if (firstAutosave.current) {
       firstAutosave.current = false;
       return;
@@ -219,6 +228,7 @@ export function TournamentCreateForm({
     visibility,
     rated,
     edit,
+    pending,
   ]);
 
   async function onCoverSelected(event: ChangeEvent<HTMLInputElement>) {
@@ -288,6 +298,7 @@ export function TournamentCreateForm({
         setError(result.error);
         return;
       }
+      leaving.current = true;
       router.push(`/orgs/${orgSlug}`);
       router.refresh();
     } finally {
@@ -365,6 +376,7 @@ export function TournamentCreateForm({
         setError(result.error);
         return;
       }
+      published.current = true;
       router.push(`/event/${result.slug}`);
       router.refresh();
     } finally {
@@ -491,6 +503,7 @@ export function TournamentCreateForm({
               </div>
               {coverImageUrl ? (
                 <CompetitionCoverImage
+                  key={coverImageUrl}
                   src={coverImageUrl}
                   alt={`Cover for ${name.trim() || "this tournament"}`}
                   aspectClass="aspect-[2/1]"
