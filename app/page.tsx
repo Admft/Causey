@@ -76,10 +76,7 @@ export default function CompetitionTypesPage() {
                     Chess
                   </h3>
                 </div>
-                <span
-                  aria-hidden="true"
-                  className="text-xl text-brand-red transition-transform group-hover:translate-x-1"
-                >
+                <span aria-hidden="true" className="nudge-x text-xl text-brand-red">
                   →
                 </span>
               </div>

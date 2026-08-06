@@ -70,7 +70,10 @@ function SourceColumn({
                   >
                     {source.name}
                     {external ? (
-                      <span aria-hidden="true" className="text-sm font-medium text-muted">
+                      <span
+                        aria-hidden="true"
+                        className="nudge-x text-sm font-medium text-muted"
+                      >
                         ↗
                       </span>
                     ) : null}

@@ -12,12 +12,14 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Frontend polish backlog (kimi-k3 max)
 - [x] Tournament display: make events easier to scan (date/venue/level sections, cleaner hierarchy on event cards) — 2026-08-05
 - [x] Responsive audit: phone/tablet/desktop without clashing grids, cramped cards, or orphaned CTAs — 2026-08-05 (/chess filter rail no longer buries results on phone/tablet: collapses into a disclosure below lg; other pages already stack single-column)
-- [ ] Alive feel: intentional micro-interaction (hover/focus states, smooth layout shifts) — max 2–3 per page, respect prefers-reduced-motion
+- [x] Alive feel: intentional micro-interaction (hover/focus states, smooth layout shifts) — max 2–3 per page, respect prefers-reduced-motion — 2026-08-05 (`.nudge-x` ported from the design-system checklist; arrow/external marks nudge on hover AND keyboard focus; card-lift now answers focus-visible too; all covered by the reduced-motion kill switch)
 - [ ] Visual hierarchy: consistent spacing/typography rhythm; kill anything that reads template-default
 - [x] Event page polish: hero/info/register actions feel composed, not stacked — 2026-08-05 (hero half: no-image events go text-first; register-flow composition covered by UX P1 "External registration tracking")
 - [x] Loading/empty states that feel designed (not dead) — 2026-08-05 (route skeletons for /orgs + /family account surfaces; search already had skeletons)
 
 ## Done
+- [x] 2026-08-05 — Link affordances feel alive and keyboard-equal: shared `.nudge-x` utility (design-system §10/§16, brand easing) drives every → / ↗ mark on home, footer, and sources; card-lift and the nudge now also trigger on focus-visible; the two hand-rolled `group-hover:translate-x-1` arrows that ignored prefers-reduced-motion are replaced by the guarded utility
+- [x] 2026-08-05 — Search now defaults to honest popularity from distinct saves and registration starts, keeps nearer distance bands ahead of farther events, and offers an explicit soonest-first option
 - [x] 2026-08-05 — Search filters no longer wall off results on phones/tablets: below lg the rail collapses behind a "Narrow it down · N applied" disclosure (aria-expanded, motion-safe chevron, Clear filters still reachable); desktop 220px sidebar unchanged
 - [x] 2026-08-05 — Search provenance is explicit on every tournament card and event page, with plain-language source filtering for scraped, organizer-provided, and Causey-entered listings
 - [x] 2026-08-05 — My tournaments now puts unanswered coach invitations first and lets students RSVP without leaving the workspace
@@ -37,7 +39,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Signup / join-org copy + flow: match real unlocks; remove contradictory coach language — join-link auth handoff shipped 2026-08-05; broader copy audit remains
 - [x] External registration tracking: Register → registration_opened → “Did you register?” → My tournaments — shipped 2026-08-05
 - [ ] My tournaments workspace: Registration needed / Registered / Invited shipped 2026-08-05; Upcoming / Past remain
-- [ ] Search defaults: provenance shipped 2026-08-05; popularity and org-member boosting without burying public discovery remain
+- [ ] Search defaults: provenance + popularity shipped 2026-08-05; org-member boosting without burying public discovery remains
 - [ ] Empty/error/success states that always name the next action
 - [ ] Navigation consistency: same terms for org, event, RSVP, register across pages
 
@@ -52,4 +54,5 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — made each tournament’s listing source explicit in search and event details (UX); /chess filter rail collapses into a disclosure on phone/tablet so results lead the page (frontend polish)
+- Last UX tick: 2026-08-05 — defaulted search to de-duplicated save/registration interest within nearby distance bands, with a transparent soonest-first alternative
+- Last frontend-polish tick: 2026-08-05 — ported `.nudge-x` so arrow/external marks nudge on hover + keyboard focus, with card-lift focus parity and full reduced-motion guards

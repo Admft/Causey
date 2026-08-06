@@ -92,7 +92,7 @@ export function HomeAccountPitch() {
                   </div>
                   <span
                     aria-hidden="true"
-                    className="shrink-0 text-xl text-brand-red transition-transform group-hover:translate-x-1"
+                    className="nudge-x shrink-0 text-xl text-brand-red"
                   >
                     →
                   </span>
