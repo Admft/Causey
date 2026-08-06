@@ -18,6 +18,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [x] Loading/empty states that feel designed (not dead) — 2026-08-05 (route skeletons for /orgs + /family account surfaces; search already had skeletons)
 
 ## Done
+- [x] 2026-08-05 — Search provenance is explicit on every tournament card and event page, with plain-language source filtering for scraped, organizer-provided, and Causey-entered listings
 - [x] 2026-08-05 — My tournaments now puts unanswered coach invitations first and lets students RSVP without leaving the workspace
 - [x] 2026-08-05 — Account surfaces no longer hang on the old screen while data loads: `app/orgs/loading.tsx` + `app/family/loading.tsx` mirror each page's header/panel/row structure with the shared `.skeleton` pulse (reduced-motion safe, `role="status"` labels)
 - [x] 2026-08-05 — External registration handoff: signed-in users get a “Did you register?” confirmation after leaving for the organizer site, with Registration needed / Registered lists in My tournaments
@@ -35,7 +36,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Signup / join-org copy + flow: match real unlocks; remove contradictory coach language — join-link auth handoff shipped 2026-08-05; broader copy audit remains
 - [x] External registration tracking: Register → registration_opened → “Did you register?” → My tournaments — shipped 2026-08-05
 - [ ] My tournaments workspace: Registration needed / Registered / Invited shipped 2026-08-05; Upcoming / Past remain
-- [ ] Search defaults: popularity + provenance; org’s own events boosted for members without burying public discovery
+- [ ] Search defaults: provenance shipped 2026-08-05; popularity and org-member boosting without burying public discovery remain
 - [ ] Empty/error/success states that always name the next action
 - [ ] Navigation consistency: same terms for org, event, RSVP, register across pages
 
@@ -50,4 +51,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — put unanswered coach invitations and RSVP actions first in My tournaments (UX); designed route-loading skeletons for the orgs and family workspaces (frontend polish)
+- Last tick: 2026-08-05 — made each tournament’s listing source explicit in search and event details (UX); responsive audit continues with the frontend polish agent

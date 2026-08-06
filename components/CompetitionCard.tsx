@@ -16,6 +16,7 @@ import { sourceByCompetitionSource } from "@/lib/ingestion-sources";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import { isCompetitionEnded } from "@/lib/competition-timing";
+import { SourceBadge } from "@/components/SourceBadge";
 
 /**
  * Search-result card. Scans in three beats: standing + fee on the eyebrow
@@ -164,6 +165,9 @@ export function CompetitionCard({
                   ) : null}
                 </p>
               ) : null}
+              <span className="mt-1 block">
+                <SourceBadge source={result.source} showLogo={false} />
+              </span>
             </div>
           </div>
         </div>
@@ -259,20 +263,20 @@ export function CompetitionCard({
             ) : null}
           </div>
         </div>
-        {footerParts.length > 0 && (
-          <div
-            className={`border-t border-line text-2xs text-muted ${
-              compact ? "mt-2.5 pt-2" : "mt-3 pt-3"
-            }`}
-          >
-            {footerParts.map((part, i): ReactNode => (
-              <span key={part.text} className={part.strong ? "text-muted-strong" : undefined}>
-                {i > 0 ? " · " : ""}
-                {part.text}
-              </span>
-            ))}
-          </div>
-        )}
+        <div
+          className={`flex flex-wrap items-center gap-x-2 border-t border-line text-2xs text-muted ${
+            compact ? "mt-2.5 pt-2" : "mt-3 pt-3"
+          }`}
+        >
+          <SourceBadge source={result.source} showLogo={false} />
+          {footerParts.length > 0 ? <span aria-hidden="true">·</span> : null}
+          {footerParts.map((part, i): ReactNode => (
+            <span key={part.text} className={part.strong ? "text-muted-strong" : undefined}>
+              {i > 0 ? " · " : ""}
+              {part.text}
+            </span>
+          ))}
+        </div>
       </div>
     </Link>
   );

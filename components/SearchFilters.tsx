@@ -45,13 +45,14 @@ const FEE_CEILINGS = [
   { value: "100", label: "$100 or less" },
 ];
 
-/** Live scrape hubs + manual seed rows — values match competitions.source. */
+/** Listing origins shown in plain language; values match competitions.source. */
 const SOURCE_OPTIONS = [
   ...INGESTION_SOURCES.filter((s) => s.competitionSource).map((s) => ({
     value: s.competitionSource as string,
     label: s.name,
   })),
-  { value: "manual", label: "Hand-entered / seed" },
+  { value: "organizer", label: "Provided by organizer" },
+  { value: "manual", label: "Entered in Causey" },
 ];
 
 const TIMING_OPTIONS: { value: TimingFilter; label: string }[] = [
@@ -155,9 +156,9 @@ export function SearchFilters({
         Featured only
       </button>
 
-      <Field id="filter-source" label="Data source">
+      <Field id="filter-source" label="Listing source">
         <select id="filter-source" className="field" value={filters.source} onChange={set("source")}>
-          <option value="">All sources</option>
+          <option value="">Any source</option>
           {SOURCE_OPTIONS.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
