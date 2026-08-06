@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Coach org-home mission on `/orgs/[slug]` (resume draft → manage next → create-first) — 2026-08-06
 - [x] Event next-action tree: one dominant step by viewer state; Save/rate demoted — 2026-08-06
 - [x] Role workspaces differentiated: parent desk (`/family` action inbox), student plan (`/me` + nav/homePath), coach mission (`/orgs`), portal primitives — 2026-08-06
 - [x] Search filter rail: sticky sidebar scrollbar no longer overlays filter controls (inner `pr-4` inset + soft-scroll thumb; column 240→256px — overlay bars ignore padding on the scroller) — 2026-08-06
@@ -97,7 +98,7 @@ Pick these before polish. One major end-to-end win per tick.
 ## Still visually unfinished for districts (UI — kimi-k3-max)
 
 ### Biggest gap — role workspaces
-- [x] Coach org home panel soup → one mission panel (426148a)
+- [x] Coach org home panel soup → one mission panel (426148a list; `/orgs/[slug]` mission 2026-08-06)
 - [x] `/family`, `/me`, `/orgs` no longer share one recipe — parent desk / student plan / coach mission (2026-08-06)
 - [x] Parent desk vs student plan vs coach mission differentiated (district overview still open)
 
@@ -158,4 +159,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Next UX: start sequence item 1 — `0018` hierarchy + role-split helpers + staff/provision tables (then app mirrors).
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.
-- Last persona batch (2026-08-06): event next-action tree shipped. Next: invite-first join auth or coach `/orgs/[slug]` mission.
+- Last persona batch (2026-08-06): coach org-home mission shipped. Next: invite-first join auth or parent registration inbox.

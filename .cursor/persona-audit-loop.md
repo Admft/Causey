@@ -50,23 +50,23 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
-- 2026-08-06 — Event next-action tree: one “What to do next” by viewer state (host / RSVP / register / invite-only / ended); Save/rate demoted to aside.
-- 2026-08-06 — Role workspace differentiation (parent desk / student plan / coach mission).
+- 2026-08-06 — Coach org-home mission: `/orgs/[slug]` leads with resume draft → manage next → create-first; other lists demoted.
+- 2026-08-06 — Event next-action tree
+- 2026-08-06 — Role workspace differentiation
 
-## Backlog candidates (refreshed 2026-08-06 tick 2)
+## Backlog candidates (refreshed tick 3)
 
 ### P0 / first-session killers
-- Event page: no clear next-action tree — **done 2026-08-06**
-- Join link forces Sign in before Create account
-- Coach `/orgs/[slug]` still panel soup (mission only on `/orgs` list)
+- Coach `/orgs/[slug]` still panel soup — **done 2026-08-06**
+- Join link forces Sign in before Create account (needs soft landing; org preview may need RPC grant)
 - Parent desk only counts RSVPs; organizer registration lives on `/me`
 
 ### P1 / trust & IA
-- HomeAccountPitch coach-weighted + `/chess` “every tournament” overclaim
-- Mobile: banner + header + subnav eat viewport
+- HomeAccountPitch coach-weighted + `/chess` overclaim
+- Mobile chrome stack
 - Manage tournament orphaned from org subnav
 - Admin home not moderation-first
-- District admin has no distinct landing (schema-gated)
+- District admin distinct landing (schema-gated)
 
 ### Later / schema-gated
 - Real district shell + audience scopes + aggregate reporting
