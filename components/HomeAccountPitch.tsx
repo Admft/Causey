@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { AccountRole } from "@/lib/auth/types";
+import { getCurrentProfile } from "@/lib/auth/session";
 
 /**
- * Conversion band. Searching works signed out, so this has to earn the account
- * by naming what each role actually gets. Roles link into a pre-selected
- * signup rather than a generic one, so the first screen already fits them.
+ * Conversion band for signed-out visitors. Searching works without an account,
+ * so this has to earn signup by naming what each role actually gets.
+ * When already signed in, swap to role next-actions — never pitch Sign up.
  */
 const ROLE_ROUTES: {
   role: AccountRole;
@@ -33,7 +34,82 @@ const ROLE_ROUTES: {
   },
 ];
 
-export function HomeAccountPitch() {
+const SIGNED_IN_NEXT: Record<
+  AccountRole,
+  { heading: string; blurb: string; actions: { href: string; label: string; primary?: boolean }[] }
+> = {
+  student: {
+    heading: "You are signed in as a student",
+    blurb:
+      "Save events you are still deciding on, RSVP when you are going, and keep your schedule in one place.",
+    actions: [
+      { href: "/me", label: "Open my schedule", primary: true },
+      { href: "/chess", label: "Search tournaments" },
+      { href: "/orgs", label: "My clubs" },
+    ],
+  },
+  parent: {
+    heading: "You are signed in as a parent",
+    blurb:
+      "Link your children, RSVP for them, and follow the events they enter from one place.",
+    actions: [
+      { href: "/family", label: "Open family", primary: true },
+      { href: "/chess", label: "Search tournaments" },
+      { href: "/me", label: "My account" },
+    ],
+  },
+  coach: {
+    heading: "You are signed in as a coach or organizer",
+    blurb:
+      "Invite students with a join code, publish club tournaments, and track who is going.",
+    actions: [
+      { href: "/orgs", label: "Open my clubs", primary: true },
+      { href: "/chess", label: "Search tournaments" },
+      { href: "/orgs/new", label: "Start a club" },
+    ],
+  },
+};
+
+export async function HomeAccountPitch() {
+  const profile = await getCurrentProfile();
+
+  if (profile) {
+    const next = SIGNED_IN_NEXT[profile.role] ?? SIGNED_IN_NEXT.student;
+    return (
+      <section
+        className="section-rule bg-brand-blue-soft/50"
+        aria-labelledby="account-heading"
+      >
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-14 sm:px-8 sm:py-16 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+          <div className="max-w-2xl">
+            <h2
+              id="account-heading"
+              className="max-w-[24ch] font-display text-display font-bold tracking-tight text-foreground"
+            >
+              {next.heading}
+            </h2>
+            <p className="mt-4 max-w-prose text-base text-muted">{next.blurb}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {next.actions.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={
+                  action.primary
+                    ? "cta-enabled inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold"
+                    : "inline-flex items-center justify-center rounded-xl border border-line bg-surface px-5 py-3 text-sm font-semibold text-foreground hover:border-foreground/30"
+                }
+              >
+                {action.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       className="section-rule bg-brand-blue-soft/50"
