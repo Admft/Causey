@@ -15,9 +15,10 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Alive feel: intentional micro-interaction (hover/focus states, smooth layout shifts) — max 2–3 per page, respect prefers-reduced-motion
 - [ ] Visual hierarchy: consistent spacing/typography rhythm; kill anything that reads template-default
 - [x] Event page polish: hero/info/register actions feel composed, not stacked — 2026-08-05 (hero half: no-image events go text-first; register-flow composition covered by UX P1 "External registration tracking")
-- [ ] Loading/empty states that feel designed (not dead)
+- [x] Loading/empty states that feel designed (not dead) — 2026-08-05 (route skeletons for /orgs + /family account surfaces; search already had skeletons)
 
 ## Done
+- [x] 2026-08-05 — Account surfaces no longer hang on the old screen while data loads: `app/orgs/loading.tsx` + `app/family/loading.tsx` mirror each page's header/panel/row structure with the shared `.skeleton` pulse (reduced-motion safe, `role="status"` labels)
 - [x] 2026-08-05 — External registration handoff: signed-in users get a “Did you register?” confirmation after leaving for the organizer site, with Registration needed / Registered lists in My tournaments
 - [x] 2026-08-05 — Event pages without a cover image go text-first: dead grey 2:1 placeholder removed, featured mark moves inline with the eyebrow (same pattern as cards)
 - [x] 2026-08-05 — Tournament cards scan by weekend: date chip + weekday date line, venue/city/distance line, section levels (U900 · K-8 …), fee pinned top-right, no empty image chrome
@@ -48,4 +49,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — tracked external registration handoffs through account confirmation and My tournaments
+- Last tick: 2026-08-05 — tracked external registration handoffs through account confirmation and My tournaments (UX); designed route-loading skeletons for the orgs and family workspaces (frontend polish)
