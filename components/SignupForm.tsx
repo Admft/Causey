@@ -19,6 +19,27 @@ const STATES = [
   "VA","WA","WV","WI","WY","DC",
 ];
 
+const ROLE_SIGNUP_COPY: Record<
+  AccountRole,
+  { nameLabel: string; nameHelp: string; confirmationNext: string }
+> = {
+  student: {
+    nameLabel: "Student name",
+    nameHelp: "This is the name coaches see on school and club rosters.",
+    confirmationNext: "open My clubs to join a school or club.",
+  },
+  parent: {
+    nameLabel: "Your name",
+    nameHelp: "Use the name your student will recognize.",
+    confirmationNext: "open Family to link a student’s account.",
+  },
+  coach: {
+    nameLabel: "Your name",
+    nameHelp: "Use the name your school or club knows you by.",
+    confirmationNext: "open My organizations to start a roster.",
+  },
+};
+
 export function SignupForm({
   initialRole = "student",
   next,
@@ -54,6 +75,9 @@ export function SignupForm({
       return null;
     }
   }, [dateOfBirth]);
+  const roleOption =
+    ROLE_OPTIONS.find((option) => option.value === role) ?? ROLE_OPTIONS[0];
+  const roleCopy = ROLE_SIGNUP_COPY[role];
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -120,24 +144,45 @@ export function SignupForm({
 
   if (needsConfirm) {
     return (
-      <div className="rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
+      <div
+        className="rounded-xl border border-brand-red/25 bg-accent-soft p-6"
+        role="status"
+      >
         <h2 className="font-display text-display-sm font-bold text-foreground">
-          {joiningOrganization
-            ? "Check your email to continue"
-            : "Check your email"}
+          Confirm your email to finish
         </h2>
         <p className="mt-3 text-sm text-muted">
           We sent a confirmation link to <strong className="text-foreground">{email}</strong>.
-          Open it to finish creating your account
-          {joiningOrganization
-            ? " and return to the organization before joining its roster."
-            : next
-              ? " and continue where you left off."
-            : " and sign in to Causey."}
         </p>
-        <Link href={loginHref} className="cta-enabled mt-6 inline-flex">
-          Go to sign in
-        </Link>
+        <p className="mt-4 text-sm font-semibold text-foreground">
+          Open that email on this device next.
+        </p>
+        <p className="mt-1 text-sm text-muted">
+          After you confirm, you&rsquo;ll{" "}
+          {joiningOrganization
+            ? "return to review the organization before joining its roster."
+            : next
+              ? "continue where you left off."
+              : roleCopy.confirmationNext}
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={() => {
+              setNeedsConfirm(false);
+              setPassword("");
+            }}
+            className="text-sm font-semibold text-brand-red hover:underline"
+          >
+            Use a different email
+          </button>
+          <Link
+            href={loginHref}
+            className="text-sm font-medium text-muted-strong hover:text-foreground"
+          >
+            Already confirmed? Sign in
+          </Link>
+        </div>
       </div>
     );
   }
@@ -159,21 +204,27 @@ export function SignupForm({
             {ROLE_OPTIONS.map((opt) => {
               const selected = role === opt.value;
               return (
-                <button
+                <label
                   key={opt.value}
-                  type="button"
-                  onClick={() => setRole(opt.value)}
-                  className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+                  className={`cursor-pointer rounded-xl border px-3 py-3 text-left transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
                     selected
                       ? "border-brand-red/40 bg-accent-soft"
                       : "border-line bg-white hover:border-brand-red/30"
                   }`}
                 >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={opt.value}
+                    checked={selected}
+                    onChange={() => setRole(opt.value)}
+                    className="sr-only"
+                  />
                   <span className="block text-sm font-semibold text-foreground">
                     {opt.label}
                   </span>
                   <span className="mt-1 block text-2xs text-muted">{opt.description}</span>
-                </button>
+                </label>
               );
             })}
           </div>
@@ -182,7 +233,9 @@ export function SignupForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1 sm:col-span-2">
-          <span className="text-xs font-semibold text-muted-strong">Display name</span>
+          <span className="text-xs font-semibold text-muted-strong">
+            {roleCopy.nameLabel}
+          </span>
           <input
             className="field"
             required
@@ -190,6 +243,7 @@ export function SignupForm({
             onChange={(e) => setDisplayName(e.target.value)}
             autoComplete="name"
           />
+          <span className="text-2xs text-muted">{roleCopy.nameHelp}</span>
         </label>
         <label className="flex flex-col gap-1 sm:col-span-2">
           <span className="text-xs font-semibold text-muted-strong">Email</span>
@@ -234,6 +288,10 @@ export function SignupForm({
                 Age band: {ageBandLabel(derivedBand)}
               </span>
             ) : null}
+            <span className="text-2xs text-muted">
+              A parent or guardian should help students under 13 complete this
+              form.
+            </span>
           </label>
         ) : null}
         <label className="flex flex-col gap-1">
@@ -280,7 +338,9 @@ export function SignupForm({
       ) : null}
 
       <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
-        {pending ? "Creating account…" : "Create account"}
+        {pending
+          ? "Creating account…"
+          : `Create ${roleOption.accountLabel} account`}
       </button>
 
       <p className="text-sm text-muted">

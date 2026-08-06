@@ -17,23 +17,29 @@ export const AGE_BAND_OPTIONS: { value: AgeBand; label: string }[] = [
 export const ROLE_OPTIONS: {
   value: AccountRole;
   label: string;
+  accountLabel: string;
   description: string;
 }[] = [
   {
     value: "student",
     label: "Student",
-    description: "Find tournaments, save events, rate difficulty, build a profile.",
+    accountLabel: "student",
+    description:
+      "Join a school or club, answer coach invitations, and keep tournament plans together.",
   },
   {
     value: "coach",
     label: "Coach / Organizer",
+    accountLabel: "coach or organizer",
     description:
-      "Start a club, invite students with a join code, and host tournaments.",
+      "Start a school or club roster, invite students, and publish tournaments.",
   },
   {
     value: "parent",
     label: "Parent",
-    description: "Link with your child, follow their events, and RSVP for them.",
+    accountLabel: "parent",
+    description:
+      "Link to a student’s account, follow their invitations, and RSVP on their behalf.",
   },
 ];
 

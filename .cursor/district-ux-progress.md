@@ -25,6 +25,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — Signup carries each role through plain-language account choices, roster-visible name guidance, and a next-step email confirmation handoff
 - [x] 2026-08-05 — Join-link sign-in names the required student account and offers student-specific account creation without losing the invitation
 - [x] 2026-08-05 — Tournament creation requires a stored cover, autosaves coach-only drafts, resumes from the organization workspace, and publishes after preview + audience review
 - [x] 2026-08-05 — Join-link signup is student-specific, explains roster access, and preserves the invitation through sign-in and email confirmation
@@ -48,7 +49,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 
 ## Open — P0/P1 UX (do these first)
 - [x] Tournament create flow: required image + persisted drafts — completed 2026-08-05 with cover upload, autosave/resume, preview, audience review, and publish validation
-- [ ] Signup / join-org copy + flow: student-specific join signup and sign-in shipped 2026-08-05; broader role-copy audit remains
+- [x] Signup / join-org copy + flow: student join links preserve invitations; generic signup now carries student, parent, and coach intent through account creation and confirmation
 - [ ] Search: org-member boosting without burying public discovery
 - [ ] Empty/error/success states that always name the next action
 - [ ] Navigation consistency: same terms for org, event, RSVP, register across pages
@@ -65,7 +66,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Last UX tick: 2026-08-05 — made join-link sign-in student-specific while preserving the invitation through account creation.
-- Next UX: finish the broader signup / join-org role-copy audit.
+- Last UX tick: 2026-08-05 — made generic signup role-aware through account choice, name guidance, and email confirmation.
+- Next UX: add next actions to the highest-impact empty, error, and success states.
 - Last polish tick: 2026-08-05 — home + search visual hierarchy (coverage section tells the truth about what works; one search cluster; count-anchored results header).
 - Next polish: search results composition redesign, or org workspace visual redesign once UX org files settle.

@@ -6,7 +6,8 @@ import { AccountRoleSchema } from "@/lib/auth/types";
 
 export const metadata: Metadata = {
   title: "Sign up",
-  description: "Create a Causey account to save tournaments and build a student profile.",
+  description:
+    "Create a Causey account as a student, parent, coach, or organizer.",
 };
 
 export default async function SignupPage({
@@ -30,7 +31,7 @@ export default async function SignupPage({
       <p className="mt-3 text-sm text-muted">
         {isJoiningOrganization
           ? "This join link is for a student roster. After confirming your email, you’ll return to review the organization before joining."
-          : "Choose Student to join a school or club, Parent to manage a linked child’s invitations, or Coach / Organizer to create a roster and publish tournaments."}
+          : "Students join schools or clubs, parents link to a student, and coaches or organizers start rosters and publish tournaments."}
       </p>
       <div className="section-rule mt-8 pt-8">
         <SignupForm
@@ -46,9 +47,9 @@ export default async function SignupPage({
         />
       </div>
       <p className="mt-6 text-xs text-muted">
-        Under 13? A parent should create the account for now.{" "}
+        You can search without creating an account.{" "}
         <Link href="/chess" className="font-medium text-muted-strong hover:text-brand-red">
-          Keep browsing without an account
+          Keep browsing tournaments
         </Link>
       </p>
     </div>
