@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import type { AccountRole } from "@/lib/auth/types";
 import {
   getMyEntrantRows,
   getParentLinks,
@@ -15,6 +16,40 @@ import { formatDateRange } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Your account",
   description: "Your Causey profile, saved tournaments, and ratings.",
+};
+
+const ROLE_NEXT_ACTION: Record<
+  AccountRole,
+  {
+    title: string;
+    description: string;
+    href: string;
+    label: string;
+    secondary?: { href: string; label: string };
+  }
+> = {
+  student: {
+    title: "Find your next chess tournament",
+    description:
+      "Search scholastic events, save the ones that fit, and keep your club invitations together.",
+    href: "/chess",
+    label: "Search tournaments",
+    secondary: { href: "/orgs", label: "Open my clubs" },
+  },
+  parent: {
+    title: "See which student needs you",
+    description:
+      "Review each linked student’s clubs, tournament invitations, and RSVP status.",
+    href: "/family",
+    label: "Review family activity",
+  },
+  coach: {
+    title: "Run your next team task",
+    description:
+      "Open your organization workspace to manage rosters, invitations, and tournaments.",
+    href: "/orgs",
+    label: "Manage organizations",
+  },
 };
 
 export default async function MePage() {
@@ -68,6 +103,7 @@ export default async function MePage() {
       : profile.role === "parent"
         ? "Parent"
         : "Student";
+  const nextAction = ROLE_NEXT_ACTION[profile.role];
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
@@ -78,6 +114,28 @@ export default async function MePage() {
       <p className="mt-2 text-sm text-muted">
         {user.email} · {roleLabel}
       </p>
+
+      <section className="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-6">
+        <h2 className="font-display text-xl font-bold text-foreground">
+          {nextAction.title}
+        </h2>
+        <p className="mt-2 max-w-prose text-sm text-muted">
+          {nextAction.description}
+        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-4">
+          <Link href={nextAction.href} className="cta-enabled inline-flex">
+            {nextAction.label}
+          </Link>
+          {nextAction.secondary ? (
+            <Link
+              href={nextAction.secondary.href}
+              className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+            >
+              {nextAction.secondary.label}
+            </Link>
+          ) : null}
+        </div>
+      </section>
 
       {parentLinks.length ? (
         <section className="section-rule mt-10 pt-8">
