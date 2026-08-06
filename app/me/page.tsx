@@ -97,7 +97,7 @@ export default async function MePage() {
   if (!profile) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <h1 className="font-display text-display-lg font-bold text-foreground">
+        <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
           Profile not ready
         </h1>
         <p className="mt-3 text-sm text-muted">
@@ -266,7 +266,7 @@ export default async function MePage() {
       </section>
 
       <section className="section-rule mt-10 pt-8">
-        <h2 className="font-display text-xl font-bold text-foreground">
+        <h2 className="text-sm font-semibold text-foreground">
           My tournaments
         </h2>
         <p className="mt-2 max-w-prose text-sm text-muted">
@@ -284,7 +284,7 @@ export default async function MePage() {
           <div className="mt-6 flex flex-col gap-7">
             {upcomingInvitations.length ? (
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-xs font-semibold text-muted-strong">
                   Invited
                 </h3>
                 <p className="mt-1 text-sm text-muted">
@@ -326,7 +326,7 @@ export default async function MePage() {
             ) : null}
             {registrationNeeded.length ? (
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-xs font-semibold text-muted-strong">
                   Registration needed
                 </h3>
                 <ul className="mt-3 flex flex-col gap-3">
@@ -357,7 +357,7 @@ export default async function MePage() {
             ) : null}
             {upcomingPlans.length ? (
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-xs font-semibold text-muted-strong">
                   Upcoming
                 </h3>
                 <ul className="mt-3 flex flex-col gap-3">
@@ -390,7 +390,7 @@ export default async function MePage() {
             ) : null}
             {pastPlans.length ? (
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-xs font-semibold text-muted-strong">
                   Past
                 </h3>
                 <p className="mt-1 text-sm text-muted">

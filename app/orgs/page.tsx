@@ -31,7 +31,7 @@ export default async function OrgsPage() {
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <h1 className="font-display text-display-lg font-bold text-foreground">
+        <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
           Organizations
         </h1>
         <p className="mt-3 text-sm text-muted">

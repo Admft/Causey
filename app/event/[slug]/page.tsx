@@ -290,7 +290,7 @@ export default async function EventPage({ params }: Params) {
           </p>
 
           <section className="mt-10">
-            <h2 className="text-xl font-bold text-foreground">Sections &amp; who can enter</h2>
+            <h2 className="font-display text-xl font-bold tracking-tight text-foreground">Sections &amp; who can enter</h2>
             <ul className="mt-4 flex flex-col">
               {competition.sections.map((section) => (
                 <li
