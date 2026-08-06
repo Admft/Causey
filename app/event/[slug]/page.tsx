@@ -92,6 +92,7 @@ export default async function EventPage({ params }: Params) {
     name: competition.name,
     source: competition.source,
     series: competition.series,
+    details: competition.details,
   });
   const ended = isCompetitionEnded(competition);
 

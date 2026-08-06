@@ -1,0 +1,129 @@
+﻿
+.main-charter p, .charter-body p
+{
+
+padding:0px;
+}
+
+.sticky_div {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  border-bottom: 1px solid #b4b4b4;
+}
+.sticky_div2 {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  
+}
+
+.modal {
+	display: none;
+	position: fixed;
+	top: 10px;
+	left: 10px;
+	width: 95%;
+	height: 95%;
+	background: #ffffff;
+	overflow: scroll;
+	scrollbar-width: thin;
+    scrollbar-color: #374785 #C6CDDD;
+	padding: 20px;
+	
+}
+
+.modal.active {
+	display: block;
+}
+
+.modal::-webkit-scrollbar {
+    width: 5px;
+}
+
+.modal::-webkit-scrollbar-track {
+    background: #C6CDDD;
+}
+
+
+
+.modal-btn-close {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	width: 30px;
+	height: 30px;
+	background: transparent;
+	border: 1px solid #95AADE;
+	box-sizing: border-box;
+	border-radius: 4px;
+	display: flex;
+	align-items: right;
+	justify-content: center;
+	cursor: pointer;
+}
+.content_zone
+{
+	width: 80%;
+	padding: 10px;
+}
+
+.content_zone p
+{
+	border-bottom: 1px solid #efefef;
+}
+mark {
+  background: #78a1ff;
+}
+
+.directory-tabs-nav button
+{
+	text-align:left;
+}
+.directory-contact
+{
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+.right-card
+{
+	 flex-wrap: wrap;
+}
+.fed-body
+{
+	justify-content: flex-start;
+}
+.fed-column p a
+{
+	text-decoration: none;
+}
+.directory-tabs-nav button
+{
+	font-size:18px;
+	
+}
+
+.header-dir2
+{
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 22px;
+}
+.directory-left
+{
+	width: 300px;
+}
+.header {
+  margin-bottom: 0px;
+}
+.button_floor
+{
+display: block; 
+width: 100%; 
+border-bottom: 1px solid #b4b4b4;
+}
+
+@media screen and (max-width: 1024px)
+.header {
+  margin-bottom: 0px;
+}

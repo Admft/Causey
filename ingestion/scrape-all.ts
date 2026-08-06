@@ -1,11 +1,19 @@
 /**
- * Run both scrapers in sequence (TLA then CCA) so fingerprint dedupe can
- * collapse cross-source duplicates in one ops pass.
+ * Run scrapers in sequence so fingerprint dedupe can collapse
+ * cross-source duplicates in one ops pass.
  *
  *   npm run scrape:all
  */
 import { pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
+
+const SCRIPTS = [
+  { label: "TLA", script: "ingestion/scrape-tla.ts" },
+  { label: "CCA", script: "ingestion/scrape-cca.ts" },
+  { label: "OnlineReg", script: "ingestion/scrape-onlinereg.ts" },
+  { label: "Chess-Results", script: "ingestion/scrape-chess-results.ts" },
+  { label: "FIDE", script: "ingestion/scrape-fide.ts" },
+] as const;
 
 function run(script: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -22,10 +30,11 @@ function run(script: string): Promise<void> {
 }
 
 async function main() {
-  console.log("=== scrape:all — TLA then CCA ===\n");
-  await run("ingestion/scrape-tla.ts");
-  console.log("\n=== CCA ===\n");
-  await run("ingestion/scrape-cca.ts");
+  console.log("=== scrape:all — hubs in sequence ===\n");
+  for (const step of SCRIPTS) {
+    console.log(`\n=== ${step.label} ===\n`);
+    await run(step.script);
+  }
   console.log("\n=== scrape:all complete ===");
 }
 

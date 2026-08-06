@@ -3,7 +3,13 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type ScrapeRunSource = "tla_scrape" | "cca_scrape" | "all";
+export type ScrapeRunSource =
+  | "tla_scrape"
+  | "cca_scrape"
+  | "onlinereg_scrape"
+  | "chess_results_scrape"
+  | "fide_calendar_scrape"
+  | "all";
 
 export type ScrapeRunStats = {
   rows_staged?: number;

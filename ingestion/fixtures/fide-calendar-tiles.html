@@ -1,0 +1,2763 @@
+<!DOCTYPE html>
+<!-- saved from url=(0188)https://calendar.fide.com/calendar.php?name_filter=&from_date=2026-08-06&to_date=2026-12-31&country=all&show=tiles&page=1&cat_filter=&cat_cont=2&event_type=undefined&time_control=undefined -->
+<html lang="en"><style class="adjust-screen-brightness" media="screen">html::before, :not(:root):not(video):fullscreen::before {
+  content: " ";
+  z-index: 2147483647;
+  pointer-events: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.020000000000000018);
+}video:fullscreen {
+  filter: brightness(0.98);
+}
+:not(:root):fullscreen::backdrop {
+  display: none;
+}</style><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>FIDE Calendar</title>
+	<!-- <link rel="stylesheet" href="/css/style.css?v=1302"> -->
+	<link rel="stylesheet" href="./FIDE Calendar_files/mobile.css">
+	<link rel="stylesheet" href="./FIDE Calendar_files/post_css.css">
+	<meta property="og:type" content="website">
+	<meta property="og:site_name" content="International Chess Federation (FIDE)">
+	<meta property="og:title" content="FIDE Calendar">
+	<meta property="og:description" content="">
+	<meta property="og:url" content="">
+	<meta property="og:locale" content="en_EN">
+	<meta property="og:image" content="https://directory.fide.com/img/fide_og_1200.png">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<script src="./FIDE Calendar_files/jquery-3.6.0.min.js"></script>
+	<script src="./FIDE Calendar_files/jquery.mark.min.js"></script>
+	<link href="./FIDE Calendar_files/select2.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="./FIDE Calendar_files/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+	<script src="./FIDE Calendar_files/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+	<link rel="stylesheet" href="./FIDE Calendar_files/style.css">
+	<link rel="stylesheet" href="./FIDE Calendar_files/calendar_style.css">
+	<link rel="stylesheet" href="./FIDE Calendar_files/grid.css">
+	<link rel="stylesheet" href="./FIDE Calendar_files/countrySelect.css">
+	<script src="./FIDE Calendar_files/jquery-3.6.0.min.js"></script>
+
+
+	<!-- <script src="./js/jquery.mobile-1.5.0-rc1.min.js"></script> -->
+	<link rel="stylesheet" href="./FIDE Calendar_files/jquery-ui.css">
+	<script src="./FIDE Calendar_files/jquery-ui.js"></script>
+	<script src="./FIDE Calendar_files/jquery-confirm.min.js"></script>
+	<link rel="stylesheet" href="./FIDE Calendar_files/jquery-confirm.min.css">
+	<script src="./FIDE Calendar_files/isoFlags.js"></script>
+	<link rel="stylesheet" href="./FIDE Calendar_files/colorbox.css">
+	<script src="./FIDE Calendar_files/jquery.colorbox.js"></script>
+	<link rel="stylesheet" href="./FIDE Calendar_files/add1.css">
+
+
+
+<script type="text/javascript" charset="UTF-8" src="./FIDE Calendar_files/common.js"></script><script type="text/javascript" charset="UTF-8" src="./FIDE Calendar_files/util.js"></script></head>
+
+<body>
+	<header class="header">
+	<div class="header-social"></div>
+	<div class="header-container">
+			<div class="header-logo-container">
+					<div class="header-logo">
+							<a href="https://www.fide.com/">
+									<img src="./FIDE Calendar_files/logo1.png" alt="">
+							</a>
+					</div>
+					<div class="header-title-container">
+							<div class="header-title">International</div>
+							<div class="header-subtitle">Chess Federation</div>
+					</div>
+			</div>
+			<div class="menu-container tabs" role="tablist">
+					<div class="tabs-nav main-menu">
+							<button class="tabs-btn menu-button tabs-btn-not-active" data-index="0" role="tab"><a href="https://www.fide.com/news/">NEWS</a></button>
+							<button class="tabs-btn menu-button tabs-btn-not-active" data-index="1" role="tab"><a href="https://ratings.fide.com/">RATINGS</a></button>
+							<button class="tabs-btn menu-button tabs-btn-not-active" data-index="2" role="tab"><a href="https://www.fide.com/fide-world-championship-cycle-2025-2026">CHAMPIONSHIP</a></button>
+							<button class="tabs-btn menu-button tabs-btn-active" data-index="3" role="tab"><a href="https://calendar.fide.com/calendar.php">CALENDAR</a></button>
+							<button class="tabs-btn menu-button tabs-btn-not-active" data-index="4" role="tab"><a href="https://www.fide.com/about-fide">FIDE</a></button>
+							<button class="tabs-btn menu-button tabs-btn-not-active" data-index="5" role="tab"><a href="https://directory.fide.com/">DIRECTORY</a></button>
+							<button class="tabs-btn menu-button tabs-btn-not-active" data-index="6" role="tab"><a href="https://www.fide.com/partners/">PARTNERS</a></button>							
+							<button class="tabs-btn menu-button tabs-btn-not-active" id="fide100div" data-index="7" role="tab"><a href="https://shop.fide.com/">SHOP</a></button>
+							<button class="tabs-btn menu-button tabs-btn-not-active" data-index="8" role="tab"><a href="https://www.fide.com/contacts/">CONTACTS</a></button>
+					</div>
+					<div class="tabs-content nav-submenu" style="display:flex; flex-wrap:wrap;">
+							<div class="tabs-pane main-submenu" id="content-1" role="tabpanel">
+									<button class="submenu-button"><a href="https://www.fide.com/category/fide-news/">FIDE News</a></button>
+									<button class="submenu-button"><a href="https://www.fide.com/category/chess-news/">Chess news</a></button>
+							</div>
+							<div class="tabs-pane main-submenu" id="content-2" role="tabpanel">
+									<button class="submenu-button"><a href="https://ratings.fide.com/top_lists.phtml">Top</a></button>
+									<button class="submenu-button"><a href="https://ratings.fide.com/top_federations.phtml">Top Federations</a></button>
+									<button class="submenu-button"><a href="https://ratings.fide.com/rated_tournaments.phtml">Tournaments</a></button>
+									<button class="submenu-button"><a href="https://ratings.fide.com/titles_page.phtml">Titles</a></button>
+									<button class="submenu-button"><a href="https://ratings.fide.com/transfers.phtml">Transfers</a></button>
+									<button class="submenu-button"><a href="https://ratings.fide.com/calc.phtml?page=change">Calculators</a></button>
+									<button class="submenu-button"><a href="https://ratings.fide.com/download_lists.phtml">Download</a></button>
+							</div>
+							<div class="tabs-pane main-submenu" id="content-3" role="tabpanel">
+									<button class="submenu-button"><a href="https://www.fide.com/fide-circuit-2026-2027/">FIDE Circuit</a></button>
+									<button class="submenu-button"><a href="https://www.fide.com/women-fide-circuit-2026-2027/">Women's Circuit '26-'27</a></button>
+									<button class="submenu-button"><a href="https://www.fide.com/fide-world-championship-cycle-2025-2026">Open Cycle '25-'26</a></button>									
+									<button class="submenu-button"><a href="https://www.fide.com/fide-womens-world-championship-cycle-2025-2026">Women’s Cycle '25-'26</a></button>
+									<button class="submenu-button"><a href="https://www.fide.com/fide-womens-world-championship-cycle-2023-2025/">Women’s Cycle '23-'25</a></button>
+									
+									
+							</div>
+							
+							
+							
+							<div class="tabs-pane main-submenu tabs-pane-show activeurl" id="content-4" role="tabpanel" style="display: block;">
+							
+									<button class="submenu-button activeurll" style="margin-left: 200px;"><a href="https://calendar.fide.com/calendar.php">All Tournaments</a></button>
+									
+									<button class="submenu-button"><a href="https://calendar.fide.com/majorcalendar.php">Main Events</a></button>
+									
+									
+							</div>
+							
+							<div class="tabs-pane main-submenu" id="content-5" role="tabpanel">
+							
+							
+									<button class="submenu-button" style="margin-left: 200px;"><a href="https://www.fide.com/about-fide/">About FIDE</a></button>
+									<button class="submenu-button"><a href="https://handbook.fide.com/">Handbook</a></button>
+									<button class="submenu-button"><a href="https://www.fide.com/documents">Documents</a></button>
+									<button class="submenu-button"><a href="https://med.fide.com/" target="_blank">Clean Sport</a></button>
+									<button class="submenu-button"><a href="https://www.fide.com/financial">Financial Reports</a></button>
+									
+							</div>
+							<div class="tabs-pane main-submenu" id="content-6" role="tabpanel">
+									<button class="submenu-button dir_button"><a href="https://directory.fide.com/list/officials">Officials</a></button>
+									<button class="submenu-button dir_button"><a href="https://directory.fide.com/list/commissions_and_committees">Commissions &amp; Committees</a></button>
+									<button class="submenu-button dir_button"><a href="https://directory.fide.com/list/member_federations/main">Federations</a></button>
+									<button class="submenu-button dir_button"><a href="https://directory.fide.com/list/affiliated_organizations">Aff. Organizations</a></button>
+									<button class="submenu-button dir_button"><a href="https://directory.fide.com/list/affiliated_members">Aff. Members</a></button>
+									<button class="submenu-button dir_button"><a href="https://directory.fide.com/list/dignitaries/&amp;b=1&amp;c=5">Honourable Dignitaries</a></button>
+									<button class="submenu-button dir_button"><a href="https://directory.fide.com/orgchart.phtml">Chart</a></button>
+							</div>
+							
+							<div class="tabs-pane main-submenu" id="content-7" role="tabpanel">
+									<button class="submenu-button invisible"><a href="https://calendar.fide.com/calendar.php?name_filter=&amp;from_date=2026-08-06&amp;to_date=2026-12-31&amp;country=all&amp;show=tiles&amp;page=1&amp;cat_filter=&amp;cat_cont=2&amp;event_type=undefined&amp;time_control=undefined#">PARNTERS</a></button>
+							</div>
+							<div class="tabs-pane main-submenu" id="content-9" role="tabpanel">
+									<button class="submenu-button invisible"><a href="https://calendar.fide.com/calendar.php?name_filter=&amp;from_date=2026-08-06&amp;to_date=2026-12-31&amp;country=all&amp;show=tiles&amp;page=1&amp;cat_filter=&amp;cat_cont=2&amp;event_type=undefined&amp;time_control=undefined#">FIDE100</a></button>
+							</div>
+							<div class="tabs-pane main-submenu" id="content-10" role="tabpanel">
+									<button class="submenu-button invisible"><a href="https://calendar.fide.com/calendar.php?name_filter=&amp;from_date=2026-08-06&amp;to_date=2026-12-31&amp;country=all&amp;show=tiles&amp;page=1&amp;cat_filter=&amp;cat_cont=2&amp;event_type=undefined&amp;time_control=undefined#">CONTACTS</a></button>
+							</div>
+							
+					</div>
+			</div>
+					<div class="mobile-menu-container">
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><strong>MAIN/NEWS</strong></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body">
+									<p><a href="https://www.fide.com/news/">All News</a></p>
+									<p><a href="https://www.fide.com/category/fide-news/">FIDE News</a></p>
+									<p><a href="https://www.fide.com/category/chess-news/">Chess News</a></p>
+							</div>
+					</div>
+	
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><strong>RATINGS</strong></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body">
+									<p><a href="https://ratings.fide.com/top_lists.phtml">Top</a></p>
+									<p><a href="https://ratings.fide.com/top_federations.phtml">Top Federations</a></p>
+							        <p><a href="https://ratings.fide.com/index.phtml">Main Page / Search</a></p>
+									<p><a href="https://ratings.fide.com/rated_tournaments.phtml">Tournaments</a></p>
+									<p><a href="https://ratings.fide.com/titles_page.phtml">Titles</a></p>
+									<p><a href="https://ratings.fide.com/transfers.phtml">Transfers</a></p>
+									<p><a href="https://ratings.fide.com/calc.phtml?page=change">Calculators</a></p>
+									<p><a href="https://ratings.fide.com/download_lists.phtml">Download</a></p>
+							</div>
+					</div>
+						<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><strong>CHAMPIONSHIP</strong></h2>
+							</button>
+							
+							
+							<div class="mobile-submenu accordeon-body">
+									<p><a href="https://www.fide.com/fide-circuit-2026-2027/">FIDE Circuit</a></p>
+									<p><a href="https://www.fide.com/women-fide-circuit-2026-2027/">Women's Circuit '26-'27</a></p>
+									<p><a href="https://www.fide.com/fide-world-championship-cycle-2025-2026">Open Cycle 2025-2026</a></p>
+									<p><a href="https://www.fide.com/fide-womens-world-championship-cycle-2025-2026">Women’s Cycle 2025-2026</a></p>
+									<p><a href="https://www.fide.com/fide-womens-world-championship-cycle-2023-2025">Women’s Cycle 2023-2025</a></p>
+									
+							</div>
+						
+					</div>
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title active">
+									<h2><strong>CALENDAR</strong></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body open" style="height: 73px;">
+									<p><a href="https://calendar.fide.com/calendar.php" style="font-weight: bold; color: rgb(36, 48, 94);">All Tournaments</a></p>
+									<p><a href="https://calendar.fide.com/majorcalendar.php">Main Events</a></p>
+							</div>
+					</div>
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><strong>FIDE</strong></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body">
+									<p><a href="https://www.fide.com/about/">About FIDE</a></p>
+									<p><a href="https://handbook.fide.com/">Handbook</a></p>
+									<p><a href="https://www.fide.com/documents">Documents</a></p>
+									<p><a href="https://med.fide.com/" target="_blank">Clean Sport</a></p>
+									<p><a href="https://www.fide.com/financial">Financial Reports</a></p>
+									
+							</div>
+					</div>
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><strong>DIRECTORY</strong></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body">
+									<p><a href="https://directory.fide.com/list/officials">Officials</a></p>
+									<p><a href="https://directory.fide.com/list/commissions_and_committees">Commissions &amp; Committees</a></p>
+									<p><a href="https://directory.fide.com/list/member_federations/main">Federations</a></p>
+								    <p><a href="https://directory.fide.com/list/affiliated_organizations">Affiliated Organizations</a></p>
+									<p><a href="https://directory.fide.com/list/affiliated_members">Affiliated Members</a></p>
+									<p><a href="https://directory.fide.com/list/dignitaries">Honourable Dignitaries</a></p>
+									<p><a href="https://directory.fide.com/orgchart.phtml">Chart</a></p>
+								
+									
+							</div>
+					</div>
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><a href="https://www.fide.com/partners/">PARTNERS</a></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body">
+							</div>
+					</div>
+		
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><a href="https://shop.fide.com/">SHOP</a></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body">
+							</div>
+					</div>
+					<div class="mobile-accordeon accordeon">
+							<button class="mobile-menu accordeon-title">
+									<h2><a href="https://www.fide.com/contacts/">CONTACTS</a></h2>
+							</button>
+							<div class="mobile-submenu accordeon-body">
+							</div>
+					</div>
+			<!--mobile-menu-container-->
+	</div>
+			<div class="header-search-container">
+					<div class="header-search" style="display:none;">
+							
+					</div>
+					<div class="header-account" style="display:none;">
+							<a href="https://portal.fide.com/"><img src="./FIDE Calendar_files/user.svg" alt=""></a>
+					</div>
+			</div>
+			<div class="menu-burger">
+					<span></span>
+			</div>
+	</div>
+<aside class="social">
+	<div class="social-aside">
+			<a href="https://twitter.com/FIDE_chess" target="_blank"><img src="./FIDE Calendar_files/twitter-top.svg" alt="twitter"></a>
+	</div>
+	<div class="social-aside">
+			<a href="https://www.instagram.com/fide_chess/" target="_blank"><img src="./FIDE Calendar_files/instagram-top.svg" alt="instagram"></a>
+	</div>
+	<div class="social-aside">
+			<a href="https://www.facebook.com/ChessFIDE/" target="_blank"><img src="./FIDE Calendar_files/fb-top.svg" alt="facebook"></a>
+	</div>
+	<div class="social-aside">
+			<a href="https://www.tiktok.com/@fide_chess" target="_blank"><img src="./FIDE Calendar_files/tiktok_icon.svg" alt="tiktok"></a>
+	</div>
+	<div class="social-aside">
+			<a href="https://www.linkedin.com/company/48892238" target="_blank"><img src="./FIDE Calendar_files/linkedin-top.svg" alt="linkedin"></a>
+	</div>
+	<div class="social-aside youtu">
+			<a href="https://www.youtube.com/channel/UC9B47GnzCRFHTT1BIBWvStQ" target="_blank"><img src="./FIDE Calendar_files/youtube-top.svg" alt="youtube"></a>
+	</div>
+	<div class="social-aside">
+			<a href="https://www.twitch.tv/fide_chess" target="_blank"><img src="./FIDE Calendar_files/twitch-top.svg" alt="twitch"></a>
+	</div>
+</aside>
+</header>
+<!-- Menu -->
+
+<style>
+.social-aside img
+{
+    height: 18px;
+}
+.youtu img
+{
+    height: 15px !important;
+}
+
+	.header-title {
+  font-style: normal;
+  font-weight: 300;
+  font-size: 24px;
+  line-height: 28px;
+}
+.dir-pattern-three, .dir-pattern-two, .dir-pattern-four
+{
+top: 0;
+display:none;
+}
+.directory
+{
+	margin-top: 40px;
+}
+
+	
+	.social
+	{
+	margin:0;
+	}
+	.menu-button {
+	border: none;
+	padding: 10px 8px 62px 8px;
+	border-radius: 7px 7px 0 0;
+	background-color: #EAEEF3;
+	height: 91px;
+	}
+	.main-menu a, .main-menu a:visited
+	{
+		color:#24305E;
+	}
+	.main-menu .tabs-btn:hover
+	{
+	background-color:#374785;
+	transition:
+    
+    background-color 1s,
+	background 1s;
+	
+	}
+	
+	.main-menu > .tabs-btn-active a {
+	color: #fff;
+	}
+	.invisible {
+		display:none;
+	}
+	.header-container
+	{
+			max-width: 1440px;
+			margin: 0 auto;
+			width: 100%;
+	}
+	.mobile-menu-container {
+			display: none;
+			z-index: 10000 !important;
+	}
+	.main-submenu button:hover
+	{
+	background-color: #24305E !important;
+	}
+	.submenu-button a:visited
+	{
+	color:#24305E;
+	}
+
+	
+	@media screen and (max-width: 1024px) {
+	.menu-container {
+			display: none;
+	}
+	.mobile-menu-container {
+			display: block;
+			position: absolute;
+			top: 137px;
+			left: 0;
+			background: rgb(245, 246, 246);
+			box-shadow: #ccc;
+			width: 100%;
+			box-shadow: 0 4px 2px -2px rgba(36, 36, 36, 0.17);
+			left: -200%;
+			transition: all 0.4s ease;
+			z-index: 10000 !important;
+	}
+	.mobile-menu-container.open-menu {
+			left: 0;
+	}
+	.menu-burger {
+			position: absolute;
+			right: 10px;
+			top: 69px;
+			width: 24px;
+			height: 19px;
+			display: block;
+			margin-left: auto;
+			margin-bottom: 20px;
+			cursor: pointer;
+	}
+	.menu-burger span, .menu-burger:after, .menu-burger:before{
+			height: 3px;
+			width: 100%;
+			position: absolute;
+			background: #24305E;
+			margin: 0 auto;
+			border-radius: 1px;
+	}
+	.menu-burger span{
+			top: 21px;
+	}
+	.menu-burger:after, .menu-burger:before{
+			content: '';
+	}
+	.menu-burger:after{
+			bottom: 3px;
+			border-radius: 1px;
+	}
+	.menu-burger:before{
+			top: 5px;
+			border-radius: 1px;
+	}
+	.menu-burger.open-menu span {
+			transform: rotate(38deg);
+			top: 8px;
+			transition: 0.4s;
+	}
+	.menu-burger.open-menu:before {
+			opacity:0; 
+			transition: 0.5s; 
+	}
+	.menu-burger.open-menu:after {
+			transform: rotate(-38deg);
+			bottom: 8px;
+			transition: 0.4s;
+	}
+	.social {
+			position: absolute;
+			top: 10px;
+			left: 159px;
+			width: 400px;
+			justify-content: space-between;
+	}
+	.container {
+			width: 688px;
+	}
+	.page-title {
+			font-weight: 400;
+			font-size: 36px;
+			line-height: 42px;
+	}
+	.menu-button {
+			padding: 0px;
+			height: auto;
+	}
+	.nav-submenu {
+			margin-top: 0px;
+	}
+	.main-submenu button {
+			padding: 0px;
+			margin-right: 0px;
+	}
+	.main-menu a {
+			display: block;
+	}
+	.tabs-pane-show {
+			display: inline-grid;
+	}
+	.mobile-menu {
+			list-style-type: none;
+			text-align: center;
+	}
+	.mobile-submenu {
+			height: 0;
+			overflow: hidden;
+			transition: height .4s ease-in-out;
+			text-align: center;
+	}
+	.mobile-accordeon button {
+			padding: 10px;
+			border: none;
+			cursor: pointer;
+			width: 100%;
+			background-color: #EAEEF3;
+			line-height: 1;
+	}
+	.mobile-accordeon button:focus
+	{
+		background-color: #868CAD;
+		color: #fff;
+	}
+	.mobile-menu.active, .mobile-menu.active:focus  {
+			background-color: #868CAD;
+	}
+	.mobile-menu.active h2 {
+			background-color: #868CAD;
+			color: #fff;
+	}
+	.mobile-menu.active h2 a {
+			color: #fff;
+	}
+	.mobile-menu h2, .mobile-menu h2 a {
+			font-style: normal;
+			font-weight: 400;
+			font-size: 16px;
+			line-height: 19px;
+			align-items: center;
+			text-transform: uppercase;
+			text-decoration: none;
+			display:inline;
+	}
+	.mobile-submenu p {
+			padding: 7px 0px;
+	}
+	.mobile-submenu p a {
+			font-style: normal;
+			font-weight: 400;
+			font-size: 16px;
+			line-height: 140%;
+			color: #374785;
+			text-decoration: none;
+	}
+	}
+	@media screen and (max-width: 576px) {
+							.header-social, .social {
+			display: none;
+	}
+	.header-search-container, .menu-burger {
+			top: 40px;
+	}
+	
+	}
+	@media screen and (max-width: 375px) {
+							.header-search-container {
+			display: none;
+	}
+	.menu-burger {
+			right: 15px;
+	}
+	}
+	
+
+
+.main-submenu button {
+	margin-right: 8px;
+	padding: 10px 8px;
+}
+.submenu-button.dir_button
+{
+	margin: 1px !important;
+	padding: 10px 4px;
+}
+.tabs-btn-active, .tabs-btn-active:focus, .tabs-btn-active:active
+{
+	
+	background-color: #374785;
+}
+.header-search-container img:last-child {
+ 
+  margin-right: 5px;
+}
+.header
+{
+	box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+}
+
+@media screen and (max-width: 1300px) {
+
+.header-title {
+  font-style: normal;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 20px;
+}
+.header-subtitle {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 20px;
+}
+.menu-container {
+  margin-left: 15px;
+  
+}
+.header-title-container {
+padding-left: 10px;
+}
+}
+
+@media screen and (max-width: 1576px) {
+	.header-logo-container
+	{
+	margin-left: 10px;
+	}
+
+
+}
+@media screen and (max-width: 1576px) {
+.social {
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -ms-flexbox;
+	display: flex;
+	align-items: center;
+	top: 40px;
+	right: 40px;
+}
+ .social-aside {
+    padding-bottom: 0px;
+    padding-right: 0px;
+    padding-left: 20px;
+  }
+}
+
+@media screen and (max-width: 1200px) {
+.header
+{
+	height: 174px;
+}
+.header-title
+{
+	padding-top:0;
+	paddint-left: 8px;
+	
+}
+.container {
+	width: 944px;
+	margin: 0 auto;
+}
+.page-title {
+	font-size: 36px;
+	line-height: 42px;
+}
+.none {
+	display: none;
+}
+/*HEADER*/
+.header {
+ margin-bottom: 8px;
+}
+.header-container {
+	padding-top: 20px;
+	display: block;
+}
+.header-logo-container {
+	padding-bottom: 10px;
+	padding-left: 10px;
+	
+}
+.header-logo-container img {
+	width: 70px;
+}
+.header-title-container {
+	padding-left: 10px;
+}
+.header-title {
+	font-size: 14px;
+	line-height: 16px;
+	padding-left: 10px;
+}
+.header-subtitle {
+	font-size: 14px;
+	line-height: 16px;
+	padding-left: 10px;
+}
+.menu-container {
+	margin: 0px;
+	padding-left: 4px;
+}
+.header-search-container {
+	position: absolute;
+	top: 85px;
+	right: 40px;
+}
+.submenu-button.dir_button
+{
+	margin: 1px !important;
+	padding: 10px 4px;
+}
+.main-submenu button {
+	margin-right: 3px;
+}
+
+
+.social {
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -ms-flexbox;
+	display: flex;
+	align-items: center;
+	top: 40px;
+	right: 40px;
+}
+.social-aside {
+	padding-bottom: 0px;
+	padding-right: 0px;
+	padding-left: 20px;
+}
+.header-title, .header-subtitle
+	{
+			margin-top: 0;
+			margin-bottom: 0;
+	}
+}
+
+
+@media screen and (max-width: 1024px) {
+	 .header
+	{
+			height: 90px;
+			padding-left: 5px;
+	}
+	.header-social, .social {
+			display: none;
+	}
+	.header-search-container, .menu-burger {
+			top: 40px;
+	}
+	.header-search-container {
+	position: absolute;
+	top: 40px;
+	right: 60px;
+	}
+	.header-social {
+	display: none;
+	height: 40px;
+	background-color: #fff;
+	}
+	.header-title, .header-subtitle
+	{
+			margin-top: 0;
+			margin-bottom: 0;
+	}
+	.header-logo-container {
+	padding-bottom: 10px;
+	padding-top: 15px;
+	}
+	
+	.social {
+display: -webkit-box;
+display: -webkit-flex;
+display: -ms-flexbox;
+display: flex;
+align-items: center;
+left:0;
+top: 5px;
+padding-bottom: 3px;
+border-bottom: 1px solid #C6CDDD;
+width: 100%;
+justify-content: center;
+
+
+	
+	}
+	.mobile-menu-container {
+	top: 90px;
+	transition: all 0.4s ease;
+	border-top: 1px solid #374785;
+	z-index: 200;
+	
+	}
+	
+}
+
+@media screen and (max-width: 375px){
+	.header {
+	height: 90px;
+	padding-left: 5px;
+	}
+	
+	.mobile-menu-container {
+	top: 90px;
+	transition: all 0.4s ease;
+	border-top: 1px solid #374785;
+	
+	}
+	.header-search-container {
+	display: flex;
+	top: 40px;
+	right: 60px;
+	}
+  
+	}
+
+
+[type="button"], [type="submit"], button
+{
+	 background-color: #374785;
+}
+.activeurll {
+  background-color: #24305E !important;
+  color: #ffffff !important;
+}
+.activeurll a {
+  color: #ffffff !important;
+}
+
+.main-submenu a:hover
+{
+text-decoration: none;
+font-weight: normal;
+}
+.mobile-accordeon button:hover
+{
+	color: red;
+	background-color: #868CAD;
+}
+ .mobile-menu.active {
+    background-color: #868CAD;
+  }
+
+	#fide100div
+	{	
+	color:red;
+	border: 0;
+	
+   
+	}
+	#fide100div:hover
+	{
+	z-index: 1000;
+	}
+	
+.calendar-tabs-buttons {
+  z-index: 90;
+}
+.elementor-245 .elementor-element.elementor-element-df66bb2
+{
+	box-shadow:none;
+}
+
+</style>
+
+<script>
+let burger = document.querySelector('.menu-burger');
+let menu = document.querySelector('.mobile-menu-container');
+
+burger.onclick = function() {
+	
+menu.classList.toggle('open-menu');
+burger.classList.toggle('open-menu');
+};
+
+</script>    
+<script>
+class ItcTabs {
+  constructor(target, config) {
+    const defaultConfig = {};
+    this._config = Object.assign(defaultConfig, config);
+    this._elTabs =
+      typeof target === "string" ? document.querySelector(target) : target;
+    this._elButtons = this._elTabs.querySelectorAll(".tabs-btn");
+    this._elPanes = this._elTabs.querySelectorAll(".tabs-pane");
+    this._eventShow = new Event("tab.itc.change");
+    this._init();
+    this._events();
+  }
+
+  _init() {
+    this._elTabs.setAttribute("role", "tablist");
+    this._elButtons.forEach((el, index) => {
+      el.dataset.index = index;
+      el.setAttribute("role", "tab");
+      this._elPanes[index].setAttribute("role", "tabpanel");
+      el.classList.add("tabs-btn-not-active"); // ���������� ������ .tabs-btn-not-active
+    });
+  }
+
+  show(elLinkTarget) {
+    const elPaneTarget = this._elPanes[elLinkTarget.dataset.index];
+    const elLinkActive = this._elTabs.querySelector(".tabs-btn-active");
+    const elPaneShow = this._elTabs.querySelector(".tabs-pane-show");
+    if (elLinkTarget === elLinkActive) {
+      return;
+    }
+    elLinkActive ? elLinkActive.classList.remove("tabs-btn-active") : null;
+    elLinkActive ? elLinkActive.classList.add("tabs-btn-not-active") : null; // ���������� ������ .tabs-btn-not-active
+		elPaneShow ? elPaneShow.style.display = "none" : null;
+    elPaneShow ? elPaneShow.classList.remove("tabs-pane-show") : null;
+    elLinkTarget.classList.add("tabs-btn-active");
+    elLinkTarget.classList.remove("tabs-btn-not-active"); // �������� ������ .tabs-btn-not-active
+    elPaneTarget.classList.add("tabs-pane-show");
+    this._elTabs.dispatchEvent(this._eventShow);
+    elLinkTarget.focus();
+  }
+
+  showByIndex(index) {
+    const elLinkTarget = this._elButtons[index];
+    elLinkTarget ? this.show(elLinkTarget) : null;
+  }
+
+  _events() {
+		this._elTabs.addEventListener("click", (e) => {
+  const target = e.target.closest(".tabs-btn");
+  if (target) {
+    const link = target.querySelector("a");
+    if (link) {
+      const href = link.getAttribute("href");
+      if (href) {
+        e.preventDefault();
+        window.location.href = href;
+      }
+    }
+  }
+});
+
+  }
+}
+
+const accordionToggle = () => {
+  const chItems = document.querySelectorAll(".tabs-pane.main-submenu");
+
+  chItems.forEach((item) => {
+    const chButton = item.querySelector("button.submenu-button");
+    const chDesc = item;
+
+    const toggleAccordion = () => {
+      chItems.forEach((item) => {
+        const chRemoveButton = item.querySelector("button.submenu-button");
+        const chRemoveDesc = item;
+
+        if (chRemoveDesc !== chDesc) {
+          chRemoveDesc.style.display = "none"; // Set display: none
+          chRemoveDesc.classList.remove("tabs-pane-show");
+					chRemoveDesc.classList.add("tabs-pane-not-show");
+          chRemoveButton.classList.remove("tabs-btn-active");
+          chRemoveButton.classList.add("tabs-btn-not-active");
+        }
+      });
+
+      chDesc.classList.toggle("tabs-pane-show");
+      chButton.classList.toggle("tabs-btn-active");
+      chButton.classList.remove("tabs-btn-not-active");
+    };
+
+    chButton.addEventListener("click", toggleAccordion);
+  });
+};
+
+const tabs = new ItcTabs(".tabs");
+accordionToggle();
+const accordeon = () => {
+  const chItems = document.querySelectorAll(".accordeon");
+
+  chItems.forEach((item) => {
+    const chButton = item.querySelector(".accordeon-title");
+    const chDesc = item.querySelector(".accordeon-body");
+
+    chButton.addEventListener("click", () => {
+      chItems.forEach((item) => {
+        const chRemoveButton = item.querySelector(".accordeon-title");
+        const chRemoveDesc = item.querySelector(
+          ".accordeon-body"
+        );
+
+        if (chRemoveDesc !== chDesc) {
+          chRemoveDesc.classList.remove("open");
+          chRemoveDesc.style.height = 0;
+          chRemoveButton.classList.remove("active");
+        }
+      });
+
+      if (chDesc.classList.contains("open")) {
+        chDesc.style.height = 0;
+      } else {
+        chDesc.style.height = chDesc.scrollHeight + "px";
+      }
+
+      chDesc.classList.toggle("open");
+      chButton.classList.toggle("active");
+    });
+  });
+};
+
+accordeon();
+
+document.addEventListener('DOMContentLoaded', function() {
+  var currentURL = window.location.href;
+  var substituteURL = window.location.href;
+  
+
+  // ������� ������� � ������� menu-container
+  var menuContainer = document.querySelector('.tabs-content');
+
+	var menuContainerLvlOne = document.querySelector('.tabs-nav');
+  // �������� ��� ������ ������ menuContainer
+  var links = menuContainer.querySelectorAll('a');
+	var linksLvlOne = menuContainerLvlOne.querySelectorAll('a');
+
+
+	for (var i = 0; i <linksLvlOne.length; i++) {
+		var linkLvlOne = linksLvlOne[i];
+		var href = linkLvlOne.getAttribute('href');
+		
+		//custom links
+		  if (href.includes("https://ratings.fide.com") & substituteURL.includes("ratings2.fide.com.test"))
+  
+			{
+				var currentURL = "https://ratings.fide.com";
+				var href = "ratings.fide.com";
+			}
+		 
+
+		
+		if (currentURL.includes(href)){
+		
+		
+			var parent = linkLvlOne.parentElement;
+			
+			parent.classList.add('tabs-btn-active');
+			parent.classList.remove('tabs-btn-not-active');
+			var dataIndex = parent.getAttribute('data-index');
+			var newId = 'content-' + (parseInt(dataIndex, 10) + 1);
+
+
+// ������� ������� � ����� ��������������� � ��������� ����������� ��������
+var element = document.getElementById(newId);
+if (element) {
+  element.classList.add('tabs-pane-show');
+}
+
+		}
+		
+	
+		
+	}
+  // ���������� ������ � ��������� ����������� ��������
+  for (var i = 0; i < links.length; i++) {
+    var link = links[i];
+    var href = link.getAttribute('href');
+
+    // ���������, �������� �� ������� URL ������ ����� ������
+    if (currentURL.includes(href)) {
+      // ������� ������������ ������� ������
+      var parentParent = link.parentElement.parentElement;
+			var parent = link.parentElement;
+
+      // ������������� display: block ��� ������������� �������� ������
+			parent.classList.add('activeurll');
+      parentParent.style.display = 'block';
+      parentParent.classList.add('activeurl');
+      parentParent.classList.add('tabs-pane-show');
+
+      var myid = parentParent.id;
+			
+      var trimmedId = myid.replace('content-', '');
+      var newId = parseInt(trimmedId, 10) - 1;
+
+      // ������� ������� � ����� ��������������� � ��������� ����������� ��������
+			
+      var element = menuContainerLvlOne.querySelector('[data-index="' + newId + '"]');
+			
+      if (element) {
+        element.classList.add('tabs-btn-active');
+        element.classList.remove('tabs-btn-not-active');
+      }
+    }
+  }
+
+  // ��������� ���������� tabsPane
+  var tabsPane = document.querySelector('.tabs-pane-show');
+
+  // ������� ��� ���������� ���������� tabsPane
+  function updateTabsPane() {
+    tabsPane = document.querySelector('.tabs-pane-show');
+  }
+
+  const buttons = document.querySelectorAll('.tabs-btn.menu-button');
+  let activeSubmenu = null;
+
+  buttons.forEach((button, index) => {
+    const submenu = document.getElementById(`content-${index + 1}`);
+
+    button.addEventListener('mouseover', () => {
+      if (button.classList.contains('tabs-btn-not-active')){
+        if (submenu) submenu.style.display = 'block'; // Added submenu check
+        updateTabsPane();
+        if (tabsPane) tabsPane.style.display = 'none'; // Guard: Only hide if exists
+      }
+      if (button.classList.contains('tabs-btn-active')){
+        updateTabsPane();
+        if (tabsPane) tabsPane.style.display = 'block'; // Guard: Only show if exists
+      }
+    });
+
+    button.addEventListener('mouseleave', () => {
+      if (!button.classList.contains('tabs-btn-active')) {
+        if (submenu) submenu.style.display = 'none'; // Added submenu check
+        updateTabsPane();
+        if (tabsPane) tabsPane.style.display = 'block'; // Guard: Only show if exists
+      }
+      if (button.classList.contains('tabs-btn-active')){
+        updateTabsPane();
+        if (tabsPane) tabsPane.style.display = 'block'; // Guard: Only show if exists
+      }
+    });
+
+    // Only add listeners if the submenu actually exists in the HTML
+    if (submenu) {
+      submenu.addEventListener('mouseenter', () => {
+        if (button.classList.contains('tabs-btn-not-active')){
+          submenu.style.display = 'block';
+          updateTabsPane();
+          if (tabsPane) tabsPane.style.display = 'none'; // Guard
+        }
+        if (button.classList.contains('tabs-btn-active')){
+          updateTabsPane();
+          if (tabsPane) tabsPane.style.display = 'block'; // Guard
+        }
+      });
+
+      submenu.addEventListener('mouseleave', () => {
+        submenu.style.display = 'none';
+        updateTabsPane();
+        if (tabsPane) tabsPane.style.display = 'block'; // Guard
+      });
+    }
+  });
+  
+const currentPath = window.location.href;
+  const mobileLinks = document.querySelectorAll('.mobile-submenu a');
+  
+  mobileLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    
+    // Check if current URL contains the link's href to handle parameters
+    if (href && href !== "#" && currentPath.includes(href)) {
+      const parentAccordeon = link.closest('.accordeon');
+      
+      if (parentAccordeon) {
+        const chButton = parentAccordeon.querySelector('.accordeon-title');
+        const chDesc = parentAccordeon.querySelector('.accordeon-body');
+        
+        if (chButton && chDesc) {
+          // Force the accordion to expand
+          chDesc.classList.add("open");
+          chDesc.style.height = chDesc.scrollHeight + "px";
+          chButton.classList.add("active");
+          
+          // Optional: Highlight the specific active link in the mobile menu
+          link.style.fontWeight = "bold";
+          link.style.color = "#24305E";
+        }
+      }
+    }
+  });
+
+
+  // ��������� ��������� ��� ���������� ���������� tabsPane
+  menuContainer.addEventListener('transitionend', updateTabsPane);
+  menuContainer.addEventListener('animationend', updateTabsPane);
+});
+
+
+
+</script><!-- Google tag (gtag.js) -->
+<script async="" src="./FIDE Calendar_files/js"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4SR265HX24');
+</script>
+
+	<style>
+		.right-card-text p {
+			font-size: 14px;
+		}
+
+		.other_link:link {
+			text-decoration: none;
+
+		}
+
+		.other_link:link p {
+			text-decoration: none;
+
+		}
+
+		.other_link:hover p {
+			color: #586EC1;
+		}
+
+		.other_link a:hover {
+			color: red
+		}
+
+		.right-card-text:hover {
+			color: red
+		}
+
+		.right-card-row {
+			width: 50%;
+			min-width: 200px;
+		}
+
+		.container {
+			max-width: 1440px;
+			margin: 0 auto;
+			border: 0;
+		}
+
+		.directory-container {
+
+			max-width: 1440px;
+			margin: 0 auto;
+			border: 0;
+		}
+
+		.directory-button.activetab {
+			font-weight: bolder;
+
+		}
+
+		.directory-tabs-nav button {
+			font-size: 16px;
+		}
+
+		.dir_table {
+			border: 5px solid #fff;
+			border-radius: 8px;
+		}
+
+		.directory-contact img {
+			width: 20px;
+		}
+
+		.right-card img {
+			width: 40px;
+			min-height: 40px;
+			box-shadow: 2px 2px 3px 4px rgba(34, 60, 80, 0.2);
+			border: 4px solid #fff;
+		}
+
+
+		.directory-contact {
+			padding: 0;
+			padding-bottom: 0;
+			padding-top: 0;
+
+		}
+
+		.directory-left {
+			padding-left: 15px;
+		}
+
+		.directory-right {
+			width: 100%;
+			padding-left: 40px;
+			padding-right: 10px;
+		}
+
+		.page-title {
+			font-size: 36px;
+			/* padding-left: 20px; */
+			line-height: 42px;
+			padding-top: 20px;
+			padding-bottom: 20px;
+		}
+
+		.select {
+			border-bottom: 2px solid #374785;
+		}
+
+		.directory-hidden-input,
+		.directory-hidden-select {
+			display: none;
+		}
+
+		.directory-card-info>.directory-contact {
+			padding-top: 10px;
+			word-break: break-word;
+		}
+
+		.web_selector {
+			appearance: none;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			-ms-appearance: none;
+			background-position: calc(100% - 12px) center !important;
+			background: url("data:image/svg+xml,<svg height='10px' width='10px' viewBox='0 0 16 16' fill='%23000000' xmlns='http://www.w3.org/2000/svg'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>") no-repeat;
+			padding: 8px 32px 8px 16px;
+		}
+
+		.directory-tabs-nav button:hover,
+		.directory-button:not(.directory-button-active):hover,
+		.button_floor:hover {
+			background-color: #fbfbfc;
+			font-weight: 400;
+
+		}
+
+		.directory-tabs-nav button {
+			padding-top: 10px;
+			margin-top: 0;
+			padding-left: 3px;
+		}
+
+		.directory-photo img {
+			width: 150px;
+			max-width: 150px;
+		}
+
+		.directory-logo {
+			max-width: 250px;
+		}
+
+		.fed_logo {
+			width: 250px;
+		}
+
+
+
+		@media screen and (max-width: 1024px) {
+			.fed_logo {
+				width: 180px;
+			}
+
+
+			.directory-photo img {
+				max-width: 150px;
+			}
+
+			.page-title {
+				font-size: 24px;
+				line-height: 32px;
+
+			}
+
+			.sticky_div_dir {
+				position: sticky;
+				top: 0;
+				z-index: 100;
+				background-color: #eaeef3;
+
+
+			}
+
+			.directory-logo {
+				padding-bottom: 20px;
+				text-align: center;
+			}
+
+			.directory-right-head {
+				width: 100%;
+				background-image: none;
+				padding: 20px;
+			}
+
+			.container {
+				width: 100%;
+				padding-left: 10px;
+				padding-right: 10px;
+
+			}
+
+			.directory-left {
+				width: 100%;
+				display: none;
+			}
+
+			.directory-hidden-input input {
+				width: 100%;
+			}
+
+			.directory-hidden-select select {
+				width: 100%;
+				border-bottom: 2px solid #374785;
+				background-color: transparent;
+			}
+
+			.directory-hidden-input,
+			.directory-hidden-select {
+				display: block;
+				width: 100%;
+				margin-top: 10px;
+				margin-bottom: 10px;
+
+			}
+
+			.directory-right {
+				width: 100%;
+				padding-left: 0px;
+				padding-right: 0px;
+			}
+
+			.directory-card {
+				padding: 10px;
+				width: 100%;
+			}
+
+			.directory-card-info>.directory-contact {
+				padding-top: 10px;
+				word-break: break-word;
+			}
+
+			.right-card-row {
+				width: 100%;
+			}
+
+		}
+	</style>
+
+
+
+	<div class="dir-pattern">
+		<img src="./FIDE Calendar_files/dir-pattern-1.png" alt="">
+	</div>
+	<div class="dir-pattern-two">
+		<img src="./FIDE Calendar_files/dir-pattern-2.png" alt="">
+	</div>
+	<div class="dir-pattern-four">
+		<img src="./FIDE Calendar_files/dir-pattern-4.png" alt="">
+	</div>
+	<div class="dir-pattern-three">
+		<img src="./FIDE Calendar_files/dir-pattern-3.png" alt="">
+	</div>
+	<div class="dir-pattern-five">
+		<img src="./FIDE Calendar_files/dir-pattern-5.png" alt="">
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<style>
+		/* .container {
+        max-width: 1440px;
+    } */
+
+		.calendar-tabs-buttons>.calendartabs-btn-active {
+			border-radius: 5px;
+		}
+
+		.calendar-button {
+			padding: 5px;
+		}
+
+		.t-tile-left .flag,
+		.calendar-h-point .flag {
+			width: 40px;
+			height: 30px;
+			border-radius: 3px;
+			background: transparent;
+			background-size: cover;
+			background-size: 40px 30px;
+		}
+
+		.ratings-button button {
+			background: #24305E;
+			color: #ffffff;
+			border: 0;
+		}
+
+		.ratings-button button:hover {
+			border: 0;
+		}
+
+		select {
+			border-bottom: 1px solid #374785;
+			padding-bottom: 5px;
+
+		}
+
+		input {
+			padding-bottom: 5px;
+			border-bottom: 1px solid #374785;
+			width: 100%;
+		}
+
+		.ratings-select {
+			padding-bottom: 0;
+		}
+
+		.event_name {
+			margin-right: 10px;
+			width: 150px;
+		}
+
+		label {
+			font-size: 14px;
+		}
+
+		.datepicker {
+			min-width: 125px;
+		}
+
+		.tile-header-name a,
+		.calendar-h-name a {
+			text-decoration: none;
+		}
+
+		.ratings-input {
+			margin-left: 2px;
+			margin-right: 2px;
+			min-width: 80px;
+		}
+
+		@media screen and (max-width: 1024px) {
+			.container {
+				margin-left: 10px;
+				margin-right: 10px;
+			}
+
+			.ratings-select-container {
+				flex-wrap: wrap;
+			}
+
+			.ratings-input input,
+			input {
+				padding-bottom: 5px;
+				border-bottom: 1px solid #374785;
+				width: 100%;
+			}
+
+			.ratings-input {
+				width: 100%;
+			}
+
+			.event_name {
+
+				width: 100%;
+			}
+
+			.ratings-select,
+			select {
+				width: 100%;
+			}
+
+			.country-select.inside input,
+			.country-select.inside input[type="text"] {
+				width: 100%;
+				background-color: #EAEEF3;
+			}
+
+			.country-select.inside .flag-dropdown {
+				width: 100%;
+			}
+
+			.ratings-button {
+				margin-top: 5px;
+				width: 100%;
+			}
+
+			button {
+				width: 100%;
+
+			}
+
+		}
+
+		@media screen and (max-width: 576px) {
+
+			.ratings-input input,
+			input {
+				padding-bottom: 5px;
+				border-bottom: 1px solid #374785;
+				width: 100%;
+			}
+
+			.event_name {
+
+				width: 100%;
+			}
+
+			.ratings-select,
+			select {
+				width: 100%;
+			}
+
+			.country-select.inside input,
+			.country-select.inside input[type="text"] {
+				width: 100%;
+			}
+
+			.country-select.inside .flag-dropdown {
+				width: 100%;
+			}
+
+			.country-select {
+				width: 100%;
+			}
+
+			.ratings-button {
+				margin-top: 5px;
+				width: 100%;
+			}
+
+			button {
+				width: 100%;
+
+			}
+
+		}
+	</style>
+
+	<section class="calendar">
+		<div class="calendar-container container">
+			<div class="calendar-tabs calendartabs" role="caltablist">
+				<div class="calendar-header">
+					<h1 class="page-title">All Events</h1>
+					<div class="calendar-tabs-buttons tabs-nav">
+						<p>Display type:</p>
+						<button class="calendartabs-btn calendar-button calendar-button-active calendartabs-btn-active" data-index="0" role="caltab"><img src="./FIDE Calendar_files/default.png" alt="Tiles" title="Tiles"></button>
+						<button class="calendartabs-btn calendar-button" data-index="1" role="caltab"><img src="./FIDE Calendar_files/table2.png" alt="Table" title="Table"></button>
+						<button class="calendartabs-btn calendar-button" style="display: none;" data-index="2" role="caltab"><img src="./FIDE Calendar_files/table2.png" alt="Table" title="Table"></button>
+						<!-- <div class="calendar-tabs-buttons tabs-nav dropdown">
+							<button class="calendartabs-btn calendar-button dropbtn" id="btnYear">
+								<img src="./img/year2.png" alt="Year" title="Year"></button>
+							<div id="myDropdown" class="dropdown-content">
+								<a href="#" class="dropCalendar" id="cal2023drop" onclick="itlTab.showByIndex(2, 2023);">2023</a>
+								<a href="#" class="dropCalendar" id="cal2024drop" onclick="itlTab.showByIndex(2, 2024);">2024</a>
+							</div>
+						</div> -->
+						<!-- <button class="calendartabs-btn calendar-button" style="display: none;"><img src="./img/map.png" alt="Map" title="Map"></button> -->
+						<button class="calendartabs-btn calendar-button" data-index="3" role="caltab"><img src="./FIDE Calendar_files/map.png" alt="Map" title="Map"></button>
+						<button class="calendartabs-btn calendar-button" id="btnDetails" data-index="4" role="caltab" style="display: none;"><img src="./FIDE Calendar_files/description.png" alt="Event details" title="Event details"></button>
+						<button class="calendartabs-btn calendar-button" style="display: none;" id="btnLogin" data-index="5" role="caltab"><img class="filter_grey" width="32px" height="32px" src="./FIDE Calendar_files/user_no_login.svg" alt="Dashboard" title="Login" style="display: none;"></button>
+					</div>
+				</div>
+				<div class="tabs-content">
+					<div id="category_filter">
+						<div class="filterdiv"><input type="checkbox" class="check-with-label" id="cat_check1" name="cat_check" value="wfe">
+							<label class="label-for-check" for="cat_check1" style="background-color: #e3e7f7;border: solid silver;border-width: 1px;">World FIDE Event</label>
+						</div>
+						<div class="filterdiv"><input type="checkbox" class="check-with-label" id="cat_check2" name="cat_check" value="cte">
+							<label class="label-for-check" for="cat_check2" style="background-color: #91c1f7;border: solid silver;border-width: 1px;">Continental</label>
+						</div>
+						<div class="filterdiv"><input type="checkbox" class="check-with-label" id="cat_check3" name="cat_check" value="wte">
+							<label class="label-for-check" for="cat_check3" style="background-color: #c6ebf9;border: solid silver;border-width: 1px;">World Top Events</label>
+						</div>
+						<div class="filterdiv"><input type="checkbox" class="check-with-label" id="cat_check4" name="cat_check" value="wcc">
+							<label class="label-for-check" for="cat_check4" style="border: solid goldenrod;border-width: 5px; padding: 5px;">World Championship Cycle</label>
+						</div>
+						<div class="filterdiv"><input type="checkbox" class="check-with-label" id="cat_check5" name="cat_check" value="cir">
+							<label class="label-for-check" for="cat_check5"><img src="./FIDE Calendar_files/icon-circuit-column.png" style="width: 12px;margin-right: 5px;">FIDE Circuit</label>
+						</div>
+						<div class="filterdiv"><input type="checkbox" class="check-with-label" id="cat_check6" name="cat_check" value="you">
+							<label class="label-for-check" for="cat_check6" style="border: solid #bf96ee;border-width: 5px;">Youth</label>
+						</div>
+						<div class="filterdiv"><input type="checkbox" class="check-with-label" id="cat_check7" name="cat_check" value="sen">
+							<label class="label-for-check" for="cat_check7" style="border: solid silver;border-width: 5px;">Seniors</label>
+						</div>
+						<div class="filterdiv curEventsDiv"><input type="checkbox" class="check-with-label" id="curEventsInput" name="curEvents" value="now">
+							<label class="label-for-check" for="curEventsInput">Current Events</label>
+						</div>
+						<div id="contContainer">
+							<div class="filterdiv contDiv"><input type="checkbox" class="check-with-label" id="contAll" name="cat_cont" value="0" checked="">
+								<label class="label-for-check" for="contAll">All Locations</label>
+							</div>
+							<div class="filterdiv contDiv" style=""><input type="checkbox" class="check-with-label" id="contEurope" name="cat_cont" value="1">
+								<label class="label-for-check" for="contEurope">Europe</label>
+							</div>
+							<div class="filterdiv contDiv" style=""><input type="checkbox" class="check-with-label" id="contAmericas" name="cat_cont" value="2">
+								<label class="label-for-check" for="contAmericas">Americas</label>
+							</div>
+							<div class="filterdiv contDiv" style=""><input type="checkbox" class="check-with-label" id="contAsia" name="cat_cont" value="3">
+								<label class="label-for-check" for="contAsia">Asia</label>
+							</div>
+							<div class="filterdiv contDiv" style=""><input type="checkbox" class="check-with-label" id="contAfrica" name="cat_cont" value="4">
+								<label class="label-for-check" for="contAfrica">Africa</label>
+							</div>
+							<div class="filterdiv contDiv" style=""><input type="checkbox" class="check-with-label" id="contOnline" name="cat_cont" value="7">
+								<label class="label-for-check" for="contOnline">Online</label>
+							</div>
+
+						</div>
+
+					</div>
+					<div class="ratings-select-container" id="select_container_1">
+						<div class="input-group">
+							<input class="input event_name" required="" autocomplete="off" type="search" id="name_filter_1" name="name_filter">
+							<label class="label" for="name_filter">Search</label>
+						</div>
+
+						<div class="rating-input input-group">
+							<input type="text" id="from_date1" class="datepicker input hasDatepicker" placeholder="From" name="from_date" title="FROM DATE" size="10">
+							<label class="label" for="from_name">From:</label>
+						</div>
+						<div class="input-group">
+							<input type="text" id="to_date1" class="datepicker input hasDatepicker" placeholder="To" name="to_date" title="TO DATE" size="10">
+							<label class="label" for="to_name">To:</label>
+						</div>
+						<div class="ratings-select input-group">
+							<select name="event_type" class="event_type input">
+								<option value="all" class="rating-option">All</option>
+								<option value="0" class="rating-option">Over-the-Board</option>
+								<option value="4" class="rating-option">Hybrid</option>
+								<option value="8" class="rating-option">Online</option>
+								<option value="16" class="rating-option">Meeting</option>
+							</select>
+							<label for="event_type" class="label">Event type:</label>
+						</div>
+						<div class="ratings-select input-group">
+							<select name="time_control" class="time_control input">
+								<option value="all" class="rating-option">All</option>
+								<option value="s" class="rating-option">Standard</option>
+								<option value="r" class="rating-option">Rapid</option>
+								<option value="b" class="rating-option">Blitz</option>
+							</select>
+							<label for="time_control" class="label">Time:</label>
+						</div>
+						<div class="ratings-select input-group">
+							<div class="country-select inside"><input type="text" class="input country" name="country" style="background-color: #EAEEF3;"><div class="flag-dropdown"><div class="selected-flag" title="All"><div class="flag all"></div><div class="arrow"></div></div><ul class="country-list hide"><li class="country preferred active" data-country-code="all"><div class="flag all"></div><span class="country-name">All</span></li><li class="country preferred" data-country-code="onl"><div class="flag onl"></div><span class="country-name">Online</span></li><li class="divider"></li><li class="country" data-country-code="afg"><div class="flag afg"></div><span class="country-name">Afghanistan</span></li><li class="country" data-country-code="alb"><div class="flag alb"></div><span class="country-name">Albania</span></li><li class="country" data-country-code="alg"><div class="flag alg"></div><span class="country-name">Algeria</span></li><li class="country" data-country-code="and"><div class="flag and"></div><span class="country-name">Andorra</span></li><li class="country" data-country-code="ang"><div class="flag ang"></div><span class="country-name">Angola</span></li><li class="country" data-country-code="ant"><div class="flag ant"></div><span class="country-name">Antigua and Barbuda</span></li><li class="country" data-country-code="arg"><div class="flag arg"></div><span class="country-name">Argentina</span></li><li class="country" data-country-code="arm"><div class="flag arm"></div><span class="country-name">Armenia</span></li><li class="country" data-country-code="aru"><div class="flag aru"></div><span class="country-name">Aruba</span></li><li class="country" data-country-code="aus"><div class="flag aus"></div><span class="country-name">Australia</span></li><li class="country" data-country-code="aut"><div class="flag aut"></div><span class="country-name">Austria </span></li><li class="country" data-country-code="aze"><div class="flag aze"></div><span class="country-name">Azerbaijan</span></li><li class="country" data-country-code="bah"><div class="flag bah"></div><span class="country-name">Bahamas</span></li><li class="country" data-country-code="brn"><div class="flag brn"></div><span class="country-name">Bahrain</span></li><li class="country" data-country-code="ban"><div class="flag ban"></div><span class="country-name">Bangladesh</span></li><li class="country" data-country-code="bar"><div class="flag bar"></div><span class="country-name">Barbados</span></li><li class="country" data-country-code="blr"><div class="flag blr"></div><span class="country-name">Belarus</span></li><li class="country" data-country-code="bel"><div class="flag bel"></div><span class="country-name">Belgium</span></li><li class="country" data-country-code="biz"><div class="flag biz"></div><span class="country-name">Belize</span></li><li class="country" data-country-code="ber"><div class="flag ber"></div><span class="country-name">Bermuda</span></li><li class="country" data-country-code="bhu"><div class="flag bhu"></div><span class="country-name">Bhutan</span></li><li class="country" data-country-code="bol"><div class="flag bol"></div><span class="country-name">Bolivia</span></li><li class="country" data-country-code="bih"><div class="flag bih"></div><span class="country-name">Bosnia and Herzegovina</span></li><li class="country" data-country-code="bot"><div class="flag bot"></div><span class="country-name">Botswana</span></li><li class="country" data-country-code="bra"><div class="flag bra"></div><span class="country-name">Brazil</span></li><li class="country" data-country-code="ivb"><div class="flag ivb"></div><span class="country-name">British Virgin Islands</span></li><li class="country" data-country-code="bru"><div class="flag bru"></div><span class="country-name">Brunei Darussalam</span></li><li class="country" data-country-code="bul"><div class="flag bul"></div><span class="country-name">Bulgaria</span></li><li class="country" data-country-code="bur"><div class="flag bur"></div><span class="country-name">Burkina Faso</span></li><li class="country" data-country-code="bdi"><div class="flag bdi"></div><span class="country-name">Burundi</span></li><li class="country" data-country-code="cam"><div class="flag cam"></div><span class="country-name">Cambodia</span></li><li class="country" data-country-code="cmr"><div class="flag cmr"></div><span class="country-name">Cameroon (Cameroun)</span></li><li class="country" data-country-code="can"><div class="flag can"></div><span class="country-name">Canada</span></li><li class="country" data-country-code="cpv"><div class="flag cpv"></div><span class="country-name">Cape Verde</span></li><li class="country" data-country-code="cay"><div class="flag cay"></div><span class="country-name">Cayman Islands</span></li><li class="country" data-country-code="caf"><div class="flag caf"></div><span class="country-name">Central African Republic</span></li><li class="country" data-country-code="cha"><div class="flag cha"></div><span class="country-name">Chad</span></li><li class="country" data-country-code="chi"><div class="flag chi"></div><span class="country-name">Chile</span></li><li class="country" data-country-code="chn"><div class="flag chn"></div><span class="country-name">China</span></li><li class="country" data-country-code="tpe"><div class="flag tpe"></div><span class="country-name">Chinese Taipei</span></li><li class="country" data-country-code="col"><div class="flag col"></div><span class="country-name">Colombia</span></li><li class="country" data-country-code="com"><div class="flag com"></div><span class="country-name">Comoros Islands</span></li><li class="country" data-country-code="crc"><div class="flag crc"></div><span class="country-name">Costa Rica</span></li><li class="country" data-country-code="civ"><div class="flag civ"></div><span class="country-name">Cote d’Ivoire</span></li><li class="country" data-country-code="cro"><div class="flag cro"></div><span class="country-name">Croatia</span></li><li class="country" data-country-code="cub"><div class="flag cub"></div><span class="country-name">Cuba</span></li><li class="country" data-country-code="cyp"><div class="flag cyp"></div><span class="country-name">Cyprus</span></li><li class="country" data-country-code="cze"><div class="flag cze"></div><span class="country-name">Czech Republic</span></li><li class="country" data-country-code="cod"><div class="flag cod"></div><span class="country-name">Democratic Republic of the Congo</span></li><li class="country" data-country-code="den"><div class="flag den"></div><span class="country-name">Denmark</span></li><li class="country" data-country-code="dji"><div class="flag dji"></div><span class="country-name">Djibouti</span></li><li class="country" data-country-code="dma"><div class="flag dma"></div><span class="country-name">Dominica</span></li><li class="country" data-country-code="dom"><div class="flag dom"></div><span class="country-name">Dominican Republic</span></li><li class="country" data-country-code="ecu"><div class="flag ecu"></div><span class="country-name">Ecuador</span></li><li class="country" data-country-code="egy"><div class="flag egy"></div><span class="country-name">Egypt</span></li><li class="country" data-country-code="esa"><div class="flag esa"></div><span class="country-name">El Salvador</span></li><li class="country" data-country-code="eng"><div class="flag eng"></div><span class="country-name">England</span></li><li class="country" data-country-code="geq"><div class="flag geq"></div><span class="country-name">Equatorial Guinea</span></li><li class="country" data-country-code="eri"><div class="flag eri"></div><span class="country-name">Eritrea</span></li><li class="country" data-country-code="est"><div class="flag est"></div><span class="country-name">Estonia</span></li><li class="country" data-country-code="swz"><div class="flag swz"></div><span class="country-name">Eswatini</span></li><li class="country" data-country-code="eth"><div class="flag eth"></div><span class="country-name">Ethiopia</span></li><li class="country" data-country-code="fai"><div class="flag fai"></div><span class="country-name">Faroe Islands</span></li><li class="country" data-country-code="fij"><div class="flag fij"></div><span class="country-name">Fiji</span></li><li class="country" data-country-code="fin"><div class="flag fin"></div><span class="country-name">Finland</span></li><li class="country" data-country-code="fra"><div class="flag fra"></div><span class="country-name">France</span></li><li class="country" data-country-code="gab"><div class="flag gab"></div><span class="country-name">Gabon</span></li><li class="country" data-country-code="gam"><div class="flag gam"></div><span class="country-name">Gambia</span></li><li class="country" data-country-code="geo"><div class="flag geo"></div><span class="country-name">Georgia</span></li><li class="country" data-country-code="ger"><div class="flag ger"></div><span class="country-name">Germany</span></li><li class="country" data-country-code="gha"><div class="flag gha"></div><span class="country-name">Ghana</span></li><li class="country" data-country-code="gre"><div class="flag gre"></div><span class="country-name">Greece</span></li><li class="country" data-country-code="grn"><div class="flag grn"></div><span class="country-name">Grenada</span></li><li class="country" data-country-code="gum"><div class="flag gum"></div><span class="country-name">Guam</span></li><li class="country" data-country-code="gua"><div class="flag gua"></div><span class="country-name">Guatemala</span></li><li class="country" data-country-code="gci"><div class="flag gci"></div><span class="country-name">Guernsey</span></li><li class="country" data-country-code="guy"><div class="flag guy"></div><span class="country-name">Guyana</span></li><li class="country" data-country-code="hai"><div class="flag hai"></div><span class="country-name">Haiti</span></li><li class="country" data-country-code="hon"><div class="flag hon"></div><span class="country-name">Honduras</span></li><li class="country" data-country-code="hkg"><div class="flag hkg"></div><span class="country-name">Hong Kong, China</span></li><li class="country" data-country-code="hun"><div class="flag hun"></div><span class="country-name">Hungary</span></li><li class="country" data-country-code="isl"><div class="flag isl"></div><span class="country-name">Iceland </span></li><li class="country" data-country-code="ind"><div class="flag ind"></div><span class="country-name">India</span></li><li class="country" data-country-code="ina"><div class="flag ina"></div><span class="country-name">Indonesia</span></li><li class="country" data-country-code="iri"><div class="flag iri"></div><span class="country-name">Iran</span></li><li class="country" data-country-code="irq"><div class="flag irq"></div><span class="country-name">Iraq</span></li><li class="country" data-country-code="irl"><div class="flag irl"></div><span class="country-name">Ireland</span></li><li class="country" data-country-code="iom"><div class="flag iom"></div><span class="country-name">Isle of Man</span></li><li class="country" data-country-code="isr"><div class="flag isr"></div><span class="country-name">Israel</span></li><li class="country" data-country-code="ita"><div class="flag ita"></div><span class="country-name">Italy</span></li><li class="country" data-country-code="jam"><div class="flag jam"></div><span class="country-name">Jamaica</span></li><li class="country" data-country-code="jpn"><div class="flag jpn"></div><span class="country-name">Japan</span></li><li class="country" data-country-code="jci"><div class="flag jci"></div><span class="country-name">Jersey</span></li><li class="country" data-country-code="jor"><div class="flag jor"></div><span class="country-name">Jordan</span></li><li class="country" data-country-code="kaz"><div class="flag kaz"></div><span class="country-name">Kazakhstan</span></li><li class="country" data-country-code="ken"><div class="flag ken"></div><span class="country-name">Kenya</span></li><li class="country" data-country-code="kos"><div class="flag kos"></div><span class="country-name">Kosovo</span></li><li class="country" data-country-code="kuw"><div class="flag kuw"></div><span class="country-name">Kuwait</span></li><li class="country" data-country-code="kgz"><div class="flag kgz"></div><span class="country-name">Kyrgyzstan</span></li><li class="country" data-country-code="lao"><div class="flag lao"></div><span class="country-name">Laos</span></li><li class="country" data-country-code="lat"><div class="flag lat"></div><span class="country-name">Latvia</span></li><li class="country" data-country-code="lbn"><div class="flag lbn"></div><span class="country-name">Lebanon</span></li><li class="country" data-country-code="les"><div class="flag les"></div><span class="country-name">Lesotho</span></li><li class="country" data-country-code="lbr"><div class="flag lbr"></div><span class="country-name">Liberia</span></li><li class="country" data-country-code="lba"><div class="flag lba"></div><span class="country-name">Libya</span></li><li class="country" data-country-code="lie"><div class="flag lie"></div><span class="country-name">Liechtenstein</span></li><li class="country" data-country-code="ltu"><div class="flag ltu"></div><span class="country-name">Lithuania</span></li><li class="country" data-country-code="lux"><div class="flag lux"></div><span class="country-name">Luxembourg</span></li><li class="country" data-country-code="mac"><div class="flag mac"></div><span class="country-name">Macau</span></li><li class="country" data-country-code="mad"><div class="flag mad"></div><span class="country-name">Madagascar</span></li><li class="country" data-country-code="maw"><div class="flag maw"></div><span class="country-name">Malawi</span></li><li class="country" data-country-code="mas"><div class="flag mas"></div><span class="country-name">Malaysia</span></li><li class="country" data-country-code="mdv"><div class="flag mdv"></div><span class="country-name">Maldives</span></li><li class="country" data-country-code="mli"><div class="flag mli"></div><span class="country-name">Mali</span></li><li class="country" data-country-code="mlt"><div class="flag mlt"></div><span class="country-name">Malta</span></li><li class="country" data-country-code="mtn"><div class="flag mtn"></div><span class="country-name">Mauritania</span></li><li class="country" data-country-code="mri"><div class="flag mri"></div><span class="country-name">Mauritius</span></li><li class="country" data-country-code="mex"><div class="flag mex"></div><span class="country-name">Mexico</span></li><li class="country" data-country-code="mda"><div class="flag mda"></div><span class="country-name">Moldova</span></li><li class="country" data-country-code="mnc"><div class="flag mnc"></div><span class="country-name">Monaco</span></li><li class="country" data-country-code="mgl"><div class="flag mgl"></div><span class="country-name">Mongolia</span></li><li class="country" data-country-code="mne"><div class="flag mne"></div><span class="country-name">Montenegro</span></li><li class="country" data-country-code="mar"><div class="flag mar"></div><span class="country-name">Morocco</span></li><li class="country" data-country-code="moz"><div class="flag moz"></div><span class="country-name">Mozambique</span></li><li class="country" data-country-code="mya"><div class="flag mya"></div><span class="country-name">Myanmar</span></li><li class="country" data-country-code="nam"><div class="flag nam"></div><span class="country-name">Namibia</span></li><li class="country" data-country-code="nru"><div class="flag nru"></div><span class="country-name">Nauru</span></li><li class="country" data-country-code="nep"><div class="flag nep"></div><span class="country-name">Nepal</span></li><li class="country" data-country-code="ned"><div class="flag ned"></div><span class="country-name">Netherlands</span></li><li class="country" data-country-code="aho"><div class="flag aho"></div><span class="country-name">Netherlands Antilles</span></li><li class="country" data-country-code="nzl"><div class="flag nzl"></div><span class="country-name">New Zealand</span></li><li class="country" data-country-code="nca"><div class="flag nca"></div><span class="country-name">Nicaragua</span></li><li class="country" data-country-code="nig"><div class="flag nig"></div><span class="country-name">Niger</span></li><li class="country" data-country-code="ngr"><div class="flag ngr"></div><span class="country-name">Nigeria</span></li><li class="country" data-country-code="mkd"><div class="flag mkd"></div><span class="country-name">North Makedonia</span></li><li class="country" data-country-code="nor"><div class="flag nor"></div><span class="country-name">Norway</span></li><li class="country" data-country-code="oma"><div class="flag oma"></div><span class="country-name">Oman</span></li><li class="country" data-country-code="pak"><div class="flag pak"></div><span class="country-name">Pakistan</span></li><li class="country" data-country-code="plw"><div class="flag plw"></div><span class="country-name">Palau</span></li><li class="country" data-country-code="ple"><div class="flag ple"></div><span class="country-name">Palestine</span></li><li class="country" data-country-code="pan"><div class="flag pan"></div><span class="country-name">Panama</span></li><li class="country" data-country-code="png"><div class="flag png"></div><span class="country-name">Papua New Guinea</span></li><li class="country" data-country-code="par"><div class="flag par"></div><span class="country-name">Paraguay</span></li><li class="country" data-country-code="per"><div class="flag per"></div><span class="country-name">Peru</span></li><li class="country" data-country-code="phi"><div class="flag phi"></div><span class="country-name">Philippines</span></li><li class="country" data-country-code="pol"><div class="flag pol"></div><span class="country-name">Poland</span></li><li class="country" data-country-code="por"><div class="flag por"></div><span class="country-name">Portugal</span></li><li class="country" data-country-code="pur"><div class="flag pur"></div><span class="country-name">Puerto Rico</span></li><li class="country" data-country-code="qat"><div class="flag qat"></div><span class="country-name">Qatar</span></li><li class="country" data-country-code="rou"><div class="flag rou"></div><span class="country-name">Romania</span></li><li class="country" data-country-code="rus"><div class="flag rus"></div><span class="country-name">Russia</span></li><li class="country" data-country-code="rwa"><div class="flag rwa"></div><span class="country-name">Rwanda</span></li><li class="country" data-country-code="skn"><div class="flag skn"></div><span class="country-name">Saint Kitts and Nevis</span></li><li class="country" data-country-code="lca"><div class="flag lca"></div><span class="country-name">Saint Lucia</span></li><li class="country" data-country-code="vin"><div class="flag vin"></div><span class="country-name">Saint Vincent and the Grenadines</span></li><li class="country" data-country-code="smr"><div class="flag smr"></div><span class="country-name">San Marino</span></li><li class="country" data-country-code="stp"><div class="flag stp"></div><span class="country-name">Sao Tome and Príncipe</span></li><li class="country" data-country-code="ska"><div class="flag ska"></div><span class="country-name">Saudi Arabia</span></li><li class="country" data-country-code="sco"><div class="flag sco"></div><span class="country-name">Scotland</span></li><li class="country" data-country-code="sen"><div class="flag sen"></div><span class="country-name">Senegal</span></li><li class="country" data-country-code="srb"><div class="flag srb"></div><span class="country-name">Serbia</span></li><li class="country" data-country-code="sey"><div class="flag sey"></div><span class="country-name">Seychelles</span></li><li class="country" data-country-code="sle"><div class="flag sle"></div><span class="country-name">Sierra Leone</span></li><li class="country" data-country-code="sgp"><div class="flag sgp"></div><span class="country-name">Singapore</span></li><li class="country" data-country-code="svk"><div class="flag svk"></div><span class="country-name">Slovakia</span></li><li class="country" data-country-code="slo"><div class="flag slo"></div><span class="country-name">Slovenia</span></li><li class="country" data-country-code="sol"><div class="flag sol"></div><span class="country-name">Solomon Islands</span></li><li class="country" data-country-code="som"><div class="flag som"></div><span class="country-name">Somalia</span></li><li class="country" data-country-code="rsa"><div class="flag rsa"></div><span class="country-name">South Africa</span></li><li class="country" data-country-code="kor"><div class="flag kor"></div><span class="country-name">South Korea</span></li><li class="country" data-country-code="ssd"><div class="flag ssd"></div><span class="country-name">South Sudan</span></li><li class="country" data-country-code="esp"><div class="flag esp"></div><span class="country-name">Spain</span></li><li class="country" data-country-code="sri"><div class="flag sri"></div><span class="country-name">Sri Lanka</span></li><li class="country" data-country-code="sud"><div class="flag sud"></div><span class="country-name">Sudan</span></li><li class="country" data-country-code="sur"><div class="flag sur"></div><span class="country-name">Suriname</span></li><li class="country" data-country-code="swe"><div class="flag swe"></div><span class="country-name">Sweden</span></li><li class="country" data-country-code="sui"><div class="flag sui"></div><span class="country-name">Switzerland</span></li><li class="country" data-country-code="syr"><div class="flag syr"></div><span class="country-name">Syria</span></li><li class="country" data-country-code="tjk"><div class="flag tjk"></div><span class="country-name">Tajikistan</span></li><li class="country" data-country-code="tan"><div class="flag tan"></div><span class="country-name">Tanzania</span></li><li class="country" data-country-code="tha"><div class="flag tha"></div><span class="country-name">Thailand</span></li><li class="country" data-country-code="tls"><div class="flag tls"></div><span class="country-name">Timor-Leste</span></li><li class="country" data-country-code="tog"><div class="flag tog"></div><span class="country-name">Togo</span></li><li class="country" data-country-code="tto"><div class="flag tto"></div><span class="country-name">Trinidad and Tobago</span></li><li class="country" data-country-code="tun"><div class="flag tun"></div><span class="country-name">Tunisia</span></li><li class="country" data-country-code="tur"><div class="flag tur"></div><span class="country-name">Turkey</span></li><li class="country" data-country-code="tkm"><div class="flag tkm"></div><span class="country-name">Turkmenistan</span></li><li class="country" data-country-code="uga"><div class="flag uga"></div><span class="country-name">Uganda</span></li><li class="country" data-country-code="ukr"><div class="flag ukr"></div><span class="country-name">Ukraine</span></li><li class="country" data-country-code="uae"><div class="flag uae"></div><span class="country-name">United Arab Emirates</span></li><li class="country" data-country-code="usa"><div class="flag usa"></div><span class="country-name">United States</span></li><li class="country" data-country-code="uru"><div class="flag uru"></div><span class="country-name">Uruguay</span></li><li class="country" data-country-code="isv"><div class="flag isv"></div><span class="country-name">US Virgin Islands</span></li><li class="country" data-country-code="uzb"><div class="flag uzb"></div><span class="country-name">Uzbekistan</span></li><li class="country" data-country-code="ven"><div class="flag ven"></div><span class="country-name">Venezuela</span></li><li class="country" data-country-code="vie"><div class="flag vie"></div><span class="country-name">Vietnam</span></li><li class="country" data-country-code="wls"><div class="flag wls"></div><span class="country-name">Wales</span></li><li class="country" data-country-code="yem"><div class="flag yem"></div><span class="country-name">Yemen</span></li><li class="country" data-country-code="zam"><div class="flag zam"></div><span class="country-name">Zambia</span></li><li class="country" data-country-code="zim"><div class="flag zim"></div><span class="country-name">Zimbabwe</span></li><li class="country" data-country-code="all"><div class="flag all"></div><span class="country-name">All</span></li><li class="country" data-country-code="TBD"><div class="flag TBD"></div><span class="country-name">TBD</span></li><li class="country" data-country-code="onl"><div class="flag onl"></div><span class="country-name">Online</span></li></ul></div></div>
+							<label for="country" class="label" style="top: -0.5rem;left: 2rem; font-size: 14px; background-color: #EAEEF3;">Country:</label>
+						</div>
+						<div class="ratings-button btnSearch">
+							<button>SEARCH</button>
+						</div>
+						<!--ratings-select-container-->
+					</div>
+					<div class="calendartabs-pane calendartabs-pane-show" id="calendarcontent-1" role="caltabpanel"><div class="calendar-t-body" id="calendar-t-body"><div class="calendar-t-tile wte-tile cir-tile"><span class="ribbon_cir"><span>Circuit</span></span><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">29</span><span class="t-tile-header-month">Jul</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">28</span><span class="t-tile-header-month">Aug</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Saint Louis, Missouri, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=10674">Saint Louis Rapid</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Rapid</p></div></div></div></div><div class="calendar-t-tile wte-tile cir-tile"><span class="ribbon_cir"><span>Circuit</span></span><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">29</span><span class="t-tile-header-month">Jul</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">28</span><span class="t-tile-header-month">Aug</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Saint Louis, Missouri, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=10675">Saint Louis Blitz</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Blitz</p></div></div></div></div><div class="calendar-t-tile wte-tile cir-tile"><span class="ribbon_cir"><span>Circuit</span></span><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">29</span><span class="t-tile-header-month">Jul</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">28</span><span class="t-tile-header-month">Aug</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Saint Louis, Missouri, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=10677">GCT Finals</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile wte-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">8</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">21</span>&nbsp;<span class="t-tile-header-month">Aug</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Saint Louis, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=13839">Cairns Cup 2026</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile wte-tile cir-tile"><span class="ribbon_cir"><span>Circuit</span></span><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">8</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">12</span>&nbsp;<span class="t-tile-header-month">Aug</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Saint Louis, Missouri, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=10676">Sinquefield Cup 2026</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile wfe-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">11</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">16</span>&nbsp;<span class="t-tile-header-month">Aug</span></div><div class="t-tile-left country-select"><div class="flag crc" style="background-color:transparent;"></div><p class="t-tile-city">San Jose, CRC</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=16285">FIDE ISCF World Schools Team Championship, American Continental Stage</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">14</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">16</span>&nbsp;<span class="t-tile-header-month">Aug</span></div><div class="t-tile-left country-select"><div class="flag can" style="background-color:transparent;"></div><p class="t-tile-city">Montreal, CAN</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=18697">2026 Lakeshore WOMEN's Open Championship</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Rapid</p></div></div></div></div><div class="calendar-t-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">4</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">7</span>&nbsp;<span class="t-tile-header-month">Sep</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Glendale , USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=14269">2026 Southern California Open</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">4</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">7</span>&nbsp;<span class="t-tile-header-month">Sep</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Glendale, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=17597">2026 Southern California Open</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">5</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">7</span>&nbsp;<span class="t-tile-header-month">Sep</span></div><div class="t-tile-left country-select"><div class="flag can" style="background-color:transparent;"></div><p class="t-tile-city">Montreal, CAN</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=19264">2026 Montreal Open</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile wfe-tile you-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">2026</span></div><div class="t-tile-left country-select"><div class="flag ven" style="background-color:transparent;"></div><p class="t-tile-city">TBC, VEN</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=5080">FIDE World Junior U20 Championships 2026</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">16</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">18</span>&nbsp;<span class="t-tile-header-month">Oct</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Estero, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=17898">4th Gulf Coast October Open</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">4</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">9</span>&nbsp;<span class="t-tile-header-month">Nov</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Bellevue, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=17816">20th Annual SPICE Cup Open</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile"><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">13</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">15</span>&nbsp;<span class="t-tile-header-month">Nov</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Fort Lauderdale, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=18715">24th Annual Turkey Bowl</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: Standard</p></div></div></div></div><div class="calendar-t-tile wte-tile cir-tile"><span class="ribbon_cir"><span>Circuit</span></span><div class="t-tile-header"><div class="t-tile-header-date"><div class="date_flag"><span class="t-tile-header-day">25</span><span class="t-tile-header-day">-</span><span class="t-tile-header-day">29</span>&nbsp;<span class="t-tile-header-month">Nov</span></div><div class="t-tile-left country-select"><div class="flag usa" style="background-color:transparent;"></div><p class="t-tile-city">Charlotte, USA</p></div></div><div class="t-tile-body"><div class="t-tile-header-name"><p class="tile-header-name"><a href="https://calendar.fide.com/calendar.php?id=13837">2026 US Masters</a></p></div><div class="t-tile-right"><p class="t-tile-start">Time control: other</p></div></div></div></div></div><div class="ranking-pagination"><div class="ranking-pagination-number" onclick="loadTiles(1);saveHistory();"><u>1</u></div></div></div>
+					<div class="calendartabs-pane" id="calendarcontent-2" role="caltabpanel">
+
+					</div>
+
+				</div>
+				<!--calendartabs-pane-->
+
+				<div class="calendartabs-pane" id="calendarcontent-4" role="caltabpanel">
+
+				</div>
+				<div class="calendartabs-pane" id="calendarcontent-5" role="caltabpanel">
+					<div class="ratings-select-container" style="width: 1200px;">
+						<div class="ratings-input">
+							<input type="text" placeholder="Enter City" id="mapCity" onchange="mapFindCity(this.value)">
+							<div id="mapError" style="display: none;"></div>
+						</div>
+					</div>
+					<div class="calendar-map" id="map_canvas">
+					</div>
+				</div>
+
+
+				<div class="calendartabs-pane" id="calendarcontent-6" role="caltabpanel"></div>
+				<div class="calendartabs-pane" id="calendarcontent-7" role="caltabpanel">
+					<div class="calendar-map" id="box"></div>
+
+				</div>
+			</div>
+
+			<!--container-->
+		</div>
+		<div id="msgBox" title="Basic dialog" style="display: none;"></div>
+	</section>
+	<script src="./FIDE Calendar_files/tabs.js"></script>
+	<script src="./FIDE Calendar_files/js(1)"></script>
+	<script src="./FIDE Calendar_files/countrySelect.js"></script>
+
+	<script>
+		let today = new Date().toISOString().slice(0, 10);
+
+		var getUrlParameter = function getUrlParameter(sParam) {
+			var sPageURL = window.location.search.substring(1),
+				sURLVariables = sPageURL.split('&'),
+				sParameterName,
+				i;
+
+			for (i = 0; i < sURLVariables.length; i++) {
+				sParameterName = sURLVariables[i].split('=');
+
+				if (sParameterName[0] === sParam) {
+					return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+				}
+			}
+			return false;
+		};
+		var url = new URL(location);
+		//                                        var spage = "1";
+		var show = "tiles";
+		let searchParams = new URLSearchParams(window.location.search);
+		var ships = [];
+		var map;
+		var infowindow = [];
+		var marker = [];
+		var spage;
+		var myDate = new Date(new Date().getTime() + (7 * 24 * 60 * 60 * 1000));
+		var myLat = 46.5199;
+		var myLng = 6.633597;
+		var myZoom = 4;
+
+		function initialize() {
+			map = new google.maps.Map(document.getElementById('map_canvas'), {
+				center: {
+					lng: myLng,
+					lat: myLat,
+				},
+				zoom: myZoom
+			});
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(function(position) {
+					initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+					// map.setCenter(initialLocation);
+				});
+			}
+		}
+
+		function createMarker(lat, lon, name, description, venue_id) {
+			var newmarker = new google.maps.Marker({
+				position: new google.maps.LatLng(lon, lat),
+				//            position: new google.maps.LatLng(lat, lon),
+				map: map,
+				title: name,
+				icon: {
+					url: 'img/google_pin.png',
+					scaledSize: new google.maps.Size(20, 30)
+				},
+
+				description: description,
+				venue_id: venue_id
+			});
+			newmarker['infowindow'] = new google.maps.InfoWindow({
+				position: new google.maps.LatLng(lat, lon),
+				content: '<h5>' + name + '</h5>' + description + '<p></p>'
+			});
+			// console.log(newmarker);
+			google.maps.event.addListener(newmarker, 'click', function() {
+				this['infowindow'].open(map, this);
+			});
+			google.maps.event.addListener(newmarker, 'mouseover', function() {
+				this['infowindow'].open(map, this);
+			});
+			//google.maps.event.addListener(newmarker, 'mouseout', function () {this['infowindow'].close(map, this);});
+
+			marker.push(newmarker);
+		}
+
+		function processShips(ships) {
+			var cat_filter_array = $.map($('input[name="cat_check"]:checked'), function(c) {
+				return c.value;
+			});
+			var cat_cont = $.map($('input[name="cat_cont"]:checked:visible'), function(c) {
+				return c.value;
+			});
+			var countryData = $("#select_container_1 .country").countrySelect("getSelectedCountryData");
+			$.post('calendar_edit.php', {
+				command: "venues",
+				all: 0,
+				'country': countryData.iso2,
+				'name_filter': $('#name_filter_1').val(),
+				'event_type': $('#select_container_1 .event_type option:selected').val().toString(),
+				'time_control': $('#select_container_1 .time_control option:selected').val(),
+				'cat_filter': cat_filter_array,
+				'cat_cont': cat_cont,
+				'from_date': $("#from_date1").val(),
+				'to_date': $("#to_date1").val(),
+
+			}, function(data) {
+				data = JSON.parse(data);
+				ships = data.features;
+				console.log('ships:');
+				console.log(data);
+				console.log(ships[0].geometry.coordinates[0]);
+				console.log(ships[0].properties.color);
+				console.log(ships[0].properties.color);
+				for (var i = 0; i < ships.length; i++) {
+					console.log('i:' + i);
+					console.log(ships[i].properties.color);
+					//console.log(ships[i]['properties']);
+					createMarker(ships[i].geometry.coordinates[1], ships[i].geometry.coordinates[0], ships[i].properties.venue_name, ships[i].properties.events_list, ships[i].properties.venue_id);
+				}
+			});
+			google.maps.event.addListener(map, 'click', () => {
+				//                                            google.maps.event.addListener(map, 'mousedown', () => {
+				for (var i = 0; i < marker.length; i++) {
+					marker[i]['infowindow'].close();
+				};
+			});
+		}
+
+		function showMap() {
+			//    itlTab.showByIndex(3);
+			show = "map";
+			//                                            saveHistory();
+		}
+
+		function load(ships) {
+			show = 'map';
+			$(".filterdiv").show();
+			$("#contContainer").show();
+			$("#select_container_1").show();
+			initialize();
+			processShips(ships);
+		}
+
+		function gotoPoint(myPoint) {
+			map.setCenter(new google.maps.LatLng(marker[myPoint - 1].position.lat(), marker[myPoint - 1].position.lng()));
+			marker[myPoint - 1]['infowindow'].open(map, marker[myPoint - 1]);
+		}
+
+		function saveHistory() {
+			console.log('searchparams: ' + searchParams);
+			//                                            console.log('data: ' + JSON.stringify(data));
+			//                searchParams.set("name_filter",$('#name_filter_1').val());
+			var curURL = url;
+			console.log('curURL:' + curURL);
+			var url = new URL(location.protocol + '//' + location.host + location.pathname);
+			//                                            var url = new URL("calendar.php");
+
+			// If your expected result is "http://foo.bar/?x=42&y=2"
+			url.searchParams.set('name_filter', $('#name_filter_1').val());
+			url.searchParams.set('from_date', $('#from_date1').val());
+			url.searchParams.set('to_date', $('#to_date1').val());
+			url.searchParams.set('country', $("#select_container_1 .country").countrySelect("getSelectedCountryData").iso2);
+			console.log('show:' + show);
+			url.searchParams.set('show', show);
+			url.searchParams.set('page', spage);
+			var cat_filter_array = $.map($('input[name="cat_check"]:checked'), function(c) {
+				return c.value;
+			});
+			console.log('CATEGORIES:' + cat_filter_array);
+			url.searchParams.set('cat_filter', cat_filter_array);
+			var cat_cont_array = $.map($('input[name="cat_cont"]:checked'), function(c) {
+				return c.value;
+			});
+			url.searchParams.set('cat_cont', cat_cont_array);
+
+			url.searchParams.set('event_type', $('#calendarcontent-1 .event_type option:selected').val());
+			url.searchParams.set('time_control', $('#calendarcontent-1 .time_control option:selected').val());
+			//                                            url.searchParams.set('name_filter', $('#name_filter_1').val());
+
+			//searchParams+=addUrlParam(document.location.search, 'name_filter', $('#name_filter_1').val());
+			//searchParams+=addUrlParam(document.location.search, 'from_date', $('#from_date1').val());
+			//searchParams+=addUrlParam(document.location.search, 'to_date', $('#to_date1').val());
+			//searchParams.set('name_filter', $('#name_filter_1').val());
+			//searchParams+=insertParam('from_date', $('#from_date1').val());
+			//searchParams+=insertParam('to_date', $('#to_date1').val());
+			console.log('URL: ' + url);
+			console.log('URLtoString: ' + url.toString());
+			//console.log(searchParams);
+			//console.log(document.location.href + addUrlParam(document.location.search, 'foo', 'bar'));
+
+			//                history.pushState(JSON.stringify(data),$('#name_filter_1').val(), url.toString());
+			history.pushState(null, null, url.toString());
+			//                history.pushState(JSON.stringify(data), 'Tiles', window.location.href.split('?')[0]+'?' + searchParams.substr(1));
+			//                history.pushState(JSON.stringify(data), 'Tiles', document.location);
+
+		};
+
+		function updatePage(histSave = false) {
+			var url = new URL(window.location);
+			//                                                url.searchParams.set("foo", "bar");
+			//                                            history.pushState({}, "", url);
+			//                                            let url = {};
+
+			//                                            url.name_filter = getUrlParameter('name_filter') || "";
+			//                                            url.country = getUrlParameter('country') || "";
+			//                                            url.event_type = getUrlParameter('event_type') || "";
+			//                                            url.from_date = getUrlParameter('from_date') || "";
+			//                                            url.to_date = getUrlParameter('to_date') || "";
+			//                                            url.page = getUrlParameter('page') || "";
+			//                                            url.show = getUrlParameter('show') || "tiles";
+			//                                            url.time_control = getUrlParameter('time_control') || "";
+			//                                            url.id = getUrlParameter('id') || "";
+			//                                            console.log(url);
+			$("#name_filter_1").val(url.searchParams.get('name_filter') || "");
+
+			// nextDayDate.setDate(today);
+			// alert(myDate.toISOString().split('T')[0]);
+			$("#from_date1").val(url.searchParams.get('from_date') || today);
+			$("#to_date1").val(url.searchParams.get('to_date') || "2026-12-31");
+			console.log("CAT_FILTER:");
+			var cat_filter = url.searchParams.get('cat_filter') || "";
+			console.log(url.searchParams.get('cat_filter') || "2026-01-01");
+			if (cat_filter.includes('wfe')) {
+				$('#cat_check1').prop('checked', true);
+			};
+			if (cat_filter.includes('cte')) {
+				$('#cat_check2').prop('checked', true);
+			};
+			if (cat_filter.includes('wte')) {
+				$('#cat_check3').prop('checked', true);
+			}
+			if (cat_filter.includes('wcc')) {
+				$('#cat_check4').prop('checked', true);
+			}
+			if (cat_filter.includes('cir')) {
+				$('#cat_check5').prop('checked', true);
+			}
+			if (cat_filter.includes('you')) {
+				$('#cat_check6').prop('checked', true);
+			}
+			if (cat_filter.includes('sen')) {
+				$('#cat_check7').prop('checked', true);
+			}
+			var cat_cont = url.searchParams.get('cat_cont') || "0";
+			if (cat_cont.includes('0')) {
+				$('#contAll').prop('checked', true);
+			} else {
+				$('#contAll').prop('checked', false);
+				$("#contEurope").parent().show();
+				$("#contAmericas").parent().show();
+				$("#contAsia").parent().show();
+				$("#contAfrica").parent().show();
+				$("#contOnline").parent().show();
+			};
+			if (cat_cont.includes('7')) {
+				$('#contOnline').prop('checked', true);
+			}
+			if (cat_cont.includes('1')) {
+				$('#contEurope').prop('checked', true);
+			};
+			if (cat_cont.includes('2')) {
+				$('#contAmericas').prop('checked', true);
+			}
+			if (cat_cont.includes('3')) {
+				$('#contAsia').prop('checked', true);
+			}
+			if (cat_cont.includes('4')) {
+				$('#contAfrica').prop('checked', true);
+			}
+
+			$('#calendarcontent-1 .event_type').val(url.searchParams.get('event_type') || "all");
+			$('#calendarcontent-1 .time_control').val(url.searchParams.get('time_control') || "all");
+			$("#calendarcontent-1 .country").countrySelect("selectCountry", url.searchParams.get('country') || "all");
+
+			spage = url.searchParams.get('page') || "1";
+			show = url.searchParams.get('show') || "tiles";
+
+			if (searchParams.has('preview')) {
+				showTmnt(searchParams.get('id'), searchParams.get('preview'));
+			} else {
+				if (searchParams.has('id') && searchParams.get('id') > 0) {
+					showTmnt(searchParams.get('id'));
+					
+
+					//                                                    saveHistory();
+				} else {
+					if (!url.searchParams.get('show') || url.searchParams.get('show') == "tiles") {
+						//                                                        itlTab.showByIndex(0);
+						$(".calendartabs-btn").removeClass("calendartabs-btn-active");
+						$(".calendartabs-pane").removeClass("calendartabs-pane-show");
+						//                                                        $(".calendartabs-btn[data-index=0]").removeClass("calendartabs-btn-active");
+						//                                                        $("#calendarcontent-1").removeClass("calendartabs-pane-show");
+						$(".calendartabs-btn[data-index=0]").addClass("calendartabs-btn-active");
+						$("#calendarcontent-1").addClass("calendartabs-pane-show");
+						loadTiles(spage);
+					} else if (!url.searchParams.get('show') || url.searchParams.get('show') == "table") {
+						$(".calendartabs-btn").removeClass("calendartabs-btn-active");
+						$(".calendartabs-pane").removeClass("calendartabs-pane-show");
+						//                                                        $(".calendartabs-btn[data-index=0]").removeClass("calendartabs-btn-active");
+						//                                                        $("#calendarcontent-1").removeClass("calendartabs-pane-show");
+						$(".calendartabs-btn[data-index=1]").addClass("calendartabs-btn-active");
+						$("#calendarcontent-2").addClass("calendartabs-pane-show");
+						//                                                        itlTab.showByIndex(1, spage);
+						//                                                        itlTab._elPanes[1].show();
+						loadTable(spage);
+					} else if (!url.searchParams.get('show') || url.searchParams.get('show') == "showYear") {
+						$(".calendartabs-btn").removeClass("calendartabs-btn-active");
+						$(".calendartabs-pane").removeClass("calendartabs-pane-show");
+						$(".calendartabs-btn[data-index=2]").addClass("calendartabs-btn-active");
+						$("#calendarcontent-4").addClass("calendartabs-pane-show");
+						loadYear(spage);
+						//                                                        itlTab.showByIndex(2, spage);
+					} else if (!url.searchParams.get('show') || url.searchParams.get('show') == "map") {
+						$(".calendartabs-btn").removeClass("calendartabs-btn-active");
+						$(".calendartabs-pane").removeClass("calendartabs-pane-show");
+						$(".calendartabs-btn[data-index=3]").addClass("calendartabs-btn-active");
+						$("#calendarcontent-5").addClass("calendartabs-pane-show");
+						//                                                        itlTab.showByIndex(3);
+						load(ships);
+						showMap();
+						//                                                        saveHistory();
+					}
+
+
+				}
+			}
+
+		}
+		// window.onload = load(ships);
+		$(document).ready(function() {
+			function apply_category_filter() {
+				var yourArray = [];
+				// console.log(e.val());
+				$("input:checkbox[name=cat_check]:checked").each(function() {
+					yourArray.push($(this).val());
+					console.log(yourArray);
+				});
+			};
+			//  $("#select_container_2 .country").countrySelect({
+			$(".country").countrySelect({
+				defaultCountry: "all",
+				preferredCountries: ['all', 'onl'],
+				responsiveDropdown: false
+			});
+
+			$(".check-with-label").change(function(e) {
+				// apply_category_filter();
+				console.log(e.target.id);
+				console.log('ID OF CURRENT TAB:');
+				console.log($(".calendartabs-pane-show").prop("id"));
+				switch ($(".calendartabs-pane-show").prop("id")) {
+					case "calendarcontent-1":
+						loadTiles();
+						break;
+					case "calendarcontent-2":
+						loadTable();
+						break;
+					case "calendarcontent-4":
+						loadYear();
+						break;
+					case "calendarcontent-5":
+						myLat = map.getCenter().lat();
+						myLng = map.getCenter().lng();
+						myZoom = map.getZoom()
+						load(ships);
+						break;
+					case "calendarcontent-6":
+						loadTiles();
+						break;
+				}
+				saveHistory();
+			});
+			$("#curEventsInput").click(function(e) {
+				// apply_category_filter();
+				if ($("#curEventsInput").prop("checked")) {
+					// alert('checked');
+					$("#from_date1").val(today);
+					$("#to_date1").val(myDate.toISOString().split('T')[0]);
+
+				} else {
+					$("#from_date1").val(today);
+					$("#to_date1").val("2025-12-31");
+
+				}
+				// $(".btnSearch").click();
+				console.log('ID OF CURRENT TAB:');
+				console.log($(".calendartabs-pane-show").prop("id"));
+				switch ($(".calendartabs-pane-show").prop("id")) {
+					case "calendarcontent-1":
+						// loadTiles();
+						break;
+					case "calendarcontent-1":
+						// loadTiles();
+						break;
+					case "calendarcontent-2":
+						// loadTable();
+						break;
+					case "calendarcontent-4":
+						// loadYear();
+						break;
+				}
+				// $(this).prop('checked', true);
+				// updatePage();
+				// saveHistory();
+			});
+
+
+			$("#select_container_1 .btnSearch").click(function() {
+				if ($("#from_date1").val() > $("#to_date1").val()) {
+					$("#msgBox").dialog({
+						my: "center",
+						at: "center",
+						of: screen,
+						title: "ERROR"
+					}).html('Start date > End date. <BR>Please correct');
+				}
+				loadTiles();
+				saveHistory();
+			});
+			//                                            loadTiles();
+			$("#select_container_1").change(function(element) {
+				//console.log("Handler for "+$( element ).val()+" called.");
+				console.log('changed element: ');
+				//                                                var target=element.target.name;
+				console.log(element.target.name);
+				//                                                console.log($('#select_container_1 [name="name_filter"]').val());
+				//                                                console.log(('#select_container_1 [name='+target+']').val());
+				if (element.target.name == "country") {
+					$("#calendarcontent-2 .country").countrySelect("selectCountry", $("#select_container_1 .country").countrySelect("getSelectedCountryData").iso2);
+				} else {
+					$('#select_container_2 [name=' + element.target.name + ']').val($('#select_container_1 [name=' + element.target.name + ']').val());
+				}
+				if ((element.target.name == "from_date" || element.target.name == "to_date") && ($("#from_date1").val() > $("#to_date1").val())) {
+					$("#msgBox").dialog({
+						my: "center",
+						at: "center",
+						of: screen,
+						title: "ERROR"
+					}).html('Start date > End date. <BR>Please correct');
+				}
+
+				//        console.log("name_filter:"+$("#name_filter").val());
+				//        console.log("status:"+$("#status").val());
+				switch ($(".calendartabs-pane-show").prop("id")) {
+					case "calendarcontent-1":
+						loadTiles();
+						break;
+					case "calendarcontent-2":
+						loadTable();
+						break;
+					case "calendarcontent-5":
+						myLat = map.getCenter().lat();
+						myLng = map.getCenter().lng();
+						myZoom = map.getZoom()
+						load(ships);
+						break;
+				}
+				loadTiles();
+				saveHistory();
+			});
+			$("#select_container_2").change(function(element) {
+				//console.log("Handler for "+$( element ).val()+" called.");
+				console.log('changed element: ');
+				//                                                var target=element.target.name;
+				console.log(element.target.name);
+				//                                                console.log($('#select_container_1 [name="name_filter"]').val());
+				//                                                console.log(('#select_container_1 [name='+target+']').val());
+				if (element.target.name == "country") {
+					$("#calendarcontent-1 .country").countrySelect("selectCountry", $("#select_container_2 .country").countrySelect("getSelectedCountryData").iso2);
+				} else {
+					$('#select_container_1 [name=' + element.target.name + ']').val($('#select_container_2 [name=' + element.target.name + ']').val());
+				}
+				if ((element.target.name == "from_date" || element.target.name == "to_date") && ($("#from_date1").val() > $("#to_date1").val())) {
+					$("#msgBox").dialog({
+						my: "center",
+						at: "center",
+						of: screen,
+						title: "ERROR",
+						open: function(event, ui) {
+							setTimeout("$('#msgBox').dialog('close')", 3000);
+						}
+					}).html('Start date > End date. <BR>Please correct');
+				}
+				//        console.log("name_filter:"+$("#name_filter").val());
+				//        console.log("status:"+$("#status").val());
+				switch (elPaneShow) {
+					case 'calendarcontent-1':
+						loadTiles();
+						break;
+					case 'calendarcontent-2':
+						loadTable();
+						break;
+					case 'calendarcontent-5':
+						showMap();
+						break;
+
+				}
+				saveHistory();
+			});
+
+
+			/* When the user clicks on the button,
+			 toggle between hiding and showing the dropdown content */
+			function calYear() {
+				document.getElementById("myDropdown").classList.toggle("show");
+			}
+
+			// Close the dropdown menu if the user clicks outside of it
+			window.onclick = function(event) {
+				if (!event.target.matches('.dropbtn')) {
+					var dropdowns = document.getElementsByClassName("dropdown-content");
+					var i;
+					for (i = 0; i < dropdowns.length; i++) {
+						var openDropdown = dropdowns[i];
+						if (openDropdown.classList.contains('show')) {
+							openDropdown.classList.remove('show');
+						}
+					}
+				}
+			}
+			$("#btnYear").hover(
+				function(e) {
+					calYear();
+					console.log(e.id);
+				},
+				function(e) {
+					if (!e && window.event)
+						e = event;
+					var goingto = e.relatedTarget || event.toElement;
+					//do something
+					if (goingto.id != 'cal2023drop' && goingto.id != 'cal2024drop')
+						$("#myDropdown").removeClass("show");
+				}
+			);
+			$("#btnLogin").hover(
+				function(e) {
+					$("#LoginDropdown").addClass("show");
+					console.log(e.id);
+				},
+				function(e) {
+					if (!e && window.event)
+						e = event;
+					var goingto = e.relatedTarget || event.toElement;
+					//do something
+					if (!e && goingto.id != 'dropDashboard' && goingto.id != 'dropLogout')
+						$("#LoginDropdown").removeClass("show");
+				}
+			);
+			$("#btnLogout").hover(
+				function(e) {
+					$("#LoginDropdown").addClass("show");
+					console.log(e.id);
+				},
+				function(e) {
+					if (!e && window.event)
+						e = event;
+					var goingto = e.relatedTarget || event.toElement;
+					//do something
+					if (!e && goingto.id != 'dropDashboard' && goingto.id != 'dropLogout')
+						$("#LoginDropdown").removeClass("show");
+				}
+			);
+			$(".dropdown-content").hover(function() {}, function() {
+				$(".dropdown-content").removeClass("show");
+			});
+			$(".datepicker").datepicker({
+				showOtherMonths: true,
+				selectOtherMonths: true,
+				dateFormat: 'yy-mm-dd',
+				defaultDate: '2022-01-01',
+				autoSize: true,
+				onClose: function(selectedDate) {
+					console.log($("#from_date1").val());
+					console.log($("#to_date1").val());
+					console.log(selectedDate);
+					console.log($("#from_date1").val() <= $("#to_date1").val());
+					if ($(this).val() != today) {
+						$("#curEventsInput").prop('checked', false);
+					}
+
+					//                                                    $(this).parent().next().children().focus();
+				}
+
+			});
+			$("#dropDashboard").click(function() {
+				window.location.href = 'dashboard.php';
+			});
+			$("#dropLogout").click(function() {
+
+				$.confirm({
+					useBootstrap: false,
+					title: 'Confirm Logout. ',
+					content: 'Logout?',
+					buttons: {
+						confirm: function() {
+							window.location.href = 'logout.php';
+						},
+						cancel: function() {
+							//                                                            $("#btnLogout").classList.remove("calendartabs-pane-show") ;
+							//                                                            $("#btnLogout").classList.remove("calendar-button-active") ;
+							//$.alert('Canceled!');
+						},
+					}
+				});
+				//                                                location.href = 'logout.php';
+			});
+
+			updatePage();
+		});
+
+		$("#contAll").change(function(e) {
+			// apply_category_filter();
+			console.log('ID OF CURRENT TAB:');
+			console.log($(".calendartabs-pane-show").prop("id"));
+			if ($("#contAll").prop("checked") == false) {
+				// $("#contAll").parent().hide();
+				$("#contEurope").parent().show();
+				$("#contAmericas").parent().show();
+				$("#contAsia").parent().show();
+				$("#contAfrica").parent().show();
+				$("#contOnline").parent().show();
+
+			} else {
+				// $("#contAll").parent().show();
+				$("#contEurope").parent().hide();
+				$("#contAmericas").parent().hide();
+				$("#contAsia").parent().hide();
+				$("#contAfrica").parent().hide();
+				$("#contOnline").parent().hide();
+
+			}
+
+			saveHistory();
+		});
+
+		// 1. Logic for "All Locations" Button
+		$("#contAll").change(function() {
+			// If "All Locations" is checked...
+			if ($(this).is(":checked")) {
+				// Find all other inputs with name="cat_cont" and uncheck them
+				$('input[name="cat_cont"]').not(this).prop('checked', false);
+			}
+			// Trigger your update function (based on your previous code)
+			saveHistory();
+		});
+
+		// 2. Logic for Specific Location Buttons (Europe, Americas, etc.)
+		// Select all inputs with name "cat_cont" EXCEPT the #contAll button
+		$('input[name="cat_cont"]').not('#contAll').change(function() {
+			// If a specific location is checked...
+			if ($(this).is(":checked")) {
+				// Uncheck the "All Locations" button
+				$("#contAll").prop('checked', false);
+			}
+
+			// Optional: If the user unchecks everything, you might want to auto-select "All"
+			// Uncomment the lines below if you want that behavior:
+			/*
+			if ($('input[name="cat_cont"]:checked').length === 0) {
+			    $("#contAll").prop('checked', true);
+			}
+			*/
+
+			// Trigger your update function
+			saveHistory();
+		});
+
+		// load(ships);
+		window.addEventListener("popstate", (event) => {
+			console.log(JSON.stringify(event.state));
+			console.log('history event');
+			updatePage(0);
+			//                                            alert(
+			//                                                    `location: ${document.location}, state: ${JSON.stringify(event.state)}`
+			//                                                    );
+		});
+		if (performance.navigation.type == 2) {
+			//                                            alert("Back button clicked");
+		}
+	</script>
+
+
+
+<footer class="footer">
+        <div class="footer-top">
+            <div class="footer-image">
+                <img src="./FIDE Calendar_files/footer-queen.png" alt="">
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-container container1">
+                <div class="footer-logo-container">
+                    <div class="footer-logo">
+                        <a href="https://calendar.fide.com/"><img src="./FIDE Calendar_files/logo1.png" alt=""></a>
+                    </div>
+                    <div class="header-title-container footer-title-container">
+                        <h2 class="header-title footer-title">International</h2>
+                        <h2 class="header-subtitle footer-subtitle">Chess Federation</h2>
+                    </div>
+                    <!--footer-logo-container-->
+                </div>
+                <div class="footer-menu-container">
+                    <div class="footer-menu">
+                        <ul class="footmenu">
+                            <a href="https://www.fide.com/"><li>HOME</li></a>
+                            <a href="https://www.fide.com/news"><li>NEWS</li></a>
+                            <a href="https://ratings.fide.com/"><li>RATINGS</li></a>
+                            <a href="https://www.fide.com/fide-world-championship-cycle-2026-2026"><li>CHAMPIONSHIP</li></a>
+                            <a href="https://calendar.fide.com/"><li>CALENDAR</li></a>
+                            <a href="https://www.fide.com/fide/about-fide"><li>FIDE</li></a>
+                            <a href="https://med.fide.com/" target="_blank"><li>Clean Sport</li></a>
+							<a href="https://www.fide.com/partners"><li>PARTNERS</li></a>							
+							<a href="https://shop.fide.com/" target="_blank"><li>SHOP</li></a>
+							<a href="https://www.fide.com/contacts"><li>CONTACTS</li></a>
+							<a href="https://old.fide.com/"><li>ARCHIVE</li></a>
+							<a href="https://www.fide.com/privacy"><li>PRIVACY POLICY</li></a>
+							
+							
+                        </ul>
+                    </div>
+                   
+                    <div class="footer-copyright">
+                        <p>© 2026 FIDE International Chess Federation. All Rights Reserved. No part of this site may be reproduced, stored in a retrieval system or transmitted in any way or by any means (including photocopying, recording or storing it in any medium by electronic means), without the written permission of FIDE International Chess Federation.</p>
+                    </div>
+                    <!--footer-menu-container-->
+                </div>
+                <div class="footer-social">
+                    <div class="footer-social-button">
+                        <a href="https://www.twitch.tv/fide_chess">
+                            <img src="./FIDE Calendar_files/footer-twitch.svg" alt="">
+                        </a>
+                    </div>
+                    <div class="footer-social-button">
+                        <a href="https://twitter.com/FIDE_chess">
+                            <img src="./FIDE Calendar_files/twitterx_footer.svg" alt="twitter">
+                        </a>    
+                    </div>
+                    <div class="footer-social-button">
+                        <a href="https://www.instagram.com/fide_chess/">
+                            <img src="./FIDE Calendar_files/footer-instagram.svg" alt="instagram">
+                        </a>
+                    </div>
+                    <div class="footer-social-button">
+                        <a href="https://www.facebook.com/ChessFIDE/">
+                            <img src="./FIDE Calendar_files/footer-facebook.svg" alt="facebook">
+                        </a>
+                    </div>
+                    <div class="footer-social-button youtube_logo">
+                        <a href="https://www.youtube.com/channel/UC9B47GnzCRFHTT1BIBWvStQ">
+                            <img src="./FIDE Calendar_files/footer-youtube.svg" alt="youtube">
+                        </a>
+                    </div>
+                    <div class="footer-social-button">
+                        <a href="https://calendar.fide.com/calendar.php?name_filter=&amp;from_date=2026-08-06&amp;to_date=2026-12-31&amp;country=all&amp;show=tiles&amp;page=1&amp;cat_filter=&amp;cat_cont=2&amp;event_type=undefined&amp;time_control=undefined">
+                            <img src="./FIDE Calendar_files/footer-twitch.svg" alt="twitch">
+                        </a>
+                    </div>
+                    <div class="footer-social-button">
+                        <a href="https://www.tiktok.com/@fide_chess">
+                            <img src="./FIDE Calendar_files/tiktok_footer.svg" alt="tiktok">
+                        </a>
+                    </div>
+                    <div class="footer-social-button">
+                        <a href="https://www.linkedin.com/company/48892238">
+                            <img src="./FIDE Calendar_files/footer-linkedin.svg" alt="linkedin">
+                        </a>
+                    </div>
+                    <!--footer-social-->
+                </div>
+                <!--footer-container-->
+            </div>
+        </div>
+    
+        <div class="up-button-container">
+            <a href="https://calendar.fide.com/calendar.php?name_filter=&amp;from_date=2026-08-06&amp;to_date=2026-12-31&amp;country=all&amp;show=tiles&amp;page=1&amp;cat_filter=&amp;cat_cont=2&amp;event_type=undefined&amp;time_control=undefined#">
+                <img src="./FIDE Calendar_files/up-button.png" alt="">
+            </a>
+        </div>
+    </footer>
+	<style>
+
+.container1
+{
+	max-width: 1440px;
+	padding: 10px;
+	margin: auto;
+}
+.footmenu a, .footmenu a:visited, .footmenu a:active, .footmenu a:hover
+{
+  font-family: "Roboto", Sans-serif;
+  font-size: 14px;
+  font-weight: 400;	
+  text-decoration: none;
+  color:#24305e;
+}
+.footer
+{
+	margin-top: 0px;
+	width: 100vw;
+        max-width: 100%;
+}
+.footer-menu ul
+{
+	flex-direction: row;
+    flex-wrap: wrap;
+	gap: 10px;
+	justify-content: space-evenly;
+}
+
+.footer-logo-container {
+  max-width: 420px;
+  width: 20%;
+}
+
+.footer-image {
+  position: absolute;
+  right: 140px;
+  bottom: 60px;
+  z-index: 1;
+}
+
+.footer-social-button img {
+  padding: 14px;
+  height: 50px;
+}
+.youtube_logo img
+{
+    width: 50px !important;
+}
+
+.up-button-container a {
+    display: inline-block;
+    position: absolute;
+    right: 50px;
+    bottom: 17px;
+    width: 80px;
+    height: 80px;
+    z-index: 300;
+}
+
+.up-button-container img {
+    position: absolute;
+    z-index: 300;
+    bottom: 0px;
+    right: 0px;
+}
+
+@media screen and (max-width: 1024px) {
+.container1 {
+	width:100%;
+	margin: 0 auto;
+}
+
+ .header-title-container {
+    padding-left: 8px;
+  }
+  .footer-social {
+    padding-left: 0px;
+    }
+    .footer-social-button:first-child {
+    display: none;
+}
+}
+@media screen and (min-width: 575px) and (max-width: 1024px) {
+  .footer-menu-container {
+    width: 70%;
+    padding-left: 10px;
+  }
+  .footer-image {
+    left: 15%;
+    bottom: 40%;
+  }
+   .footer-title-container {
+    padding-left: 0px;
+    padding-top: 0px;
+    
+    text-align: left;
+  }
+   .footer-copyright p {
+    padding-top: 10px;
+    line-height: 14px;
+	font-size: 12px;
+  }
+   .footer-social{
+    justify-content:left;
+    width: 100%;
+    }
+
+  .footer-social-button img {
+    padding: 16px;
+  }
+  .footer-logo {
+    padding: 0px 0px 10px 10px;
+}
+.up-button-container a {
+    right: 20px;
+    bottom: 56px;
+}
+}
+
+@media screen and (max-width: 574px) {
+    
+.header-title, .header-subtitle {
+    padding-left: 0px;
+    }  
+  .footer-menu-container {
+    width: 75%;
+    align-items: start;
+	padding-left: 0;
+  }
+   .footer-copyright {
+    width: 99%;
+    margin-left: 0;
+  }
+  .footer-image {
+    top: 3%;
+    left: 40%;
+  }
+  .footer-image img {
+        width: 60px;
+        margin-left: 150%;
+    }
+    .footer-social{
+    justify-content: center;
+    width: 100%;
+    }
+  .footer-social-button img {
+    padding: 8px;
+    width: 38px;
+  }
+
+.footer-menu ul
+{
+	flex-direction: row;
+    flex-wrap: wrap;
+	padding-left:0;
+}
+
+.footer-title-container {
+    padding-left: 0px;
+    padding-top: 0px;
+    
+    text-align: left;
+  }
+
+.footer-menu {
+  display: block;
+  width: 100%;
+  padding-top: 20px;
+  }
+.footer-logo-container img
+	{
+		margin:auto;
+	}
+	
+.footer-title-container {
+    
+    width: 100%;
+  }
+.footer-subtitle {
+	width: 100%;
+	}
+.footer-logo-container {
+  padding-top: 15px;
+	width: 20%;
+	}
+.footer-bottom {
+    padding-bottom: 10px;
+	padding-top: 10px;
+  }
+
+.footer-logo-container {
+  
+	width: 100%;
+	}
+.footmenu a li {
+    padding-top: 10px;
+  }
+.footer-menu ul
+{
+	flex-direction: column;
+    flex-wrap: wrap;
+    
+}
+.footer-menu-container {
+    width: 100%;
+    align-items: start;
+	padding-left: 0;
+	
+  }
+.footer-title-container {
+    padding-left: 0px;
+    padding-top: 0px;
+    
+    text-align: center;
+  }
+.up-button-container a {
+    right: 20px;
+    bottom: 807px;
+    width: 50px;
+    height: 50px;
+}
+
+}
+	</style><div id="cboxOverlay" style="display: none;"></div><div id="colorbox" class="" role="dialog" tabindex="-1" style="display: none;"><div id="cboxWrapper"><div><div id="cboxTopLeft" style="float: left;"></div><div id="cboxTopCenter" style="float: left;"></div><div id="cboxTopRight" style="float: left;"></div></div><div style="clear: left;"><div id="cboxMiddleLeft" style="float: left;"></div><div id="cboxContent" style="float: left;"><div id="cboxTitle" style="float: left;"></div><div id="cboxCurrent" style="float: left;"></div><button type="button" id="cboxPrevious"></button><button type="button" id="cboxNext"></button><button type="button" id="cboxSlideshow"></button><div id="cboxLoadingOverlay" style="float: left;"></div><div id="cboxLoadingGraphic" style="float: left;"></div></div><div id="cboxMiddleRight" style="float: left;"></div></div><div style="clear: left;"><div id="cboxBottomLeft" style="float: left;"></div><div id="cboxBottomCenter" style="float: left;"></div><div id="cboxBottomRight" style="float: left;"></div></div></div><div style="position: absolute; width: 9999px; visibility: hidden; display: none; max-width: none;"></div></div><div id="ui-datepicker-div" class="ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all"></div></body></html>

@@ -1,7 +1,7 @@
 /**
  * Per-site branding for scrapers / upcoming hubs.
  * Keep logos in public/sources/ and ids aligned with competitions.source
- * plus migration 0007 ingestion_sources.
+ * plus migration 0007 / 0019 ingestion_sources.
  */
 
 export type IngestionSourceStatus = "live" | "soon";
@@ -9,7 +9,12 @@ export type IngestionSourceStatus = "live" | "soon";
 export type IngestionSource = {
   id: string;
   /** Matches competitions.source when applicable. */
-  competitionSource?: "tla_scrape" | "cca_scrape";
+  competitionSource?:
+    | "tla_scrape"
+    | "cca_scrape"
+    | "onlinereg_scrape"
+    | "chess_results_scrape"
+    | "fide_calendar_scrape";
   name: string;
   href: string;
   logoUrl: string;
@@ -37,28 +42,33 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     status: "live",
   },
   {
-    id: "onlinereg",
+    id: "onlinereg_scrape",
+    competitionSource: "onlinereg_scrape",
     name: "OnlineRegistration.cc",
-    href: "https://onlineregistration.cc",
+    href: "https://onlineregistration.cc/tournaments/index.php",
     logoUrl: "/sources/onlinereg.svg",
     blurb: "Organizer registration hub used by many US events.",
-    status: "soon",
+    status: "live",
   },
   {
-    id: "chess_results",
+    id: "chess_results_scrape",
+    competitionSource: "chess_results_scrape",
     name: "Chess-Results.com",
     href: "https://chess-results.com",
     logoUrl: "/sources/chess-results.svg",
-    blurb: "Global pairings and results (Swiss-Manager publishes here).",
-    status: "soon",
+    blurb:
+      "Global pairings and results (Swiss-Manager). Causey indexes USA upcoming OTB events.",
+    status: "live",
   },
   {
-    id: "fide_calendar",
+    id: "fide_calendar_scrape",
+    competitionSource: "fide_calendar_scrape",
     name: "FIDE Calendar",
-    href: "https://fide.com/calendar",
+    href: "https://calendar.fide.com/calendar.php",
     logoUrl: "/sources/fide.svg",
-    blurb: "Official international events — World Cup, Candidates, Grand Swiss.",
-    status: "soon",
+    blurb:
+      "Official international calendar — World events, Circuit, Continental stages.",
+    status: "live",
   },
   {
     id: "state_affiliates",

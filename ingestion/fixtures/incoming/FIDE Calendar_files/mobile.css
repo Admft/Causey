@@ -1,0 +1,614 @@
+@media screen and (max-width: 1024px) {
+
+    .container {
+        width: 944px;
+        margin: 0 auto;
+    }   
+    .page-title {
+        font-size: 36px;
+        line-height: 42px;
+    } 
+    .none {
+        display: none;
+    }
+
+    /*HEADER*/  
+
+    .header-container {
+        padding-top: 20px;
+        display: block;
+    }
+    .header-logo-container {
+        padding-bottom: 10px;
+    }
+    .header-logo-container img {
+        width: 70px;
+    }
+    .header-title-container {
+        padding-left: 10px;
+    }
+    .header-title {
+        font-size: 14px;
+        line-height: 16px;
+    }
+    .header-subtitle {
+        font-size: 14px;
+        line-height: 16px;
+    }
+    .menu-container {
+        margin: 0px;
+    }
+    .header-search-container {
+        position: absolute;
+        top: 85px;
+        right: 40px;
+    }
+    .main-submenu button {
+        margin-right: 13px;
+    }
+    .social {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        align-items: center;
+        top: 30px;
+        right: 40px;
+    }
+    .social-aside {
+        padding-bottom: 0px;
+        padding-right: 0px;
+        padding-left: 20px;
+    }
+
+    /*FOOTER*/
+    .footer-bottom {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+    .footer-container {
+        flex-wrap: wrap;
+    }
+    .footer-top {
+        height: 110px;
+    }
+    .footer-logo img {
+        width: 70px;
+    }
+    .footer-title-container {
+        padding-left: 0px;
+        padding-top: 10px;
+        width: 110px;
+    }
+    .footmenu {
+        list-style-type: none;
+    }
+    .footer-menu-container {
+        width: 830px;
+        padding-left: 51px;
+    }
+    .footer-menu ul {
+        padding-right: 0px;
+    }
+    .footer-copyright p {
+        padding-top: 40px;
+        line-height: 22px;
+    }
+    .footer-social {
+        margin-left: 0px;
+        padding-top: 23px;
+        padding-left: 80px;
+    }
+    .footer-social-button {
+        margin: 5px;
+    }
+    .footer-social-button img {
+        padding: 17px;
+    }
+    .up-button-container img {
+        right: 40px;
+        bottom: 50px;
+        width: 60px;
+    }
+    .footer-image img {
+        width: 120px;
+    }
+    .footer-image {
+        left: 107px;
+        bottom: 153px;
+    }
+
+    /*RATINGS*/
+
+    .ratings-input input {
+        width: 200px;
+    }
+    .rating-block-header h2 {
+        font-style: normal;
+        font-weight: 400;
+        font-size: 36px;
+        line-height: 42px;
+    }
+    .ratings-blocks {
+        display: block;
+        padding-top: 0px;
+    }
+    .rating-block {
+        width: 100%;
+        margin-bottom: 40px;
+    }
+    .rating-top-text {
+        line-height: 25px;
+        width: 20%;
+    }
+    .rating-name {
+        width: 45%;
+    }
+
+    /*RANKINGS*/
+
+    .ranking-row, .rankings-table-header {
+        padding: 10px 20px;
+    }
+    .rank-arrow {
+        padding-left: 10px;
+    }
+    .rank-block p {
+        font-size: 16px;
+        line-height: 22px;
+    }
+    .rank-number-block {
+        width: 9%;
+    }
+    .rank-name-block {
+        width: 35%;
+    }
+    .rank-federations-block {
+        width: 18%;
+    }
+
+    /*TOURNAMENTS*/
+
+    .tour-header {
+        display: block;
+    }
+    .tour-header-right {
+        width: 100%;
+        justify-content: normal;
+        padding-bottom: 40px;
+    }
+    .tour-select {
+        margin-right: 40px;
+        width: 300px;
+    }
+    .tour-inf-block {
+        width: 9%;
+    }
+    .tour-name-block {
+        width: 35%;
+    }
+    .tour-city-block {
+        width: 24%;
+    }
+
+    /*TOURNAMENT-DETAIL*/
+
+    .tour-d-table {
+        margin-top: 10px;
+    }
+    .tour-d-head-left {
+        width: 70%;
+    }
+    .tour-d-body {
+        display: block;
+    }
+    .tour-d-body-left {
+        width: 100%;
+    }
+    .tour-d-left-start {
+        width: 45%;
+    }
+    .tour-d-left-end {
+        width: 82%;
+    }
+    .tour-d-chief {
+        flex-wrap: wrap;
+    }
+    .tour-d-arbiter-card {
+        width: 45%;
+    }
+    .tour-d-right {
+        position: absolute;
+        left: 35px;
+        top: 1510px;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        align-items: baseline;
+        padding-bottom: 120px;
+    }
+    .tour-d-right p {
+        padding-left: 20px;
+    }
+    .tour-d-button button {
+        padding: 10px 67px;
+    }
+
+    /*FIDE-TITLES*/
+    .rank-federations-block {
+        width: 9%;
+    }
+    .titles-chevrone {
+        width: 0%;
+    }
+    .titles-publ-column {
+        width: 10%;
+    }
+    .titles-name-column {
+        width: 37%;
+    }
+    .rank-name-block {
+        width: 37%;
+    }
+    .title-bday {
+        width: 9%;
+    }
+    .title-fed {
+        width: 11%;
+    }
+
+    /*PROFILE*/
+
+    .profile-section {
+        display: block;
+    }
+    .profile-left {
+        width: 100%;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        margin-bottom: 20px;
+        padding: 40px;
+    }
+    .profile-games {
+        display: block;
+        border: none;
+    }
+    .profile-game {
+        padding-bottom: 40px;
+    }
+    .profile-info {
+        width: 450px;
+        padding-left: 51px;
+    }
+    .profile-share-stroke {
+        position: absolute;
+        top: 200px;
+        right: 70px;
+    }
+    .profile-share-twitter {
+        position: absolute;
+        top: 245px;
+        right: 90px;
+    }
+    .profile-share-facebook {
+        position: absolute;
+        top: 325px;
+        right: 90px;
+    }
+    .fide-council {
+        width: 201px;
+        padding: 40px 20px;
+    }
+    .profile-right {
+        width: 944px;
+    }
+    .profile-rating-images {
+        padding-top: 60px;
+    }
+    .total-games-row, .statistics-bar, .statistics-top {
+        max-width: 864px;
+    }
+    .statistics-scale {
+        width: 760px;
+    }
+    .statistics-standart-games {
+        max-width: 944px;
+    }
+
+    /*CALENDAR*/
+
+    .calendar-t-tile {
+        width: 49%;
+    }
+    .calendar-h-date-container {
+        width: 13%;
+    }
+    .calendar-h-datetime, .time-control-type {
+        width: 17%;
+    }
+    .calendar-h-point {
+        width: 24%;
+    }
+    .calendar-h-name {
+        font-size: 16px;
+    }
+    .calendar-h-date {
+        font-size: 24px;
+    }
+    .fide-tournament p, .online-tournament p, .calendar-h-start, .calendar-h-city, .calendar-h-country {
+        font-size: 14px;
+    }
+    .local-event h6 {
+        font-size: 12px;
+    }
+    .mothly-event {
+        padding: 10px;
+    }
+    .mothly-day {
+        padding: 10px;
+    }
+    .fide-event h6 {
+        font-size: 12px;
+    }
+
+    /*EVENT DETAILED*/
+
+    .event-container {
+        display: block;
+    }
+    .event-left {
+        width: 944px;
+    }
+    .event-hero-left {
+        width: 539px;
+    }
+    .event-hero-left img {
+        width: 100%;
+    }
+    .event-footer {
+        padding-top: 40px;
+        width: 630px;
+    }
+    .event-right {
+        width: 100%;
+    }
+    
+    /*HANDBOOK*/
+
+    .charter-rules-header h2 {
+        text-align: left;
+    }
+    .handbook-input input {
+        width: 100%;
+    }
+
+    /*HANDBOOK DETAILED*/
+
+    .detail-body {
+        display: block;
+    }
+    .detail-right {
+        width: 944px;
+        margin-left: 0px;
+    }
+    .detail-left {
+        width: 100%;
+    }
+    .detail-button {
+        width: fit-content;
+    }
+
+    /*DIRECTORY OFFICIALS*/
+
+    .directory-left {
+        width: 280px;
+    }
+    .directory-right {
+        width: 623px;
+    }
+    .directory-right-head {
+        padding: 40px 20px;
+    }
+    .directory-logo img {
+        width: 141px;
+    }
+    .directory-office-info {
+        padding-left: 20px;
+    }
+    .directory-card {
+        display: block;
+    }
+    .directory-card-right {
+        width: 583px;
+    }
+    .right-card {
+        justify-content: normal;
+        flex-wrap: wrap;
+    }
+    .right-card-row {
+        width: 182px;
+    }
+
+    /*DIRECTORY FEDERATIONS*/
+    
+    .fed-container {
+        margin-bottom: 120px;
+    }
+    .fed-body-container {
+        padding: 40px 20px;
+    }
+    .fed-disclaimer {
+        padding: 40px 20px;
+    }
+    .fed-column {
+        width: 150px;
+    }
+    .fed-image {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        justify-content: center;
+    }
+    .fed-input input {
+        width: 301px;
+    }
+
+    /*FEDERATION DETAIL*/
+
+    .fed-d-body {
+        padding: 40px 20px;
+    }
+    .fed-d-image img {
+        width: 261px;
+    }
+    .fed-d-top {
+        flex-wrap: wrap;
+    }
+    .fed-d-info {
+        width: 282px;
+    }
+    .fed-d-social {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        justify-content: space-between;
+        width: 605px;
+        align-items: center;
+        margin-left: auto;
+        padding-top: 40px;
+    } 
+    .fed-d-social-links {
+        padding-top: 0px;
+        padding-right: 38px;
+    }
+    .fed-d-button {
+        margin: 0 0;
+    }
+    .fed-d-soc {
+        margin-right: 20px;
+    }
+    .fed-directory-card {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        padding: 20px;
+        justify-content: space-between;
+    }
+    .fed-directory-card-right {
+        width: 410px;
+    }
+    .fed-d-pattern {
+        background-image: none;
+    }
+    .fed-d {
+        background-image: none;
+    }
+    .fed-d-container {
+        margin-bottom: 120px;
+    }
+    .fed-right-card {
+        justify-content: space-between;
+    }
+    .fed-directory-card-info {
+        padding-left: 20px;
+    }
+
+    /*PROFILE-EDIT*/
+    .edit-container {
+        margin-bottom: 120px;
+    }
+    .edit-row {
+        display: block;
+    }
+    .edit-right {
+        width: 563px;
+    }
+    .edit-up-button {
+        width: 202px;
+    }
+    .edit-up-button button {
+        background-color: rgba(0, 0, 0, 0);
+        border: 2px solid #24305E;
+        padding: 10px 40px;
+        color: #24305E;
+    }
+    .edit-row {
+        padding-bottom: 20px;
+    }
+    .edit-row .edit-input:first-child {
+        padding-bottom: 20px;
+    }
+    .edit-input-max input, .edit-input input, .edit-input select {
+        width: 100%;
+    }
+    .edit-bottom-button {
+        margin-left: auto;
+    }
+
+    /*ADMIN FORM CREATE*/
+
+    .create-body-left, .create-body-right {
+        width: 412px;
+    }
+    .create-image img {
+        width: 100%;
+    }
+    .create-button-container {
+        display: block;
+    }
+    .create-button-text {
+        padding-left: 0px;
+        padding-top: 20px;
+    }
+    .create-fest-container {
+        display: block;
+    }
+    .create-super-button {
+        margin-top: 20px;
+        margin-left: auto;
+    }
+    .create-edit-input {
+        width: 412px;
+    }
+    .create-input {
+        margin-bottom: 20px;
+    }
+    .edit-image img {
+        width: 100%;
+    }
+    .create-body-bottom {
+        margin-top: 40px;
+        padding-bottom: 40px;
+    }
+    .create-checkbox {
+        width: 412px;
+    }
+    .venue-input {
+        width: 100%;
+    }
+    .right-row {
+        width: 412px;
+    }
+    .create-container {
+        margin-bottom: 120px;
+    }
+
+    /*CABINET EVENTS*/
+
+    .cabinet-card {
+        width: 301px;
+    }
+    .cabinet-image img {
+        width: 100%;
+    }
+    .cabinet-card {
+        margin-right: 20px;
+    }
+}
+

@@ -23,12 +23,13 @@ Run these in the Supabase SQL editor if not already applied:
 2. **`0005_ingestion_ops.sql`** — `competition_sources`, `scrape_runs`, `fingerprint`, `canonical_id`
 3. **`0006_competition_image_url.sql`** — optional `image_url` cover from scrape
 4. **`0007_pathway_enrichment.sql`** — `ingestion_sources` logos, `pathway_*` columns, `enrichment_runs`
+5. **`0019_hub_scrape_sources.sql`** — OnlineReg / Chess-Results / FIDE source enums + live `ingestion_sources`
 
 ## Provenance
 
 | Column / table | Meaning |
 | --- | --- |
-| `competitions.source` | Pipeline: `manual`, `tla_scrape`, `cca_scrape`, `organizer` |
+| `competitions.source` | Pipeline: `manual`, `tla_scrape`, `cca_scrape`, `organizer`, `onlinereg_scrape`, `chess_results_scrape`, `fide_calendar_scrape` |
 | `competitions.source_url` | Exact upstream page scraped |
 | `competitions.fingerprint` | Normalized name\|date\|state\|zip for cross-source matching |
 | `competitions.canonical_id` | Set on archived duplicates → points at the surviving row |
@@ -40,14 +41,22 @@ Search only shows `status='published'` rows **without** `canonical_id` (duplicat
 ## Commands
 
 ```bash
-npm run scrape:tla          # US Chess upcoming-tournaments
-npm run scrape:cca          # Continental Chess (chesstour.com)
-npm run scrape:all          # TLA then CCA (recommended for dedupe)
+npm run scrape:tla              # US Chess upcoming-tournaments
+npm run scrape:cca              # Continental Chess (chesstour.com)
+npm run scrape:onlinereg        # OnlineRegistration.cc index
+npm run scrape:chess-results    # Chess-Results USA search
+npm run scrape:fide             # FIDE Calendar tiles
+npm run scrape:all              # All five in sequence (dedupe-friendly)
 
 SCRAPE_UPSERT_ONLY=1 npm run scrape:tla   # re-upsert staged JSON
 SCRAPE_HTML_FILE=… SCRAPE_SKIP_DETAIL=1 npm run scrape:tla
 SCRAPE_MAX_PAGES=2 npm run scrape:tla
+SCRAPE_HTML_FILE=ingestion/fixtures/fide-calendar-tiles.html npm run scrape:fide
 ```
+
+Standing hints (`details.catalog_standing` / `catalog_class`) come from FIDE tile
+classes, Chess-Results player counts, and OnlineReg entry counts — used by
+`lib/event-standing.ts` for honest labels (not a prestige score).
 
 ## Pathways (site + scrapers)
 
