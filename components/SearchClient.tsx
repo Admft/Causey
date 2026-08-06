@@ -245,12 +245,13 @@ export function SearchClient() {
           <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
             Chess
           </p>
-          <h1 className="mt-2 max-w-[18ch] font-display text-display-lg font-bold tracking-tight text-foreground">
-            Every scholastic chess tournament near you.
+          <h1 className="mt-2 max-w-[20ch] font-display text-display-lg font-bold tracking-tight text-foreground">
+            Scholastic chess tournaments near you.
           </h1>
           <p className="mt-3 max-w-lg text-md text-muted">
-            Enter a zip code to see what&rsquo;s in reach, with the entry fee and
-            who can play shown before you commit to anything.
+            Search the events Causey has indexed so far — coverage is growing
+            and still incomplete. Enter a zip to see what&rsquo;s in reach, with
+            entry fee and who can play shown before you commit.
           </p>
           {/* One search cluster: name it, or place it. Keyword applies as you
               type; zip + radius apply on submit/blur. All three controls share

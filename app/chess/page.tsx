@@ -7,7 +7,7 @@ import { TournamentSources } from "@/components/TournamentSources";
 export const metadata: Metadata = {
   title: "Scholastic chess competitions",
   description:
-    "Search US scholastic chess tournaments by zip code and radius. Entry fees and section eligibility shown up front, with qualification pathways to national invitationals.",
+    "Search indexed US scholastic chess tournaments by zip code and radius. Coverage is incomplete — confirm fees and eligibility on each event.",
 };
 
 export default function ChessSearchPage() {

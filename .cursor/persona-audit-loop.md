@@ -50,24 +50,17 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
-- 2026-08-06 — Parent desk registration inbox: unfinished organizer registration for linked students + mark-complete; migration `0022` (+ applied missing `0015` remotely).
-- 2026-08-06 — Invite-first join, coach org mission, event next-action, role workspaces
+- 2026-08-06 — Discovery conversion honesty: `/chess` drops “every tournament”; home demotes unfinished types to a footnote; HomeAccountPitch is student-primary with coach in disclosure.
+- 2026-08-06 — Parent registration inbox, invite-first join, coach org mission, event next-action, role workspaces
 
-## Backlog candidates (refreshed tick 3)
+## Backlog candidates (tick 5)
 
 ### P0 / first-session killers
-- Coach `/orgs/[slug]` still panel soup — **done 2026-08-06**
-- Join link forces Sign in before Create account — **done 2026-08-06**
-- Parent desk only counts RSVPs; organizer registration lives on `/me` — **done 2026-08-06**
+- Parent desk registration — **done**
+- Discovery overclaim + coach-weighted home conversion — **done 2026-08-06**
 
-### P1 / trust & IA
-- HomeAccountPitch coach-weighted + `/chess` overclaim
+### P1
 - Mobile chrome stack
 - Manage tournament orphaned from org subnav
 - Admin home not moderation-first
 - District admin distinct landing (schema-gated)
-
-### Later / schema-gated
-- Real district shell + audience scopes + aggregate reporting
-- Role split coach vs org admin vs district admin
-- Bulk provisioning guided flow

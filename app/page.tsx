@@ -57,24 +57,25 @@ export default function CompetitionTypesPage() {
       <section className="section-rule">
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
           <h2 className="font-display text-display font-bold tracking-tight text-foreground">
-            What Causey covers
+            Chess is ready to search
           </h2>
           <p className="mt-2 max-w-prose text-base text-muted">
-            Every type below is on the roadmap. Only chess has real listings
-            behind it today.
+            Other competition types are on the roadmap. Only chess has real
+            listings behind it today — and those listings are still being filled
+            in.
           </p>
-          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="mt-8">
             <Link
               href="/chess"
-              className="card-lift group rounded-2xl border border-brand-red/30 bg-surface p-6 shadow-[var(--shadow-card)]"
+              className="card-lift group block max-w-2xl rounded-2xl border border-brand-red/30 bg-surface p-6 shadow-[var(--shadow-card)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-                    Chess first
+                    Chess
                   </p>
                   <h3 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
-                    Chess
+                    Chess tournaments
                   </h3>
                 </div>
                 <span
@@ -85,34 +86,30 @@ export default function CompetitionTypesPage() {
                 </span>
               </div>
               <p className="mt-3 max-w-md text-base text-muted">
-                Find scholastic tournaments near you and trace qualification
-                pathways from local events to national invitationals.
+                Find indexed scholastic events near a zip code, with fees and
+                section eligibility up front.
               </p>
               <span className="mt-6 inline-flex text-sm font-semibold text-brand-red">
-                Explore chess competitions
+                Search chess tournaments
               </span>
             </Link>
+          </div>
 
-            {upcomingCompetitionTypes.map((type) => (
-              <div
-                key={type.name}
-                className="rounded-2xl border border-line bg-surface-soft p-6"
-                aria-disabled="true"
-              >
-                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                  Not built yet
-                </p>
-                <h3 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
-                  {type.name}
-                </h3>
-                <p className="mt-3 max-w-md text-base text-muted">
-                  {type.description}
-                </p>
-                <span className="mt-6 inline-flex text-sm font-semibold text-muted">
-                  Not available yet
-                </span>
-              </div>
-            ))}
+          <div className="mt-10 max-w-2xl border-t border-line pt-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+              Also planned
+            </p>
+            <ul className="mt-3 flex flex-col gap-2 text-sm text-muted">
+              {upcomingCompetitionTypes.map((type) => (
+                <li key={type.name}>
+                  <span className="font-semibold text-muted-strong">
+                    {type.name}
+                  </span>
+                  {" — "}
+                  {type.description} Still on the roadmap.
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
