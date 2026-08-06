@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
-import { SEARCH_LOAD_ALL_LIMIT } from "@/lib/schemas";
+import { SEARCH_LOAD_ALL_LIMIT, type SearchSort } from "@/lib/schemas";
 import { CompetitionCard } from "@/components/CompetitionCard";
 import { SearchFilters, type FilterState } from "@/components/SearchFilters";
 import {
@@ -50,12 +50,14 @@ function readParams(params: URLSearchParams): {
   keyword: string;
   zip: string;
   radius: string;
+  sort: SearchSort;
   filters: FilterState;
 } {
   return {
     keyword: params.get("q") ?? "",
     zip: params.get("zip") ?? "",
     radius: params.get("radius") ?? "50",
+    sort: params.get("sort") === "soonest" ? "soonest" : "popular",
     filters: {
       state: params.get("state") ?? "",
       source: params.get("source") ?? "",
@@ -87,6 +89,7 @@ export function SearchClient() {
   const [zip, setZip] = useState(initial.zip);
   const [zipError, setZipError] = useState<string | null>(null);
   const [radius, setRadius] = useState(initial.radius);
+  const [sort, setSort] = useState<SearchSort>(initial.sort);
   const [filters, setFilters] = useState<FilterState>(initial.filters);
   const [status, setStatus] = useState<Status>({ kind: "loading" });
   const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
@@ -125,8 +128,9 @@ export function SearchClient() {
     if (filters.max_fee_dollars) p.set("max_fee", filters.max_fee_dollars);
     if (filters.date_from) p.set("date_from", filters.date_from);
     if (filters.date_to) p.set("date_to", filters.date_to);
+    if (sort !== "popular") p.set("sort", sort);
     return p;
-  }, [keyword, zip, radius, filters]);
+  }, [keyword, zip, radius, filters, sort]);
 
   const buildApiParams = useCallback(
     (limit: number, offset: number) => {
@@ -365,7 +369,11 @@ export function SearchClient() {
                     </span>
                     {keyword.trim() && ` matching “${keyword.trim()}”`}
                     {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
-                    , soonest and closest first.
+                    {sort === "popular"
+                      ? zip
+                        ? ", prioritizing closer 25-mile ranges and then real save and registration interest."
+                        : ", ranked by real save and registration interest."
+                      : ", soonest first."}
                     {shown < total && (
                       <span className="text-muted">
                         {" "}
@@ -375,6 +383,20 @@ export function SearchClient() {
                   </p>
                   <div className="flex flex-wrap items-center gap-3">
                     <ResultsLayoutToggle value={layout} onChange={setLayout} />
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="result-sort" className="text-xs font-semibold text-muted-strong">
+                        Sort
+                      </label>
+                      <select
+                        id="result-sort"
+                        className="field h-9 w-auto py-0 pr-8 text-sm"
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value as SearchSort)}
+                      >
+                        <option value="popular">{zip ? "Popular nearby" : "Popular first"}</option>
+                        <option value="soonest">Soonest first</option>
+                      </select>
+                    </div>
                     <div className="flex items-center gap-2">
                       <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
                         Load

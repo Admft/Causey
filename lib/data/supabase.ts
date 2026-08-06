@@ -64,7 +64,7 @@ export class SupabaseDataSource implements DataSource {
     const origin = filters.zip ? await this.getZip(filters.zip) : null;
     const radius = filters.radius_miles ?? 50;
 
-    // Fast path: no geo sort needed — page in SQL by start_date.
+    // Fast path: no geo sort needed — page in SQL using the requested rank.
     // Skip when JS filters need the full set (sections, name, featured).
     const canPageInSql =
       !origin && !hasSectionFilters(filters) && !filters.q && !filters.featured;
@@ -104,8 +104,12 @@ export class SupabaseDataSource implements DataSource {
     }
 
     if (canPageInSql) {
+      if ((filters.sort ?? "popular") === "popular") {
+        query = query.order("interest_count", { ascending: false });
+      }
       query = query
         .order("start_date", { ascending: true })
+        .order("id", { ascending: true })
         .range(offset, offset + limit - 1);
     } else {
       query = query.order("start_date", { ascending: true });

@@ -19,7 +19,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 
 ## Done
 - [x] 2026-08-05 — Link affordances feel alive and keyboard-equal: shared `.nudge-x` utility (design-system §10/§16, brand easing) drives every → / ↗ mark on home, footer, and sources; card-lift and the nudge now also trigger on focus-visible; the two hand-rolled `group-hover:translate-x-1` arrows that ignored prefers-reduced-motion are replaced by the guarded utility
-- [x] 2026-08-05 — Search now defaults to honest popularity from distinct saves and registration starts, keeps nearer distance bands ahead of farther events, and offers an explicit soonest-first option
+- [x] 2026-08-05 — Search now defaults to honest popularity from distinct saves and registration starts (migration 0016), keeps nearer distance bands ahead of farther events, and offers an explicit soonest-first option
 - [x] 2026-08-05 — Search filters no longer wall off results on phones/tablets: below lg the rail collapses behind a "Narrow it down · N applied" disclosure (aria-expanded, motion-safe chevron, Clear filters still reachable); desktop 220px sidebar unchanged
 - [x] 2026-08-05 — Search provenance is explicit on every tournament card and event page, with plain-language source filtering for scraped, organizer-provided, and Causey-entered listings
 - [x] 2026-08-05 — My tournaments now puts unanswered coach invitations first and lets students RSVP without leaving the workspace

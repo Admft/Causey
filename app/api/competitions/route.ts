@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
  * GET /api/competitions — search published competitions.
  * Query params mirror SearchFiltersSchema (q, zip, radius_miles, state,
  * source, grade_band, rating_band, max_fee_cents, date_from, date_to,
- * timing, limit, offset). timing defaults to upcoming (hides ended).
+ * timing, sort, limit, offset). timing defaults to upcoming (hides ended);
+ * sort defaults to popular, with soonest available as an explicit option.
  * Returns { results, total, limit, offset, count } — tiles page in chunks
  * (default limit 20) so the first load stays fast.
  */

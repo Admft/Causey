@@ -15,6 +15,8 @@ import {
 } from "@/lib/data/filtering";
 import type { CompetitionResult, CompetitionSearchPage } from "@/lib/data/types";
 
+const POPULARITY_DISTANCE_BAND_MILES = 25;
+
 /** Shared post-filter sort used by mock + supabase search. */
 export function sortCompetitionResults(
   results: CompetitionResult[],
@@ -26,12 +28,35 @@ export function sortCompetitionResults(
         competitionNameRank(a.name, filters.q) - competitionNameRank(b.name, filters.q);
       if (rankDelta !== 0) return rankDelta;
     }
+
+    const sort = filters.sort ?? "popular";
+
+    if (sort === "soonest") {
+      const dateDelta = a.start_date.localeCompare(b.start_date);
+      if (dateDelta !== 0) return dateDelta;
+    } else {
+      // Keep nearby discovery useful: popularity only competes inside broad
+      // distance bands rather than sending a far-away event to the top.
+      if (a.distance_miles !== null && b.distance_miles !== null) {
+        const distanceBandDelta =
+          Math.floor(a.distance_miles / POPULARITY_DISTANCE_BAND_MILES) -
+          Math.floor(b.distance_miles / POPULARITY_DISTANCE_BAND_MILES);
+        if (distanceBandDelta !== 0) return distanceBandDelta;
+      }
+
+      const interestDelta = b.interest_count - a.interest_count;
+      if (interestDelta !== 0) return interestDelta;
+    }
+
     if (a.distance_miles !== null && b.distance_miles !== null) {
       if (Math.abs(a.distance_miles - b.distance_miles) > 0.5) {
         return a.distance_miles - b.distance_miles;
       }
     }
-    return a.start_date.localeCompare(b.start_date);
+
+    const dateDelta = a.start_date.localeCompare(b.start_date);
+    if (dateDelta !== 0) return dateDelta;
+    return a.id.localeCompare(b.id);
   });
 }
 

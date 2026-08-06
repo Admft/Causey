@@ -51,7 +51,7 @@ export interface CompetitionRef {
 }
 
 export interface DataSource {
-  /** Published competitions matching the filters, sorted distance → date. */
+  /** Published competitions matching the filters and requested search rank. */
   searchCompetitions(filters: SearchFilters): Promise<CompetitionSearchPage>;
   getCompetitionBySlug(slug: string): Promise<CompetitionDetail | null>;
   /** Lightweight list for pickers (pathway explorer). */

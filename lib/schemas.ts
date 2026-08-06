@@ -91,6 +91,8 @@ export const CompetitionSchema = z.object({
     .record(z.unknown())
     .nullish()
     .transform((v) => v ?? {}),
+  /** Distinct users who saved or started registering for this tournament. */
+  interest_count: z.number().int().nonnegative().default(0),
   status: CompetitionStatus.default("published"),
 });
 
@@ -163,6 +165,9 @@ export const RATING_BANDS = {
 } as const;
 export type RatingBand = keyof typeof RATING_BANDS;
 
+export const SearchSortSchema = z.enum(["popular", "soonest"]);
+export type SearchSort = z.infer<typeof SearchSortSchema>;
+
 export const SearchFiltersSchema = z.object({
   q: z.string().trim().min(1).max(100).optional(),
   zip: z.string().regex(/^\d{5}$/).optional(),
@@ -185,6 +190,8 @@ export const SearchFiltersSchema = z.object({
    * all = both. End date is end_date ?? start_date.
    */
   timing: z.enum(["upcoming", "ended", "all"]).optional().default("upcoming"),
+  /** Popular defaults to real saved/registration interest; soonest is explicit. */
+  sort: SearchSortSchema.optional().default("popular"),
   /** Page size for tile loading. Defaults to 20; max 2000 (for “load all”). */
   limit: z.coerce.number().int().positive().max(2000).optional(),
   offset: z.coerce.number().int().nonnegative().optional(),
