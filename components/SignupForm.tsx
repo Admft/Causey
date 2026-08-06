@@ -8,6 +8,7 @@ import {
   ageBandLabel,
   parseDateOnly,
 } from "@/lib/auth/age-band";
+import { homePathForRole } from "@/lib/auth/home-path";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { ROLE_OPTIONS, type AccountRole, type AgeBand } from "@/lib/auth/types";
 
@@ -97,9 +98,7 @@ export function SignupForm({
         return;
       }
 
-      router.push(
-        role === "coach" ? "/orgs" : role === "parent" ? "/family" : "/me"
-      );
+      router.push(homePathForRole(role));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed.");

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { homePathForRole } from "@/lib/auth/home-path";
 
 /**
  * Supabase email-confirm / OAuth redirect lands here with ?code=.
@@ -8,7 +9,7 @@ import { cookies } from "next/headers";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/me";
+  const next = searchParams.get("next");
 
   if (code) {
     const cookieStore = await cookies();
@@ -30,7 +31,23 @@ export async function GET(request: Request) {
     );
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      let destination = next;
+      if (!destination) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        let role: string | null = null;
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
+          role = profile?.role ?? null;
+        }
+        destination = homePathForRole(role);
+      }
+      return NextResponse.redirect(`${origin}${destination}`);
     }
   }
 

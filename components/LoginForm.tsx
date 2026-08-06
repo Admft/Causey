@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { homePathForRole } from "@/lib/auth/home-path";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export function LoginForm({ next }: { next?: string }) {
@@ -26,7 +27,25 @@ export function LoginForm({ next }: { next?: string }) {
         password,
       });
       if (signError) throw signError;
-      router.push(next ?? "/me");
+
+      let destination = next;
+      if (!destination) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        let role: string | null = null;
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
+          role = profile?.role ?? null;
+        }
+        destination = homePathForRole(role);
+      }
+
+      router.push(destination);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed.");
