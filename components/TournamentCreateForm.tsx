@@ -1,8 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
-import { createTournament, updateTournament } from "@/lib/actions/tournaments";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { CompetitionCoverImage } from "@/components/CompetitionCoverImage";
+import {
+  publishTournamentDraft,
+  saveTournamentDraft,
+  updateTournament,
+} from "@/lib/actions/tournaments";
+import type { TournamentDraftRow } from "@/lib/data/portal";
+import type { TournamentDraftData } from "@/lib/schemas";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -52,38 +60,240 @@ export function TournamentCreateForm({
   orgId,
   orgSlug,
   orgState,
+  draftId,
+  initialDraft,
   initial,
   edit,
 }: {
   orgId: string;
   orgSlug: string;
   orgState: string | null;
+  draftId?: string;
+  initialDraft?: TournamentDraftRow;
   initial?: TournamentFormInitial;
   edit?: { competitionId: string; eventSlug: string };
 }) {
   const router = useRouter();
-  const [name, setName] = useState(initial?.name ?? "");
-  const [startDate, setStartDate] = useState(initial?.start_date ?? "");
-  const [endDate, setEndDate] = useState(initial?.end_date ?? "");
-  const [regDeadline, setRegDeadline] = useState(initial?.reg_deadline ?? "");
-  const [venueName, setVenueName] = useState(initial?.venue_name ?? "");
-  const [address, setAddress] = useState(initial?.address ?? "");
-  const [city, setCity] = useState(initial?.city ?? "");
-  const [state, setState] = useState(initial?.state ?? orgState ?? "");
-  const [zip, setZip] = useState(initial?.zip ?? "");
+  const savedDraft = initialDraft?.data;
+  const [name, setName] = useState(savedDraft?.name ?? initial?.name ?? "");
+  const [startDate, setStartDate] = useState(
+    savedDraft?.startDate ?? initial?.start_date ?? ""
+  );
+  const [endDate, setEndDate] = useState(
+    savedDraft?.endDate ?? initial?.end_date ?? ""
+  );
+  const [regDeadline, setRegDeadline] = useState(
+    savedDraft?.regDeadline ?? initial?.reg_deadline ?? ""
+  );
+  const [venueName, setVenueName] = useState(
+    savedDraft?.venueName ?? initial?.venue_name ?? ""
+  );
+  const [address, setAddress] = useState(
+    savedDraft?.address ?? initial?.address ?? ""
+  );
+  const [city, setCity] = useState(savedDraft?.city ?? initial?.city ?? "");
+  const [state, setState] = useState(
+    savedDraft?.state ?? initial?.state ?? orgState ?? ""
+  );
+  const [zip, setZip] = useState(savedDraft?.zip ?? initial?.zip ?? "");
   const [entryFee, setEntryFee] = useState(
-    initial && initial.entry_fee_cents !== null
-      ? String(initial.entry_fee_cents / 100)
-      : ""
+    savedDraft?.entryFee ??
+      (initial && initial.entry_fee_cents !== null
+        ? String(initial.entry_fee_cents / 100)
+        : "")
   );
-  const [regUrl, setRegUrl] = useState(initial?.reg_url ?? "");
+  const [regUrl, setRegUrl] = useState(
+    savedDraft?.regUrl ?? initial?.reg_url ?? ""
+  );
   const [visibility, setVisibility] = useState<"private" | "public">(
-    initial?.visibility ?? "private"
+    savedDraft?.visibility ?? initial?.visibility ?? "private"
   );
-  const [rated, setRated] = useState(initial?.rated ?? false);
+  const [rated, setRated] = useState(
+    savedDraft?.rated ?? initial?.rated ?? false
+  );
+  const [coverImageUrl, setCoverImageUrl] = useState(
+    initialDraft?.cover_image_url ?? null
+  );
   const [step, setStep] = useState<"details" | "review">("details");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >(initialDraft ? "saved" : "idle");
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const firstAutosave = useRef(true);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const latestSaveId = useRef(0);
+  const draftUrlSet = useRef(Boolean(initialDraft));
+  const leaving = useRef(false);
+  const published = useRef(false);
+  const saveVersion = useRef(0);
+
+  function currentDraftData(): TournamentDraftData {
+    return {
+      name,
+      startDate,
+      endDate,
+      regDeadline,
+      venueName,
+      address,
+      city,
+      state,
+      zip,
+      entryFee,
+      regUrl,
+      visibility,
+      rated,
+    };
+  }
+
+  function persistDraft(coverImagePath?: string) {
+    if (!draftId) {
+      return Promise.resolve({
+        ok: false as const,
+        error: "Could not identify this draft. Reload the page and try again.",
+      });
+    }
+    const data = currentDraftData();
+    const version = ++saveVersion.current;
+    setDraftStatus("saving");
+    setDraftError(null);
+    const request = saveQueue.current.then(async () => {
+      try {
+        return await saveTournamentDraft({
+          draftId,
+          orgId,
+          data,
+          coverImagePath,
+        });
+      } catch {
+        return {
+          ok: false as const,
+          error: "Could not save the draft. Check your connection and try again.",
+        };
+      }
+    });
+    saveQueue.current = request.then(
+      () => undefined,
+      () => undefined
+    );
+    void request.then((result) => {
+      if (version !== saveVersion.current) return;
+      if (result.ok) {
+        setDraftStatus("saved");
+        setDraftError(null);
+        if (result.coverImageUrl) setCoverImageUrl(result.coverImageUrl);
+      } else {
+        setDraftStatus("error");
+        setDraftError(result.error);
+      }
+    });
+    return request;
+  }
+
+  useEffect(() => {
+    if (edit) return;
+    if (firstAutosave.current) {
+      firstAutosave.current = false;
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void persistDraft();
+    }, 900);
+    return () => window.clearTimeout(timer);
+    // Every primitive field is intentional: any organizer edit is persisted.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    name,
+    startDate,
+    endDate,
+    regDeadline,
+    venueName,
+    address,
+    city,
+    state,
+    zip,
+    entryFee,
+    regUrl,
+    visibility,
+    rated,
+    edit,
+  ]);
+
+  async function onCoverSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setError(null);
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    if (!allowedTypes.has(file.type)) {
+      setError("Choose a JPG, PNG, or WebP cover image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Cover images must be 5 MB or smaller.");
+      return;
+    }
+    if (!draftId) {
+      setError("Could not identify this draft. Reload the page and try again.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const saved = await persistDraft();
+      if (!saved.ok) {
+        setError(saved.error);
+        return;
+      }
+      const extension =
+        file.type === "image/png"
+          ? "png"
+          : file.type === "image/webp"
+            ? "webp"
+            : "jpg";
+      const imagePath = `${orgId}/${draftId}/cover-${crypto.randomUUID()}.${extension}`;
+      const supabase = createBrowserSupabaseClient();
+      const { error: uploadError } = await supabase.storage
+        .from("tournament-covers")
+        .upload(imagePath, file, {
+          cacheControl: "31536000",
+          contentType: file.type,
+          upsert: false,
+        });
+      if (uploadError) {
+        setError("Could not upload the cover image. Try a smaller image or try again.");
+        return;
+      }
+
+      const attached = await persistDraft(imagePath);
+      if (!attached.ok) {
+        await supabase.storage.from("tournament-covers").remove([imagePath]);
+        setError(attached.error);
+        return;
+      }
+      setCoverImageUrl(attached.coverImageUrl);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function saveDraftAndLeave() {
+    setPending(true);
+    setError(null);
+    try {
+      const result = await persistDraft();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.push(`/orgs/${orgSlug}`);
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -92,11 +302,6 @@ export function TournamentCreateForm({
     const fee = feeToCents(entryFee);
     if ("error" in fee) {
       setError(fee.error);
-      return;
-    }
-
-    if (!edit && step === "details") {
-      setStep("review");
       return;
     }
 
@@ -117,14 +322,45 @@ export function TournamentCreateForm({
         visibility,
         rated,
       };
-      const result = edit
-        ? await updateTournament({
-            competitionId: edit.competitionId,
-            eventSlug: edit.eventSlug,
-            orgSlug,
-            ...fields,
-          })
-        : await createTournament({ orgId, orgSlug, ...fields });
+      if (edit) {
+        const result = await updateTournament({
+          competitionId: edit.competitionId,
+          eventSlug: edit.eventSlug,
+          orgSlug,
+          ...fields,
+        });
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        router.push(`/event/${result.slug}`);
+        router.refresh();
+        return;
+      }
+
+      if (!coverImageUrl) {
+        setError("Add a cover image before previewing the tournament.");
+        return;
+      }
+      const saved = await persistDraft();
+      if (!saved.ok) {
+        setError(saved.error);
+        return;
+      }
+      if (step === "details") {
+        setStep("review");
+        return;
+      }
+
+      if (!draftId) {
+        setError("Could not identify this draft. Reload the page and try again.");
+        return;
+      }
+      const result = await publishTournamentDraft({
+        draftId,
+        orgId,
+        orgSlug,
+      });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -203,18 +439,85 @@ export function TournamentCreateForm({
             Step {reviewing ? "2" : "1"} of 2
           </p>
           <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">
-            {reviewing ? "Review and choose the audience" : "Add tournament details"}
+            {reviewing ? "Preview and choose the audience" : "Add tournament details"}
           </h2>
           <p className="mt-2 max-w-prose text-sm text-muted">
             {reviewing
-              ? "Confirm what families will see, then publish the event."
-              : "Add the schedule, location, and registration information first."}
+              ? "Check the event page preview, decide who can find it, then publish."
+              : "Add the cover, schedule, location, and registration information."}
           </p>
+        </div>
+      ) : null}
+
+      {!edit ? (
+        <div className="flex flex-col items-start justify-between gap-2 border-y border-line py-3 sm:flex-row sm:items-center">
+          <p
+            className={`text-xs ${
+              draftStatus === "error" ? "font-medium text-brand-red" : "text-muted"
+            }`}
+            role={draftStatus === "error" ? "alert" : "status"}
+          >
+            {draftStatus === "saving"
+              ? "Saving draft…"
+              : draftStatus === "saved"
+                ? "Draft saved. You can resume it from this organization."
+                : draftStatus === "error"
+                  ? draftError
+                  : "Your changes will save as a draft."}
+          </p>
+          <button
+            type="button"
+            onClick={saveDraftAndLeave}
+            disabled={pending || uploading}
+            className="text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+          >
+            Save draft and leave
+          </button>
         </div>
       ) : null}
 
       {!reviewing ? (
         <>
+          {!edit ? (
+            <fieldset className="flex flex-col gap-3">
+              <div>
+                <legend className="text-xs font-semibold text-muted-strong">
+                  Cover image <span className="text-brand-red">Required</span>
+                </legend>
+                <p className="mt-1 text-xs text-muted">
+                  Use a landscape JPG, PNG, or WebP up to 5 MB. The preview shows
+                  the crop families will see.
+                </p>
+              </div>
+              {coverImageUrl ? (
+                <CompetitionCoverImage
+                  src={coverImageUrl}
+                  alt={`Cover for ${name.trim() || "this tournament"}`}
+                  aspectClass="aspect-[2/1]"
+                  className="max-w-2xl rounded-2xl"
+                />
+              ) : (
+                <div className="flex aspect-[2/1] max-w-2xl items-center justify-center rounded-2xl border border-dashed border-field-border bg-surface-soft px-5 text-center text-sm text-muted">
+                  Add a real tournament photo, venue image, or event artwork.
+                </div>
+              )}
+              <label className="inline-flex w-fit cursor-pointer items-center rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={onCoverSelected}
+                  disabled={uploading || pending}
+                />
+                {uploading
+                  ? "Uploading cover…"
+                  : coverImageUrl
+                    ? "Choose a different cover"
+                    : "Choose cover image"}
+              </label>
+            </fieldset>
+          ) : null}
+
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold text-muted-strong">Tournament name</span>
             <input
@@ -360,6 +663,12 @@ export function TournamentCreateForm({
       ) : (
         <>
           <section aria-labelledby="tournament-review-heading">
+            <CompetitionCoverImage
+              src={coverImageUrl}
+              alt={`Cover for ${name}`}
+              aspectClass="aspect-[2/1]"
+              className="mb-5 max-w-2xl rounded-2xl"
+            />
             <h3
               id="tournament-review-heading"
               className="font-display text-xl font-bold tracking-tight text-foreground"
@@ -429,13 +738,27 @@ export function TournamentCreateForm({
           >
             ← Edit details
           </button>
-          <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={pending || uploading}
+            className="cta-enabled disabled:opacity-60"
+          >
             {pending ? "Publishing…" : "Publish tournament"}
           </button>
         </div>
       ) : (
-        <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
-          {pending ? "Saving…" : edit ? "Save changes" : "Review tournament"}
+        <button
+          type="submit"
+          disabled={pending || uploading}
+          className="cta-enabled disabled:opacity-60"
+        >
+          {pending
+            ? edit
+              ? "Saving changes…"
+              : "Saving draft…"
+            : edit
+              ? "Save changes"
+              : "Preview tournament"}
         </button>
       )}
     </form>

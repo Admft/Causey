@@ -24,6 +24,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — Tournament creation requires a stored cover, autosaves coach-only drafts, resumes from the organization workspace, and publishes after preview + audience review
 - [x] 2026-08-05 — Join-link signup is student-specific, explains roster access, and preserves the invitation through sign-in and email confirmation
 - [x] 2026-08-05 — Section headings settle into one rhythm (fc953a4)
 - [x] 2026-08-05 — My tournaments Upcoming/Past timeline (c6e22b7)
@@ -44,7 +45,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] 2026-08-05 — Role-aware post-auth landing (a81e453)
 
 ## Open — P0/P1 UX (do these first)
-- [ ] Tournament create flow: required image + persisted drafts (preview → audience → publish already exists)
+- [x] Tournament create flow: required image + persisted drafts — completed 2026-08-05 with cover upload, autosave/resume, preview, audience review, and publish validation
 - [ ] Signup / join-org copy + flow: student-specific join signup shipped 2026-08-05; broader role-copy audit remains
 - [ ] Search: org-member boosting without burying public discovery
 - [ ] Empty/error/success states that always name the next action
@@ -62,5 +63,6 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Next UX: finish tournament create (required cover + drafts) and/or signup copy.
+- Last UX tick: 2026-08-05 — completed required cover upload and persisted tournament drafts through preview, audience review, and publish.
+- Next UX: finish the broader signup / join-org role-copy audit.
 - Next polish: home/search visual hierarchy or search results composition redesign.

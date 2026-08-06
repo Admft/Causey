@@ -17,6 +17,26 @@ export const SeriesSchema = z.object({
 
 export const CompetitionStatus = z.enum(["draft", "published", "archived"]);
 
+/**
+ * In-progress organizer input. Drafts deliberately accept incomplete values so
+ * a coach can leave at any point and resume without relying on browser storage.
+ */
+export const TournamentDraftDataSchema = z.object({
+  name: z.string().max(120).default(""),
+  startDate: z.string().max(10).default(""),
+  endDate: z.string().max(10).default(""),
+  regDeadline: z.string().max(10).default(""),
+  venueName: z.string().max(120).default(""),
+  address: z.string().max(160).default(""),
+  city: z.string().max(80).default(""),
+  state: z.string().max(2).default(""),
+  zip: z.string().max(5).default(""),
+  entryFee: z.string().max(20).default(""),
+  regUrl: z.string().max(2048).default(""),
+  visibility: z.enum(["public", "private"]).default("private"),
+  rated: z.boolean().default(false),
+});
+
 /** Pathway honesty for scraped events — default majority is none. */
 export const PathwayStatusSchema = z.enum(["none", "uncertain", "known"]);
 
@@ -141,6 +161,7 @@ export type QualificationRule = z.infer<typeof QualificationRuleSchema>;
 export type ZipRow = z.infer<typeof ZipSchema>;
 export type PathwayStatus = z.infer<typeof PathwayStatusSchema>;
 export type PathwayRelated = z.infer<typeof PathwayRelatedSchema>;
+export type TournamentDraftData = z.infer<typeof TournamentDraftDataSchema>;
 
 /** Grade bands offered as search filters. Values are inclusive grade ranges. */
 export const GRADE_BANDS = {
