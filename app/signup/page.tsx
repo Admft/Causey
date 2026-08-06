@@ -24,18 +24,25 @@ export default async function SignupPage({
       <p className="text-sm font-semibold text-brand-red">Account</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         {isJoiningOrganization
-          ? "Create an account to join your organization"
+          ? "Create a student account to join"
           : "Create your Causey account"}
       </h1>
       <p className="mt-3 text-sm text-muted">
         {isJoiningOrganization
-          ? "Your join link will stay with you. After confirming your email, you’ll review the organization before joining its roster."
+          ? "This join link is for a student roster. After confirming your email, you’ll return to review the organization before joining."
           : "Choose Student to join a school or club, Parent to manage a linked child’s invitations, or Coach / Organizer to create a roster and publish tournaments."}
       </p>
       <div className="section-rule mt-8 pt-8">
         <SignupForm
-          initialRole={parsedRole.success ? parsedRole.data : "student"}
+          initialRole={
+            isJoiningOrganization
+              ? "student"
+              : parsedRole.success
+                ? parsedRole.data
+                : "student"
+          }
           next={next}
+          joiningOrganization={isJoiningOrganization}
         />
       </div>
       <p className="mt-6 text-xs text-muted">

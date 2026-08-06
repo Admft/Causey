@@ -22,12 +22,19 @@ const STATES = [
 export function SignupForm({
   initialRole = "student",
   next,
+  joiningOrganization = false,
 }: {
   initialRole?: AccountRole;
   next?: string;
+  joiningOrganization?: boolean;
 }) {
   const router = useRouter();
-  const [role, setRole] = useState<AccountRole>(initialRole);
+  const [role, setRole] = useState<AccountRole>(
+    joiningOrganization ? "student" : initialRole
+  );
+  const loginHref = next
+    ? `/login?next=${encodeURIComponent(next)}`
+    : "/login";
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,16 +122,20 @@ export function SignupForm({
     return (
       <div className="rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)]">
         <h2 className="font-display text-display-sm font-bold text-foreground">
-          Check your email
+          {joiningOrganization
+            ? "Check your email to continue"
+            : "Check your email"}
         </h2>
         <p className="mt-3 text-sm text-muted">
           We sent a confirmation link to <strong className="text-foreground">{email}</strong>.
           Open it to finish creating your account
-          {next
-            ? " and continue where you left off."
+          {joiningOrganization
+            ? " and return to the organization before joining its roster."
+            : next
+              ? " and continue where you left off."
             : " and sign in to Causey."}
         </p>
-        <Link href="/login" className="cta-enabled mt-6 inline-flex">
+        <Link href={loginHref} className="cta-enabled mt-6 inline-flex">
           Go to sign in
         </Link>
       </div>
@@ -133,31 +144,41 @@ export function SignupForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-xs font-semibold text-muted-strong">Account type</legend>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {ROLE_OPTIONS.map((opt) => {
-            const selected = role === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setRole(opt.value)}
-                className={`rounded-xl border px-3 py-3 text-left transition-colors ${
-                  selected
-                    ? "border-brand-red/40 bg-accent-soft"
-                    : "border-line bg-white hover:border-brand-red/30"
-                }`}
-              >
-                <span className="block text-sm font-semibold text-foreground">
-                  {opt.label}
-                </span>
-                <span className="mt-1 block text-2xs text-muted">{opt.description}</span>
-              </button>
-            );
-          })}
+      {joiningOrganization ? (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-semibold text-muted-strong">Account type</p>
+          <p className="text-sm font-semibold text-foreground">Student</p>
+          <p className="text-xs text-muted">
+            Organization join links add students to a school or club roster.
+          </p>
         </div>
-      </fieldset>
+      ) : (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-xs font-semibold text-muted-strong">Account type</legend>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {ROLE_OPTIONS.map((opt) => {
+              const selected = role === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setRole(opt.value)}
+                  className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+                    selected
+                      ? "border-brand-red/40 bg-accent-soft"
+                      : "border-line bg-white hover:border-brand-red/30"
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-foreground">
+                    {opt.label}
+                  </span>
+                  <span className="mt-1 block text-2xs text-muted">{opt.description}</span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1 sm:col-span-2">
@@ -264,7 +285,7 @@ export function SignupForm({
 
       <p className="text-sm text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-brand-red hover:underline">
+        <Link href={loginHref} className="font-semibold text-brand-red hover:underline">
           Sign in
         </Link>
       </p>
