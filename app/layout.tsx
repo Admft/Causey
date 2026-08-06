@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import { AuthNav } from "@/components/AuthNav";
+import { PrimaryNav } from "@/components/PrimaryNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { EarlyBuildBanner } from "@/components/EarlyBuildBanner";
 import "./globals.css";
@@ -46,7 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/" aria-label="Causey home — browse competition types">
                 <CauseyLogo size="md" />
               </Link>
-              <nav className="flex items-center gap-5" aria-label="Primary">
+              <nav
+                className="flex items-center gap-4 sm:gap-6"
+                aria-label="Primary"
+              >
+                <PrimaryNav />
                 <AuthNav />
               </nav>
             </div>

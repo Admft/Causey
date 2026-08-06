@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { AccountRole } from "@/lib/auth/types";
@@ -11,8 +11,15 @@ import type { AccountRole } from "@/lib/auth/types";
  * Renders nothing useful if Supabase env is missing (mock-only mode).
  * Signed-in users get a role-aware portal link next to Account.
  */
+function navLinkClass(active: boolean) {
+  return active
+    ? "text-sm font-semibold text-brand-red"
+    : "text-sm font-medium text-muted-strong transition-colors hover:text-foreground";
+}
+
 export function AuthNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const configured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
@@ -96,11 +103,12 @@ export function AuthNav() {
           : null;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4 sm:gap-5">
       {isAdmin ? (
         <Link
           href="/admin"
-          className="text-sm font-semibold text-brand-red transition-colors hover:text-foreground"
+          aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+          className={navLinkClass(pathname.startsWith("/admin"))}
         >
           Admin
         </Link>
@@ -108,14 +116,18 @@ export function AuthNav() {
       {portalLink ? (
         <Link
           href={portalLink.href}
-          className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+          aria-current={
+            pathname.startsWith(portalLink.href) ? "page" : undefined
+          }
+          className={navLinkClass(pathname.startsWith(portalLink.href))}
         >
           {portalLink.label}
         </Link>
       ) : null}
       <Link
         href="/me"
-        className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+        aria-current={pathname.startsWith("/me") ? "page" : undefined}
+        className={navLinkClass(pathname.startsWith("/me"))}
       >
         Account
       </Link>

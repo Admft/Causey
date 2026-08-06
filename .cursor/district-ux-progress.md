@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Navigation chrome: chess search is now one tap away in the global header for everyone (signed out included), with active-state awareness across Chess/Family-or-orgs/Account/Admin links; mobile keeps a short "Chess" label so the cluster fits phones — 2026-08-05
 - [x] Org workspace: one mission panel leads (resume freshest draft → next tournament with manage/RSVP → create-first-tournament empty state); extra drafts, other upcoming, and attending events demote to quiet hairline rows; "Create another tournament" drops to a text link when a mission exists — 2026-08-05 (426148a)
 - [x] Search composition: applied rail filters restate as removable chips above the results (visible in every state, even with the rail collapsed/scrolled away), desktop rail goes sticky, and paging moves to the bottom row where "load more" happens — 2026-08-05
 - [x] Home/search hierarchy: chess gets the one big coverage panel (unbuilt types demoted to a plain list), hero copy de-doubled, /chess search controls read as one labeled cluster, result count anchors the results header — 2026-08-05
@@ -27,6 +28,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — Platform moderation now shows the event, source, audience, and organizer context needed for a decision; rejected listings require a useful note; every decision confirms what changed and points to the next review or record
 - [x] 2026-08-05 — Roster group changes now show action-specific progress, confirm what changed and what coaches can do next, guide the first empty state, and protect deletion with a student-safe confirmation
 - [x] 2026-08-05 — Family link requests now confirm the privacy-safe handoff, tell parents exactly where students accept, and preserve the email for retry after unexpected failures
 - [x] 2026-08-05 — Signed-in organization members see their own public/private tournaments in search with a bounded ranking lift that still keeps higher-interest public events discoverable
@@ -72,7 +74,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Last UX tick: 2026-08-05 — made roster group creation, membership changes, and deletion explicit, actionable, and safe for coaches.
-- Next UX: continue adding next actions to high-impact empty, error, and success states outside roster groups.
-- Last polish tick: 2026-08-05 — org workspace as one mission panel + quiet lists (426148a). NOTE: progress.md entry left uncommitted so the mid-tick UX agent can commit it with their own notes.
+- Last UX tick: 2026-08-05 — completed the platform-admin public tournament review flow with decision-ready context, required return notes, and recoverable success/error states.
+- Next UX: audit event RSVP and registration language for consistent terms and explicit next actions.
+- Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: family workspace composition, or empty/error/success-state visual pass.
