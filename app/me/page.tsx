@@ -74,23 +74,68 @@ export default async function MePage() {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { data: savedRows } = await supabase
-    .from("saved_competitions")
-    .select("competition_id, created_at, competitions(id, slug, name, city, state, start_date, end_date)")
-    .eq("user_id", profile.id)
-    .order("created_at", { ascending: false });
-
-  const { data: ratingRows } = await supabase
-    .from("competition_ratings")
-    .select("score, competitions(id, slug, name)")
-    .eq("user_id", profile.id)
-    .order("updated_at", { ascending: false });
-
-  const parentLinks =
-    profile.role === "student" ? await getParentLinks(profile.id) : [];
+  const [
+    { data: savedRows },
+    { data: ratingRows },
+    { data: registrationRows },
+    parentLinks,
+    entrantRows,
+  ] = await Promise.all([
+    supabase
+      .from("saved_competitions")
+      .select(
+        "competition_id, created_at, competitions(id, slug, name, city, state, start_date, end_date)"
+      )
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("competition_ratings")
+      .select("score, competitions(id, slug, name)")
+      .eq("user_id", profile.id)
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("external_registrations")
+      .select(
+        "competition_id, status, opened_at, competitions(id, slug, name, city, state, start_date, end_date)"
+      )
+      .eq("user_id", profile.id)
+      .order("opened_at", { ascending: false }),
+    profile.role === "student"
+      ? getParentLinks(profile.id)
+      : Promise.resolve([]),
+    getMyEntrantRows(profile.id),
+  ]);
 
   const today = new Date().toISOString().slice(0, 10);
-  const schedule = (await getMyEntrantRows(profile.id)).filter(
+  const trackedRegistrations = (registrationRows ?? [])
+    .flatMap((row) => {
+      const competition = row.competitions as unknown as {
+        slug: string;
+        name: string;
+        city: string;
+        state: string;
+        start_date: string;
+        end_date: string | null;
+      } | null;
+      if (!competition || !isUpcomingEvent(competition, today)) return [];
+      return [
+        {
+          competitionId: row.competition_id as string,
+          status: row.status as "opened" | "registered" | "not_registered",
+          competition,
+        },
+      ];
+    })
+    .sort((a, b) =>
+      a.competition.start_date.localeCompare(b.competition.start_date)
+    );
+  const registrationNeeded = trackedRegistrations.filter(
+    (row) => row.status !== "registered"
+  );
+  const registered = trackedRegistrations.filter(
+    (row) => row.status === "registered"
+  );
+  const schedule = entrantRows.filter(
     (row) =>
       row.status === "going" &&
       row.competition &&
@@ -135,6 +180,91 @@ export default async function MePage() {
             </Link>
           ) : null}
         </div>
+      </section>
+
+      <section className="section-rule mt-10 pt-8">
+        <h2 className="font-display text-xl font-bold text-foreground">
+          My tournaments
+        </h2>
+        <p className="mt-2 max-w-prose text-sm text-muted">
+          Keep organizer-site registrations from getting lost after you leave
+          Causey.
+        </p>
+        {!trackedRegistrations.length ? (
+          <p className="mt-4 text-sm text-muted">
+            No upcoming registrations to track. Open a tournament and choose{" "}
+            <span className="font-medium text-foreground">Register</span> while
+            signed in.{" "}
+            <Link href="/chess" className="font-semibold text-brand-red hover:underline">
+              Search tournaments
+            </Link>
+          </p>
+        ) : (
+          <div className="mt-6 flex flex-col gap-7">
+            {registrationNeeded.length ? (
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Registration needed
+                </h3>
+                <ul className="mt-3 flex flex-col gap-3">
+                  {registrationNeeded.map(({ competitionId, competition }) => (
+                    <li key={competitionId}>
+                      <Link
+                        href={`/event/${competition.slug}`}
+                        className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
+                      >
+                        <span className="font-semibold text-foreground">
+                          {competition.name}
+                        </span>
+                        <span className="mt-1 block text-xs text-muted">
+                          {formatDateRange(
+                            competition.start_date,
+                            competition.end_date
+                          )}{" "}
+                          · {competition.city}, {competition.state}
+                        </span>
+                        <span className="mt-2 block text-sm font-semibold text-brand-red">
+                          Finish registration
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {registered.length ? (
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Registered
+                </h3>
+                <ul className="mt-3 flex flex-col gap-3">
+                  {registered.map(({ competitionId, competition }) => (
+                    <li key={competitionId}>
+                      <Link
+                        href={`/event/${competition.slug}`}
+                        className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
+                      >
+                        <span className="font-semibold text-foreground">
+                          {competition.name}
+                        </span>
+                        <span className="mt-1 block text-xs text-muted">
+                          {formatDateRange(
+                            competition.start_date,
+                            competition.end_date
+                          )}{" "}
+                          · {competition.city}, {competition.state}
+                        </span>
+                        <span className="mt-2 block text-xs font-semibold text-muted-strong">
+                          Registration marked complete
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        )}
       </section>
 
       {parentLinks.length ? (

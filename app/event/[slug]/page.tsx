@@ -139,25 +139,25 @@ export default async function EventPage({ params }: Params) {
     const supabase = await createServerSupabaseClient();
     const [{ data: saved }, { data: rating }, { data: registration }] =
       await Promise.all([
-      supabase
-        .from("saved_competitions")
-        .select("competition_id")
-        .eq("user_id", user.id)
-        .eq("competition_id", competition.id)
-        .maybeSingle(),
-      supabase
-        .from("competition_ratings")
-        .select("score")
-        .eq("user_id", user.id)
-        .eq("competition_id", competition.id)
-        .maybeSingle(),
-      supabase
-        .from("external_registrations")
-        .select("status")
-        .eq("user_id", user.id)
-        .eq("competition_id", competition.id)
-        .maybeSingle(),
-    ]);
+        supabase
+          .from("saved_competitions")
+          .select("competition_id")
+          .eq("user_id", user.id)
+          .eq("competition_id", competition.id)
+          .maybeSingle(),
+        supabase
+          .from("competition_ratings")
+          .select("score")
+          .eq("user_id", user.id)
+          .eq("competition_id", competition.id)
+          .maybeSingle(),
+        supabase
+          .from("external_registrations")
+          .select("status")
+          .eq("user_id", user.id)
+          .eq("competition_id", competition.id)
+          .maybeSingle(),
+      ]);
     initiallySaved = Boolean(saved);
     initialScore = rating?.score ?? null;
     initialRegistrationStatus =

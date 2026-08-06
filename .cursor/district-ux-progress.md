@@ -18,6 +18,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Loading/empty states that feel designed (not dead)
 
 ## Done
+- [x] 2026-08-05 — External registration handoff: signed-in users get a “Did you register?” confirmation after leaving for the organizer site, with Registration needed / Registered lists in My tournaments
 - [x] 2026-08-05 — Event pages without a cover image go text-first: dead grey 2:1 placeholder removed, featured mark moves inline with the eyebrow (same pattern as cards)
 - [x] 2026-08-05 — Tournament cards scan by weekend: date chip + weekday date line, venue/city/distance line, section levels (U900 · K-8 …), fee pinned top-right, no empty image chrome
 - [x] 2026-08-05 — Join links now survive login, signup, and email confirmation so new students return to the organization invitation
@@ -30,8 +31,8 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Open — P0/P1 UX (do these first)
 - [ ] Tournament create flow: required image, preview, audience, then publish (guided steps) — details → audience/review → publish shipped 2026-08-05; image upload and persisted drafts remain
 - [ ] Signup / join-org copy + flow: match real unlocks; remove contradictory coach language — join-link auth handoff shipped 2026-08-05; broader copy audit remains
-- [ ] External registration tracking: Register → registration_opened → “Did you register?” → My tournaments
-- [ ] My tournaments workspace: Registration needed / Registered / Invited / Upcoming / Past
+- [x] External registration tracking: Register → registration_opened → “Did you register?” → My tournaments — shipped 2026-08-05
+- [ ] My tournaments workspace: Registration needed / Registered shipped 2026-08-05; Invited / Upcoming / Past remain
 - [ ] Search defaults: popularity + provenance; org’s own events boosted for members without burying public discovery
 - [ ] Empty/error/success states that always name the next action
 - [ ] Navigation consistency: same terms for org, event, RSVP, register across pages
@@ -47,4 +48,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — preserved organization invitations through account creation (UX); event page drops empty image chrome, text-first header (frontend polish)
+- Last tick: 2026-08-05 — tracked external registration handoffs through account confirmation and My tournaments
