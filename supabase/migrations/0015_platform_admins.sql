@@ -25,26 +25,34 @@ $$;
 revoke execute on function public.is_platform_admin() from public, anon;
 grant execute on function public.is_platform_admin() to authenticated;
 
--- Promote the named existing account. Failing loudly is safer than deploying
--- an admin shell with no administrator.
+-- Promote named existing accounts. Failing loudly is safer than deploying
+-- an admin shell with missing administrators.
 do $$
 declare
+  admin_email text;
   target_id uuid;
 begin
-  select u.id into target_id
-  from auth.users u
-  join public.profiles p on p.id = u.id
-  where lower(u.email) = 'adam.mophat@gmail.com'
-  limit 1;
+  foreach admin_email in array array[
+    'adam.mophat@gmail.com',
+    'mcausey.th@gmail.com'
+  ]
+  loop
+    select u.id into target_id
+    from auth.users u
+    join public.profiles p on p.id = u.id
+    where lower(u.email) = admin_email
+    limit 1;
 
-  if target_id is null then
-    raise exception
-      'Create and confirm the Causey account adam.mophat@gmail.com before applying 0015_platform_admins.sql';
-  end if;
+    if target_id is null then
+      raise exception
+        'Create and confirm the Causey account % before applying 0015_platform_admins.sql',
+        admin_email;
+    end if;
 
-  insert into public.platform_admins (profile_id)
-  values (target_id)
-  on conflict (profile_id) do nothing;
+    insert into public.platform_admins (profile_id)
+    values (target_id)
+    on conflict (profile_id) do nothing;
+  end loop;
 end
 $$;
 

@@ -69,8 +69,9 @@ describe("platform admin migration", () => {
     expect(profileGrant?.[1]).not.toContain("role_unlocked");
   });
 
-  it("promotes the named existing account and makes the audit log append-only", () => {
+  it("promotes the named existing accounts and makes the audit log append-only", () => {
     expect(sql).toContain("adam.mophat@gmail.com");
+    expect(sql).toContain("mcausey.th@gmail.com");
     expect(sql).toContain("create table public.admin_audit_log");
     expect(sql).toContain(
       "revoke all on public.admin_audit_log from public, anon, authenticated"
