@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentProfile } from "@/lib/auth/session";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { canCreateOrg } from "@/lib/org-permissions";
 import {
   getTournamentZip,
@@ -183,7 +184,8 @@ export async function saveTournamentDraft(
   const values = parsed.data;
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to save this draft." };
-  if (!canCreateOrg(profile)) {
+  const platformAdmin = await getPlatformAdminUser();
+  if (!canCreateOrg(profile) && !platformAdmin) {
     return { ok: false, error: "Only coach / organizer accounts can save tournaments." };
   }
 
@@ -308,7 +310,8 @@ export async function publishTournamentDraft(
   const values = parsedInput.data;
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to publish this tournament." };
-  if (!canCreateOrg(profile)) {
+  const platformAdmin = await getPlatformAdminUser();
+  if (!canCreateOrg(profile) && !platformAdmin) {
     return { ok: false, error: "Only coach / organizer accounts can publish tournaments." };
   }
 

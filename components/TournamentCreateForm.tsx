@@ -4,11 +4,9 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { CompetitionCoverImage } from "@/components/CompetitionCoverImage";
 import {
-  adminCreateTournament,
   adminUpdateTournament,
 } from "@/lib/actions/admin";
 import {
-  createTournament,
   publishTournamentDraft,
   saveTournamentDraft,
   updateTournament,
@@ -161,10 +159,9 @@ export function TournamentCreateForm({
   const leaving = useRef(false);
   const published = useRef(false);
   const saveVersion = useRef(0);
-  // Stable UUID for coach create even if the server prop is missing; admin
-  // create uses a separate path and must not pretend to have a draft.
+  // Stable UUID for create flows (coach + platform admin). Edit has no draft.
   const [resolvedDraftId] = useState(() =>
-    edit || admin ? draftId ?? null : draftId ?? crypto.randomUUID()
+    edit ? draftId ?? null : draftId ?? crypto.randomUUID()
   );
 
   function currentDraftData(): TournamentDraftData {
@@ -242,22 +239,15 @@ export function TournamentCreateForm({
   }
 
   useEffect(() => {
-    if (edit || admin || !resolvedDraftId || initialDraft) return;
+    if (edit || !resolvedDraftId || initialDraft) return;
     // Create the draft row immediately so cover uploads and leave-saves
     // don't race an empty tournament_drafts table.
     void persistDraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedDraftId, edit, admin, initialDraft]);
+  }, [resolvedDraftId, edit, initialDraft]);
 
   useEffect(() => {
-    if (
-      edit ||
-      admin ||
-      !resolvedDraftId ||
-      pending ||
-      leaving.current ||
-      published.current
-    ) {
+    if (edit || !resolvedDraftId || pending || leaving.current || published.current) {
       return;
     }
     if (firstAutosave.current) {
@@ -287,7 +277,6 @@ export function TournamentCreateForm({
     sections,
     rated,
     edit,
-    admin,
     pending,
     resolvedDraftId,
   ]);
@@ -367,7 +356,7 @@ export function TournamentCreateForm({
         return;
       }
       leaving.current = true;
-      router.push(`/orgs/${orgSlug}`);
+      router.push(returnTo ?? (admin ? "/admin/tournaments?status=draft" : `/orgs/${orgSlug}`));
       router.refresh();
     } finally {
       setPending(false);
@@ -426,19 +415,7 @@ export function TournamentCreateForm({
         return;
       }
 
-      // Platform admin create stays on the SEC-06 draft-competition path
-      // (no cover upload required); coaches use resumable drafts + cover.
-      if (admin) {
-        const result = await adminCreateTournament({ orgId, orgSlug, ...fields });
-        if (!result.ok) {
-          setError(result.error);
-          return;
-        }
-        router.push(returnTo ?? `/event/${result.slug}`);
-        router.refresh();
-        return;
-      }
-
+      // Coach and platform-admin create both use resumable drafts + required cover.
       if (!coverImageUrl) {
         setError("Add a cover image before previewing the tournament.");
         return;
@@ -579,7 +556,7 @@ export function TournamentCreateForm({
         </div>
       ) : null}
 
-      {!edit && !admin ? (
+      {!edit ? (
         <div className="flex flex-col items-start justify-between gap-2 border-y border-line py-3 sm:flex-row sm:items-center">
           <p
             className={`text-xs ${
@@ -590,7 +567,9 @@ export function TournamentCreateForm({
             {draftStatus === "saving"
               ? "Saving draft…"
               : draftStatus === "saved"
-                ? "Draft saved. You can resume it from this organization."
+                ? admin
+                  ? "Draft saved."
+                  : "Draft saved. You can resume it from this organization."
                 : draftStatus === "error"
                   ? draftError
                   : "Your changes will save as a draft."}
@@ -608,7 +587,7 @@ export function TournamentCreateForm({
 
       {!reviewing ? (
         <>
-          {!edit && !admin && resolvedDraftId ? (
+          {!edit && resolvedDraftId ? (
             <fieldset className="flex flex-col gap-3">
               <div>
                 <legend className="text-xs font-semibold text-muted-strong">
@@ -1059,14 +1038,10 @@ export function TournamentCreateForm({
           {pending
             ? edit
               ? "Saving changes…"
-              : admin
-                ? "Creating…"
-                : "Saving draft…"
+              : "Saving draft…"
             : edit
               ? "Save changes"
-              : admin
-                ? "Create tournament draft"
-                : "Preview tournament"}
+              : "Preview tournament"}
         </button>
       )}
     </form>

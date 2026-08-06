@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
@@ -16,6 +17,7 @@ export default async function AdminNewTournamentPage({
   const { org: selectedId } = await searchParams;
   const organizations = await getAdminOrganizations();
   const selected = organizations.find((org) => org.id === selectedId) ?? null;
+  const draftId = randomUUID();
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
@@ -30,7 +32,8 @@ export default async function AdminNewTournamentPage({
         Add a tournament draft
       </h1>
       <p className="mt-2 text-sm text-muted">
-        The tournament stays out of public search until an administrator publishes it.
+        Add a cover and the details families need. The tournament stays out of
+        public search until it is published.
       </p>
 
       {!selected ? (
@@ -81,6 +84,7 @@ export default async function AdminNewTournamentPage({
             orgId={selected.id}
             orgSlug={selected.slug}
             orgState={selected.state}
+            draftId={draftId}
             admin
             returnTo="/admin/tournaments?status=draft"
           />
