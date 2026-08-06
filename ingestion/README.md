@@ -58,6 +58,12 @@ Standing hints (`details.catalog_standing` / `catalog_class`) come from FIDE til
 classes, Chess-Results player counts, and OnlineReg entry counts — used by
 `lib/event-standing.ts` for honest labels (not a prestige score).
 
+**Location / publish gate:** same as TLA — real ZIP + coords from `zips`.
+Hubs resolve ZIP via listing parse (Chess-Results), or city+state → GeoNames
+place index (`data/cache/us-city-zips.json`, built on first scrape) then `zips`
+(`details.geo_precision: "city"`). OnlineReg public pages omit street address;
+city is guessed from organizer/title when possible.
+
 ## Pathways (site + scrapers)
 
 The **qualification graph** lives in curated tables — scrapers never invent rules:

@@ -1,6 +1,7 @@
 import { CompetitionSchema, type Competition } from "../lib/schemas";
 import { NEEDS_REVIEW, parseDateRange, slugify, stateToCode } from "./normalize";
 import type { RawOnlineRegEvent } from "./parse-onlinereg";
+import type { GeoPrecision } from "./geo";
 
 export const ONLINEREG_SCRAPER_ID = "onlinereg_scrape" as const;
 export const ONLINEREG_LISTING_URL =
@@ -34,6 +35,9 @@ export type NormalizeOnlineRegOptions = {
   id: string;
   coords?: { lat: number; lng: number } | null;
   zip?: string | null;
+  city?: string | null;
+  address?: string | null;
+  geoPrecision?: GeoPrecision | null;
 };
 
 export function normalizeRawOnlineReg(
@@ -57,6 +61,7 @@ export function normalizeRawOnlineReg(
     opts.zip && /^\d{5}$/.test(opts.zip) ? opts.zip : NEEDS_REVIEW.zip;
   const ready = zip !== NEEDS_REVIEW.zip && Boolean(opts.coords);
   const name = cleanOnlineRegName(raw.name);
+  const city = (opts.city?.trim() || "Unknown").slice(0, 80);
 
   const draft = {
     id: opts.id,
@@ -65,8 +70,8 @@ export function normalizeRawOnlineReg(
     category: "chess",
     organizer_name: raw.organizerHint,
     venue_name: null,
-    address: null,
-    city: "Unknown",
+    address: opts.address ?? null,
+    city,
     state,
     zip,
     lat: opts.coords?.lat ?? NEEDS_REVIEW.lat,
@@ -94,6 +99,7 @@ export function normalizeRawOnlineReg(
       entry_count: raw.entryCount,
       onlinereg_tid: raw.tid,
       raw_name: raw.name,
+      ...(opts.geoPrecision ? { geo_precision: opts.geoPrecision } : {}),
     },
     interest_count: 0,
     status: ready ? ("published" as const) : ("draft" as const),

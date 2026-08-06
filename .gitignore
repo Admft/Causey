@@ -28,6 +28,7 @@ yarn-error.log*
 
 # ingestion output (scraped drafts land here in mock mode; reviewed by hand)
 /data/staging/
+/data/cache/
 
 # browser "Save Page As" dumps (use ingestion/fixtures/ instead)
 /Upcoming Tournaments _ US Chess.org.html

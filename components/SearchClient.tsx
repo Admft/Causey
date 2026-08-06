@@ -324,10 +324,11 @@ export function SearchClient() {
       </section>
 
       <section className="section-rule">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[220px_1fr]">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[240px_1fr]">
           {/* Sticky on desktop so the rail stays in reach while scanning a
-              long results column; short viewports scroll the rail internally. */}
-          <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
+              long results column; short viewports scroll the rail internally.
+              scrollbar-gutter + padding keep the thumb off the filter controls. */}
+          <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:pr-2 lg:[scrollbar-gutter:stable]">
             <SearchFilters filters={filters} onChange={setFilters} />
           </aside>
 

@@ -1,6 +1,10 @@
 /**
  * OnlineRegistration.cc current-tournaments scraper.
  *
+ * Listing pages only expose State (no street/ZIP). Public detail/buy pages
+ * also omit venue address, so we resolve city from organizer/title via
+ * GeoNames city→zip, then Supabase `zips` centroids (geo_precision: city).
+ *
  *   npm run scrape:onlinereg
  *   SCRAPE_HTML_FILE=ingestion/fixtures/onlinereg-tournaments-index.html npm run scrape:onlinereg
  */
@@ -12,6 +16,12 @@ import {
 } from "./normalize-onlinereg";
 import { parseOnlineRegIndexHtml } from "./parse-onlinereg";
 import {
+  createZipGeo,
+  guessCityFromText,
+  loadCityZipIndex,
+} from "./geo";
+import { stateToCode } from "./normalize";
+import {
   capRows,
   loadListingHtml,
   newId,
@@ -20,6 +30,7 @@ import {
 } from "./scrape-hub-utils";
 import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
+import { getServiceRoleClient } from "../lib/supabase/client";
 
 const STAGING_FILE = "onlinereg-drafts.json";
 
@@ -36,9 +47,27 @@ async function main() {
   console.log(`Parsed ${raw.length} OnlineRegistration events.`);
   raw = capRows(raw);
 
+  const client = getServiceRoleClient();
+  const geo = createZipGeo(client);
+  const cityIndex = await loadCityZipIndex();
   const drafts: StagedCompetition[] = [];
+
   for (const row of raw) {
-    const competition = normalizeRawOnlineReg(row, { id: newId() });
+    const state = row.stateName ? stateToCode(row.stateName) : null;
+    const guessTexts = [row.organizerHint, row.name].filter(Boolean).join(" | ");
+    const city =
+      (state && guessCityFromText(cityIndex, guessTexts, state)) || null;
+    const resolved = state
+      ? await geo.resolveLocation({ city, state })
+      : null;
+
+    const competition = normalizeRawOnlineReg(row, {
+      id: newId(),
+      city,
+      coords: resolved?.coords ?? null,
+      zip: resolved?.zip ?? null,
+      geoPrecision: resolved?.precision ?? null,
+    });
     if (!competition) continue;
     drafts.push({
       ...competition,
@@ -47,7 +76,9 @@ async function main() {
   }
 
   const published = drafts.filter((d) => d.status === "published").length;
-  console.log(`Normalized ${drafts.length} (published ${published}, draft ${drafts.length - published}).`);
+  console.log(
+    `Normalized ${drafts.length} (published ${published}, draft ${drafts.length - published}).`
+  );
   await upsertOrExit(drafts, ONLINEREG_SCRAPER_ID, STAGING_FILE, {
     listing: ONLINEREG_LISTING_URL,
     parsed: raw.length,

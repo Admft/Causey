@@ -98,7 +98,20 @@ export function parseFideLocation(locationText: string): {
         country: "USA",
       };
     }
+    // "Glendale, USA" — city only
     return { city: parts[0], state: "XX", country: "USA" };
+  }
+
+  // "Saint Louis, Missouri" (no country suffix)
+  if (parts.length >= 2) {
+    const maybeState = stateToCode(parts[parts.length - 1]!);
+    if (maybeState) {
+      return {
+        city: parts.slice(0, -1).join(", "),
+        state: maybeState,
+        country: "USA",
+      };
+    }
   }
 
   // International — use XX so fingerprint still works; stays draft without coords.
@@ -128,6 +141,7 @@ export type NormalizeFideOptions = {
   id: string;
   coords?: { lat: number; lng: number } | null;
   zip?: string | null;
+  geoPrecision?: import("./geo").GeoPrecision | null;
 };
 
 export function normalizeRawFide(
@@ -182,6 +196,7 @@ export function normalizeRawFide(
       country: loc.country,
       fide_calendar_id: raw.externalKey,
       location_raw: raw.locationText,
+      ...(opts.geoPrecision ? { geo_precision: opts.geoPrecision } : {}),
     },
     interest_count: 0,
     status: ready ? ("published" as const) : ("draft" as const),

@@ -12,6 +12,7 @@ import {
   parseChessResultsLocation,
 } from "./normalize-chess-results";
 import { parseChessResultsSearchHtml } from "./parse-chess-results";
+import { createZipGeo } from "./geo";
 import {
   capRows,
   loadListingHtml,
@@ -43,19 +44,21 @@ async function main() {
   raw = capRows(raw);
 
   const client = getServiceRoleClient();
+  const geo = createZipGeo(client);
   const drafts: StagedCompetition[] = [];
   for (const row of raw) {
     const loc = parseChessResultsLocation(row.locationText);
-    let coords: { lat: number; lng: number } | null = null;
-    if (client && loc.zip) {
-      const { data } = await client
-        .from("zips")
-        .select("lat, lng")
-        .eq("zip", loc.zip)
-        .maybeSingle();
-      if (data) coords = { lat: data.lat, lng: data.lng };
-    }
-    const competition = normalizeRawChessResults(row, { id: newId(), coords });
+    const resolved = await geo.resolveLocation({
+      zip: loc.zip,
+      city: loc.city,
+      state: loc.state,
+    });
+    const competition = normalizeRawChessResults(row, {
+      id: newId(),
+      coords: resolved?.coords ?? null,
+      zip: resolved?.zip ?? loc.zip,
+      geoPrecision: resolved?.precision ?? null,
+    });
     if (!competition) continue;
     drafts.push({
       ...competition,
@@ -64,7 +67,9 @@ async function main() {
   }
 
   const published = drafts.filter((d) => d.status === "published").length;
-  console.log(`Normalized ${drafts.length} (published ${published}, draft ${drafts.length - published}).`);
+  console.log(
+    `Normalized ${drafts.length} (published ${published}, draft ${drafts.length - published}).`
+  );
   await upsertOrExit(drafts, CHESS_RESULTS_SCRAPER_ID, STAGING_FILE, {
     listing: CHESS_RESULTS_LISTING_URL,
     parsed: raw.length,
