@@ -6,9 +6,9 @@ describe("homePathForRole", () => {
     expect(homePathForRole("parent")).toBe("/family");
   });
 
-  it("sends coaches and students to orgs", () => {
+  it("sends coaches to orgs and students to their tournament plan", () => {
     expect(homePathForRole("coach")).toBe("/orgs");
-    expect(homePathForRole("student")).toBe("/orgs");
+    expect(homePathForRole("student")).toBe("/me");
   });
 
   it("falls back to /me when role is missing", () => {

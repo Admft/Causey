@@ -14,12 +14,15 @@ export function ExternalRegistrationPanel({
   registrationHost,
   initialStatus,
   signedIn,
+  embedded = false,
 }: {
   competitionId: string;
   eventSlug: string;
   registrationHost: string;
   initialStatus: ExternalRegistrationStatus | null;
   signedIn: boolean;
+  /** When true, drop outer section chrome — parent already titled the next step. */
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
@@ -55,25 +58,36 @@ export function ExternalRegistrationPanel({
     }
   }
 
+  const errorLine = error ? (
+    <p className="mt-2 text-xs font-medium text-brand-red" role="alert">
+      {error}
+    </p>
+  ) : null;
+
   if (status === "registered") {
-    return (
-      <section
-        className="mt-6 rounded-xl border border-brand-red/25 bg-accent-soft p-4"
-        aria-labelledby="external-registration-status"
-        aria-live="polite"
-      >
-        <h2
-          id="external-registration-status"
-          className="text-base font-semibold text-foreground"
-        >
-          Organizer registration complete
-        </h2>
-        <p className="mt-1 max-w-prose text-sm text-muted-strong">
-          You marked this complete, so Causey will keep the tournament in My
-          tournaments. The organizer remains the source of truth for your entry
-          and payment.
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-4">
+    const body = (
+      <>
+        {!embedded ? (
+          <>
+            <h2
+              id="external-registration-status"
+              className="text-base font-semibold text-foreground"
+            >
+              Organizer registration complete
+            </h2>
+            <p className="mt-1 max-w-prose text-sm text-muted-strong">
+              You marked this complete, so Causey will keep the tournament in My
+              tournaments. The organizer remains the source of truth for your entry
+              and payment.
+            </p>
+          </>
+        ) : (
+          <p className="max-w-prose text-sm text-muted-strong">
+            Causey will keep this in My tournaments. The organizer remains the
+            source of truth for entry and payment.
+          </p>
+        )}
+        <div className={`${embedded ? "mt-4" : "mt-3"} flex flex-wrap items-center gap-4`}>
           <a
             href={registrationHref}
             target="_blank"
@@ -92,33 +106,44 @@ export function ExternalRegistrationPanel({
             {pending ? "Saving…" : "Registration is still needed"}
           </button>
         </div>
-        {error ? (
-          <p className="mt-2 text-xs font-medium text-brand-red" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {errorLine}
+      </>
+    );
+    if (embedded) return <div className="mt-4">{body}</div>;
+    return (
+      <section
+        className="mt-6 rounded-xl border border-brand-red/25 bg-accent-soft p-4"
+        aria-labelledby="external-registration-status"
+        aria-live="polite"
+      >
+        {body}
       </section>
     );
   }
 
   if (signedIn && status === "opened") {
-    return (
-      <section
-        className="mt-6 rounded-xl border border-line bg-surface p-4"
-        aria-labelledby="external-registration-question"
-        aria-live="polite"
-      >
-        <h2
-          id="external-registration-question"
-          className="text-base font-semibold text-foreground"
-        >
-          Is organizer registration complete?
-        </h2>
-        <p className="mt-1 max-w-prose text-sm text-muted">
-          Causey cannot see the organizer&rsquo;s checkout. Confirm here after
-          you submit any required registration and payment.
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+    const body = (
+      <>
+        {!embedded ? (
+          <>
+            <h2
+              id="external-registration-question"
+              className="text-base font-semibold text-foreground"
+            >
+              Is organizer registration complete?
+            </h2>
+            <p className="mt-1 max-w-prose text-sm text-muted">
+              Causey cannot see the organizer&rsquo;s checkout. Confirm here after
+              you submit any required registration and payment.
+            </p>
+          </>
+        ) : (
+          <p className="max-w-prose text-sm text-muted">
+            Causey cannot see the organizer&rsquo;s checkout. Confirm after you
+            finish registration and payment.
+          </p>
+        )}
+        <div className={`${embedded ? "mt-4" : "mt-4"} flex flex-wrap items-center gap-3`}>
           <button
             type="button"
             disabled={pending}
@@ -145,22 +170,28 @@ export function ExternalRegistrationPanel({
             Open registration site again <span aria-hidden="true">↗</span>
           </a>
         </div>
-        {error ? (
-          <p className="mt-2 text-xs font-medium text-brand-red" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {errorLine}
+      </>
+    );
+    if (embedded) return <div className="mt-4">{body}</div>;
+    return (
+      <section
+        className="mt-6 rounded-xl border border-line bg-surface p-4"
+        aria-labelledby="external-registration-question"
+        aria-live="polite"
+      >
+        {body}
       </section>
     );
   }
 
-  return (
-    <div className="mt-6">
+  const defaultBody = (
+    <>
       <a
         href={registrationHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="cta-enabled"
+        className="cta-enabled inline-flex"
         aria-label={`Register on ${registrationHost}; opens in a new tab`}
         onClick={() => {
           if (signedIn) setStatus("opened");
@@ -199,11 +230,10 @@ export function ExternalRegistrationPanel({
           </>
         ) : null}
       </p>
-      {error ? (
-        <p className="mt-2 text-xs font-medium text-brand-red" role="alert">
-          {error}
-        </p>
-      ) : null}
-    </div>
+      {errorLine}
+    </>
   );
+
+  if (embedded) return <div className="mt-4">{defaultBody}</div>;
+  return <div className="mt-6">{defaultBody}</div>;
 }

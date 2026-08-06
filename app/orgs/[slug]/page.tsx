@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { AnnouncementForm } from "@/components/AnnouncementForm";
 import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
+import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
 import {
@@ -35,6 +36,28 @@ function formatSavedAt(value: string): string {
     day: "numeric",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function coachEventAction(event: {
+  slug: string;
+  status: string;
+}): { href: string; label: string } {
+  if (event.status === "rejected") {
+    return { href: `/event/${event.slug}/edit`, label: "Fix and resubmit" };
+  }
+  if (event.status === "draft") {
+    return {
+      href: `/event/${event.slug}/manage`,
+      label: "Review and publish",
+    };
+  }
+  if (event.status === "pending_review") {
+    return {
+      href: `/event/${event.slug}/manage`,
+      label: "View while in review",
+    };
+  }
+  return { href: `/event/${event.slug}/manage`, label: "Manage invites" };
 }
 
 export default async function OrgPage({
@@ -76,6 +99,89 @@ export default async function OrgPage({
     isUpcomingEvent(e, today)
   );
 
+  const sortedDrafts = [...drafts].sort((a, b) =>
+    b.updated_at.localeCompare(a.updated_at)
+  );
+  const freshestDraft = sortedDrafts[0] ?? null;
+  const priorityUpcoming =
+    upcoming.find((e) => e.status === "rejected") ??
+    upcoming.find((e) => e.status === "draft") ??
+    upcoming.find((e) => e.status === "pending_review") ??
+    upcoming[0] ??
+    null;
+
+  const coachMission = (() => {
+    if (!isCoach || org.type === "district") return null;
+    if (freshestDraft) {
+      return {
+        title: `Resume “${freshestDraft.data.name.trim() || "Untitled tournament"}”`,
+        description: `Draft saved ${formatSavedAt(freshestDraft.updated_at)}${
+          freshestDraft.cover_image_url
+            ? ". Cover is ready — finish details and publish when you’re set."
+            : ". Add a cover and finish details before you publish."
+        }`,
+        action: {
+          href: `/orgs/${org.slug}/tournaments/new?draft=${freshestDraft.id}`,
+          label: "Resume draft",
+        },
+        secondary: {
+          href: `/orgs/${org.slug}/tournaments/new`,
+          label: "Create another tournament",
+        },
+      };
+    }
+    if (priorityUpcoming) {
+      const action = coachEventAction(priorityUpcoming);
+      return {
+        title:
+          priorityUpcoming.status === "rejected"
+            ? `Fix “${priorityUpcoming.name}”`
+            : priorityUpcoming.status === "pending_review"
+              ? `“${priorityUpcoming.name}” is awaiting review`
+              : `Next up: ${priorityUpcoming.name}`,
+        description: `${formatDateRange(
+          priorityUpcoming.start_date,
+          priorityUpcoming.end_date
+        )}${
+          priorityUpcoming.city
+            ? ` · ${priorityUpcoming.city}, ${priorityUpcoming.state}`
+            : ""
+        }. ${
+          priorityUpcoming.status === "rejected"
+            ? "Platform review returned this listing — update it and resubmit."
+            : priorityUpcoming.status === "pending_review"
+              ? "You can still prep invites while the listing is in review."
+              : "Invite your roster and track RSVPs from manage."
+        }`,
+        action: { href: action.href, label: action.label },
+        secondary: {
+          href: `/orgs/${org.slug}/tournaments/new`,
+          label: "Create another tournament",
+        },
+      };
+    }
+    return {
+      title: "Create your first tournament",
+      description:
+        "Publish an event page, invite your roster with one click, and track who can attend.",
+      action: {
+        href: `/orgs/${org.slug}/tournaments/new`,
+        label: "Create tournament",
+      },
+      secondary: {
+        href: `/orgs/${org.slug}/roster`,
+        label: "Open roster",
+      },
+    };
+  })();
+
+  const otherDrafts = freshestDraft
+    ? sortedDrafts.filter((d) => d.id !== freshestDraft.id)
+    : sortedDrafts;
+  const otherUpcoming = priorityUpcoming
+    ? upcoming.filter((e) => e.id !== priorityUpcoming.id)
+    : upcoming;
+
   return (
     <>
       <OrgSubnavBar
@@ -86,7 +192,7 @@ export default async function OrgPage({
         showAdmin={isAdmin}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        <p className="text-sm font-semibold text-brand-red">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
           {ORG_TYPE_LABEL[org.type] ?? org.type}
           {org.state ? ` · ${org.state}` : ""}
         </p>
@@ -164,6 +270,17 @@ export default async function OrgPage({
           </section>
         ) : null}
 
+        {coachMission ? (
+          <div className="mt-8">
+            <PortalMission
+              title={coachMission.title}
+              description={coachMission.description}
+              action={coachMission.action}
+              secondary={coachMission.secondary}
+            />
+          </div>
+        ) : null}
+
         {announcements.length ? (
           <section className="mt-8 border-l-2 border-brand-red pl-5">
             <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
@@ -178,16 +295,15 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        <section className="section-rule mt-8 pt-8">
-          {isCoach ? (
+        {isCoach && !coachMission ? (
+          <section className="mt-8">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <h2 className="text-sm font-semibold text-foreground">
                   Hosted tournaments
                 </h2>
                 <p className="mt-1 max-w-lg text-xs text-muted">
-                  Create and publish an event page, then invite your roster and
-                  track replies.
+                  Create and publish an event page, then invite your roster.
                 </p>
               </div>
               <Link
@@ -197,157 +313,184 @@ export default async function OrgPage({
                 Create tournament
               </Link>
             </div>
-          ) : (
-            <h2 className="text-sm font-semibold text-foreground">
+          </section>
+        ) : null}
+
+        {!isCoach ? (
+          <section className="mt-8">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
               Upcoming tournaments
             </h2>
-          )}
-          {isCoach && drafts.length ? (
-            <div className="mt-6">
-              <h3 className="text-xs font-semibold text-muted-strong">
-                Drafts to finish
-              </h3>
-              <ul className="mt-3 flex flex-col gap-2">
-                {drafts.map((draft) => (
-                  <li
-                    key={draft.id}
-                    className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {draft.data.name.trim() || "Untitled tournament"}
-                      </p>
-                      <p className="mt-1 text-xs text-muted">
-                        Saved {formatSavedAt(draft.updated_at)}
-                        {draft.cover_image_url ? " · cover added" : " · cover still needed"}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/orgs/${org.slug}/tournaments/new?draft=${draft.id}`}
-                      className="text-sm font-semibold text-brand-red hover:underline"
-                    >
-                      Resume draft
-                    </Link>
-                  </li>
-                ))}
+            {!upcoming.length ? (
+              <p className="mt-3 text-sm text-muted">
+                Nothing scheduled yet. Check back soon.
+              </p>
+            ) : (
+              <ul className="mt-2">
+                {upcoming.map((event) => {
+                  const rsvp = myRsvpByCompetition.get(event.id);
+                  return (
+                    <PortalListRow
+                      key={event.id}
+                      href={`/event/${event.slug}`}
+                      title={event.name}
+                      meta={`${formatDateRange(
+                        event.start_date,
+                        event.end_date
+                      )}${
+                        event.city ? ` · ${event.city}, ${event.state}` : ""
+                      } · ${formatFeeCents(event.entry_fee_cents)}${
+                        event.visibility === "private" ? " · members only" : ""
+                      }`}
+                      trailing={
+                        rsvp ? (
+                          <RsvpButtons
+                            competitionId={event.id}
+                            profileId={user.id}
+                            status={rsvp.status}
+                            eventSlug={event.slug}
+                          />
+                        ) : null
+                      }
+                    />
+                  );
+                })}
               </ul>
-            </div>
-          ) : null}
-          {!upcoming.length ? (
-            <p className="mt-3 text-sm text-muted">
-              {isCoach
-                ? drafts.length
-                  ? "No published tournaments yet. Finish a draft when you’re ready."
-                  : "No hosted tournaments yet. Create one, then invite your roster."
-                : "Nothing scheduled yet. Check back soon."}
-            </p>
-          ) : (
-            <ul className="mt-4 flex flex-col gap-3">
-              {upcoming.map((event) => {
-                const rsvp = myRsvpByCompetition.get(event.id);
-                return (
-                  <li
-                    key={event.id}
-                    className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <Link
+            )}
+          </section>
+        ) : null}
+
+        {isCoach &&
+        (otherDrafts.length > 0 ||
+          otherUpcoming.length > 0 ||
+          Boolean(freshestDraft && priorityUpcoming)) ? (
+          <section className="mt-10">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+              Hosted tournaments
+            </h2>
+            {otherDrafts.length ? (
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Other drafts
+                </h3>
+                <ul className="mt-1">
+                  {otherDrafts.map((draft) => (
+                    <PortalListRow
+                      key={draft.id}
+                      title={draft.data.name.trim() || "Untitled tournament"}
+                      meta={`Saved ${formatSavedAt(draft.updated_at)}${
+                        draft.cover_image_url
+                          ? " · cover added"
+                          : " · cover still needed"
+                      }`}
+                      trailing={
+                        <Link
+                          href={`/orgs/${org.slug}/tournaments/new?draft=${draft.id}`}
+                          className="text-sm font-semibold text-brand-red hover:underline"
+                        >
+                          Resume
+                        </Link>
+                      }
+                    />
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {otherUpcoming.length > 0 || (freshestDraft && priorityUpcoming) ? (
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {freshestDraft && priorityUpcoming
+                    ? "Published & in review"
+                    : "Also upcoming"}
+                </h3>
+                <ul className="mt-1">
+                  {(freshestDraft && priorityUpcoming
+                    ? [priorityUpcoming, ...otherUpcoming]
+                    : otherUpcoming
+                  ).map((event) => {
+                    const action = coachEventAction(event);
+                    return (
+                      <PortalListRow
+                        key={event.id}
                         href={`/event/${event.slug}`}
-                        className="font-semibold text-foreground hover:text-brand-red"
-                      >
-                        {event.name}
-                      </Link>
-                      <span className="mt-1 block text-xs text-muted">
-                        {formatDateRange(event.start_date, event.end_date)}
-                        {event.city ? ` · ${event.city}, ${event.state}` : ""}
-                        {` · ${formatFeeCents(event.entry_fee_cents)}`}
-                        {event.visibility === "private" ? " · members only" : ""}
-                        {event.status === "pending_review"
-                          ? " · awaiting platform review"
-                          : event.status === "rejected"
-                            ? " · returned for changes"
-                            : ""}
-                      </span>
-                    </div>
-                    {rsvp ? (
-                      <RsvpButtons
-                        competitionId={event.id}
-                        profileId={user.id}
-                        status={rsvp.status}
-                        eventSlug={event.slug}
-                      />
-                    ) : isCoach && event.status === "pending_review" ? (
-                      <span className="text-xs font-semibold text-muted-strong">
-                        Review pending
-                      </span>
-                    ) : isCoach ? (
-                      <Link
-                        href={
-                          event.status === "rejected"
-                            ? `/event/${event.slug}/edit`
-                            : `/event/${event.slug}/manage`
+                        title={event.name}
+                        meta={`${formatDateRange(
+                          event.start_date,
+                          event.end_date
+                        )}${
+                          event.city ? ` · ${event.city}, ${event.state}` : ""
+                        } · ${formatFeeCents(event.entry_fee_cents)}${
+                          event.visibility === "private" ? " · members only" : ""
+                        }${
+                          event.status === "pending_review"
+                            ? " · awaiting platform review"
+                            : event.status === "rejected"
+                              ? " · returned for changes"
+                              : ""
+                        }`}
+                        trailing={
+                          event.status === "pending_review" ? (
+                            <span className="text-xs font-semibold text-muted-strong">
+                              Review pending
+                            </span>
+                          ) : (
+                            <Link
+                              href={action.href}
+                              className="text-sm font-semibold text-brand-red hover:underline"
+                            >
+                              {action.label}
+                            </Link>
+                          )
                         }
-                        className="text-sm font-semibold text-brand-red hover:underline"
-                      >
-                        {event.status === "draft"
-                          ? "Review and publish"
-                          : event.status === "rejected"
-                            ? "Fix and resubmit"
-                            : "Manage invites"}
-                      </Link>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+                      />
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         {attendingUpcoming.length ? (
-          <section className="section-rule mt-10 pt-8">
-            <h2 className="text-sm font-semibold text-foreground">
+          <section className="mt-10 border-t border-line pt-8">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
               We&rsquo;re attending
             </h2>
             <p className="mt-1 text-xs text-muted">
               Public tournaments this organization is going to.
             </p>
-            <ul className="mt-4 flex flex-col gap-3">
+            <ul className="mt-2">
               {attendingUpcoming.map((event) => {
                 const rsvp = myRsvpByCompetition.get(event.id);
                 return (
-                  <li
+                  <PortalListRow
                     key={event.id}
-                    className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <Link
-                        href={`/event/${event.slug}`}
-                        className="font-semibold text-foreground hover:text-brand-red"
-                      >
-                        {event.name}
-                      </Link>
-                      <span className="mt-1 block text-xs text-muted">
-                        {formatDateRange(event.start_date, event.end_date)}
-                        {event.city ? ` · ${event.city}, ${event.state}` : ""}
-                        {` · ${formatFeeCents(event.entry_fee_cents)}`}
-                      </span>
-                    </div>
-                    {rsvp ? (
-                      <RsvpButtons
-                        competitionId={event.id}
-                        profileId={user.id}
-                        status={rsvp.status}
-                        eventSlug={event.slug}
-                      />
-                    ) : isCoach ? (
-                      <Link
-                        href={`/event/${event.slug}/manage`}
-                        className="text-sm font-semibold text-brand-red hover:underline"
-                      >
-                        Manage entrants
-                      </Link>
-                    ) : null}
-                  </li>
+                    href={`/event/${event.slug}`}
+                    title={event.name}
+                    meta={`${formatDateRange(
+                      event.start_date,
+                      event.end_date
+                    )}${
+                      event.city ? ` · ${event.city}, ${event.state}` : ""
+                    } · ${formatFeeCents(event.entry_fee_cents)}`}
+                    trailing={
+                      rsvp ? (
+                        <RsvpButtons
+                          competitionId={event.id}
+                          profileId={user.id}
+                          status={rsvp.status}
+                          eventSlug={event.slug}
+                        />
+                      ) : isCoach ? (
+                        <Link
+                          href={`/event/${event.slug}/manage`}
+                          className="text-sm font-semibold text-brand-red hover:underline"
+                        >
+                          Manage entrants
+                        </Link>
+                      ) : null
+                    }
+                  />
                 );
               })}
             </ul>
@@ -355,30 +498,25 @@ export default async function OrgPage({
         ) : null}
 
         {past.length ? (
-          <section className="section-rule mt-10 pt-8">
-            <h2 className="text-sm font-semibold text-foreground">
-              {isCoach ? "Past hosted tournaments" : "Past tournaments"}
+          <section className="mt-10 border-t border-line pt-8">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+              {isCoach ? "Past hosted" : "Past tournaments"}
             </h2>
-            <ul className="mt-4 flex flex-col gap-2">
+            <ul className="mt-2">
               {past.map((event) => (
-                <li key={event.id} className="flex items-baseline justify-between gap-3 text-sm">
-                  <Link
-                    href={`/event/${event.slug}`}
-                    className="font-medium text-foreground hover:text-brand-red"
-                  >
-                    {event.name}
-                  </Link>
-                  <span className="shrink-0 text-xs text-muted">
-                    {formatDateRange(event.start_date, event.end_date)}
-                  </span>
-                </li>
+                <PortalListRow
+                  key={event.id}
+                  href={`/event/${event.slug}`}
+                  title={event.name}
+                  meta={formatDateRange(event.start_date, event.end_date)}
+                />
               ))}
             </ul>
           </section>
         ) : null}
 
         {isCoach ? (
-          <section className="section-rule mt-10 pt-8">
+          <section className="mt-10 border-t border-line pt-8">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
               <div>
                 <h2 className="font-display text-xl font-bold text-foreground">
@@ -395,7 +533,7 @@ export default async function OrgPage({
         ) : null}
 
         {!isCoach && membership?.status === "active" ? (
-          <div className="section-rule mt-10 pt-8">
+          <div className="mt-10 border-t border-line pt-8">
             <LeaveOrgButton orgId={org.id} orgName={org.name} />
           </div>
         ) : null}

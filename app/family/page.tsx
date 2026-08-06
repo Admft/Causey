@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DismissRecommendationButton } from "@/components/DismissRecommendationButton";
 import { LinkChildForm } from "@/components/LinkChildForm";
+import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
@@ -18,16 +19,16 @@ import { formatDateRange } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Family",
-  description: "Your children's clubs, tournaments, and RSVPs in one place.",
+  title: "Family desk",
+  description: "See which student needs an RSVP and act from one place.",
 };
 
 export default async function FamilyPage() {
   if (!isSupabaseConfigured()) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
         <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
-          Family
+          Family desk
         </h1>
         <p className="mt-3 text-sm text-muted">
           Connect Supabase (set NEXT_PUBLIC_SUPABASE_URL and
@@ -76,13 +77,18 @@ export default async function FamilyPage() {
   const firstChildNeedingResponse = childrenByPriority.find(
     (child) => child.responseCount > 0
   );
+  const actionInbox = childrenByPriority.flatMap((child) =>
+    child.upcoming
+      .filter((row) => row.status === "invited")
+      .map((row) => ({ child, row }))
+  );
 
   const linkStudentSection = (
-    <section id="link-student" className="section-rule mt-10 scroll-mt-24 pt-8">
-      <h2 className="text-sm font-semibold text-foreground">
+    <section id="link-student" className="mt-12 scroll-mt-24">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
         {pendingCount > 0 ? "Link another student" : "Link a student"}
       </h2>
-      <div className="mt-4">
+      <div className="mt-3 max-w-lg">
         <LinkChildForm />
       </div>
       {pendingCount > 0 ? (
@@ -95,201 +101,244 @@ export default async function FamilyPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      <p className="text-sm font-semibold text-brand-red">Family</p>
-      <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        Your students
-      </h1>
-      <p className="mt-2 text-sm text-muted">
-        Link with your child&rsquo;s account to follow their clubs and RSVP to
-        tournaments for them.
-      </p>
+    <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_14rem]">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            Parent desk
+          </p>
+          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+            Who needs you
+          </h1>
+          <p className="mt-2 max-w-prose text-sm text-muted">
+            Answer each student&rsquo;s tournament invitations here. Clubs and
+            link requests stay secondary.
+          </p>
 
-      <section className="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-6">
-        <h2 className="font-display text-xl font-bold text-foreground">
-          {!children.length
-            ? pendingCount
-              ? "Waiting for your student"
-              : "Link your first student"
-            : totalResponsesNeeded
-              ? `${totalResponsesNeeded} ${
-                  totalResponsesNeeded === 1 ? "RSVP needs" : "RSVPs need"
-                } your response`
-              : "Your family is caught up"}
-        </h2>
-        <p className="mt-2 max-w-prose text-sm text-muted">
-          {!children.length
-            ? pendingCount
-              ? "Your request is pending. Your student needs to accept it from their account page before their activity appears here."
-              : "Send a link request so tournament invitations and club activity appear here."
-            : totalResponsesNeeded
-              ? `Start with ${firstChildNeedingResponse?.display_name ?? "your student"}, then review any other unanswered invitations.`
-              : "No tournament invitations need a response right now."}
-        </p>
-        {!children.length && pendingCount ? null : (
-          <Link
-            href={
-              !children.length
-                ? "#link-student"
-                : totalResponsesNeeded
-                  ? `#student-${firstChildNeedingResponse?.profile_id}`
-                  : "/chess"
-            }
-            className="cta-enabled mt-5 inline-flex"
-          >
-            {!children.length
-              ? "Link a student"
-              : totalResponsesNeeded
-                ? "Review RSVPs"
-                : "Search tournaments"}
-          </Link>
-        )}
-      </section>
-
-      {!children.length ? linkStudentSection : null}
-
-      {childrenByPriority.map((child) => {
-        const needsResponse = child.upcoming.filter(
-          (row) => row.status === "invited"
-        );
-        const answered = child.upcoming.filter(
-          (row) => row.status !== "invited"
-        );
-        const renderEventRow = (row: (typeof child.upcoming)[number]) => (
-          <li
-            key={row.competition_id}
-            className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <Link
-                href={`/event/${row.competition!.slug}`}
-                className="font-semibold text-foreground hover:text-brand-red"
-              >
-                {row.competition!.name}
-              </Link>
-              <span className="mt-1 block text-xs text-muted">
-                {formatDateRange(
-                  row.competition!.start_date,
-                  row.competition!.end_date
-                )}
-                {row.competition!.city
-                  ? ` · ${row.competition!.city}, ${row.competition!.state}`
-                  : ""}
-                {row.responded_by === user.id
-                  ? " · RSVP’d by you"
-                  : row.responded_by === child.profile_id
-                    ? ` · RSVP’d by ${child.display_name}`
-                    : ""}
-              </span>
-            </div>
-            <RsvpButtons
-              competitionId={row.competition_id}
-              profileId={child.profile_id}
-              status={row.status}
-              eventSlug={row.competition!.slug}
+          <div className="mt-8">
+            <PortalMission
+              title={
+                !children.length
+                  ? pendingCount
+                    ? "Waiting for your student"
+                    : "Link your first student"
+                  : totalResponsesNeeded
+                    ? `${totalResponsesNeeded} ${
+                        totalResponsesNeeded === 1 ? "RSVP needs" : "RSVPs need"
+                      } a response`
+                    : "Your family is caught up"
+              }
+              description={
+                !children.length
+                  ? pendingCount
+                    ? "Your request is pending. Your student needs to accept it before their activity appears here."
+                    : "Send a link request so tournament invitations appear in this desk."
+                  : totalResponsesNeeded
+                    ? `Start with ${firstChildNeedingResponse?.display_name ?? "your student"}, then work down the list.`
+                    : "No tournament invitations need a response right now."
+              }
+              action={
+                !children.length && pendingCount
+                  ? undefined
+                  : {
+                      href: !children.length
+                        ? "#link-student"
+                        : totalResponsesNeeded
+                          ? "#needs-response"
+                          : "/chess",
+                      label: !children.length
+                        ? "Link a student"
+                        : totalResponsesNeeded
+                          ? "Review RSVPs"
+                          : "Search tournaments",
+                    }
+              }
             />
-          </li>
-        );
-        return (
-          <section
-            id={`student-${child.profile_id}`}
-            key={child.profile_id}
-            className="section-rule mt-10 scroll-mt-24 pt-8"
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
-                {child.display_name}
-              </h2>
-              <UnlinkChildButton
-                childProfileId={child.profile_id}
-                childName={child.display_name}
-              />
-            </div>
-            <p className="mt-1 text-sm text-muted">
-              {child.orgs.length
-                ? child.orgs.map((org, i) => (
-                    <span key={org.id}>
-                      {i > 0 ? " · " : ""}
-                      <Link
-                        href={`/orgs/${org.slug}`}
-                        className="font-medium text-muted-strong hover:text-foreground"
-                      >
-                        {org.name}
-                      </Link>
-                    </span>
-                  ))
-                : "Not in any club yet."}
-            </p>
+          </div>
 
-            {!child.upcoming.length ? (
-              <p className="mt-4 text-sm text-muted">
-                No upcoming tournament invites.
-              </p>
-            ) : (
-              <div className="mt-4 flex flex-col gap-6">
-                {needsResponse.length ? (
-                  <div>
-                    <h3 className="text-xs font-semibold text-brand-red">
-                      {needsResponse.length === 1
-                        ? "1 invitation needs your response"
-                        : `${needsResponse.length} invitations need your response`}
-                    </h3>
-                    <ul className="mt-3 flex flex-col gap-3">
-                      {needsResponse.map(renderEventRow)}
-                    </ul>
-                  </div>
-                ) : null}
-                {answered.length ? (
-                  <div>
+          {!children.length ? linkStudentSection : null}
+
+          {actionInbox.length ? (
+            <section id="needs-response" className="mt-10 scroll-mt-24">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+                Needs a response
+              </h2>
+              <ul className="mt-2">
+                {actionInbox.map(({ child, row }) => (
+                  <li
+                    key={`${child.profile_id}-${row.competition_id}`}
+                    className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-muted-strong">
+                        {child.display_name}
+                      </p>
+                      <Link
+                        href={`/event/${row.competition!.slug}`}
+                        className="font-semibold text-foreground hover:text-brand-red"
+                      >
+                        {row.competition!.name}
+                      </Link>
+                      <span className="mt-1 block text-xs text-muted">
+                        {formatDateRange(
+                          row.competition!.start_date,
+                          row.competition!.end_date
+                        )}
+                        {row.competition!.city
+                          ? ` · ${row.competition!.city}, ${row.competition!.state}`
+                          : ""}
+                      </span>
+                    </div>
+                    <RsvpButtons
+                      competitionId={row.competition_id}
+                      profileId={child.profile_id}
+                      status={row.status}
+                      eventSlug={row.competition!.slug}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {childrenByPriority.map((child) => {
+            const answered = child.upcoming.filter(
+              (row) => row.status !== "invited"
+            );
+            return (
+              <section
+                id={`student-${child.profile_id}`}
+                key={child.profile_id}
+                className="mt-10 scroll-mt-24 border-t border-line pt-8"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
+                    {child.display_name}
+                  </h2>
+                  <UnlinkChildButton
+                    childProfileId={child.profile_id}
+                    childName={child.display_name}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-muted">
+                  {child.orgs.length
+                    ? child.orgs.map((org, i) => (
+                        <span key={org.id}>
+                          {i > 0 ? " · " : ""}
+                          <Link
+                            href={`/orgs/${org.slug}`}
+                            className="font-medium text-muted-strong hover:text-foreground"
+                          >
+                            {org.name}
+                          </Link>
+                        </span>
+                      ))
+                    : "Not in any club yet."}
+                </p>
+
+                {!child.upcoming.length ? (
+                  <p className="mt-4 text-sm text-muted">
+                    No upcoming tournament invites.
+                  </p>
+                ) : answered.length ? (
+                  <div className="mt-4">
                     <h3 className="text-xs font-semibold text-muted-strong">
                       Answered
                     </h3>
-                    <ul className="mt-3 flex flex-col gap-3">
-                      {answered.map(renderEventRow)}
+                    <ul className="mt-1">
+                      {answered.map((row) => (
+                        <PortalListRow
+                          key={row.competition_id}
+                          href={`/event/${row.competition!.slug}`}
+                          title={row.competition!.name}
+                          meta={`${formatDateRange(
+                            row.competition!.start_date,
+                            row.competition!.end_date
+                          )}${
+                            row.responded_by === user.id
+                              ? " · RSVP’d by you"
+                              : row.responded_by === child.profile_id
+                                ? ` · RSVP’d by ${child.display_name}`
+                                : ""
+                          }`}
+                          trailing={
+                            <RsvpButtons
+                              competitionId={row.competition_id}
+                              profileId={child.profile_id}
+                              status={row.status}
+                              eventSlug={row.competition!.slug}
+                            />
+                          }
+                        />
+                      ))}
                     </ul>
                   </div>
                 ) : null}
-              </div>
-            )}
-          </section>
-        );
-      })}
+              </section>
+            );
+          })}
 
-      {children.length ? linkStudentSection : null}
+          {children.length ? linkStudentSection : null}
 
-      {recommendations.length ? (
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">
-            Recommended to you
-          </h2>
-          <ul className="mt-4 flex flex-col gap-3">
-            {recommendations.map((rec) => (
-              <li
-                key={rec.id}
-                className="flex flex-col gap-2 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <Link
+          {recommendations.length ? (
+            <section className="mt-12 border-t border-line pt-8">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+                Recommended to you
+              </h2>
+              <ul className="mt-2">
+                {recommendations.map((rec) => (
+                  <PortalListRow
+                    key={rec.id}
                     href={`/event/${rec.competition!.slug}`}
-                    className="font-semibold text-foreground hover:text-brand-red"
-                  >
-                    {rec.competition!.name}
-                  </Link>
-                  <span className="mt-1 block text-xs text-muted">
-                    {formatDateRange(
+                    title={rec.competition!.name}
+                    meta={`${formatDateRange(
                       rec.competition!.start_date,
                       rec.competition!.end_date
-                    )}
-                    {` · from ${rec.from_name}`}
-                    {rec.note ? ` — “${rec.note}”` : ""}
-                  </span>
-                </div>
-                <DismissRecommendationButton id={rec.id} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+                    )} · from ${rec.from_name}${
+                      rec.note ? ` — “${rec.note}”` : ""
+                    }`}
+                    trailing={<DismissRecommendationButton id={rec.id} />}
+                  />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 rounded-xl border border-line bg-surface-soft/80 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+              Students
+            </p>
+            {!children.length ? (
+              <p className="mt-2 text-sm text-muted">None linked yet.</p>
+            ) : (
+              <ul className="mt-3 flex flex-col gap-2">
+                {childrenByPriority.map((child) => (
+                  <li key={child.profile_id}>
+                    <a
+                      href={`#student-${child.profile_id}`}
+                      className="block text-sm font-semibold text-foreground hover:text-brand-red"
+                    >
+                      {child.display_name}
+                      {child.responseCount ? (
+                        <span className="mt-0.5 block text-xs font-medium text-brand-red">
+                          {child.responseCount}{" "}
+                          {child.responseCount === 1 ? "RSVP" : "RSVPs"}
+                        </span>
+                      ) : (
+                        <span className="mt-0.5 block text-xs font-medium text-muted">
+                          Caught up
+                        </span>
+                      )}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
