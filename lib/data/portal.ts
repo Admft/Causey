@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
   AttendanceRow,
+  CompetitionAudience,
   CompetitionEntrant,
   EntrantStatus,
   Organization,
@@ -40,10 +41,24 @@ export type OrgEventRow = {
   start_date: string;
   end_date: string | null;
   visibility: "public" | "private";
+  audience: CompetitionAudience;
   entry_fee_cents: number | null;
-  /** Only selected where drafts are relevant; RLS hides drafts from non-staff. */
-  status?: "draft" | "published" | "archived";
+  status: "draft" | "pending_review" | "published" | "rejected" | "archived";
 };
+
+export type OrgAnnouncementRow = {
+  id: string;
+  org_id: string;
+  title: string;
+  body: string;
+  published_at: string;
+  archived_at: string | null;
+};
+
+export type DistrictSchoolRow = Pick<
+  Organization,
+  "id" | "name" | "slug" | "state" | "verification_status"
+>;
 
 export type TournamentDraftRow = {
   id: string;
@@ -66,9 +81,13 @@ export type OrgForViewer = {
   org: Organization;
   membership: OrgMembership | null;
   isCoach: boolean;
+  isAdmin: boolean;
+  isDistrictAdmin: boolean;
   activeMemberCount: number;
   events: OrgEventRow[];
   drafts: TournamentDraftRow[];
+  schools: DistrictSchoolRow[];
+  announcements: OrgAnnouncementRow[];
 };
 
 export type EntrantWithEvent = {
@@ -86,9 +105,25 @@ export type GroupWithMembers = OrgGroup & { member_ids: string[] };
 
 function coachOf(org: Organization, membership: OrgMembership | null, userId: string) {
   return (
+    org.owner_profile_id === userId ||
     org.created_by === userId ||
     (membership?.status === "active" &&
-      (membership.role === "coach" || membership.role === "admin"))
+      [
+        "assistant_coach",
+        "coach",
+        "school_admin",
+        "district_admin",
+      ].includes(membership.role))
+  );
+}
+
+function adminOf(org: Organization, membership: OrgMembership | null, userId: string) {
+  return (
+    org.owner_profile_id === userId ||
+    org.created_by === userId ||
+    (membership?.status === "active" &&
+      (membership.role === "school_admin" ||
+        membership.role === "district_admin"))
   );
 }
 
@@ -124,7 +159,13 @@ export async function getMyOrgs(userId: string): Promise<MyOrgRow[]> {
       org,
       memberRole,
       isCoach:
-        existing?.isCoach || memberRole === "coach" || memberRole === "admin",
+        existing?.isCoach ||
+        [
+          "assistant_coach",
+          "coach",
+          "school_admin",
+          "district_admin",
+        ].includes(memberRole),
     });
   }
   return [...rows.values()].sort((a, b) => a.org.name.localeCompare(b.org.name));
@@ -142,7 +183,8 @@ export async function getOrgBySlugForViewer(
     .maybeSingle();
   if (!org) return null;
 
-  const [membershipRes, countRes, eventsRes, draftsRes] = await Promise.all([
+  const [membershipRes, countRes, eventsRes, draftsRes, schoolsRes, announcementsRes] =
+    await Promise.all([
     supabase
       .from("org_memberships")
       .select("*")
@@ -157,12 +199,12 @@ export async function getOrgBySlugForViewer(
     supabase
       .from("competitions")
       .select(
-        "id, slug, name, city, state, start_date, end_date, visibility, entry_fee_cents, status"
+        "id, slug, name, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status"
       )
       .eq("org_id", org.id)
       // Drafts are included so an organizer can find and publish them. RLS
       // only returns them to the creator and the org's coaches.
-      .in("status", ["draft", "published"])
+      .in("status", ["draft", "pending_review", "published", "rejected"])
       .order("start_date", { ascending: true }),
     supabase
       .from("tournament_drafts")
@@ -171,6 +213,19 @@ export async function getOrgBySlugForViewer(
       )
       .eq("org_id", org.id)
       .order("updated_at", { ascending: false }),
+    supabase
+      .from("organizations")
+      .select("id, name, slug, state, verification_status")
+      .eq("parent_org_id", org.id)
+      .eq("type", "school")
+      .order("name"),
+    supabase
+      .from("org_announcements")
+      .select("id, org_id, title, body, published_at, archived_at")
+      .eq("org_id", org.id)
+      .is("archived_at", null)
+      .order("published_at", { ascending: false })
+      .limit(5),
   ]);
 
   const membership = (membershipRes.data as OrgMembership | null) ?? null;
@@ -185,13 +240,24 @@ export async function getOrgBySlugForViewer(
         ]
       : [];
   });
+  const typedOrg = org as Organization;
+  const isAdmin = adminOf(typedOrg, membership, userId);
   return {
-    org: org as Organization,
+    org: typedOrg,
     membership,
-    isCoach: coachOf(org as Organization, membership, userId),
+    isCoach: coachOf(typedOrg, membership, userId),
+    isAdmin,
+    isDistrictAdmin:
+      typedOrg.type === "district" &&
+      isAdmin &&
+      (membership?.role === "district_admin" ||
+        typedOrg.owner_profile_id === userId ||
+        typedOrg.created_by === userId),
     activeMemberCount: countRes.count ?? 0,
     events: (eventsRes.data ?? []) as OrgEventRow[],
     drafts,
+    schools: (schoolsRes.data ?? []) as DistrictSchoolRow[],
+    announcements: (announcementsRes.data ?? []) as OrgAnnouncementRow[],
   };
 }
 

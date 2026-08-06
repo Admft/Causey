@@ -15,7 +15,29 @@ export const SeriesSchema = z.object({
   level: SeriesLevel,
 });
 
-export const CompetitionStatus = z.enum(["draft", "published", "archived"]);
+export const CompetitionStatus = z.enum([
+  "draft",
+  "pending_review",
+  "published",
+  "rejected",
+  "archived",
+]);
+
+export const CompetitionAudienceSchema = z.enum([
+  "public",
+  "district",
+  "school",
+  "invite_only",
+]);
+
+export const TournamentSectionDraftSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  minRating: z.number().int().nonnegative().nullable(),
+  maxRating: z.number().int().nonnegative().nullable(),
+  minGrade: z.number().int().min(0).max(12).nullable(),
+  maxGrade: z.number().int().min(0).max(12).nullable(),
+  entryFeeCents: z.number().int().nonnegative().nullable(),
+});
 
 /**
  * In-progress organizer input. Drafts deliberately accept incomplete values so
@@ -34,6 +56,8 @@ export const TournamentDraftDataSchema = z.object({
   entryFee: z.string().max(20).default(""),
   regUrl: z.string().max(2048).default(""),
   visibility: z.enum(["public", "private"]).default("private"),
+  audience: CompetitionAudienceSchema.optional(),
+  sections: z.array(TournamentSectionDraftSchema).max(20).optional(),
   rated: z.boolean().default(false),
 });
 
@@ -104,6 +128,7 @@ export const CompetitionSchema = z.object({
    * Coach-hosted private events require org membership (RLS).
    */
   visibility: z.enum(["public", "private"]).default("public"),
+  audience: CompetitionAudienceSchema.default("public"),
   org_id: z.string().uuid().nullable().optional().default(null),
   created_by: z.string().uuid().nullable().optional().default(null),
   /** Category-specific extras (STEM/debate later) without new columns. */
@@ -155,6 +180,7 @@ export const ZipSchema = z.object({
 
 export type Series = z.infer<typeof SeriesSchema>;
 export type SeriesLevel = z.infer<typeof SeriesLevel>;
+export type CompetitionAudience = z.infer<typeof CompetitionAudienceSchema>;
 export type Competition = z.infer<typeof CompetitionSchema>;
 export type Section = z.infer<typeof SectionSchema>;
 export type QualificationRule = z.infer<typeof QualificationRuleSchema>;
@@ -162,6 +188,7 @@ export type ZipRow = z.infer<typeof ZipSchema>;
 export type PathwayStatus = z.infer<typeof PathwayStatusSchema>;
 export type PathwayRelated = z.infer<typeof PathwayRelatedSchema>;
 export type TournamentDraftData = z.infer<typeof TournamentDraftDataSchema>;
+export type TournamentSectionDraft = z.infer<typeof TournamentSectionDraftSchema>;
 
 /** Grade bands offered as search filters. Values are inclusive grade ranges. */
 export const GRADE_BANDS = {

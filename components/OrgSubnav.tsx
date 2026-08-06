@@ -6,8 +6,11 @@ import Link from "next/link";
  */
 
 const TABS = [
-  { id: "overview", label: "Tournaments", path: "" },
-  { id: "roster", label: "Roster & groups", path: "/roster" },
+  { id: "overview", label: "Overview", path: "", access: "member" },
+  { id: "roster", label: "Roster & groups", path: "/roster", access: "staff" },
+  { id: "people", label: "Invites & staff", path: "/people", access: "admin" },
+  { id: "reports", label: "Reports", path: "/reports", access: "admin" },
+  { id: "settings", label: "Settings", path: "/settings", access: "admin" },
 ] as const;
 
 export type OrgTab = (typeof TABS)[number]["id"];
@@ -23,23 +26,32 @@ export function OrgSubnavBar({
   orgName,
   tab,
   showRoster,
+  showAdmin = false,
 }: {
   slug: string;
   orgName: string;
   tab: OrgTab;
   showRoster: boolean;
+  showAdmin?: boolean;
 }) {
-  const tabs = TABS.filter((t) => t.id !== "roster" || showRoster);
+  const tabs = TABS.filter((item) => {
+    if (item.access === "member") return true;
+    if (item.access === "staff") return showRoster;
+    return showAdmin;
+  });
   return (
     <div className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-5 py-2.5 sm:px-8">
-        <p className="text-xs font-semibold text-muted">
+      <div className="mx-auto grid max-w-6xl gap-2 px-5 py-2.5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <p className="truncate text-xs font-semibold text-muted">
           <Link href="/orgs" className="hover:text-foreground">
             Organizations
           </Link>{" "}
           / <span className="text-muted-strong">{orgName}</span>
         </p>
-        <nav aria-label="Organization sections" className="flex items-center gap-1">
+        <nav
+          aria-label="Organization sections"
+          className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-0.5"
+        >
           {tabs.map((t) => {
             const active = t.id === tab;
             if (active) {

@@ -14,7 +14,11 @@ import {
   updateTournament,
 } from "@/lib/actions/tournaments";
 import type { TournamentDraftRow } from "@/lib/data/portal";
-import type { TournamentDraftData } from "@/lib/schemas";
+import type {
+  CompetitionAudience,
+  TournamentDraftData,
+  TournamentSectionDraft,
+} from "@/lib/schemas";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 const STATES = [
@@ -58,7 +62,17 @@ export type TournamentFormInitial = {
   entry_fee_cents: number | null;
   reg_url: string | null;
   visibility: "public" | "private";
+  audience?: CompetitionAudience;
   rated: boolean;
+};
+
+const OPEN_SECTION: TournamentSectionDraft = {
+  name: "Open",
+  minRating: null,
+  maxRating: null,
+  minGrade: null,
+  maxGrade: null,
+  entryFeeCents: null,
 };
 
 export function TournamentCreateForm({
@@ -117,6 +131,16 @@ export function TournamentCreateForm({
   const [visibility, setVisibility] = useState<"private" | "public">(
     savedDraft?.visibility ?? initial?.visibility ?? "private"
   );
+  const [audience, setAudience] = useState<CompetitionAudience>(
+    savedDraft?.audience ??
+      initial?.audience ??
+      (savedDraft?.visibility === "public" || initial?.visibility === "public"
+        ? "public"
+        : "school")
+  );
+  const [sections, setSections] = useState<TournamentSectionDraft[]>(
+    savedDraft?.sections?.length ? savedDraft.sections : [OPEN_SECTION]
+  );
   const [rated, setRated] = useState(
     savedDraft?.rated ?? initial?.rated ?? false
   );
@@ -152,6 +176,8 @@ export function TournamentCreateForm({
       entryFee,
       regUrl,
       visibility,
+      audience,
+      sections,
       rated,
     };
   }
@@ -235,6 +261,8 @@ export function TournamentCreateForm({
     entryFee,
     regUrl,
     visibility,
+    audience,
+    sections,
     rated,
     edit,
     pending,
@@ -340,6 +368,8 @@ export function TournamentCreateForm({
         entryFeeCents: fee.cents,
         regUrl,
         visibility,
+        audience,
+        sections,
         rated,
       };
       if (edit) {
@@ -430,6 +460,21 @@ export function TournamentCreateForm({
   ]
     .filter(Boolean)
     .join(", ");
+  function updateSection(
+    index: number,
+    patch: Partial<TournamentSectionDraft>
+  ) {
+    setSections((current) =>
+      current.map((section, sectionIndex) =>
+        sectionIndex === index ? { ...section, ...patch } : section
+      )
+    );
+  }
+  function nullableInteger(raw: string): number | null {
+    if (!raw) return null;
+    const value = Number(raw);
+    return Number.isInteger(value) ? value : null;
+  }
   const audienceChooser = (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-xs font-semibold text-muted-strong">Who can see it</legend>
@@ -437,23 +482,36 @@ export function TournamentCreateForm({
         {(
           [
             {
-              value: "private",
-              label: "Private — this organization",
-              description: "Only your roster (and their linked parents) can see it.",
+              value: "school",
+              label: "School only",
+              description: "Members, linked parents, and staff in this school.",
+            },
+            {
+              value: "district",
+              label: "District only",
+              description: "People across the connected district and its schools.",
+            },
+            {
+              value: "invite_only",
+              label: "Invite only",
+              description: "Only invited students, linked parents, and event staff.",
             },
             {
               value: "public",
-              label: "Public — listed on Causey",
-              description: "Anyone browsing chess tournaments can find it.",
+              label: "Public",
+              description: "Listed in discovery after platform review.",
             },
           ] as const
         ).map((opt) => {
-          const selected = visibility === opt.value;
+          const selected = audience === opt.value;
           return (
             <button
               key={opt.value}
               type="button"
-              onClick={() => setVisibility(opt.value)}
+              onClick={() => {
+                setAudience(opt.value);
+                setVisibility(opt.value === "public" ? "public" : "private");
+              }}
               aria-pressed={selected}
               className={`rounded-xl border px-3 py-3 text-left transition-colors ${
                 selected
@@ -691,6 +749,150 @@ export function TournamentCreateForm({
             </label>
           </div>
 
+          {!edit ? (
+            <fieldset className="section-rule pt-5">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <legend className="text-sm font-semibold text-foreground">
+                    Tournament sections
+                  </legend>
+                  <p className="mt-1 text-xs text-muted">
+                    Add the rating or grade splits families need before they RSVP.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSections((current) => [
+                      ...current,
+                      { ...OPEN_SECTION, name: "" },
+                    ])
+                  }
+                  disabled={sections.length >= 20}
+                  className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                >
+                  Add section
+                </button>
+              </div>
+              <div className="mt-4 flex flex-col gap-4">
+                {sections.map((section, index) => (
+                  <div
+                    key={index}
+                    className="rounded-xl border border-line bg-surface p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold text-muted-strong">
+                        Section {index + 1}
+                      </p>
+                      {sections.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSections((current) =>
+                              current.filter(
+                                (_item, sectionIndex) => sectionIndex !== index
+                              )
+                            )
+                          }
+                          className="text-xs font-semibold text-muted hover:text-brand-red"
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                    </div>
+                    <label className="mt-3 block">
+                      <span className="text-xs font-semibold text-muted-strong">
+                        Section name
+                      </span>
+                      <input
+                        className="field mt-1"
+                        value={section.name}
+                        onChange={(event) =>
+                          updateSection(index, { name: event.target.value })
+                        }
+                        placeholder="K–5 U1000"
+                        required
+                        maxLength={80}
+                      />
+                    </label>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-4">
+                      <label>
+                        <span className="text-xs font-semibold text-muted-strong">
+                          Min rating
+                        </span>
+                        <input
+                          className="field mt-1"
+                          type="number"
+                          min={0}
+                          value={section.minRating ?? ""}
+                          onChange={(event) =>
+                            updateSection(index, {
+                              minRating: nullableInteger(event.target.value),
+                            })
+                          }
+                          placeholder="Any"
+                        />
+                      </label>
+                      <label>
+                        <span className="text-xs font-semibold text-muted-strong">
+                          Max rating
+                        </span>
+                        <input
+                          className="field mt-1"
+                          type="number"
+                          min={0}
+                          value={section.maxRating ?? ""}
+                          onChange={(event) =>
+                            updateSection(index, {
+                              maxRating: nullableInteger(event.target.value),
+                            })
+                          }
+                          placeholder="Any"
+                        />
+                      </label>
+                      <label>
+                        <span className="text-xs font-semibold text-muted-strong">
+                          Min grade
+                        </span>
+                        <input
+                          className="field mt-1"
+                          type="number"
+                          min={0}
+                          max={12}
+                          value={section.minGrade ?? ""}
+                          onChange={(event) =>
+                            updateSection(index, {
+                              minGrade: nullableInteger(event.target.value),
+                            })
+                          }
+                          placeholder="K = 0"
+                        />
+                      </label>
+                      <label>
+                        <span className="text-xs font-semibold text-muted-strong">
+                          Max grade
+                        </span>
+                        <input
+                          className="field mt-1"
+                          type="number"
+                          min={0}
+                          max={12}
+                          value={section.maxGrade ?? ""}
+                          onChange={(event) =>
+                            updateSection(index, {
+                              maxGrade: nullableInteger(event.target.value),
+                            })
+                          }
+                          placeholder="12"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
           {edit ? audienceChooser : null}
 
           <label className="flex items-center gap-2 text-sm text-foreground">
@@ -752,6 +954,35 @@ export function TournamentCreateForm({
                 </dd>
               </div>
             </dl>
+          </section>
+
+          <section>
+            <h3 className="text-xs font-semibold text-muted-strong">
+              Sections families will see
+            </h3>
+            <ul className="mt-2 divide-y divide-line border-y border-line">
+              {sections.map((section, index) => (
+                <li key={index} className="py-2.5 text-sm text-foreground">
+                  <span className="font-semibold">{section.name}</span>
+                  <span className="ml-2 text-xs text-muted">
+                    {[
+                      section.minRating !== null || section.maxRating !== null
+                        ? `rating ${section.minRating ?? "any"}–${
+                            section.maxRating ?? "open"
+                          }`
+                        : null,
+                      section.minGrade !== null || section.maxGrade !== null
+                        ? `grades ${section.minGrade ?? "K"}–${
+                            section.maxGrade ?? 12
+                          }`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "Open eligibility"}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </section>
 
           {audienceChooser}

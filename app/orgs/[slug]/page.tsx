@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { AnnouncementForm } from "@/components/AnnouncementForm";
 import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { RsvpButtons } from "@/components/RsvpButtons";
@@ -48,7 +49,17 @@ export default async function OrgPage({
 
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
-  const { org, membership, isCoach, activeMemberCount, events, drafts } = view;
+  const {
+    org,
+    membership,
+    isCoach,
+    isAdmin,
+    activeMemberCount,
+    events,
+    drafts,
+    schools,
+    announcements,
+  } = view;
 
   const [entrantRows, attendedEvents] = await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
@@ -67,8 +78,14 @@ export default async function OrgPage({
 
   return (
     <>
-      <OrgSubnavBar slug={org.slug} orgName={org.name} tab="overview" showRoster={isCoach} />
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <OrgSubnavBar
+        slug={org.slug}
+        orgName={org.name}
+        tab="overview"
+        showRoster={isCoach}
+        showAdmin={isAdmin}
+      />
+      <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">
           {ORG_TYPE_LABEL[org.type] ?? org.type}
           {org.state ? ` · ${org.state}` : ""}
@@ -78,8 +95,88 @@ export default async function OrgPage({
         </h1>
         <p className="mt-2 text-sm text-muted">
           {activeMemberCount} active {activeMemberCount === 1 ? "member" : "members"}
-          {isCoach ? " · you coach this organization" : ""}
+          {isAdmin
+            ? org.type === "district"
+              ? " · district administration"
+              : " · school administration"
+            : isCoach
+              ? " · coaching workspace"
+              : ""}
         </p>
+
+        {org.type === "district" && isAdmin ? (
+          <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)]">
+            <div className="rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-panel)]">
+              <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+                District next step
+              </p>
+              <h2 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
+                {schools.length
+                  ? "Keep every school’s program moving"
+                  : "Add the first school in this district"}
+              </h2>
+              <p className="mt-2 max-w-prose text-sm text-muted">
+                {schools.length
+                  ? `${schools.length} ${
+                      schools.length === 1 ? "school is" : "schools are"
+                    } connected. Open reporting for participation and unresolved invitations.`
+                  : "Create a school workspace, delegate its administrator, then invite staff and students."}
+              </p>
+              <Link
+                href={
+                  schools.length
+                    ? `/orgs/${org.slug}/reports`
+                    : `/orgs/${org.slug}/settings#schools`
+                }
+                className="cta-enabled mt-5 inline-flex"
+              >
+                {schools.length ? "Review district reporting" : "Add a school"}
+              </Link>
+            </div>
+            <div className="rounded-2xl border border-line bg-surface-soft p-5">
+              <p className="text-xs font-semibold text-muted-strong">
+                School workspaces
+              </p>
+              {!schools.length ? (
+                <p className="mt-3 text-sm text-muted">
+                  None yet. Schools you provision will appear here.
+                </p>
+              ) : (
+                <ul className="mt-3 divide-y divide-line">
+                  {schools.slice(0, 5).map((school) => (
+                    <li key={school.id} className="py-2.5">
+                      <Link
+                        href={`/orgs/${school.slug}`}
+                        className="flex items-baseline justify-between gap-3 text-sm font-semibold text-foreground hover:text-brand-red"
+                      >
+                        <span>{school.name}</span>
+                        <span className="text-xs font-normal text-muted">
+                          {school.verification_status === "verified"
+                            ? "Verified"
+                            : "Needs review"}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        ) : null}
+
+        {announcements.length ? (
+          <section className="mt-8 border-l-2 border-brand-red pl-5">
+            <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+              Latest announcement
+            </p>
+            <h2 className="mt-2 font-display text-xl font-bold text-foreground">
+              {announcements[0].title}
+            </h2>
+            <p className="mt-2 max-w-2xl whitespace-pre-line text-sm text-muted">
+              {announcements[0].body}
+            </p>
+          </section>
+        ) : null}
 
         <section className="section-rule mt-8 pt-8">
           {isCoach ? (
@@ -165,6 +262,11 @@ export default async function OrgPage({
                         {event.city ? ` · ${event.city}, ${event.state}` : ""}
                         {` · ${formatFeeCents(event.entry_fee_cents)}`}
                         {event.visibility === "private" ? " · members only" : ""}
+                        {event.status === "pending_review"
+                          ? " · awaiting platform review"
+                          : event.status === "rejected"
+                            ? " · returned for changes"
+                            : ""}
                       </span>
                     </div>
                     {rsvp ? (
@@ -174,14 +276,24 @@ export default async function OrgPage({
                         status={rsvp.status}
                         eventSlug={event.slug}
                       />
+                    ) : isCoach && event.status === "pending_review" ? (
+                      <span className="text-xs font-semibold text-muted-strong">
+                        Review pending
+                      </span>
                     ) : isCoach ? (
                       <Link
-                        href={`/event/${event.slug}/manage`}
+                        href={
+                          event.status === "rejected"
+                            ? `/event/${event.slug}/edit`
+                            : `/event/${event.slug}/manage`
+                        }
                         className="text-sm font-semibold text-brand-red hover:underline"
                       >
                         {event.status === "draft"
                           ? "Review and publish"
-                          : "Manage invites"}
+                          : event.status === "rejected"
+                            ? "Fix and resubmit"
+                            : "Manage invites"}
                       </Link>
                     ) : null}
                   </li>
@@ -262,6 +374,23 @@ export default async function OrgPage({
                 </li>
               ))}
             </ul>
+          </section>
+        ) : null}
+
+        {isCoach ? (
+          <section className="section-rule mt-10 pt-8">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
+              <div>
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  Coach announcement
+                </h2>
+                <p className="mt-2 text-sm text-muted">
+                  Share one clear operational update with members and linked
+                  parents. Avoid student-specific information.
+                </p>
+              </div>
+              <AnnouncementForm orgId={org.id} orgSlug={org.slug} />
+            </div>
           </section>
         ) : null}
 

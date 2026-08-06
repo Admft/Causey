@@ -4,9 +4,23 @@
  */
 
 export type OrganizationType = "school" | "club" | "team" | "district";
-export type OrgMemberRole = "student" | "coach" | "admin";
+export type OrgMemberRole =
+  | "student"
+  | "assistant_coach"
+  | "coach"
+  | "school_admin"
+  | "district_admin";
 export type OrgMemberStatus = "active" | "invited" | "removed";
 export type CompetitionVisibility = "public" | "private";
+export type CompetitionAudience =
+  | "public"
+  | "district"
+  | "school"
+  | "invite_only";
+export type OrganizationVerificationStatus =
+  | "pending"
+  | "verified"
+  | "rejected";
 
 export type Organization = {
   id: string;
@@ -15,6 +29,11 @@ export type Organization = {
   type: OrganizationType;
   state: string | null;
   created_by: string | null;
+  owner_profile_id: string | null;
+  parent_org_id: string | null;
+  verification_status: OrganizationVerificationStatus;
+  verified_at: string | null;
+  verified_by: string | null;
   join_code: string | null;
   join_code_rotated_at: string | null;
 };
@@ -34,7 +53,12 @@ export type OrgGroup = {
   created_at: string;
 };
 
-export type EntrantStatus = "invited" | "going" | "not_going";
+export type EntrantStatus =
+  | "invited"
+  | "going"
+  | "not_going"
+  | "attended"
+  | "did_not_attend";
 
 export type CompetitionEntrant = {
   competition_id: string;
@@ -43,6 +67,8 @@ export type CompetitionEntrant = {
   invited_by: string | null;
   responded_by: string | null;
   responded_at: string | null;
+  attendance_marked_by: string | null;
+  attendance_marked_at: string | null;
   created_at: string;
 };
 
@@ -79,4 +105,39 @@ export const ORG_TYPE_OPTIONS: { value: OrganizationType; label: string }[] = [
   { value: "club", label: "Club" },
   { value: "team", label: "Team" },
   { value: "district", label: "District" },
+];
+
+export const ORG_ROLE_LABELS: Record<OrgMemberRole, string> = {
+  student: "Student",
+  assistant_coach: "Assistant coach",
+  coach: "Coach",
+  school_admin: "School administrator",
+  district_admin: "District administrator",
+};
+
+export const COMPETITION_AUDIENCE_OPTIONS: {
+  value: CompetitionAudience;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "public",
+    label: "Public",
+    description: "Anyone can find it after Causey reviews the listing.",
+  },
+  {
+    value: "district",
+    label: "District only",
+    description: "Students, families, and staff across the district can open it.",
+  },
+  {
+    value: "school",
+    label: "School only",
+    description: "Only this school’s members, linked parents, and staff can open it.",
+  },
+  {
+    value: "invite_only",
+    label: "Invite only",
+    description: "Only invited students, linked parents, and event staff can open it.",
+  },
 ];

@@ -11,6 +11,7 @@ import {
 } from "@/lib/data/tournament-mutations";
 import {
   TournamentDraftDataSchema,
+  TournamentSectionDraftSchema,
   type TournamentDraftData,
 } from "@/lib/schemas";
 import { slugify, withSlugSuffix } from "@/lib/slug";
@@ -48,6 +49,10 @@ const TournamentCreateSchema = z
       .nullable()
       .or(z.literal("").transform(() => null)),
     visibility: z.enum(["public", "private"]),
+    audience: z
+      .enum(["public", "district", "school", "invite_only"])
+      .optional(),
+    sections: z.array(TournamentSectionDraftSchema).min(1).max(20).optional(),
     rated: z.boolean(),
   })
   .refine((v) => !v.endDate || v.endDate >= v.startDate, {
@@ -352,6 +357,10 @@ export async function publishTournamentDraft(
     entryFeeCents: fee.cents,
     regUrl: draftData.data.regUrl,
     visibility: draftData.data.visibility,
+    audience:
+      draftData.data.audience ??
+      (draftData.data.visibility === "public" ? "public" : "school"),
+    sections: draftData.data.sections,
     rated: draftData.data.rated,
   });
   if (!tournament.success) {
@@ -435,6 +444,9 @@ async function insertWithSlugRetry(
         image_url: imageUrl,
         status: "published",
         visibility: values.visibility,
+        audience:
+          values.audience ??
+          (values.visibility === "public" ? "public" : "school"),
         org_id: values.orgId,
         created_by: profileId,
         source_draft_id: sourceDraftId,
@@ -455,13 +467,33 @@ async function insertWithSlugRetry(
       return { ok: false, error: "Could not create the tournament. Try again." };
     }
 
-    // One open section by default; eligibility splits are a later edit.
-    await supabase.from("sections").insert({
-      competition_id: created.id,
-      name: "Open",
-    });
+    const sections = values.sections?.length
+      ? values.sections
+      : [
+          {
+            name: "Open",
+            minRating: null,
+            maxRating: null,
+            minGrade: null,
+            maxGrade: null,
+            entryFeeCents: null,
+          },
+        ];
+    await supabase.from("sections").insert(
+      sections.map((section) => ({
+        competition_id: created.id,
+        name: section.name,
+        min_rating: section.minRating,
+        max_rating: section.maxRating,
+        min_grade: section.minGrade,
+        max_grade: section.maxGrade,
+        entry_fee_cents: section.entryFeeCents,
+      }))
+    );
 
-    if (values.visibility === "public") revalidatePath("/chess");
+    if (values.audience === "public" || values.visibility === "public") {
+      revalidatePath("/chess");
+    }
     revalidatePath(`/orgs/${values.orgSlug}`);
     return { ok: true, slug: created.slug };
   }

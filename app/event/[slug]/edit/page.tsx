@@ -75,6 +75,7 @@ export default async function EditEventPage({
             entry_fee_cents: competition.entry_fee_cents,
             reg_url: competition.reg_url,
             visibility: competition.visibility,
+            audience: competition.audience,
             rated: competition.rated,
           }}
           edit={{ competitionId: competition.id, eventSlug: competition.slug }}

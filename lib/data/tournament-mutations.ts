@@ -68,6 +68,9 @@ export async function insertTournamentRecord(input: {
         source: "organizer",
         status,
         visibility: values.visibility,
+        audience:
+          values.audience ??
+          (values.visibility === "public" ? "public" : "school"),
         org_id: values.orgId,
         created_by: profileId,
       })
@@ -79,10 +82,29 @@ export async function insertTournamentRecord(input: {
       return { ok: false, error: "Could not create the tournament. Try again." };
     }
 
-    const { error: sectionError } = await supabase.from("sections").insert({
-      competition_id: created.id,
-      name: "Open",
-    });
+    const sections = values.sections?.length
+      ? values.sections
+      : [
+          {
+            name: "Open",
+            minRating: null,
+            maxRating: null,
+            minGrade: null,
+            maxGrade: null,
+            entryFeeCents: null,
+          },
+        ];
+    const { error: sectionError } = await supabase.from("sections").insert(
+      sections.map((section) => ({
+        competition_id: created.id,
+        name: section.name,
+        min_rating: section.minRating,
+        max_rating: section.maxRating,
+        min_grade: section.minGrade,
+        max_grade: section.maxGrade,
+        entry_fee_cents: section.entryFeeCents,
+      }))
+    );
     if (sectionError) {
       await supabase
         .from("competitions")
@@ -124,6 +146,9 @@ export async function updateTournamentRecord(input: {
       entry_fee_cents: values.entryFeeCents,
       rated: values.rated,
       visibility: values.visibility,
+      audience:
+        values.audience ??
+        (values.visibility === "public" ? "public" : "school"),
     })
     .eq("id", values.competitionId)
     .select("slug");

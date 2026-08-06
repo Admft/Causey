@@ -1,6 +1,29 @@
 import { z } from "zod";
 
 const DateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a real date.");
+const SectionInputSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name each section.").max(80),
+    minRating: z.number().int().nonnegative().nullable(),
+    maxRating: z.number().int().nonnegative().nullable(),
+    minGrade: z.number().int().min(0).max(12).nullable(),
+    maxGrade: z.number().int().min(0).max(12).nullable(),
+    entryFeeCents: z.number().int().nonnegative().nullable(),
+  })
+  .refine(
+    (section) =>
+      section.minRating === null ||
+      section.maxRating === null ||
+      section.minRating <= section.maxRating,
+    { message: "Section minimum rating can’t exceed its maximum.", path: ["maxRating"] }
+  )
+  .refine(
+    (section) =>
+      section.minGrade === null ||
+      section.maxGrade === null ||
+      section.minGrade <= section.maxGrade,
+    { message: "Section minimum grade can’t exceed its maximum.", path: ["maxGrade"] }
+  );
 
 const TournamentFieldsSchema = z
   .object({
@@ -21,6 +44,10 @@ const TournamentFieldsSchema = z
       .nullable()
       .or(z.literal("").transform(() => null)),
     visibility: z.enum(["public", "private"]),
+    audience: z
+      .enum(["public", "district", "school", "invite_only"])
+      .optional(),
+    sections: z.array(SectionInputSchema).min(1).max(20).optional(),
     rated: z.boolean(),
   })
   .refine((value) => !value.endDate || value.endDate >= value.startDate, {

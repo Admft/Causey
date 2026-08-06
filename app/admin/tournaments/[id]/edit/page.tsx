@@ -67,6 +67,7 @@ export default async function AdminEditTournamentPage({
             entry_fee_cents: tournament.entry_fee_cents,
             reg_url: tournament.reg_url,
             visibility: tournament.visibility,
+            audience: tournament.audience,
             rated: tournament.rated,
           }}
           edit={{

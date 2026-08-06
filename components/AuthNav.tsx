@@ -103,7 +103,7 @@ export function AuthNav() {
           : null;
 
   return (
-    <div className="flex items-center gap-4 sm:gap-5">
+    <div className="flex items-center gap-3 sm:gap-5">
       {isAdmin ? (
         <Link
           href="/admin"
@@ -125,9 +125,20 @@ export function AuthNav() {
         </Link>
       ) : null}
       <Link
+        href="/me/notifications"
+        aria-current={
+          pathname.startsWith("/me/notifications") ? "page" : undefined
+        }
+        className={`${navLinkClass(
+          pathname.startsWith("/me/notifications")
+        )} hidden sm:inline-flex`}
+      >
+        Notifications
+      </Link>
+      <Link
         href="/me"
-        aria-current={pathname.startsWith("/me") ? "page" : undefined}
-        className={navLinkClass(pathname.startsWith("/me"))}
+        aria-current={pathname === "/me" ? "page" : undefined}
+        className={navLinkClass(pathname === "/me")}
       >
         Account
       </Link>

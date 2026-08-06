@@ -43,12 +43,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="sticky top-0 z-50">
           <EarlyBuildBanner />
           <header className="border-b border-line bg-background/90 backdrop-blur-md">
-            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-              <Link href="/" aria-label="Causey home — browse competition types">
+            <div className="mx-auto flex h-16 max-w-6xl items-center gap-5 px-5 sm:px-8">
+              <Link
+                href="/"
+                aria-label="Causey home — browse competition types"
+                className="shrink-0"
+              >
                 <CauseyLogo size="md" />
               </Link>
               <nav
-                className="flex items-center gap-4 sm:gap-6"
+                className="ml-auto flex min-w-0 items-center gap-4 overflow-x-auto sm:gap-6"
                 aria-label="Primary"
               >
                 <PrimaryNav />

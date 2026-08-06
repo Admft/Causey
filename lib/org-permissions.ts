@@ -21,7 +21,41 @@ export function isOrgCoach(
   if (org.created_by === profileId) return true;
   return (
     membership?.status === "active" &&
-    (membership.role === "coach" || membership.role === "admin")
+    [
+      "assistant_coach",
+      "coach",
+      "school_admin",
+      "district_admin",
+    ].includes(membership.role)
+  );
+}
+
+export function isOrgAdmin(
+  org: Pick<Organization, "created_by" | "owner_profile_id">,
+  membership: Pick<OrgMembership, "role" | "status"> | null | undefined,
+  profileId: string
+): boolean {
+  if (org.owner_profile_id === profileId || org.created_by === profileId) {
+    return true;
+  }
+  return (
+    membership?.status === "active" &&
+    (membership.role === "school_admin" ||
+      membership.role === "district_admin")
+  );
+}
+
+export function isDistrictAdmin(
+  org: Pick<Organization, "type" | "created_by" | "owner_profile_id">,
+  membership: Pick<OrgMembership, "role" | "status"> | null | undefined,
+  profileId: string
+): boolean {
+  return (
+    org.type === "district" &&
+    (org.owner_profile_id === profileId ||
+      org.created_by === profileId ||
+      (membership?.status === "active" &&
+        membership.role === "district_admin"))
   );
 }
 
