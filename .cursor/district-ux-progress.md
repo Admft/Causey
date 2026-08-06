@@ -11,13 +11,14 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 
 ## Frontend polish backlog (kimi-k3 max)
 - [x] Tournament display: make events easier to scan (date/venue/level sections, cleaner hierarchy on event cards) — 2026-08-05
-- [ ] Responsive audit: phone/tablet/desktop without clashing grids, cramped cards, or orphaned CTAs
+- [x] Responsive audit: phone/tablet/desktop without clashing grids, cramped cards, or orphaned CTAs — 2026-08-05 (/chess filter rail no longer buries results on phone/tablet: collapses into a disclosure below lg; other pages already stack single-column)
 - [ ] Alive feel: intentional micro-interaction (hover/focus states, smooth layout shifts) — max 2–3 per page, respect prefers-reduced-motion
 - [ ] Visual hierarchy: consistent spacing/typography rhythm; kill anything that reads template-default
 - [x] Event page polish: hero/info/register actions feel composed, not stacked — 2026-08-05 (hero half: no-image events go text-first; register-flow composition covered by UX P1 "External registration tracking")
 - [x] Loading/empty states that feel designed (not dead) — 2026-08-05 (route skeletons for /orgs + /family account surfaces; search already had skeletons)
 
 ## Done
+- [x] 2026-08-05 — Search filters no longer wall off results on phones/tablets: below lg the rail collapses behind a "Narrow it down · N applied" disclosure (aria-expanded, motion-safe chevron, Clear filters still reachable); desktop 220px sidebar unchanged
 - [x] 2026-08-05 — Search provenance is explicit on every tournament card and event page, with plain-language source filtering for scraped, organizer-provided, and Causey-entered listings
 - [x] 2026-08-05 — My tournaments now puts unanswered coach invitations first and lets students RSVP without leaving the workspace
 - [x] 2026-08-05 — Account surfaces no longer hang on the old screen while data loads: `app/orgs/loading.tsx` + `app/family/loading.tsx` mirror each page's header/panel/row structure with the shared `.skeleton` pulse (reduced-motion safe, `role="status"` labels)
@@ -51,4 +52,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — made each tournament’s listing source explicit in search and event details (UX); responsive audit continues with the frontend polish agent
+- Last tick: 2026-08-05 — made each tournament’s listing source explicit in search and event details (UX); /chess filter rail collapses into a disclosure on phone/tablet so results lead the page (frontend polish)

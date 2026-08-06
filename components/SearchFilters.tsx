@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { GRADE_BANDS, RATING_BANDS } from "@/lib/schemas";
 import { INGESTION_SOURCES } from "@/lib/ingestion-sources";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
@@ -8,6 +9,9 @@ import type { TimingFilter } from "@/lib/competition-timing";
 /**
  * Filter sidebar for the search page. Controlled component — state lives in
  * SearchClient so filters, URL, and results never drift apart.
+ * Below lg the rail sits above the results, so it collapses into a
+ * disclosure; otherwise a phone user scrolls a full screen of fields
+ * before the first tournament.
  */
 
 export interface FilterState {
@@ -90,28 +94,72 @@ export function SearchFilters({
   const set = (key: keyof FilterState) => (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) =>
     onChange({ ...filters, [key]: e.target.value });
 
-  const active =
-    filters.featured ||
-    filters.timing !== "upcoming" ||
-    Object.entries(filters).some(
+  const [open, setOpen] = useState(false);
+
+  const activeCount =
+    (filters.featured ? 1 : 0) +
+    (filters.timing !== "upcoming" ? 1 : 0) +
+    Object.entries(filters).filter(
       ([key, v]) => key !== "featured" && key !== "timing" && v !== ""
-    );
+    ).length;
+  const active = activeCount > 0;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Narrow it down</h2>
+      <div className="flex items-center gap-3 lg:items-baseline lg:justify-between">
+        {/* Below lg the rail stacks above results, so the heading becomes a
+            disclosure toggle; the count keeps active filters visible when
+            collapsed. Desktop keeps the plain heading + always-open panel. */}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="search-filter-panel"
+          onClick={() => setOpen((v) => !v)}
+          className="flex h-11 flex-1 items-center justify-between gap-2 rounded-lg border border-line bg-surface px-3.5 text-left text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 lg:hidden"
+        >
+          <span>
+            Narrow it down
+            {active ? (
+              <span className="font-medium text-muted"> · {activeCount} applied</span>
+            ) : null}
+          </span>
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className={`shrink-0 text-muted motion-safe:transition-transform motion-safe:duration-200 ${
+              open ? "rotate-180" : ""
+            }`}
+          >
+            <path
+              d="M4 6l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <h2 className="hidden text-sm font-semibold text-foreground lg:block">
+          Narrow it down
+        </h2>
         {active && (
           <button
             type="button"
             onClick={() => onChange(EMPTY_FILTERS)}
-            className="text-xs font-medium text-muted-strong transition-colors hover:text-brand-red"
+            className="shrink-0 text-xs font-medium text-muted-strong transition-colors hover:text-brand-red"
           >
             Clear filters
           </button>
         )}
       </div>
 
+      <div
+        id="search-filter-panel"
+        className={`flex-col gap-4 lg:flex ${open ? "flex" : "hidden"}`}
+      >
       <div className="flex flex-col gap-1.5">
         <p className="text-xs font-semibold text-muted-strong" id="filter-timing-label">
           When
@@ -230,6 +278,7 @@ export function SearchFilters({
           onChange={set("date_to")}
         />
       </Field>
+      </div>
     </div>
   );
 }
