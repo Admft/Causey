@@ -14,9 +14,10 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 ## Major UI backlog (kimi-k3-max — prefer these)
 - [x] Visual hierarchy overhaul: consistent spacing/typography rhythm across home, search, event, account; kill template-default feel (event/account section heads shipped in fc953a4; home + search shipped 2026-08-05)
 - [x] Search results composition redesign (results + filters as one scannable system) — 2026-08-05
-- [ ] Org workspace visual redesign (coach home reads as one clear mission, not panel soup)
+- [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Org workspace: one mission panel leads (resume freshest draft → next tournament with manage/RSVP → create-first-tournament empty state); extra drafts, other upcoming, and attending events demote to quiet hairline rows; "Create another tournament" drops to a text link when a mission exists — 2026-08-05 (426148a)
 - [x] Search composition: applied rail filters restate as removable chips above the results (visible in every state, even with the rail collapsed/scrolled away), desktop rail goes sticky, and paging moves to the bottom row where "load more" happens — 2026-08-05
 - [x] Home/search hierarchy: chess gets the one big coverage panel (unbuilt types demoted to a plain list), hero copy de-doubled, /chess search controls read as one labeled cluster, result count anchors the results header — 2026-08-05
 - [x] Tournament display: make events easier to scan (date/venue/level sections, cleaner hierarchy on event cards) — 2026-08-05
@@ -26,6 +27,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — Roster group changes now show action-specific progress, confirm what changed and what coaches can do next, guide the first empty state, and protect deletion with a student-safe confirmation
 - [x] 2026-08-05 — Family link requests now confirm the privacy-safe handoff, tell parents exactly where students accept, and preserve the email for retry after unexpected failures
 - [x] 2026-08-05 — Signed-in organization members see their own public/private tournaments in search with a bounded ranking lift that still keeps higher-interest public events discoverable
 - [x] 2026-08-05 — Coach tournament invites distinguish an empty student roster from an already-invited roster, confirm exactly how many invitations were sent, and point to the next action
@@ -70,7 +72,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Last UX tick: 2026-08-05 — made the parent-to-student family link handoff explicit, actionable, and recoverable without exposing whether an email has an account.
-- Next UX: continue adding next actions to the highest-impact empty, error, and success states.
-- Last polish tick: 2026-08-05 — search results composition (removable active-filter chips, sticky rail, paging at the bottom row).
-- Next polish: org workspace visual redesign once UX org files settle.
+- Last UX tick: 2026-08-05 — made roster group creation, membership changes, and deletion explicit, actionable, and safe for coaches.
+- Next UX: continue adding next actions to high-impact empty, error, and success states outside roster groups.
+- Last polish tick: 2026-08-05 — org workspace as one mission panel + quiet lists (426148a). NOTE: progress.md entry left uncommitted so the mid-tick UX agent can commit it with their own notes.
+- Next polish: family workspace composition, or empty/error/success-state visual pass.
