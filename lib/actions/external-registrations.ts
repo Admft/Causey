@@ -14,6 +14,8 @@ export async function setExternalRegistrationStatus(input: {
   competitionId: string;
   eventSlug: string;
   status: "registered" | "not_registered";
+  /** Defaults to the signed-in user; parents may pass a linked child. */
+  profileId?: string;
 }): Promise<ActionResult> {
   const user = await getSessionUser();
   if (!user) {
@@ -23,7 +25,25 @@ export async function setExternalRegistrationStatus(input: {
     return { ok: false, error: "Choose whether registration is complete." };
   }
 
+  const targetProfileId = input.profileId ?? user.id;
   const supabase = await createServerSupabaseClient();
+
+  if (targetProfileId !== user.id) {
+    const { data: link } = await supabase
+      .from("household_links")
+      .select("child_profile_id")
+      .eq("parent_profile_id", user.id)
+      .eq("child_profile_id", targetProfileId)
+      .eq("status", "active")
+      .maybeSingle();
+    if (!link) {
+      return {
+        ok: false,
+        error: "You can only update registration for a linked student.",
+      };
+    }
+  }
+
   const statusUpdatedAt = new Date().toISOString();
   const { data: updated, error: updateError } = await supabase
     .from("external_registrations")
@@ -31,7 +51,7 @@ export async function setExternalRegistrationStatus(input: {
       status: input.status,
       status_updated_at: statusUpdatedAt,
     })
-    .eq("user_id", user.id)
+    .eq("user_id", targetProfileId)
     .eq("competition_id", input.competitionId)
     .select("competition_id");
 
@@ -46,7 +66,7 @@ export async function setExternalRegistrationStatus(input: {
     const { error: insertError } = await supabase
       .from("external_registrations")
       .insert({
-        user_id: user.id,
+        user_id: targetProfileId,
         competition_id: input.competitionId,
         status: input.status,
         opened_at: statusUpdatedAt,
@@ -62,5 +82,6 @@ export async function setExternalRegistrationStatus(input: {
 
   revalidatePath(`/event/${input.eventSlug}`);
   revalidatePath("/me");
+  revalidatePath("/family");
   return { ok: true };
 }

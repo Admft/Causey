@@ -50,17 +50,15 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
-- 2026-08-06 — Invite-first join: unsigned `/join/[code]` soft landing (Create student account primary); login join handoff mirrors it; anon org preview migration `0020`.
-- 2026-08-06 — Coach org-home mission
-- 2026-08-06 — Event next-action tree
-- 2026-08-06 — Role workspace differentiation
+- 2026-08-06 — Parent desk registration inbox: unfinished organizer registration for linked students + mark-complete; migration `0022` (+ applied missing `0015` remotely).
+- 2026-08-06 — Invite-first join, coach org mission, event next-action, role workspaces
 
 ## Backlog candidates (refreshed tick 3)
 
 ### P0 / first-session killers
 - Coach `/orgs/[slug]` still panel soup — **done 2026-08-06**
 - Join link forces Sign in before Create account — **done 2026-08-06**
-- Parent desk only counts RSVPs; organizer registration lives on `/me`
+- Parent desk only counts RSVPs; organizer registration lives on `/me` — **done 2026-08-06**
 
 ### P1 / trust & IA
 - HomeAccountPitch coach-weighted + `/chess` overclaim

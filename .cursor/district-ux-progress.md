@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Parent desk registration inbox (RSVP + unfinished organizer registration; parent can mark complete) — 2026-08-06
 - [x] Invite-first join auth: soft landing + Create student account primary; anon org preview (`0020`) — 2026-08-06
 - [x] Coach org-home mission on `/orgs/[slug]` (resume draft → manage next → create-first) — 2026-08-06
 - [x] Event next-action tree: one dominant step by viewer state; Save/rate demoted — 2026-08-06
@@ -160,4 +161,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Next UX: start sequence item 1 — `0018` hierarchy + role-split helpers + staff/provision tables (then app mirrors).
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.
-- Last persona batch (2026-08-06): invite-first join auth shipped. Next: parent registration inbox on `/family`.
+- Last persona batch (2026-08-06): parent registration inbox shipped. Next: discovery conversion honesty or moderation-first admin.

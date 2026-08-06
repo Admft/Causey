@@ -95,10 +95,14 @@ export type EntrantWithEvent = {
   profile_id: string;
   status: EntrantStatus;
   responded_by: string | null;
-  competition: Pick<
+  competition: (Pick<
     OrgEventRow,
     "slug" | "name" | "city" | "state" | "start_date" | "end_date"
-  > | null;
+  > & {
+    reg_url: string | null;
+  }) | null;
+  /** Child's organizer-registration tracking, when the event has a reg_url. */
+  registration_status: "opened" | "registered" | "not_registered" | null;
 };
 
 export type GroupWithMembers = OrgGroup & { member_ids: string[] };
@@ -302,6 +306,7 @@ export async function getMyEntrantRows(
     responded_by: row.responded_by as string | null,
     competition:
       (row.competitions as unknown as EntrantWithEvent["competition"]) ?? null,
+    registration_status: null as EntrantWithEvent["registration_status"],
   }));
   return rows.sort((a, b) =>
     (a.competition?.start_date ?? "").localeCompare(
@@ -638,7 +643,7 @@ export async function getChildrenWithEvents(
   const childIds = children.map((c) => c.profile_id);
 
   const supabase = await createServerSupabaseClient();
-  const [membershipsRes, entrantsRes] = await Promise.all([
+  const [membershipsRes, entrantsRes, registrationsRes] = await Promise.all([
     supabase
       .from("org_memberships")
       .select("profile_id, status, organizations(id, name, slug)")
@@ -647,10 +652,21 @@ export async function getChildrenWithEvents(
     supabase
       .from("competition_entrants")
       .select(
-        "competition_id, profile_id, status, responded_by, competitions(slug, name, city, state, start_date, end_date)"
+        "competition_id, profile_id, status, responded_by, competitions(slug, name, city, state, start_date, end_date, reg_url)"
       )
       .in("profile_id", childIds),
+    supabase
+      .from("external_registrations")
+      .select("user_id, competition_id, status")
+      .in("user_id", childIds),
   ]);
+
+  const registrationByKey = new Map(
+    (registrationsRes.data ?? []).map((row) => [
+      `${row.user_id}:${row.competition_id}`,
+      row.status as "opened" | "registered" | "not_registered",
+    ])
+  );
 
   return children.map((child) => ({
     profile_id: child.profile_id,
@@ -667,15 +683,22 @@ export async function getChildrenWithEvents(
       }),
     entrants: (entrantsRes.data ?? [])
       .filter((row) => row.profile_id === child.profile_id)
-      .map((row) => ({
-        competition_id: row.competition_id as string,
-        profile_id: row.profile_id as string,
-        status: row.status as EntrantStatus,
-        responded_by: row.responded_by as string | null,
-        competition:
+      .map((row) => {
+        const competition =
           (row.competitions as unknown as EntrantWithEvent["competition"]) ??
-          null,
-      }))
+          null;
+        return {
+          competition_id: row.competition_id as string,
+          profile_id: row.profile_id as string,
+          status: row.status as EntrantStatus,
+          responded_by: row.responded_by as string | null,
+          competition,
+          registration_status:
+            registrationByKey.get(
+              `${row.profile_id}:${row.competition_id}`
+            ) ?? null,
+        };
+      })
       .sort((a, b) =>
         (a.competition?.start_date ?? "").localeCompare(
           b.competition?.start_date ?? ""
