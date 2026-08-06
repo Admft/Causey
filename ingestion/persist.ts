@@ -274,9 +274,11 @@ export async function upsertCompetitions(
 
   const payload = [...bySlug.values()].map((d) => {
     // Pathway fields are owned by enrich-pathways — never wipe on scrape upsert.
+    // interest_count is owned by save/registration triggers for the same reason.
     // series_id is owned by curation / series-match — omit null so re-scrape
     // does not clear a hand-linked or previously attached series.
     const {
+      interest_count: _ic,
       pathway_status: _ps,
       pathway_summary: _psum,
       pathway_related: _pr,

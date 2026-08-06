@@ -14,6 +14,8 @@ import {
   CompetitionSchema,
   SectionSchema,
   SeriesSchema,
+  TournamentDraftDataSchema,
+  type TournamentDraftData,
 } from "@/lib/schemas";
 
 /**
@@ -43,6 +45,17 @@ export type OrgEventRow = {
   status?: "draft" | "published" | "archived";
 };
 
+export type TournamentDraftRow = {
+  id: string;
+  org_id: string;
+  created_by: string;
+  data: TournamentDraftData;
+  cover_image_url: string | null;
+  cover_image_path: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type MyOrgRow = {
   org: Organization;
   memberRole: OrgMemberRole | null;
@@ -55,6 +68,7 @@ export type OrgForViewer = {
   isCoach: boolean;
   activeMemberCount: number;
   events: OrgEventRow[];
+  drafts: TournamentDraftRow[];
 };
 
 export type EntrantWithEvent = {
@@ -128,7 +142,7 @@ export async function getOrgBySlugForViewer(
     .maybeSingle();
   if (!org) return null;
 
-  const [membershipRes, countRes, eventsRes] = await Promise.all([
+  const [membershipRes, countRes, eventsRes, draftsRes] = await Promise.all([
     supabase
       .from("org_memberships")
       .select("*")
@@ -150,16 +164,58 @@ export async function getOrgBySlugForViewer(
       // only returns them to the creator and the org's coaches.
       .in("status", ["draft", "published"])
       .order("start_date", { ascending: true }),
+    supabase
+      .from("tournament_drafts")
+      .select(
+        "id, org_id, created_by, data, cover_image_url, cover_image_path, created_at, updated_at"
+      )
+      .eq("org_id", org.id)
+      .order("updated_at", { ascending: false }),
   ]);
 
   const membership = (membershipRes.data as OrgMembership | null) ?? null;
+  const drafts = (draftsRes.data ?? []).flatMap((row) => {
+    const parsed = TournamentDraftDataSchema.safeParse(row.data);
+    return parsed.success
+      ? [
+          {
+            ...row,
+            data: parsed.data,
+          } as TournamentDraftRow,
+        ]
+      : [];
+  });
   return {
     org: org as Organization,
     membership,
     isCoach: coachOf(org as Organization, membership, userId),
     activeMemberCount: countRes.count ?? 0,
     events: (eventsRes.data ?? []) as OrgEventRow[],
+    drafts,
   };
+}
+
+/** One resumable draft, with RLS limiting reads to coaches of its organization. */
+export async function getTournamentDraftForViewer(
+  draftId: string,
+  orgId: string
+): Promise<TournamentDraftRow | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("tournament_drafts")
+    .select(
+      "id, org_id, created_by, data, cover_image_url, cover_image_path, created_at, updated_at"
+    )
+    .eq("id", draftId)
+    .eq("org_id", orgId)
+    .maybeSingle();
+  if (!data) return null;
+  const draftData = TournamentDraftDataSchema.safeParse(data.data);
+  if (!draftData.success) return null;
+  return {
+    ...data,
+    data: draftData.data,
+  } as TournamentDraftRow;
 }
 
 export async function getMyEntrantRows(

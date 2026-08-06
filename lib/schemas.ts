@@ -17,6 +17,26 @@ export const SeriesSchema = z.object({
 
 export const CompetitionStatus = z.enum(["draft", "published", "archived"]);
 
+/**
+ * In-progress organizer input. Drafts deliberately accept incomplete values so
+ * a coach can leave at any point and resume without relying on browser storage.
+ */
+export const TournamentDraftDataSchema = z.object({
+  name: z.string().max(120).default(""),
+  startDate: z.string().max(10).default(""),
+  endDate: z.string().max(10).default(""),
+  regDeadline: z.string().max(10).default(""),
+  venueName: z.string().max(120).default(""),
+  address: z.string().max(160).default(""),
+  city: z.string().max(80).default(""),
+  state: z.string().max(2).default(""),
+  zip: z.string().max(5).default(""),
+  entryFee: z.string().max(20).default(""),
+  regUrl: z.string().max(2048).default(""),
+  visibility: z.enum(["public", "private"]).default("private"),
+  rated: z.boolean().default(false),
+});
+
 /** Pathway honesty for scraped events — default majority is none. */
 export const PathwayStatusSchema = z.enum(["none", "uncertain", "known"]);
 
@@ -91,6 +111,8 @@ export const CompetitionSchema = z.object({
     .record(z.unknown())
     .nullish()
     .transform((v) => v ?? {}),
+  /** Distinct users who saved or started registering for this tournament. */
+  interest_count: z.number().int().nonnegative().default(0),
   status: CompetitionStatus.default("published"),
 });
 
@@ -139,6 +161,7 @@ export type QualificationRule = z.infer<typeof QualificationRuleSchema>;
 export type ZipRow = z.infer<typeof ZipSchema>;
 export type PathwayStatus = z.infer<typeof PathwayStatusSchema>;
 export type PathwayRelated = z.infer<typeof PathwayRelatedSchema>;
+export type TournamentDraftData = z.infer<typeof TournamentDraftDataSchema>;
 
 /** Grade bands offered as search filters. Values are inclusive grade ranges. */
 export const GRADE_BANDS = {
@@ -163,6 +186,9 @@ export const RATING_BANDS = {
 } as const;
 export type RatingBand = keyof typeof RATING_BANDS;
 
+export const SearchSortSchema = z.enum(["popular", "soonest"]);
+export type SearchSort = z.infer<typeof SearchSortSchema>;
+
 export const SearchFiltersSchema = z.object({
   q: z.string().trim().min(1).max(100).optional(),
   zip: z.string().regex(/^\d{5}$/).optional(),
@@ -185,6 +211,8 @@ export const SearchFiltersSchema = z.object({
    * all = both. End date is end_date ?? start_date.
    */
   timing: z.enum(["upcoming", "ended", "all"]).optional().default("upcoming"),
+  /** Popular defaults to real saved/registration interest; soonest is explicit. */
+  sort: SearchSortSchema.optional().default("popular"),
   /** Page size for tile loading. Defaults to 20; max 2000 (for “load all”). */
   limit: z.coerce.number().int().positive().max(2000).optional(),
   offset: z.coerce.number().int().nonnegative().optional(),

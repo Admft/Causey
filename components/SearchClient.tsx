@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
-import { SEARCH_LOAD_ALL_LIMIT } from "@/lib/schemas";
+import { SEARCH_LOAD_ALL_LIMIT, type SearchSort } from "@/lib/schemas";
 import { CompetitionCard } from "@/components/CompetitionCard";
 import { SearchFilters, type FilterState } from "@/components/SearchFilters";
 import {
@@ -50,12 +50,14 @@ function readParams(params: URLSearchParams): {
   keyword: string;
   zip: string;
   radius: string;
+  sort: SearchSort;
   filters: FilterState;
 } {
   return {
     keyword: params.get("q") ?? "",
     zip: params.get("zip") ?? "",
     radius: params.get("radius") ?? "50",
+    sort: params.get("sort") === "soonest" ? "soonest" : "popular",
     filters: {
       state: params.get("state") ?? "",
       source: params.get("source") ?? "",
@@ -87,6 +89,7 @@ export function SearchClient() {
   const [zip, setZip] = useState(initial.zip);
   const [zipError, setZipError] = useState<string | null>(null);
   const [radius, setRadius] = useState(initial.radius);
+  const [sort, setSort] = useState<SearchSort>(initial.sort);
   const [filters, setFilters] = useState<FilterState>(initial.filters);
   const [status, setStatus] = useState<Status>({ kind: "loading" });
   const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
@@ -125,8 +128,9 @@ export function SearchClient() {
     if (filters.max_fee_dollars) p.set("max_fee", filters.max_fee_dollars);
     if (filters.date_from) p.set("date_from", filters.date_from);
     if (filters.date_to) p.set("date_to", filters.date_to);
+    if (sort !== "popular") p.set("sort", sort);
     return p;
-  }, [keyword, zip, radius, filters]);
+  }, [keyword, zip, radius, filters, sort]);
 
   const buildApiParams = useCallback(
     (limit: number, offset: number) => {
@@ -244,9 +248,12 @@ export function SearchClient() {
             Enter a zip code to see what&rsquo;s in reach, with the entry fee and
             who can play shown before you commit to anything.
           </p>
+          {/* One search cluster: name it, or place it. Keyword applies as you
+              type; zip + radius apply on submit/blur. All three controls share
+              one label treatment so the band reads as a single tool. */}
           <div className="mt-6 max-w-lg">
             <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
-              Search by tournament name
+              Tournament name
             </label>
             <input
               id="tournament-search"
@@ -258,22 +265,22 @@ export function SearchClient() {
             />
           </div>
           <form
-            className="mt-3 flex max-w-lg flex-col gap-2.5 sm:flex-row sm:items-start"
+            className="mt-2.5 flex max-w-lg flex-col gap-2.5 sm:flex-row sm:items-end"
             onSubmit={(e) => {
               e.preventDefault();
               applyZip();
             }}
           >
             <div className="flex-1">
-              <label htmlFor="zip" className="sr-only">
+              <label htmlFor="zip" className="text-xs font-semibold text-muted-strong">
                 Zip code
               </label>
               <input
                 id="zip"
-                className="field"
+                className="field mt-1"
                 inputMode="numeric"
                 autoComplete="postal-code"
-                placeholder="Zip code — try 75201"
+                placeholder="75201"
                 value={zipInput}
                 onChange={(e) => setZipInput(e.target.value)}
                 onBlur={applyZip}
@@ -287,12 +294,12 @@ export function SearchClient() {
               )}
             </div>
             <div>
-              <label htmlFor="radius" className="sr-only">
-                Search radius
+              <label htmlFor="radius" className="text-xs font-semibold text-muted-strong">
+                Distance
               </label>
               <select
                 id="radius"
-                className="field sm:w-36"
+                className="field mt-1 sm:w-36"
                 value={radius}
                 onChange={(e) => setRadius(e.target.value)}
               >
@@ -324,7 +331,9 @@ export function SearchClient() {
                 {Array.from({ length: layout === "grid3" ? 9 : layout === "list" ? 5 : 6 }, (_, i) => (
                   <div
                     key={i}
-                    className={`skeleton ${layout === "list" ? "h-20" : "h-36"}`}
+                    className={`skeleton ${
+                      layout === "list" ? "h-32" : layout === "grid3" ? "h-80" : "h-96"
+                    }`}
                   />
                 ))}
               </div>
@@ -356,23 +365,38 @@ export function SearchClient() {
 
             {status.kind === "ready" && status.results.length > 0 && (
               <>
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-muted">
-                    <span className="font-semibold text-foreground">
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">
                       {total} tournament{total === 1 ? "" : "s"}
-                    </span>
-                    {keyword.trim() && ` matching “${keyword.trim()}”`}
-                    {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
-                    , soonest and closest first.
-                    {shown < total && (
-                      <span className="text-muted">
-                        {" "}
-                        Showing {shown}.
-                      </span>
-                    )}
-                  </p>
+                      {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
+                    </p>
+                    <p className="mt-0.5 max-w-prose text-sm text-muted">
+                      {keyword.trim() && `Matching “${keyword.trim()}”. `}
+                      {sort === "popular"
+                        ? zip
+                          ? "Closer 25-mile ranges first, then real save and registration interest."
+                          : "Ranked by real save and registration interest."
+                        : "Soonest first."}
+                      {shown < total && ` Showing ${shown} so far.`}
+                    </p>
+                  </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <ResultsLayoutToggle value={layout} onChange={setLayout} />
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="result-sort" className="text-xs font-semibold text-muted-strong">
+                        Sort
+                      </label>
+                      <select
+                        id="result-sort"
+                        className="field h-9 w-auto py-0 pr-8 text-sm"
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value as SearchSort)}
+                      >
+                        <option value="popular">{zip ? "Popular nearby" : "Popular first"}</option>
+                        <option value="soonest">Soonest first</option>
+                      </select>
+                    </div>
                     <div className="flex items-center gap-2">
                       <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
                         Load

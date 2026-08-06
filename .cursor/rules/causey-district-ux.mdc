@@ -1,0 +1,32 @@
+---
+description: School-district-ready UX north star for Causey improvement loops
+alwaysApply: true
+---
+
+# District-ready UX
+
+Causey is for school districts, schools, coaches, parents, and students. Every change should make the full workflow more intuitive — not more enterprise-looking.
+
+## Non-negotiables
+- **Simple by default, powerful on demand.** Progressive disclosure by role.
+- One dominant next action per view. Plain-language labels. No database jargon.
+- Guided flows over giant forms (create → preview → publish; invite → claim).
+- Preserve context: drafts, success states with next step, undo/confirm for destructive actions.
+- Follow `causey-ui` / design system / anti-vibecode. No fake polish badges.
+
+## Role landings (what each person needs first)
+- Student: discover → track/register → reminders → my orgs
+- Parent: which child needs action, and what kind
+- Coach: tournaments, groups, invites, attendance
+- Org admin: staff, settings, exports (+ coach tasks)
+- District admin: schools, provisioning, aggregate reporting
+- Platform admin: separate `/admin` moderation shell
+
+## Improvement-loop rules
+- Work on `dev` only unless the user says otherwise.
+- **HARD BAN:** never `git checkout main`, never merge into `main`, never push `main`, never open a PR to main unless the user explicitly asks in this chat.
+- If you find yourself on `main`, immediately run `git checkout -f dev && git reset --hard origin/dev` and continue there.
+- One focused, shippable UX win per iteration. Prefer end-to-end workflow fixes over cosmetic tweaks.
+- Update `.cursor/district-ux-progress.md` after each change.
+- Commit on `dev` with a clear why-focused message; push `origin/dev` only. Do not push/merge `main` unless asked.
+- Prefer reuse of existing components/tokens. Do not invent new scrape paths or fabricate data.

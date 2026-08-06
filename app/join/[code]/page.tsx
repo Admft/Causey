@@ -51,7 +51,7 @@ export default async function JoinPage({
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
-        <h1 className="font-display text-display-lg font-bold text-foreground">
+        <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
           Join an organization
         </h1>
         <p className="mt-3 text-sm text-muted">

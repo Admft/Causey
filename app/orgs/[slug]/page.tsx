@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { JoinCodePanel } from "@/components/JoinCodePanel";
 import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { RsvpButtons } from "@/components/RsvpButtons";
@@ -29,6 +28,14 @@ const ORG_TYPE_LABEL: Record<string, string> = {
   district: "District",
 };
 
+function formatSavedAt(value: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
 export default async function OrgPage({
   params,
 }: {
@@ -41,7 +48,7 @@ export default async function OrgPage({
 
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
-  const { org, membership, isCoach, activeMemberCount, events } = view;
+  const { org, membership, isCoach, activeMemberCount, events, drafts } = view;
 
   const [entrantRows, attendedEvents] = await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
@@ -74,30 +81,68 @@ export default async function OrgPage({
           {isCoach ? " · you coach this organization" : ""}
         </p>
 
-        {isCoach ? (
-          <div className="mt-6">
-            <Link
-              href={`/orgs/${org.slug}/tournaments/new`}
-              className="cta-enabled inline-flex"
-            >
-              Create tournament
-            </Link>
-          </div>
-        ) : null}
-
-        {isCoach && org.join_code ? (
-          <section className="section-rule mt-10 pt-8">
-            <JoinCodePanel orgId={org.id} orgSlug={org.slug} joinCode={org.join_code} />
-          </section>
-        ) : null}
-
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">Upcoming tournaments</h2>
+        <section className="section-rule mt-8 pt-8">
+          {isCoach ? (
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Hosted tournaments
+                </h2>
+                <p className="mt-1 max-w-lg text-xs text-muted">
+                  Create and publish an event page, then invite your roster and
+                  track replies.
+                </p>
+              </div>
+              <Link
+                href={`/orgs/${org.slug}/tournaments/new`}
+                className="cta-enabled inline-flex shrink-0"
+              >
+                Create tournament
+              </Link>
+            </div>
+          ) : (
+            <h2 className="text-sm font-semibold text-foreground">
+              Upcoming tournaments
+            </h2>
+          )}
+          {isCoach && drafts.length ? (
+            <div className="mt-6">
+              <h3 className="text-xs font-semibold text-muted-strong">
+                Drafts to finish
+              </h3>
+              <ul className="mt-3 flex flex-col gap-2">
+                {drafts.map((draft) => (
+                  <li
+                    key={draft.id}
+                    className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {draft.data.name.trim() || "Untitled tournament"}
+                      </p>
+                      <p className="mt-1 text-xs text-muted">
+                        Saved {formatSavedAt(draft.updated_at)}
+                        {draft.cover_image_url ? " · cover added" : " · cover still needed"}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/orgs/${org.slug}/tournaments/new?draft=${draft.id}`}
+                      className="text-sm font-semibold text-brand-red hover:underline"
+                    >
+                      Resume draft
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {!upcoming.length ? (
             <p className="mt-3 text-sm text-muted">
               {isCoach
-                ? "Nothing scheduled. Create a tournament and invite your roster."
-                : "Nothing scheduled yet — check back soon."}
+                ? drafts.length
+                  ? "No published tournaments yet. Finish a draft when you’re ready."
+                  : "No hosted tournaments yet. Create one, then invite your roster."
+                : "Nothing scheduled yet. Check back soon."}
             </p>
           ) : (
             <ul className="mt-4 flex flex-col gap-3">
@@ -120,9 +165,6 @@ export default async function OrgPage({
                         {event.city ? ` · ${event.city}, ${event.state}` : ""}
                         {` · ${formatFeeCents(event.entry_fee_cents)}`}
                         {event.visibility === "private" ? " · members only" : ""}
-                        {event.status === "draft"
-                          ? " · draft, nobody else can see it yet"
-                          : ""}
                       </span>
                     </div>
                     {rsvp ? (
@@ -139,7 +181,7 @@ export default async function OrgPage({
                       >
                         {event.status === "draft"
                           ? "Review and publish"
-                          : "Manage entrants"}
+                          : "Manage invites"}
                       </Link>
                     ) : null}
                   </li>
@@ -202,7 +244,9 @@ export default async function OrgPage({
 
         {past.length ? (
           <section className="section-rule mt-10 pt-8">
-            <h2 className="text-sm font-semibold text-foreground">Past tournaments</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              {isCoach ? "Past hosted tournaments" : "Past tournaments"}
+            </h2>
             <ul className="mt-4 flex flex-col gap-2">
               {past.map((event) => (
                 <li key={event.id} className="flex items-baseline justify-between gap-3 text-sm">

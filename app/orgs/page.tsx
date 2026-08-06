@@ -31,7 +31,7 @@ export default async function OrgsPage() {
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <h1 className="font-display text-display-lg font-bold text-foreground">
+        <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
           Organizations
         </h1>
         <p className="mt-3 text-sm text-muted">
@@ -46,6 +46,7 @@ export default async function OrgsPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/orgs");
   const profile = await getCurrentProfile();
+  if (profile?.role === "parent") redirect("/family");
   const isCoachRole = canCreateOrg(profile);
 
   const [myOrgs, entrantRows, recommendations] = await Promise.all([
@@ -56,6 +57,70 @@ export default async function OrgsPage() {
   const today = new Date().toISOString().slice(0, 10);
   const upcomingInvites = entrantRows.filter(
     (row) => row.competition && isUpcomingEvent(row.competition, today)
+  ).sort((a, b) => {
+    if (a.status === b.status) {
+      return (a.competition?.start_date ?? "").localeCompare(
+        b.competition?.start_date ?? ""
+      );
+    }
+    return a.status === "invited" ? -1 : 1;
+  });
+  const pendingInviteCount = upcomingInvites.filter(
+    (row) => row.status === "invited"
+  ).length;
+  const showInvitationsAfterOrganizations = isCoachRole
+    ? upcomingInvites.length > 0
+    : pendingInviteCount === 0;
+
+  const invitationsSection = (
+    <section id="rsvps" className="section-rule mt-10 scroll-mt-24 pt-8">
+      <h2 className="text-sm font-semibold text-foreground">
+        {pendingInviteCount
+          ? `${pendingInviteCount} ${
+              pendingInviteCount === 1 ? "RSVP needs" : "RSVPs need"
+            } your response`
+          : "Invitations & RSVPs"}
+      </h2>
+      {!upcomingInvites.length ? (
+        <p className="mt-3 text-sm text-muted">
+          When your coach invites you to a tournament, it shows up here for you
+          to RSVP.
+        </p>
+      ) : (
+        <ul className="mt-4 flex flex-col gap-3">
+          {upcomingInvites.map((row) => (
+            <li
+              key={`${row.competition_id}-${row.profile_id}`}
+              className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <Link
+                  href={`/event/${row.competition!.slug}`}
+                  className="font-semibold text-foreground hover:text-brand-red"
+                >
+                  {row.competition!.name}
+                </Link>
+                <span className="mt-1 block text-xs text-muted">
+                  {formatDateRange(
+                    row.competition!.start_date,
+                    row.competition!.end_date
+                  )}
+                  {row.competition!.city
+                    ? ` · ${row.competition!.city}, ${row.competition!.state}`
+                    : ""}
+                </span>
+              </div>
+              <RsvpButtons
+                competitionId={row.competition_id}
+                profileId={row.profile_id}
+                status={row.status}
+                eventSlug={row.competition!.slug}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 
   return (
@@ -70,7 +135,12 @@ export default async function OrgsPage() {
           : "Join your school or club with the code your coach shared."}
       </p>
 
-      <section className="section-rule mt-10 pt-8">
+      {!isCoachRole && pendingInviteCount ? invitationsSection : null}
+
+      <section
+        id="organizations"
+        className="section-rule mt-10 scroll-mt-24 pt-8"
+      >
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-sm font-semibold text-foreground">
             {isCoachRole ? "Organizations you run or belong to" : "Where you belong"}
@@ -122,17 +192,13 @@ export default async function OrgsPage() {
           </ul>
         )}
 
-        {isCoachRole && myOrgs.length ? (
-          <div className="mt-5">
-            <Link href="/orgs/new" className="cta-enabled inline-flex">
-              Start an organization
-            </Link>
-          </div>
-        ) : null}
       </section>
 
       {!isCoachRole ? (
-        <section className="section-rule mt-10 pt-8">
+        <section
+          id="join-code"
+          className="section-rule mt-10 scroll-mt-24 pt-8"
+        >
           <h2 className="text-sm font-semibold text-foreground">Join with a code</h2>
           <div className="mt-4">
             <JoinOrgForm />
@@ -140,50 +206,7 @@ export default async function OrgsPage() {
         </section>
       ) : null}
 
-      <section className="section-rule mt-10 pt-8">
-        <h2 className="text-sm font-semibold text-foreground">
-          Invitations &amp; RSVPs
-        </h2>
-        {!upcomingInvites.length ? (
-          <p className="mt-3 text-sm text-muted">
-            When your coach invites you to a tournament, it shows up here for
-            you to RSVP.
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-3">
-            {upcomingInvites.map((row) => (
-              <li
-                key={`${row.competition_id}-${row.profile_id}`}
-                className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <Link
-                    href={`/event/${row.competition!.slug}`}
-                    className="font-semibold text-foreground hover:text-brand-red"
-                  >
-                    {row.competition!.name}
-                  </Link>
-                  <span className="mt-1 block text-xs text-muted">
-                    {formatDateRange(
-                      row.competition!.start_date,
-                      row.competition!.end_date
-                    )}
-                    {row.competition!.city
-                      ? ` · ${row.competition!.city}, ${row.competition!.state}`
-                      : ""}
-                  </span>
-                </div>
-                <RsvpButtons
-                  competitionId={row.competition_id}
-                  profileId={row.profile_id}
-                  status={row.status}
-                  eventSlug={row.competition!.slug}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {showInvitationsAfterOrganizations ? invitationsSection : null}
 
       {recommendations.length ? (
         <section className="section-rule mt-10 pt-8">
@@ -219,14 +242,6 @@ export default async function OrgsPage() {
         </section>
       ) : null}
 
-      {profile?.role === "parent" ? (
-        <p className="mt-8 text-sm text-muted">
-          Looking for your child&rsquo;s clubs and events?{" "}
-          <Link href="/family" className="font-semibold text-brand-red hover:underline">
-            Go to Family
-          </Link>
-        </p>
-      ) : null}
     </div>
   );
 }

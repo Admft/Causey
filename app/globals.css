@@ -182,13 +182,27 @@ select.field {
   border-top: 1px solid var(--line);
 }
 
-/* Interactive-card hover lift — §10, only on cards that are links. */
+/* Interactive-card hover lift — §10, only on cards that are links.
+ * Keyboard focus gets the same affordance as hover. */
 .card-lift {
   transition: transform 200ms var(--ease-brand), box-shadow 200ms var(--ease-brand);
 }
-.card-lift:hover {
+.card-lift:hover,
+.card-lift:focus-visible {
   transform: translateY(-4px);
   box-shadow: var(--shadow-card-hover);
+}
+
+/* Arrow / external-mark nudge — §10. Confirms the link goes somewhere.
+ * Put on the → or ↗ mark inside a `group` link; inline-block so the
+ * transform applies to marks in inline text. */
+.nudge-x {
+  display: inline-block;
+  transition: transform 200ms var(--ease-brand);
+}
+.group:hover .nudge-x,
+.group:focus-visible .nudge-x {
+  transform: translateX(0.25rem);
 }
 
 /* Coordinate-grid motif — §7. Access shouldn't depend on where you live;
@@ -249,11 +263,15 @@ select.field {
 @media (prefers-reduced-motion: reduce) {
   .cta-enabled,
   .card-lift,
+  .nudge-x,
   .field {
     transition: none;
   }
   .cta-enabled:hover,
-  .card-lift:hover {
+  .card-lift:hover,
+  .card-lift:focus-visible,
+  .group:hover .nudge-x,
+  .group:focus-visible .nudge-x {
     transform: none;
   }
   .skeleton {

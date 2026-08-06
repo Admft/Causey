@@ -3,10 +3,20 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { homePathForRole } from "@/lib/auth/home-path";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({
+  next,
+  joiningOrganization = false,
+}: {
+  next?: string;
+  joiningOrganization?: boolean;
+}) {
   const router = useRouter();
+  const signupHref = next
+    ? `/signup?next=${encodeURIComponent(next)}`
+    : "/signup";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +36,25 @@ export function LoginForm({ next }: { next?: string }) {
         password,
       });
       if (signError) throw signError;
-      router.push(next ?? "/me");
+
+      let destination = next;
+      if (!destination) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        let role: string | null = null;
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
+          role = profile?.role ?? null;
+        }
+        destination = homePathForRole(role);
+      }
+
+      router.push(destination);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed.");
@@ -72,8 +100,11 @@ export function LoginForm({ next }: { next?: string }) {
 
       <p className="text-sm text-muted">
         New here?{" "}
-        <Link href="/signup" className="font-semibold text-brand-red hover:underline">
-          Create an account
+        <Link
+          href={signupHref}
+          className="font-semibold text-brand-red hover:underline"
+        >
+          {joiningOrganization ? "Create a student account" : "Create an account"}
         </Link>
         {" · "}
         <Link

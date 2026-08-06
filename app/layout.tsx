@@ -28,7 +28,11 @@ export const metadata: Metadata = {
 };
 
 function ExternalMark() {
-  return <span aria-hidden="true">↗</span>;
+  return (
+    <span aria-hidden="true" className="nudge-x">
+      ↗
+    </span>
+  );
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -79,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="About Causey — opens causey.dev in a new tab"
-                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+                className="group font-medium text-muted-strong transition-colors hover:text-brand-red"
               >
                 About Causey <ExternalMark />
               </a>

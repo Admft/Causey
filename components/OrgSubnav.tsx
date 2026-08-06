@@ -6,7 +6,7 @@ import Link from "next/link";
  */
 
 const TABS = [
-  { id: "overview", label: "Overview", path: "" },
+  { id: "overview", label: "Tournaments", path: "" },
   { id: "roster", label: "Roster & groups", path: "/roster" },
 ] as const;
 

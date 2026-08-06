@@ -76,10 +76,12 @@ export default function StateAffiliatesPage() {
                       href={row.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="shrink-0 text-sm font-semibold text-brand-red transition-colors hover:text-brand-red-hover"
+                      className="group shrink-0 text-sm font-semibold text-brand-red transition-colors hover:text-brand-red-hover"
                     >
-                      {displayHost(row.href)}
-                      <span aria-hidden="true"> ↗</span>
+                      {displayHost(row.href)}{" "}
+                      <span aria-hidden="true" className="nudge-x">
+                        ↗
+                      </span>
                     </a>
                   </li>
                 ))}
