@@ -6,6 +6,7 @@ import {
   EntrantManager,
   RemoveEntrantButton,
 } from "@/components/EntrantManager";
+import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { getSessionUser } from "@/lib/auth/session";
 import {
@@ -13,12 +14,14 @@ import {
   getCoachOrgsWithAttendance,
   getCompetitionBySlugAuthed,
   getEventAttendance,
+  getOrgBySlugForViewer,
   getOrgGroups,
   getOrgRoster,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
 import { formatDateRange } from "@/lib/format";
 import { rsvpLabel, summarizeAttendance } from "@/lib/rsvp";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -83,111 +86,173 @@ export default async function ManageEventPage({
     (competition.end_date ?? competition.start_date) <
     new Date().toISOString().slice(0, 10);
 
+  // Keep coaches inside the org workspace shell (subnav + roster deep link).
+  let orgShell: {
+    slug: string;
+    name: string;
+    showRoster: boolean;
+    showAdmin: boolean;
+  } | null = null;
+  const preferredOrgId =
+    canManage && competition.org_id
+      ? competition.org_id
+      : (attendingOrgs[0]?.org.id ?? null);
+  if (preferredOrgId) {
+    const supabase = await createServerSupabaseClient();
+    const { data: orgRow } = await supabase
+      .from("organizations")
+      .select("slug")
+      .eq("id", preferredOrgId)
+      .maybeSingle();
+    if (orgRow?.slug) {
+      const view = await getOrgBySlugForViewer(orgRow.slug, user.id);
+      if (view) {
+        orgShell = {
+          slug: view.org.slug,
+          name: view.org.name,
+          showRoster: view.isCoach,
+          showAdmin: view.isAdmin,
+        };
+      }
+    }
+  }
+  const rosterHref = orgShell
+    ? `/orgs/${orgShell.slug}/roster`
+    : "/orgs#organizations";
+
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      <Link
-        href={`/event/${competition.slug}`}
-        className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
-      >
-        ← Back to event page
-      </Link>
-      <p className="mt-6 text-sm font-semibold text-brand-red">Hosting</p>
-      {canManage && competition.status === "draft" ? (
-        <div className="mt-4">
-          <PublishTournamentPanel
-            competitionId={competition.id}
-            eventSlug={competition.slug}
-            visibility={competition.visibility === "private" ? "private" : "public"}
-          />
-        </div>
+    <>
+      {orgShell ? (
+        <OrgSubnavBar
+          slug={orgShell.slug}
+          orgName={orgShell.name}
+          tab="overview"
+          showRoster={orgShell.showRoster}
+          showAdmin={orgShell.showAdmin}
+        />
       ) : null}
-      <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        {competition.name}
-      </h1>
-      <p className="mt-2 text-sm text-muted">
-        {formatDateRange(competition.start_date, competition.end_date)}
-        {competition.visibility === "private"
-          ? " · private to your organization"
-          : " · listed publicly"}
-        {canManage ? (
-          <>
-            {" · "}
+      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
+          {orgShell ? (
             <Link
-              href={`/event/${competition.slug}/edit`}
-              className="font-semibold text-brand-red hover:underline"
+              href={`/orgs/${orgShell.slug}`}
+              className="text-muted-strong transition-colors hover:text-brand-red"
             >
-              Edit details
+              ← Back to {orgShell.name}
             </Link>
-          </>
-        ) : null}
-      </p>
-
-      <section className="section-rule mt-10 pt-8">
-        <h2 className="text-sm font-semibold text-foreground">RSVPs</h2>
-        <p className="mt-2 text-sm text-muted-strong">
-          <span className="font-semibold text-foreground">{summary.going} going</span>
-          {" · "}
-          {summary.notGoing} can&rsquo;t go · {summary.awaiting} awaiting reply
-        </p>
-        {!attendance.length ? (
-          <p className="mt-3 text-sm text-muted">
-            Nobody is invited yet — invite students or a group below.
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-2">
-            {attendance.map((row) => (
-              <li
-                key={row.profile_id}
-                className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3 ${
-                  row.member_status !== "active" ? "opacity-60" : ""
-                }`}
-              >
-                <div>
-                  <span className="text-sm font-semibold text-foreground">
-                    {row.display_name || "Unnamed student"}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    {rsvpLabel(row.status)}
-                    {row.member_status !== "active" ? " · no longer on roster" : ""}
-                  </span>
-                </div>
-                {isPast ? (
-                  <AttendanceButtons
-                    competitionId={competition.id}
-                    eventSlug={competition.slug}
-                    profileId={row.profile_id}
-                    status={row.status}
-                  />
-                ) : (
-                  <RemoveEntrantButton
-                    competitionId={competition.id}
-                    eventSlug={competition.slug}
-                    profileId={row.profile_id}
-                    displayName={row.display_name || "this student"}
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="section-rule mt-10 pt-8">
-        <h2 className="text-sm font-semibold text-foreground">Invite</h2>
-        <div className="mt-4">
-          <EntrantManager
-            competitionId={competition.id}
-            eventSlug={competition.slug}
-            candidates={candidates}
-            groups={groups.map((g) => ({
-              id: g.id,
-              name: g.name,
-              memberCount: g.member_ids.length,
-            }))}
-            hasActiveRoster={activeStudents.length > 0}
-          />
+          ) : null}
+          <Link
+            href={`/event/${competition.slug}`}
+            className="text-muted-strong transition-colors hover:text-brand-red"
+          >
+            {orgShell ? "Event page" : "← Back to event page"}
+          </Link>
         </div>
-      </section>
-    </div>
+        <p className="mt-6 text-sm font-semibold text-brand-red">Hosting</p>
+        {canManage && competition.status === "draft" ? (
+          <div className="mt-4">
+            <PublishTournamentPanel
+              competitionId={competition.id}
+              eventSlug={competition.slug}
+              visibility={
+                competition.visibility === "private" ? "private" : "public"
+              }
+            />
+          </div>
+        ) : null}
+        <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+          {competition.name}
+        </h1>
+        <p className="mt-2 text-sm text-muted">
+          {formatDateRange(competition.start_date, competition.end_date)}
+          {competition.visibility === "private"
+            ? " · private to your organization"
+            : " · listed publicly"}
+          {canManage ? (
+            <>
+              {" · "}
+              <Link
+                href={`/event/${competition.slug}/edit`}
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Edit details
+              </Link>
+            </>
+          ) : null}
+        </p>
+
+        <section className="section-rule mt-10 pt-8">
+          <h2 className="text-sm font-semibold text-foreground">RSVPs</h2>
+          <p className="mt-2 text-sm text-muted-strong">
+            <span className="font-semibold text-foreground">
+              {summary.going} going
+            </span>
+            {" · "}
+            {summary.notGoing} can&rsquo;t go · {summary.awaiting} awaiting reply
+          </p>
+          {!attendance.length ? (
+            <p className="mt-3 text-sm text-muted">
+              Nobody is invited yet — invite students or a group below.
+            </p>
+          ) : (
+            <ul className="mt-4 flex flex-col gap-2">
+              {attendance.map((row) => (
+                <li
+                  key={row.profile_id}
+                  className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3 ${
+                    row.member_status !== "active" ? "opacity-60" : ""
+                  }`}
+                >
+                  <div>
+                    <span className="text-sm font-semibold text-foreground">
+                      {row.display_name || "Unnamed student"}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted">
+                      {rsvpLabel(row.status)}
+                      {row.member_status !== "active"
+                        ? " · no longer on roster"
+                        : ""}
+                    </span>
+                  </div>
+                  {isPast ? (
+                    <AttendanceButtons
+                      competitionId={competition.id}
+                      eventSlug={competition.slug}
+                      profileId={row.profile_id}
+                      status={row.status}
+                    />
+                  ) : (
+                    <RemoveEntrantButton
+                      competitionId={competition.id}
+                      eventSlug={competition.slug}
+                      profileId={row.profile_id}
+                      displayName={row.display_name || "this student"}
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="section-rule mt-10 pt-8">
+          <h2 className="text-sm font-semibold text-foreground">Invite</h2>
+          <div className="mt-4">
+            <EntrantManager
+              competitionId={competition.id}
+              eventSlug={competition.slug}
+              candidates={candidates}
+              groups={groups.map((g) => ({
+                id: g.id,
+                name: g.name,
+                memberCount: g.member_ids.length,
+              }))}
+              hasActiveRoster={activeStudents.length > 0}
+              rosterHref={rosterHref}
+            />
+          </div>
+        </section>
+      </div>
+    </>
   );
 }

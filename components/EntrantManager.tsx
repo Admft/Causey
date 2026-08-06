@@ -16,12 +16,15 @@ export function EntrantManager({
   candidates,
   groups,
   hasActiveRoster,
+  rosterHref = "/orgs#organizations",
 }: {
   competitionId: string;
   eventSlug: string;
   candidates: Candidate[];
   groups: GroupOption[];
   hasActiveRoster: boolean;
+  /** Prefer this org's roster when invites have nobody to pick. */
+  rosterHref?: string;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -121,10 +124,10 @@ export function EntrantManager({
                 organization roster, then return to this event.
               </p>
               <Link
-                href="/orgs#organizations"
+                href={rosterHref}
                 className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
               >
-                Choose an organization roster
+                Open organization roster
               </Link>
             </div>
           )

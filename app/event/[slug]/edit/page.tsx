@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CancelTournamentButton } from "@/components/CancelTournamentButton";
+import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   canManageCompetitionAsViewer,
   getCompetitionBySlugAuthed,
+  getOrgBySlugForViewer,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -36,58 +38,90 @@ export default async function EditEventPage({
   const supabase = await createServerSupabaseClient();
   const { data: org } = await supabase
     .from("organizations")
-    .select("id, slug, state")
+    .select("id, slug, state, name")
     .eq("id", competition.org_id)
     .maybeSingle();
   if (!org) redirect(`/event/${slug}`);
 
+  const view = await getOrgBySlugForViewer(org.slug, user.id);
+
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      <Link
-        href={`/event/${competition.slug}`}
-        className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
-      >
-        ← Back to event page
-      </Link>
-      <p className="mt-6 text-sm font-semibold text-brand-red">Hosting</p>
-      <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        Edit {competition.name}
-      </h1>
-      <p className="mt-2 text-sm text-muted">
-        The event link stays the same — everyone you&rsquo;ve invited keeps
-        seeing the updated details.
-      </p>
-      <div className="section-rule mt-8 pt-8">
-        <TournamentCreateForm
-          orgId={org.id}
-          orgSlug={org.slug}
-          orgState={org.state}
-          initial={{
-            name: competition.name,
-            start_date: competition.start_date,
-            end_date: competition.end_date,
-            reg_deadline: competition.reg_deadline,
-            venue_name: competition.venue_name,
-            address: competition.address,
-            city: competition.city,
-            state: competition.state,
-            zip: competition.zip,
-            entry_fee_cents: competition.entry_fee_cents,
-            reg_url: competition.reg_url,
-            visibility: competition.visibility,
-            audience: competition.audience,
-            rated: competition.rated,
-          }}
-          edit={{ competitionId: competition.id, eventSlug: competition.slug }}
+    <>
+      {view ? (
+        <OrgSubnavBar
+          slug={view.org.slug}
+          orgName={view.org.name}
+          tab="overview"
+          showRoster={view.isCoach}
+          showAdmin={view.isAdmin}
         />
+      ) : (
+        <div className="border-b border-line bg-surface">
+          <div className="mx-auto max-w-6xl px-5 py-2.5 sm:px-8">
+            <p className="truncate text-xs font-semibold text-muted">
+              <Link href="/orgs" className="hover:text-foreground">
+                Organizations
+              </Link>{" "}
+              / <span className="text-muted-strong">{org.name}</span>
+            </p>
+          </div>
+        </div>
+      )}
+      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
+          <Link
+            href={`/orgs/${org.slug}`}
+            className="text-muted-strong transition-colors hover:text-brand-red"
+          >
+            ← Back to {org.name}
+          </Link>
+          <Link
+            href={`/event/${competition.slug}`}
+            className="text-muted-strong transition-colors hover:text-brand-red"
+          >
+            Event page
+          </Link>
+        </div>
+        <p className="mt-6 text-sm font-semibold text-brand-red">Hosting</p>
+        <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+          Edit {competition.name}
+        </h1>
+        <p className="mt-2 text-sm text-muted">
+          The event link stays the same — everyone you&rsquo;ve invited keeps
+          seeing the updated details.
+        </p>
+        <div className="section-rule mt-8 pt-8">
+          <TournamentCreateForm
+            orgId={org.id}
+            orgSlug={org.slug}
+            orgState={org.state}
+            initial={{
+              name: competition.name,
+              start_date: competition.start_date,
+              end_date: competition.end_date,
+              reg_deadline: competition.reg_deadline,
+              venue_name: competition.venue_name,
+              address: competition.address,
+              city: competition.city,
+              state: competition.state,
+              zip: competition.zip,
+              entry_fee_cents: competition.entry_fee_cents,
+              reg_url: competition.reg_url,
+              visibility: competition.visibility,
+              audience: competition.audience,
+              rated: competition.rated,
+            }}
+            edit={{ competitionId: competition.id, eventSlug: competition.slug }}
+          />
+        </div>
+        <div className="section-rule mt-10 pt-8">
+          <CancelTournamentButton
+            competitionId={competition.id}
+            eventSlug={competition.slug}
+            orgSlug={org.slug}
+          />
+        </div>
       </div>
-      <div className="section-rule mt-10 pt-8">
-        <CancelTournamentButton
-          competitionId={competition.id}
-          eventSlug={competition.slug}
-          orgSlug={org.slug}
-        />
-      </div>
-    </div>
+    </>
   );
 }

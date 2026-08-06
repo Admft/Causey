@@ -329,9 +329,10 @@ export async function getCompetitionBySlugAuthed(
     .from("competitions")
     .select("*, sections(*), series(*)")
     .eq("slug", slug)
-    // Drafts are included so organizers can preview and publish; RLS restricts
-    // them to the creator and org coaches. Archived stays hidden.
-    .in("status", ["draft", "published"])
+    // Organizer statuses only — RLS still gates who can see each row.
+    // pending_review / rejected must resolve so org-home "View while in review"
+    // / "Fix and resubmit" links don't 404. Archived stays hidden.
+    .in("status", ["draft", "pending_review", "published", "rejected"])
     .maybeSingle();
   if (error || !data || data.canonical_id) return null;
 

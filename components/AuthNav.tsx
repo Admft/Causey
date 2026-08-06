@@ -8,13 +8,13 @@ import type { AccountRole } from "@/lib/auth/types";
 
 /**
  * Sign in / Account controls for the primary nav.
- * Renders nothing useful if Supabase env is missing (mock-only mode).
- * Signed-in users get a role-aware portal link next to Account.
+ * Mobile uses short labels so Chess + portal + Account + Sign out stay one
+ * row; full wording returns at sm+.
  */
 function navLinkClass(active: boolean) {
   return active
-    ? "text-sm font-semibold text-brand-red"
-    : "text-sm font-medium text-muted-strong transition-colors hover:text-foreground";
+    ? "shrink-0 whitespace-nowrap text-sm font-semibold text-brand-red"
+    : "shrink-0 whitespace-nowrap text-sm font-medium text-muted-strong transition-colors hover:text-foreground";
 }
 
 export function AuthNav() {
@@ -69,16 +69,16 @@ export function AuthNav() {
 
   if (!email) {
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/login"
-          className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+          className="shrink-0 whitespace-nowrap text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
         >
           Sign in
         </Link>
         <Link
           href="/signup"
-          className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red"
+          className="shrink-0 whitespace-nowrap rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red"
         >
           Sign up
         </Link>
@@ -95,18 +95,28 @@ export function AuthNav() {
 
   const portalLinks =
     role === "parent"
-      ? [{ href: "/family", label: "Family" }]
+      ? [{ href: "/family", label: "Family", shortLabel: "Family" }]
       : role === "coach"
-        ? [{ href: "/orgs", label: "My organizations" }]
+        ? [
+            {
+              href: "/orgs",
+              label: "My organizations",
+              shortLabel: "Orgs",
+            },
+          ]
         : role === "student"
           ? [
-              { href: "/me", label: "My tournaments" },
-              { href: "/orgs", label: "My clubs" },
+              {
+                href: "/me",
+                label: "My tournaments",
+                shortLabel: "Plan",
+              },
+              { href: "/orgs", label: "My clubs", shortLabel: "Clubs" },
             ]
           : [];
 
   return (
-    <div className="flex items-center gap-3 sm:gap-5">
+    <div className="flex shrink-0 items-center gap-3 sm:gap-5">
       {isAdmin ? (
         <Link
           href="/admin"
@@ -120,6 +130,7 @@ export function AuthNav() {
         <Link
           key={link.href}
           href={link.href}
+          aria-label={link.label}
           aria-current={
             link.href === "/me"
               ? pathname === "/me"
@@ -135,7 +146,8 @@ export function AuthNav() {
               : pathname.startsWith(link.href)
           )}
         >
-          {link.label}
+          <span className="sm:hidden">{link.shortLabel}</span>
+          <span className="hidden sm:inline">{link.label}</span>
         </Link>
       ))}
       <Link
@@ -161,7 +173,7 @@ export function AuthNav() {
       <button
         type="button"
         onClick={signOut}
-        className="text-sm font-medium text-muted transition-colors hover:text-foreground"
+        className="shrink-0 whitespace-nowrap text-sm font-medium text-muted transition-colors hover:text-foreground"
       >
         Sign out
       </button>

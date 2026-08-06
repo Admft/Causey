@@ -22,8 +22,8 @@ export function PrimaryNav() {
       aria-current={chessActive ? "page" : undefined}
       className={
         chessActive
-          ? "text-sm font-semibold text-brand-red"
-          : "text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+          ? "shrink-0 whitespace-nowrap text-sm font-semibold text-brand-red"
+          : "shrink-0 whitespace-nowrap text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
       }
     >
       <span className="sm:hidden">Chess</span>

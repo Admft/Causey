@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="sticky top-0 z-50">
           <EarlyBuildBanner />
           <header className="border-b border-line bg-background/90 backdrop-blur-md">
-            <div className="mx-auto flex h-16 max-w-6xl items-center gap-5 px-5 sm:px-8">
+            <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:gap-5 sm:px-8">
               <Link
                 href="/"
                 aria-label="Causey home — browse competition types"
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <CauseyLogo size="md" />
               </Link>
               <nav
-                className="ml-auto flex min-w-0 items-center gap-4 overflow-x-auto sm:gap-6"
+                className="ml-auto flex min-w-0 items-center gap-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
                 aria-label="Primary"
               >
                 <PrimaryNav />

@@ -48,7 +48,13 @@ export default async function NewTournamentPage({
 
   return (
     <>
-      <OrgSubnavBar slug={org.slug} orgName={org.name} tab="overview" showRoster />
+      <OrgSubnavBar
+        slug={org.slug}
+        orgName={org.name}
+        tab="overview"
+        showRoster
+        showAdmin={view.isAdmin}
+      />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">New tournament</p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
