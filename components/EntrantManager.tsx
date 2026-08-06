@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { inviteEntrants, inviteGroup, removeEntrant } from "@/lib/actions/entrants";
@@ -13,15 +14,18 @@ export function EntrantManager({
   eventSlug,
   candidates,
   groups,
+  hasActiveRoster,
 }: {
   competitionId: string;
   eventSlug: string;
   candidates: Candidate[];
   groups: GroupOption[];
+  hasActiveRoster: boolean;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function toggle(profileId: string) {
@@ -33,11 +37,22 @@ export function EntrantManager({
     });
   }
 
-  function onInviteGroup(groupId: string) {
+  function onInviteGroup(group: GroupOption) {
     setError(null);
+    setMessage(null);
     startTransition(async () => {
-      const result = await inviteGroup(competitionId, eventSlug, groupId);
-      if (!result.ok) setError(result.error);
+      const result = await inviteGroup(competitionId, eventSlug, group.id);
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setMessage(
+          result.invited
+            ? `Invited ${result.invited} ${
+                result.invited === 1 ? "student" : "students"
+              } from ${group.name}.`
+            : `Everyone in ${group.name} was already invited.`
+        );
+      }
       router.refresh();
     });
   }
@@ -45,10 +60,21 @@ export function EntrantManager({
   function onInviteSelected() {
     if (!selected.size) return;
     setError(null);
+    setMessage(null);
     startTransition(async () => {
       const result = await inviteEntrants(competitionId, eventSlug, [...selected]);
-      if (!result.ok) setError(result.error);
-      else setSelected(new Set());
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setMessage(
+          result.invited
+            ? `Invited ${result.invited} ${
+                result.invited === 1 ? "student" : "students"
+              }.`
+            : "Those students were already invited."
+        );
+        setSelected(new Set());
+      }
       router.refresh();
     });
   }
@@ -64,7 +90,7 @@ export function EntrantManager({
                 key={group.id}
                 type="button"
                 disabled={isPending || !group.memberCount}
-                onClick={() => onInviteGroup(group.id)}
+                onClick={() => onInviteGroup(group)}
                 className="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand-red/30 disabled:opacity-60"
               >
                 {group.name} ({group.memberCount})
@@ -77,9 +103,30 @@ export function EntrantManager({
       <div>
         <h3 className="text-xs font-semibold text-muted-strong">Invite students</h3>
         {!candidates.length ? (
-          <p className="mt-2 text-sm text-muted">
-            Everyone on your active roster is already invited.
-          </p>
+          hasActiveRoster ? (
+            <p className="mt-2 text-sm text-muted">
+              Everyone on your active roster is already invited.{" "}
+              <a
+                href="#rsvps"
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Review replies
+              </a>
+            </p>
+          ) : (
+            <div className="mt-2">
+              <p className="max-w-prose text-sm text-muted">
+                No active students are available to invite. Add students to an
+                organization roster, then return to this event.
+              </p>
+              <Link
+                href="/orgs#organizations"
+                className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
+              >
+                Choose an organization roster
+              </Link>
+            </div>
+          )
         ) : (
           <>
             <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
@@ -111,6 +158,21 @@ export function EntrantManager({
           </>
         )}
       </div>
+
+      {message ? (
+        <div
+          className="rounded-xl border border-accent/25 bg-accent-soft p-4"
+          role="status"
+        >
+          <p className="text-sm font-medium text-foreground">{message}</p>
+          <a
+            href="#rsvps"
+            className="mt-2 inline-flex text-sm font-semibold text-brand-red hover:underline"
+          >
+            Review replies
+          </a>
+        </div>
+      ) : null}
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">

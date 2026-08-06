@@ -62,11 +62,12 @@ export default async function ManageEventPage({
 
   const invitedIds = new Set(attendance.map((row) => row.profile_id));
   const seenCandidates = new Set<string>();
-  const candidates = roster
+  const activeStudents = roster.filter(
+    (row) => row.member_status === "active" && row.member_role === "student"
+  );
+  const candidates = activeStudents
     .filter((row) => {
-      if (row.member_status !== "active" || invitedIds.has(row.profile_id)) {
-        return false;
-      }
+      if (invitedIds.has(row.profile_id)) return false;
       if (seenCandidates.has(row.profile_id)) return false;
       seenCandidates.add(row.profile_id);
       return true;
@@ -157,6 +158,7 @@ export default async function ManageEventPage({
               name: g.name,
               memberCount: g.member_ids.length,
             }))}
+            hasActiveRoster={activeStudents.length > 0}
           />
         </div>
       </section>

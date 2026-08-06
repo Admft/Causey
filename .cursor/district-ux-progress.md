@@ -26,6 +26,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — Coach tournament invites distinguish an empty student roster from an already-invited roster, confirm exactly how many invitations were sent, and point to the next action
 - [x] 2026-08-05 — Signup carries each role through plain-language account choices, roster-visible name guidance, and a next-step email confirmation handoff
 - [x] 2026-08-05 — Join-link sign-in names the required student account and offers student-specific account creation without losing the invitation
 - [x] 2026-08-05 — Tournament creation requires a stored cover, autosaves coach-only drafts, resumes from the organization workspace, and publishes after preview + audience review
@@ -67,7 +68,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Last UX tick: 2026-08-05 — made generic signup role-aware through account choice, name guidance, and email confirmation.
-- Next UX: add next actions to the highest-impact empty, error, and success states.
+- Last UX tick: 2026-08-05 — made coach tournament invitation empty, error, and success states truthful and action-oriented.
+- Next UX: continue adding next actions to the highest-impact workflow states.
 - Last polish tick: 2026-08-05 — search results composition (removable active-filter chips, sticky rail, paging at the bottom row).
 - Next polish: org workspace visual redesign once UX org files settle.

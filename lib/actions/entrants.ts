@@ -60,19 +60,27 @@ export async function inviteEntrants(
   if (!profileIds.length) return { ok: true, invited: 0 };
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.from("competition_entrants").upsert(
-    profileIds.map((profileId) => ({
-      competition_id: competitionId,
-      profile_id: profileId,
-      status: "invited",
-      invited_by: user.id,
-    })),
-    { onConflict: "competition_id,profile_id", ignoreDuplicates: true }
-  );
-  if (error) return { ok: false, error: "Could not send the invites." };
+  const { data, error } = await supabase
+    .from("competition_entrants")
+    .upsert(
+      profileIds.map((profileId) => ({
+        competition_id: competitionId,
+        profile_id: profileId,
+        status: "invited",
+        invited_by: user.id,
+      })),
+      { onConflict: "competition_id,profile_id", ignoreDuplicates: true }
+    )
+    .select("profile_id");
+  if (error) {
+    return {
+      ok: false,
+      error: "Could not send the invitations. Check your connection and try again.",
+    };
+  }
 
   revalidateEventSurfaces(eventSlug);
-  return { ok: true, invited: profileIds.length };
+  return { ok: true, invited: data?.length ?? 0 };
 }
 
 export async function inviteGroup(
@@ -88,7 +96,12 @@ export async function inviteGroup(
     .from("org_group_members")
     .select("profile_id")
     .eq("group_id", groupId);
-  if (error) return { ok: false, error: "Could not read that group." };
+  if (error) {
+    return {
+      ok: false,
+      error: "Could not load that group. Reload the page and try again.",
+    };
+  }
 
   return inviteEntrants(
     competitionId,
