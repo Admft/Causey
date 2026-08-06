@@ -158,7 +158,7 @@ export async function getModerationQueue(): Promise<ModerationQueueRow[]> {
   const { data } = await supabase
     .from("competitions")
     .select(
-      "id, slug, name, audience, status, submitted_for_review_at, organizations(id, name, slug, verification_status)"
+      "id, slug, name, audience, status, submitted_for_review_at, organizations!competitions_org_id_fkey(id, name, slug, verification_status)"
     )
     .eq("status", "pending_review")
     .order("submitted_for_review_at", { ascending: true });
