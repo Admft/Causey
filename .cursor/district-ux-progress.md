@@ -18,6 +18,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [x] Loading/empty states that feel designed (not dead) — 2026-08-05 (route skeletons for /orgs + /family account surfaces; search already had skeletons)
 
 ## Done
+- [x] 2026-08-05 — My tournaments now groups accepted club RSVPs and self-marked organizer registrations into a de-duplicated Upcoming/Past timeline; past wording stays honest that Causey does not verify attendance or payment
 - [x] 2026-08-05 — Link affordances feel alive and keyboard-equal: shared `.nudge-x` utility (design-system §10/§16, brand easing) drives every → / ↗ mark on home, footer, and sources; card-lift and the nudge now also trigger on focus-visible; the two hand-rolled `group-hover:translate-x-1` arrows that ignored prefers-reduced-motion are replaced by the guarded utility
 - [x] 2026-08-05 — Search now defaults to honest popularity from distinct saves and registration starts (migration 0016), keeps nearer distance bands ahead of farther events, and offers an explicit soonest-first option
 - [x] 2026-08-05 — Search filters no longer wall off results on phones/tablets: below lg the rail collapses behind a "Narrow it down · N applied" disclosure (aria-expanded, motion-safe chevron, Clear filters still reachable); desktop 220px sidebar unchanged
@@ -38,7 +39,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Tournament create flow: required image, preview, audience, then publish (guided steps) — details → audience/review → publish shipped 2026-08-05; image upload and persisted drafts remain
 - [ ] Signup / join-org copy + flow: match real unlocks; remove contradictory coach language — join-link auth handoff shipped 2026-08-05; broader copy audit remains
 - [x] External registration tracking: Register → registration_opened → “Did you register?” → My tournaments — shipped 2026-08-05
-- [ ] My tournaments workspace: Registration needed / Registered / Invited shipped 2026-08-05; Upcoming / Past remain
+- [x] My tournaments workspace: Invited / Registration needed / Upcoming / Past shipped 2026-08-05
 - [ ] Search defaults: provenance + popularity shipped 2026-08-05; org-member boosting without burying public discovery remains
 - [ ] Empty/error/success states that always name the next action
 - [ ] Navigation consistency: same terms for org, event, RSVP, register across pages
@@ -54,5 +55,5 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last UX tick: 2026-08-05 — defaulted search to de-duplicated save/registration interest within nearby distance bands, with a transparent soonest-first alternative
+- Last UX tick: 2026-08-05 — grouped accepted RSVPs and self-marked registrations into an honest Upcoming/Past account timeline without duplicating the same tournament
 - Last frontend-polish tick: 2026-08-05 — ported `.nudge-x` so arrow/external marks nudge on hover + keyboard focus, with card-lift focus parity and full reduced-motion guards

@@ -19,6 +19,42 @@ export const metadata: Metadata = {
   description: "Your Causey profile, saved tournaments, and ratings.",
 };
 
+type AccountTournament = {
+  slug: string;
+  name: string;
+  city: string;
+  state: string;
+  start_date: string;
+  end_date: string | null;
+};
+
+type TournamentPlan = {
+  competitionId: string;
+  competition: AccountTournament;
+  going: boolean;
+  registrationMarked: boolean;
+};
+
+function addTournamentPlan(
+  plans: Map<string, TournamentPlan>,
+  competitionId: string,
+  competition: AccountTournament,
+  signal: "going" | "registered"
+) {
+  const current = plans.get(competitionId) ?? {
+    competitionId,
+    competition,
+    going: false,
+    registrationMarked: false,
+  };
+  plans.set(competitionId, {
+    ...current,
+    going: current.going || signal === "going",
+    registrationMarked:
+      current.registrationMarked || signal === "registered",
+  });
+}
+
 const ROLE_NEXT_ACTION: Record<
   AccountRole,
   {
@@ -108,17 +144,11 @@ export default async function MePage() {
   ]);
 
   const today = new Date().toISOString().slice(0, 10);
-  const trackedRegistrations = (registrationRows ?? [])
+  const registrationEvents = (registrationRows ?? [])
     .flatMap((row) => {
-      const competition = row.competitions as unknown as {
-        slug: string;
-        name: string;
-        city: string;
-        state: string;
-        start_date: string;
-        end_date: string | null;
-      } | null;
-      if (!competition || !isUpcomingEvent(competition, today)) return [];
+      const competition =
+        row.competitions as unknown as AccountTournament | null;
+      if (!competition) return [];
       return [
         {
           competitionId: row.competition_id as string,
@@ -130,11 +160,10 @@ export default async function MePage() {
     .sort((a, b) =>
       a.competition.start_date.localeCompare(b.competition.start_date)
     );
-  const registrationNeeded = trackedRegistrations.filter(
-    (row) => row.status !== "registered"
-  );
-  const registered = trackedRegistrations.filter(
-    (row) => row.status === "registered"
+  const registrationNeeded = registrationEvents.filter(
+    (row) =>
+      row.status !== "registered" &&
+      isUpcomingEvent(row.competition, today)
   );
   const upcomingInvitations = entrantRows.filter(
     (row) =>
@@ -142,12 +171,59 @@ export default async function MePage() {
       row.competition &&
       isUpcomingEvent(row.competition, today)
   );
-  const schedule = entrantRows.filter(
-    (row) =>
-      row.status === "going" &&
-      row.competition &&
-      isUpcomingEvent(row.competition, today)
+  const plans = new Map<string, TournamentPlan>();
+  for (const row of entrantRows) {
+    if (row.status === "going" && row.competition) {
+      addTournamentPlan(
+        plans,
+        row.competition_id,
+        row.competition,
+        "going"
+      );
+    }
+  }
+  for (const row of registrationEvents) {
+    if (row.status === "registered") {
+      addTournamentPlan(
+        plans,
+        row.competitionId,
+        row.competition,
+        "registered"
+      );
+    }
+  }
+  const registrationNeededIds = new Set(
+    registrationNeeded.map((row) => row.competitionId)
   );
+  const upcomingPlans = [...plans.values()]
+    .filter(
+      (plan) =>
+        isUpcomingEvent(plan.competition, today) &&
+        !registrationNeededIds.has(plan.competitionId)
+    )
+    .sort((a, b) =>
+      a.competition.start_date.localeCompare(b.competition.start_date)
+    );
+  const pastPlans = [...plans.values()]
+    .filter((plan) => !isUpcomingEvent(plan.competition, today))
+    .sort((a, b) =>
+      b.competition.start_date.localeCompare(a.competition.start_date)
+    );
+  const hasTournamentWorkspace =
+    upcomingInvitations.length > 0 ||
+    registrationNeeded.length > 0 ||
+    upcomingPlans.length > 0 ||
+    pastPlans.length > 0;
+  const planStatus = (plan: TournamentPlan, past: boolean) =>
+    plan.going && plan.registrationMarked
+      ? past
+        ? "Planned to go · You marked registration complete"
+        : "Going · You marked registration complete"
+      : plan.going
+        ? past
+          ? "You planned to go"
+          : "Going"
+        : "You marked registration complete";
 
   const roleLabel =
     profile.role === "coach"
@@ -194,12 +270,12 @@ export default async function MePage() {
           My tournaments
         </h2>
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Answer tournament invitations and keep organizer-site registrations
-          from getting lost after you leave Causey.
+          Answer invitations, finish organizer-site registration, and keep
+          upcoming and past plans in one place.
         </p>
-        {!upcomingInvitations.length && !trackedRegistrations.length ? (
+        {!hasTournamentWorkspace ? (
           <p className="mt-4 text-sm text-muted">
-            No tournament invitations or registrations need your attention.{" "}
+            You don&rsquo;t have tournament plans yet.{" "}
             <Link href="/chess" className="font-semibold text-brand-red hover:underline">
               Search tournaments
             </Link>
@@ -279,30 +355,69 @@ export default async function MePage() {
                 </ul>
               </div>
             ) : null}
-            {registered.length ? (
+            {upcomingPlans.length ? (
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
-                  Registered
+                  Upcoming
                 </h3>
                 <ul className="mt-3 flex flex-col gap-3">
-                  {registered.map(({ competitionId, competition }) => (
-                    <li key={competitionId}>
+                  {upcomingPlans.map((plan) => (
+                    <li key={plan.competitionId}>
                       <Link
-                        href={`/event/${competition.slug}`}
+                        href={`/event/${plan.competition.slug}`}
                         className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
                       >
                         <span className="font-semibold text-foreground">
-                          {competition.name}
+                          {plan.competition.name}
                         </span>
                         <span className="mt-1 block text-xs text-muted">
                           {formatDateRange(
-                            competition.start_date,
-                            competition.end_date
-                          )}{" "}
-                          · {competition.city}, {competition.state}
+                            plan.competition.start_date,
+                            plan.competition.end_date
+                          )}
+                          {plan.competition.city
+                            ? ` · ${plan.competition.city}, ${plan.competition.state}`
+                            : ""}
                         </span>
                         <span className="mt-2 block text-xs font-semibold text-muted-strong">
-                          Registration marked complete
+                          {planStatus(plan, false)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {pastPlans.length ? (
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Past
+                </h3>
+                <p className="mt-1 text-sm text-muted">
+                  A history of plans you made in Causey. This does not confirm
+                  attendance or payment.
+                </p>
+                <ul className="mt-3 flex flex-col gap-3">
+                  {pastPlans.map((plan) => (
+                    <li key={plan.competitionId}>
+                      <Link
+                        href={`/event/${plan.competition.slug}`}
+                        className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
+                      >
+                        <span className="font-semibold text-foreground">
+                          {plan.competition.name}
+                        </span>
+                        <span className="mt-1 block text-xs text-muted">
+                          {formatDateRange(
+                            plan.competition.start_date,
+                            plan.competition.end_date
+                          )}
+                          {plan.competition.city
+                            ? ` · ${plan.competition.city}, ${plan.competition.state}`
+                            : ""}
+                        </span>
+                        <span className="mt-2 block text-xs font-semibold text-muted-strong">
+                          {planStatus(plan, true)}
                         </span>
                       </Link>
                     </li>
@@ -349,37 +464,6 @@ export default async function MePage() {
           <ProfileEditor profile={profile} />
         </div>
       </section>
-
-      {schedule.length ? (
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">
-            You&rsquo;re going to
-          </h2>
-          <ul className="mt-4 flex flex-col gap-3">
-            {schedule.map((row) => (
-              <li key={row.competition_id}>
-                <Link
-                  href={`/event/${row.competition!.slug}`}
-                  className="block rounded-xl border border-line bg-surface px-4 py-3 transition-colors hover:border-brand-red/30"
-                >
-                  <span className="font-semibold text-foreground">
-                    {row.competition!.name}
-                  </span>
-                  <span className="mt-1 block text-xs text-muted">
-                    {formatDateRange(
-                      row.competition!.start_date,
-                      row.competition!.end_date
-                    )}
-                    {row.competition!.city
-                      ? ` · ${row.competition!.city}, ${row.competition!.state}`
-                      : ""}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
 
       <section className="section-rule mt-10 pt-8">
         <h2 className="text-sm font-semibold text-foreground">Saved tournaments</h2>
