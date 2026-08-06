@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Moderation queue: applied `0024` columns (`submitted_for_review_at`, review fields, org `verification_status`) + clearer schema-gap error — 2026-08-06
 - [x] Moderation-first admin home: pending-review mission + queue preview; create tasks demoted; Moderation leads subnav — 2026-08-06
 - [x] Manage ↔ org workspace: OrgSubnav on manage/edit, pending_review/rejected slug lookup, roster deep-link from empty invite, admin tabs stay on roster — 2026-08-06
 - [x] Mobile header nav: short labels (Orgs / Plan / Clubs), whitespace-nowrap + shrink-0, tighter gaps, hide scrollbar on overflow — 2026-08-06

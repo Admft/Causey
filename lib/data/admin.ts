@@ -176,12 +176,20 @@ export async function getAdminModerationQueue(): Promise<{
       "id, slug, name, organizer_name, venue_name, city, state, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, audience, source, status, submitted_for_review_at, organizations(id, name, slug, verification_status)"
     )
     .eq("status", "pending_review")
-    .order("submitted_for_review_at", { ascending: true });
+    .order("submitted_for_review_at", { ascending: true, nullsFirst: false });
 
   if (error) {
+    const detail = error.message?.toLowerCase() ?? "";
+    const schemaGap =
+      detail.includes("submitted_for_review_at") ||
+      detail.includes("verification_status") ||
+      detail.includes("does not exist") ||
+      error.code === "42703";
     return {
       queue: [],
-      error: "The moderation queue could not be loaded.",
+      error: schemaGap
+        ? "Moderation columns aren’t set up yet. Apply migration 0024_moderation_queue_columns.sql, then reload."
+        : "The moderation queue could not be loaded.",
     };
   }
 
