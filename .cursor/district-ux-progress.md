@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Moderation-first admin home: pending-review mission + queue preview; create tasks demoted; Moderation leads subnav — 2026-08-06
 - [x] Manage ↔ org workspace: OrgSubnav on manage/edit, pending_review/rejected slug lookup, roster deep-link from empty invite, admin tabs stay on roster — 2026-08-06
 - [x] Mobile header nav: short labels (Orgs / Plan / Clubs), whitespace-nowrap + shrink-0, tighter gaps, hide scrollbar on overflow — 2026-08-06
 - [x] Discovery conversion honesty: chess search copy + home coverage + student-primary account pitch — 2026-08-06
@@ -164,4 +165,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Next UX: start sequence item 1 — `0018` hierarchy + role-split helpers + staff/provision tables (then app mirrors).
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.
-- Last persona batch (2026-08-06): manage tournament linked into org workspace (+ mobile header labels). Next: moderation-first admin home.
+- Last persona batch (2026-08-06): moderation-first admin home. Next: district landing (schema-gated) or portal mobile sticky next-action.

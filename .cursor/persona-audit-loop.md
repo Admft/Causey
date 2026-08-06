@@ -50,18 +50,18 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-06 — **Moderation-first admin home**: `/admin` leads with pending-review mission + queue preview; create org/draft demoted; Moderation tab first in subnav; overview counts include awaiting review.
+- 2026-08-06 — Cover upload restored (admin+coach draft flow) + `tournament_drafts` applied on production.
 - 2026-08-06 — **Manage tournament linked into org workspace**: manage/edit keep OrgSubnav + back-to-org; `getCompetitionBySlugAuthed` resolves `pending_review`/`rejected`; empty invite deep-links to that org’s roster; roster/create keep admin tabs. Also shipped mobile header short labels.
-- 2026-08-06 — Discovery conversion honesty: `/chess` drops “every tournament”; home demotes unfinished types to a footnote; HomeAccountPitch is student-primary with coach in disclosure.
-- 2026-08-06 — Parent registration inbox, invite-first join, coach org mission, event next-action, role workspaces
 
-## Backlog candidates (tick 6–7)
+## Backlog candidates (tick 8)
 
 ### P0 / first-session killers
-- Manage orphaned from org + pending_review 404 — **done 2026-08-06**
+- Manage orphaned from org + pending_review 404 — **done**
+- Admin home not moderation-first — **done 2026-08-06**
 
 ### P1
-- Admin home not moderation-first
 - District admin distinct landing (schema-gated)
-- Portal mobile sticky next-action / chrome stack (partial: header labels done)
+- Portal mobile sticky next-action / chrome stack
 - Notifications hidden on mobile AuthNav
 - Roster still table/admin feel

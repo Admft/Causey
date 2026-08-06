@@ -80,25 +80,31 @@ export type AdminModerationQueueRow = {
 
 export async function getAdminOverview() {
   const supabase = await createServerSupabaseClient();
-  const [organizations, drafts, published, archived] = await Promise.all([
-    supabase.from("organizations").select("*", { count: "exact", head: true }),
-    supabase
-      .from("competitions")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "draft"),
-    supabase
-      .from("competitions")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "published"),
-    supabase
-      .from("competitions")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "archived"),
-  ]);
+  const [organizations, drafts, pendingReview, published, archived] =
+    await Promise.all([
+      supabase.from("organizations").select("*", { count: "exact", head: true }),
+      supabase
+        .from("competitions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "draft"),
+      supabase
+        .from("competitions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending_review"),
+      supabase
+        .from("competitions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "published"),
+      supabase
+        .from("competitions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "archived"),
+    ]);
 
   return {
     organizations: organizations.count ?? 0,
     drafts: drafts.count ?? 0,
+    pendingReview: pendingReview.count ?? 0,
     published: published.count ?? 0,
     archived: archived.count ?? 0,
   };
