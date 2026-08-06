@@ -24,6 +24,7 @@ export function isOrgCoach(
     [
       "assistant_coach",
       "coach",
+      "admin",
       "school_admin",
       "district_admin",
     ].includes(membership.role)

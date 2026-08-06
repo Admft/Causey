@@ -84,7 +84,7 @@ export function RsvpButtons({
           aria-pressed={current === "not_going"}
           className={buttonClass(current === "not_going")}
         >
-          {pending && current === "not_going" ? "Saving…" : "Can&rsquo;t go"}
+          {pending && current === "not_going" ? "Saving…" : "Can't go"}
         </button>
       </div>
       {error ? (

@@ -263,7 +263,12 @@ export default async function MePage() {
           },
           secondary: { href: "/chess", label: "Search more tournaments" },
         }
-      : nextAction;
+      : {
+          title: nextAction.title,
+          description: nextAction.description,
+          action: { href: nextAction.href, label: nextAction.label },
+          secondary: nextAction.secondary,
+        };
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">

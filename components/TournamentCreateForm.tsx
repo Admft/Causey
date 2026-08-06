@@ -161,6 +161,11 @@ export function TournamentCreateForm({
   const leaving = useRef(false);
   const published = useRef(false);
   const saveVersion = useRef(0);
+  // Stable UUID for coach create even if the server prop is missing; admin
+  // create uses a separate path and must not pretend to have a draft.
+  const [resolvedDraftId] = useState(() =>
+    edit || admin ? draftId ?? null : draftId ?? crypto.randomUUID()
+  );
 
   function currentDraftData(): TournamentDraftData {
     return {
@@ -183,7 +188,7 @@ export function TournamentCreateForm({
   }
 
   function persistDraft(coverImagePath?: string) {
-    if (!draftId) {
+    if (!resolvedDraftId) {
       return Promise.resolve({
         ok: false as const,
         error: "Could not identify this draft. Reload the page and try again.",
@@ -196,7 +201,7 @@ export function TournamentCreateForm({
     const request = saveQueue.current.then(async () => {
       try {
         return await saveTournamentDraft({
-          draftId,
+          draftId: resolvedDraftId,
           orgId,
           data,
           coverImagePath,
@@ -237,15 +242,24 @@ export function TournamentCreateForm({
   }
 
   useEffect(() => {
-    if (edit || admin || !draftId || initialDraft) return;
+    if (edit || admin || !resolvedDraftId || initialDraft) return;
     // Create the draft row immediately so cover uploads and leave-saves
     // don't race an empty tournament_drafts table.
     void persistDraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId, edit, admin, initialDraft]);
+  }, [resolvedDraftId, edit, admin, initialDraft]);
 
   useEffect(() => {
-    if (edit || admin || pending || leaving.current || published.current) return;
+    if (
+      edit ||
+      admin ||
+      !resolvedDraftId ||
+      pending ||
+      leaving.current ||
+      published.current
+    ) {
+      return;
+    }
     if (firstAutosave.current) {
       firstAutosave.current = false;
       return;
@@ -273,7 +287,9 @@ export function TournamentCreateForm({
     sections,
     rated,
     edit,
+    admin,
     pending,
+    resolvedDraftId,
   ]);
 
   async function onCoverSelected(event: ChangeEvent<HTMLInputElement>) {
@@ -290,7 +306,7 @@ export function TournamentCreateForm({
       setError("Cover images must be 5 MB or smaller.");
       return;
     }
-    if (!draftId) {
+    if (!resolvedDraftId) {
       setError("Could not identify this draft. Reload the page and try again.");
       return;
     }
@@ -308,7 +324,7 @@ export function TournamentCreateForm({
           : file.type === "image/webp"
             ? "webp"
             : "jpg";
-      const imagePath = `${orgId}/${draftId}/cover-${crypto.randomUUID()}.${extension}`;
+      const imagePath = `${orgId}/${resolvedDraftId}/cover-${crypto.randomUUID()}.${extension}`;
       const supabase = createBrowserSupabaseClient();
       const { error: uploadError } = await supabase.storage
         .from("tournament-covers")
@@ -437,12 +453,12 @@ export function TournamentCreateForm({
         return;
       }
 
-      if (!draftId) {
+      if (!resolvedDraftId) {
         setError("Could not identify this draft. Reload the page and try again.");
         return;
       }
       const result = await publishTournamentDraft({
-        draftId,
+        draftId: resolvedDraftId,
         orgId,
         orgSlug,
       });
@@ -563,7 +579,7 @@ export function TournamentCreateForm({
         </div>
       ) : null}
 
-      {!edit ? (
+      {!edit && !admin ? (
         <div className="flex flex-col items-start justify-between gap-2 border-y border-line py-3 sm:flex-row sm:items-center">
           <p
             className={`text-xs ${
@@ -592,7 +608,7 @@ export function TournamentCreateForm({
 
       {!reviewing ? (
         <>
-          {!edit && draftId ? (
+          {!edit && !admin && resolvedDraftId ? (
             <fieldset className="flex flex-col gap-3">
               <div>
                 <legend className="text-xs font-semibold text-muted-strong">
