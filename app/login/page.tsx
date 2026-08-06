@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/LoginForm";
+import { sanitizeNextPath } from "@/lib/auth/next-path";
 
 export const metadata: Metadata = {
   title: "Sign in",
   description: "Sign in to your Causey account.",
 };
-
-/** Only same-site paths may be a post-login destination. */
-function sanitizeNext(next: string | undefined): string | undefined {
-  if (!next) return undefined;
-  if (!next.startsWith("/") || next.startsWith("//")) return undefined;
-  return next;
-}
 
 export default async function LoginPage({
   searchParams,
@@ -19,7 +13,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const params = await searchParams;
-  const next = sanitizeNext(params.next);
+  const next = sanitizeNextPath(params.next);
 
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">

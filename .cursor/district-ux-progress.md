@@ -18,6 +18,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Loading/empty states that feel designed (not dead)
 
 ## Done
+- [x] 2026-08-05 — Join links now survive login, signup, and email confirmation so new students return to the organization invitation
 - [x] 2026-08-05 — Tournament creation now separates details from audience review, with an explicit publish step
 - [x] 2026-08-05 — Org workspace clarity: hosted tournaments lead the coach view, invite management is one click away, and join codes live with the roster
 - [x] 2026-08-05 — Role-aware account next actions; family prioritizes unanswered RSVPs and orgs surface pending invitations first
@@ -26,7 +27,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 
 ## Open — P0/P1 UX (do these first)
 - [ ] Tournament create flow: required image, preview, audience, then publish (guided steps) — details → audience/review → publish shipped 2026-08-05; image upload and persisted drafts remain
-- [ ] Signup / join-org copy + flow: match real unlocks; remove contradictory coach language
+- [ ] Signup / join-org copy + flow: match real unlocks; remove contradictory coach language — join-link auth handoff shipped 2026-08-05; broader copy audit remains
 - [ ] External registration tracking: Register → registration_opened → “Did you register?” → My tournaments
 - [ ] My tournaments workspace: Registration needed / Registered / Invited / Upcoming / Past
 - [ ] Search defaults: popularity + provenance; org’s own events boosted for members without burying public discovery
@@ -44,4 +45,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — guided tournament review before publishing
+- Last tick: 2026-08-05 — preserved organization invitations through account creation

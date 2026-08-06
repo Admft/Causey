@@ -21,8 +21,10 @@ const STATES = [
 
 export function SignupForm({
   initialRole = "student",
+  next,
 }: {
   initialRole?: AccountRole;
+  next?: string;
 }) {
   const router = useRouter();
   const [role, setRole] = useState<AccountRole>(initialRole);
@@ -72,12 +74,14 @@ export function SignupForm({
       const interests = chessInterest ? ["chess"] : [];
       const supabase = createBrowserSupabaseClient();
       const origin = window.location.origin;
+      const callbackUrl = new URL("/auth/callback", origin);
+      if (next) callbackUrl.searchParams.set("next", next);
 
       const { data, error: signError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: `${origin}/auth/callback`,
+          emailRedirectTo: callbackUrl.toString(),
           data: {
             role,
             display_name: displayName.trim(),
@@ -98,7 +102,7 @@ export function SignupForm({
         return;
       }
 
-      router.push(homePathForRole(role));
+      router.push(next ?? homePathForRole(role));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed.");
@@ -115,7 +119,10 @@ export function SignupForm({
         </h2>
         <p className="mt-3 text-sm text-muted">
           We sent a confirmation link to <strong className="text-foreground">{email}</strong>.
-          Open it to finish creating your account, then sign in.
+          Open it to finish creating your account
+          {next
+            ? " and continue where you left off."
+            : " and sign in to Causey."}
         </p>
         <Link href="/login" className="cta-enabled mt-6 inline-flex">
           Go to sign in

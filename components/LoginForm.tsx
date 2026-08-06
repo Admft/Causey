@@ -8,6 +8,9 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export function LoginForm({ next }: { next?: string }) {
   const router = useRouter();
+  const signupHref = next
+    ? `/signup?next=${encodeURIComponent(next)}`
+    : "/signup";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +94,10 @@ export function LoginForm({ next }: { next?: string }) {
 
       <p className="text-sm text-muted">
         New here?{" "}
-        <Link href="/signup" className="font-semibold text-brand-red hover:underline">
+        <Link
+          href={signupHref}
+          className="font-semibold text-brand-red hover:underline"
+        >
           Create an account
         </Link>
         {" · "}
