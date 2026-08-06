@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { EntrantManager, RemoveEntrantButton } from "@/components/EntrantManager";
+import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   canManageCompetitionAsViewer,
@@ -83,6 +84,15 @@ export default async function ManageEventPage({
         ← Back to event page
       </Link>
       <p className="mt-6 text-sm font-semibold text-brand-red">Hosting</p>
+      {canManage && competition.status === "draft" ? (
+        <div className="mt-4">
+          <PublishTournamentPanel
+            competitionId={competition.id}
+            eventSlug={competition.slug}
+            visibility={competition.visibility === "private" ? "private" : "public"}
+          />
+        </div>
+      ) : null}
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         {competition.name}
       </h1>

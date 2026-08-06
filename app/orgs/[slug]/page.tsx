@@ -120,6 +120,9 @@ export default async function OrgPage({
                         {event.city ? ` · ${event.city}, ${event.state}` : ""}
                         {` · ${formatFeeCents(event.entry_fee_cents)}`}
                         {event.visibility === "private" ? " · members only" : ""}
+                        {event.status === "draft"
+                          ? " · draft, nobody else can see it yet"
+                          : ""}
                       </span>
                     </div>
                     {rsvp ? (
@@ -134,7 +137,9 @@ export default async function OrgPage({
                         href={`/event/${event.slug}/manage`}
                         className="text-sm font-semibold text-brand-red hover:underline"
                       >
-                        Manage entrants
+                        {event.status === "draft"
+                          ? "Review and publish"
+                          : "Manage entrants"}
                       </Link>
                     ) : null}
                   </li>

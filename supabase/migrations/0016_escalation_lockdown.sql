@@ -8,6 +8,13 @@
 -- was that any signed-up account could self-declare as a district and publish
 -- public events. Each section below cuts one link.
 --
+-- Runs after 0015_platform_admins.sql, which added the platform-admin tier and
+-- narrowed the profiles column grants. This migration covers what that one did
+-- not: the trigger-level role freeze, join-code rejoin, draft-first events, and
+-- an audit trail for ordinary (non-admin) actors. admin_audit_log stays the
+-- record of what platform admins did; audit_events records security-relevant
+-- actions by anyone, including coaches.
+--
 -- Audit refs: SEC-01 (B001), SEC-05 (B007), SEC-06 (B005), B010.
 -- SEC-03 is deliberately NOT addressed here: revoking EXECUTE on the
 -- SECURITY DEFINER helpers also breaks every RLS policy that calls them
@@ -17,22 +24,12 @@
 
 -- ---------------------------------------------------------------------------
 -- 1. SEC-01 / B001 — profile role is no longer self-service.
---    Two independent layers: column-level privileges stop the write at the
---    grant level, and the trigger still refuses if a future migration
---    re-grants the table broadly.
+--    0015_platform_admins.sql already narrowed the column grants. That alone
+--    is one stray `grant update on profiles` away from being undone, so this
+--    adds the second, independent layer: a trigger that refuses the write
+--    regardless of what the grants say. Both layers are verified in
+--    scripts/verify-0016.sql.
 -- ---------------------------------------------------------------------------
-revoke update on public.profiles from anon, authenticated;
-
-grant update (
-  display_name,
-  date_of_birth,
-  age_band,
-  state,
-  zip,
-  interests,
-  updated_at
-) on public.profiles to authenticated;
-
 create or replace function public.guard_profile_privileged_columns()
 returns trigger
 language plpgsql
@@ -89,14 +86,11 @@ begin
   if target is null then
     raise exception 'invalid_code';
   end if;
-  insert into org_memberships (org_id, profile_id, role, status)
+  insert into org_memberships as m (org_id, profile_id, role, status)
   values (target.id, auth.uid(), 'student', 'active')
   on conflict (org_id, profile_id) do update
     set status = 'active',
-        role = case
-          when org_memberships.status = 'removed' then 'student'
-          else org_memberships.role
-        end;
+        role = case when m.status = 'removed' then 'student' else m.role end;
   return query select target.id, target.slug, target.name;
 end;
 $$;
@@ -169,7 +163,7 @@ returns trigger
 language plpgsql
 as $$
 begin
-  raise exception 'audit_events is append-only' using errcode = '42501';
+  raise exception '% is append-only', tg_table_name using errcode = '42501';
 end;
 $$;
 
@@ -253,3 +247,11 @@ create trigger profiles_audit
 
 comment on table public.audit_events is
   'B010: append-only record of organization creation, organizer event status changes, and profile role changes.';
+
+-- admin_audit_log (0015) records platform-admin actions but was mutable, so an
+-- admin could edit the record of their own action. B010 asks for append-only;
+-- apply the same guard there.
+drop trigger if exists admin_audit_log_no_mutate on public.admin_audit_log;
+create trigger admin_audit_log_no_mutate
+  before update or delete on public.admin_audit_log
+  for each row execute function public.audit_events_append_only();

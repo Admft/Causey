@@ -33,11 +33,22 @@ values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
 on conflict (org_id, profile_id) do update set role = 'coach', status = 'active';
 
 insert into public.competitions
-  (id, slug, name, category, city, state, zip, start_date, status, visibility,
-   source, org_id, created_by)
+  (id, slug, name, category, city, state, zip, lat, lng, start_date, status,
+   visibility, source, org_id, created_by)
 values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'probe-draft-event',
-        'Probe Draft Event', 'chess', 'Dallas', 'TX', '75201',
+        'Probe Draft Event', 'chess', 'Dallas', 'TX', '75201', 32.7767, -96.7970,
         current_date + 30, 'draft', 'public', 'organizer',
+        'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222')
+on conflict (id) do nothing;
+
+-- Published sibling of the draft above. Without it, the "public search still
+-- works" probe has nothing to find and would pass on an empty table.
+insert into public.competitions
+  (id, slug, name, category, city, state, zip, lat, lng, start_date, status,
+   visibility, source, org_id, created_by)
+values ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'probe-published-event',
+        'Probe Published Event', 'chess', 'Dallas', 'TX', '75201', 32.7767, -96.7970,
+        current_date + 30, 'published', 'public', 'organizer',
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222')
 on conflict (id) do nothing;
 
@@ -106,6 +117,31 @@ begin
   end;
   reset role;
   perform pg_temp.report('SEC-01 normal profile edits still work', ok, msg);
+end $$;
+
+-- Second layer: even if a future migration re-grants the table broadly, the
+-- trigger must still refuse. Without this the fix is one stray GRANT from gone.
+do $$
+declare
+  ok boolean := false;
+  msg text;
+begin
+  grant update on public.profiles to authenticated;
+  set local role authenticated;
+  perform set_config('request.jwt.claims',
+    '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    update public.profiles set role = 'coach'
+    where id = '11111111-1111-1111-1111-111111111111';
+    ok := false; msg := 'update succeeded — trigger layer is NOT holding';
+  exception when others then
+    ok := true; msg := '(' || sqlerrm || ')';
+  end;
+  reset role;
+  revoke update on public.profiles from authenticated;
+  grant update (display_name, date_of_birth, age_band, state, zip, interests, updated_at)
+    on public.profiles to authenticated;
+  perform pg_temp.report('SEC-01 trigger still blocks if table UPDATE is re-granted', ok, msg);
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -195,9 +231,10 @@ declare n int;
 begin
   set local role anon;
   perform set_config('request.jwt.claims', '{"role":"anon"}', true);
-  select count(*) into n from public.competitions where status = 'published' and visibility = 'public';
+  select count(*) into n from public.competitions
+   where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
   reset role;
-  perform pg_temp.report('SEC-06 anonymous public search still works', n >= 0, '(rows=' || n || ')');
+  perform pg_temp.report('SEC-06 anonymous public search still works', n = 1, '(rows=' || n || ')');
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -260,7 +297,34 @@ begin
   perform pg_temp.report('B010 users cannot read the audit log', ok, msg);
 end $$;
 
--- Cleanup
-delete from public.competitions where id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+-- 0015 shipped admin_audit_log as a mutable table, so a platform admin could
+-- rewrite the record of their own action. 0016 extends the append-only guard.
+do $$
+declare ok boolean := false; msg text; n int;
+begin
+  insert into public.admin_audit_log (actor_id, action, target_type, target_id)
+  values ('22222222-2222-2222-2222-222222222222', 'probe', 'organizations',
+          'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+  begin
+    update public.admin_audit_log set action = 'tampered' where action = 'probe';
+    ok := false; msg := 'update succeeded — NOT append-only';
+  exception when others then
+    ok := true; msg := '(' || sqlerrm || ')';
+  end;
+  perform pg_temp.report('B010 admin_audit_log is append-only too', ok, msg);
+end $$;
+
+-- Cleanup. admin_audit_log.actor_id is ON DELETE RESTRICT, so its probe rows
+-- have to go before the profiles they reference.
+alter table public.admin_audit_log disable trigger admin_audit_log_no_mutate;
+delete from public.admin_audit_log
+where actor_id in ('11111111-1111-1111-1111-111111111111',
+                   '22222222-2222-2222-2222-222222222222',
+                   '33333333-3333-3333-3333-333333333333');
+alter table public.admin_audit_log enable trigger admin_audit_log_no_mutate;
+
+delete from public.competitions
+ where id in ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+              'cccccccc-cccc-cccc-cccc-cccccccccccc');
 delete from public.organizations where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 delete from auth.users where email like '%@probe.test';

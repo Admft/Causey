@@ -39,6 +39,8 @@ export type OrgEventRow = {
   end_date: string | null;
   visibility: "public" | "private";
   entry_fee_cents: number | null;
+  /** Only selected where drafts are relevant; RLS hides drafts from non-staff. */
+  status?: "draft" | "published" | "archived";
 };
 
 export type MyOrgRow = {
@@ -141,10 +143,12 @@ export async function getOrgBySlugForViewer(
     supabase
       .from("competitions")
       .select(
-        "id, slug, name, city, state, start_date, end_date, visibility, entry_fee_cents"
+        "id, slug, name, city, state, start_date, end_date, visibility, entry_fee_cents, status"
       )
       .eq("org_id", org.id)
-      .eq("status", "published")
+      // Drafts are included so an organizer can find and publish them. RLS
+      // only returns them to the creator and the org's coaches.
+      .in("status", ["draft", "published"])
       .order("start_date", { ascending: true }),
   ]);
 
@@ -198,7 +202,9 @@ export async function getCompetitionBySlugAuthed(
     .from("competitions")
     .select("*, sections(*), series(*)")
     .eq("slug", slug)
-    .eq("status", "published")
+    // Drafts are included so organizers can preview and publish; RLS restricts
+    // them to the creator and org coaches. Archived stays hidden.
+    .in("status", ["draft", "published"])
     .maybeSingle();
   if (error || !data || data.canonical_id) return null;
 

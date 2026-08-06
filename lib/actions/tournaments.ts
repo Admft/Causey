@@ -53,13 +53,53 @@ export async function createTournament(
     orgName: org.name,
     profileId: profile.id,
     zipRow: { lat: zipResult.lat, lng: zipResult.lng },
-    status: "published",
+    // SEC-06: organizer events start as drafts. Nothing reaches public
+    // discovery until someone who can manage it chooses to publish.
+    status: "draft",
   });
   if (!result.ok) return result;
 
-  if (values.visibility === "public") revalidatePath("/chess");
   revalidatePath(`/orgs/${values.orgSlug}`);
   return result;
+}
+
+/**
+ * Draft -> published. Kept separate from updateTournament so publishing is an
+ * explicit decision rather than a side effect of editing. RLS
+ * (competitions_update_manager) is what actually authorizes it.
+ */
+export async function publishTournament(input: {
+  competitionId: string;
+  eventSlug: string;
+}): Promise<ActionResult> {
+  const profile = await getCurrentProfile();
+  if (!profile) return { ok: false, error: "Sign in to continue." };
+
+  const supabase = await createServerSupabaseClient();
+
+  // Read the host org before publishing so its page can be revalidated too.
+  const { data: existing } = await supabase
+    .from("competitions")
+    .select("organizations(slug)")
+    .eq("id", input.competitionId)
+    .maybeSingle();
+
+  const { count, error } = await supabase
+    .from("competitions")
+    .update({ status: "published" }, { count: "exact" })
+    .eq("id", input.competitionId)
+    .eq("status", "draft");
+
+  if (error || !count) {
+    return { ok: false, error: "Could not publish this tournament." };
+  }
+
+  const orgSlug = (existing?.organizations as { slug?: string } | null)?.slug;
+  revalidatePath("/chess");
+  revalidatePath(`/event/${input.eventSlug}`);
+  revalidatePath(`/event/${input.eventSlug}/manage`);
+  if (orgSlug) revalidatePath(`/orgs/${orgSlug}`);
+  return { ok: true };
 }
 
 /** Edit a hosted tournament. The slug never changes — shared links stay live. */
