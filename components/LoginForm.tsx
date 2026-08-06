@@ -6,7 +6,13 @@ import { FormEvent, useState } from "react";
 import { homePathForRole } from "@/lib/auth/home-path";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({
+  next,
+  joiningOrganization = false,
+}: {
+  next?: string;
+  joiningOrganization?: boolean;
+}) {
   const router = useRouter();
   const signupHref = next
     ? `/signup?next=${encodeURIComponent(next)}`
@@ -98,7 +104,7 @@ export function LoginForm({ next }: { next?: string }) {
           href={signupHref}
           className="font-semibold text-brand-red hover:underline"
         >
-          Create an account
+          {joiningOrganization ? "Create a student account" : "Create an account"}
         </Link>
         {" · "}
         <Link
