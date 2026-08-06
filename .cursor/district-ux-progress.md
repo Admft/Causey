@@ -28,6 +28,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — RSVP controls now show which answer is saving, confirm exactly what the organization can see, explain that the answer remains changeable, and recover from unexpected connection failures
 - [x] 2026-08-05 — Platform moderation now shows the event, source, audience, and organizer context needed for a decision; rejected listings require a useful note; every decision confirms what changed and points to the next review or record
 - [x] 2026-08-05 — Roster group changes now show action-specific progress, confirm what changed and what coaches can do next, guide the first empty state, and protect deletion with a student-safe confirmation
 - [x] 2026-08-05 — Family link requests now confirm the privacy-safe handoff, tell parents exactly where students accept, and preserve the email for retry after unexpected failures
@@ -74,7 +75,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Last UX tick: 2026-08-05 — completed the platform-admin public tournament review flow with decision-ready context, required return notes, and recoverable success/error states.
-- Next UX: audit event RSVP and registration language for consistent terms and explicit next actions.
+- Last UX tick: 2026-08-05 — made RSVP changes explicit and recoverable across event, account, organization, and family views.
+- Next UX: audit external registration language for consistent terms and explicit next actions.
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: family workspace composition, or empty/error/success-state visual pass.
