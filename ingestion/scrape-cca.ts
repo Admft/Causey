@@ -280,7 +280,12 @@ async function main() {
   stageCompetitions(STAGING_FILE, drafts);
 
   if (!client) {
-    console.log("No Supabase configured — staging file is the output.");
+    const msg = "No Supabase configured — staging file is the output.";
+    if (process.env.REQUIRE_SUPABASE === "1" || process.env.CI === "true") {
+      console.error(msg);
+      process.exit(1);
+    }
+    console.log(msg);
     return;
   }
 

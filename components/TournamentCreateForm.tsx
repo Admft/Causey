@@ -2,6 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import {
+  adminCreateTournament,
+  adminUpdateTournament,
+} from "@/lib/actions/admin";
 import { createTournament, updateTournament } from "@/lib/actions/tournaments";
 
 const STATES = [
@@ -45,12 +49,16 @@ export function TournamentCreateForm({
   orgState,
   initial,
   edit,
+  admin = false,
+  returnTo,
 }: {
   orgId: string;
   orgSlug: string;
   orgState: string | null;
   initial?: TournamentFormInitial;
   edit?: { competitionId: string; eventSlug: string };
+  admin?: boolean;
+  returnTo?: string;
 }) {
   const router = useRouter();
   const [name, setName] = useState(initial?.name ?? "");
@@ -103,18 +111,27 @@ export function TournamentCreateForm({
         rated,
       };
       const result = edit
-        ? await updateTournament({
-            competitionId: edit.competitionId,
-            eventSlug: edit.eventSlug,
-            orgSlug,
-            ...fields,
-          })
-        : await createTournament({ orgId, orgSlug, ...fields });
+        ? admin
+          ? await adminUpdateTournament({
+              competitionId: edit.competitionId,
+              eventSlug: edit.eventSlug,
+              orgSlug,
+              ...fields,
+            })
+          : await updateTournament({
+              competitionId: edit.competitionId,
+              eventSlug: edit.eventSlug,
+              orgSlug,
+              ...fields,
+            })
+        : admin
+          ? await adminCreateTournament({ orgId, orgSlug, ...fields })
+          : await createTournament({ orgId, orgSlug, ...fields });
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      router.push(`/event/${result.slug}`);
+      router.push(returnTo ?? `/event/${result.slug}`);
       router.refresh();
     } finally {
       setPending(false);
@@ -316,7 +333,9 @@ export function TournamentCreateForm({
             : "Creating…"
           : edit
             ? "Save changes"
-            : "Create tournament"}
+            : admin
+              ? "Create tournament draft"
+              : "Create tournament"}
       </button>
     </form>
   );

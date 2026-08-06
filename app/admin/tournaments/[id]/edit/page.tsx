@@ -1,0 +1,82 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { AdminTournamentStatusActions } from "@/components/AdminTournamentStatusActions";
+import { TournamentCreateForm } from "@/components/TournamentCreateForm";
+import { getAdminTournament } from "@/lib/data/admin";
+
+export const metadata: Metadata = {
+  title: "Edit tournament",
+  description: "Edit tournament metadata and publication status.",
+};
+
+export default async function AdminEditTournamentPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const tournament = await getAdminTournament(id);
+  if (!tournament) notFound();
+
+  return (
+    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <Link
+        href="/admin/tournaments"
+        className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+      >
+        ← Back to tournaments
+      </Link>
+      <p className="mt-6 text-sm font-semibold text-brand-red">Platform admin</p>
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
+            Edit {tournament.name}
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            {tournament.source} · {tournament.status}
+            {tournament.organizations
+              ? ` · ${tournament.organizations.name}`
+              : " · no Causey organization"}
+          </p>
+        </div>
+        <AdminTournamentStatusActions
+          competitionId={tournament.id}
+          eventSlug={tournament.slug}
+          status={tournament.status}
+        />
+      </div>
+
+      <div className="section-rule mt-8 pt-8">
+        <TournamentCreateForm
+          orgId={
+            tournament.org_id ?? "00000000-0000-0000-0000-000000000000"
+          }
+          orgSlug={tournament.organizations?.slug ?? "platform-admin"}
+          orgState={tournament.organizations?.state ?? tournament.state}
+          initial={{
+            name: tournament.name,
+            start_date: tournament.start_date,
+            end_date: tournament.end_date,
+            reg_deadline: tournament.reg_deadline,
+            venue_name: tournament.venue_name,
+            address: tournament.address,
+            city: tournament.city,
+            state: tournament.state,
+            zip: tournament.zip,
+            entry_fee_cents: tournament.entry_fee_cents,
+            reg_url: tournament.reg_url,
+            visibility: tournament.visibility,
+            rated: tournament.rated,
+          }}
+          edit={{
+            competitionId: tournament.id,
+            eventSlug: tournament.slug,
+          }}
+          admin
+          returnTo="/admin/tournaments"
+        />
+      </div>
+    </main>
+  );
+}

@@ -12,6 +12,8 @@ import {
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatDateRange } from "@/lib/format";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Your account",
   description: "Your Causey profile, saved tournaments, and ratings.",

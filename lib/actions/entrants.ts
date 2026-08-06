@@ -6,6 +6,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 
 function revalidateEventSurfaces(eventSlug?: string) {
+  revalidatePath("/me");
   revalidatePath("/orgs");
   revalidatePath("/family");
   if (eventSlug) {

@@ -198,7 +198,13 @@ async function main() {
   stageCompetitions("tla-drafts.json", drafts);
 
   if (!client) {
-    console.log("No Supabase configured — staging file is the output. Set .env to upsert.");
+    const msg =
+      "No Supabase configured — staging file is the output. Set .env to upsert.";
+    if (process.env.REQUIRE_SUPABASE === "1" || process.env.CI === "true") {
+      console.error(msg);
+      process.exit(1);
+    }
+    console.log(msg);
     console.log(
       "Done. Every row has source='tla_scrape' and source_url set to its US Chess page."
     );
