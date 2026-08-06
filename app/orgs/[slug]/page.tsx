@@ -179,7 +179,9 @@ export default async function OrgPage({
                         href={`/event/${event.slug}/manage`}
                         className="text-sm font-semibold text-brand-red hover:underline"
                       >
-                        Manage invites
+                        {event.status === "draft"
+                          ? "Review and publish"
+                          : "Manage invites"}
                       </Link>
                     ) : null}
                   </li>

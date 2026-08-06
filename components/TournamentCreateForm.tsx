@@ -4,6 +4,11 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { CompetitionCoverImage } from "@/components/CompetitionCoverImage";
 import {
+  adminCreateTournament,
+  adminUpdateTournament,
+} from "@/lib/actions/admin";
+import {
+  createTournament,
   publishTournamentDraft,
   saveTournamentDraft,
   updateTournament,
@@ -64,6 +69,8 @@ export function TournamentCreateForm({
   initialDraft,
   initial,
   edit,
+  admin = false,
+  returnTo,
 }: {
   orgId: string;
   orgSlug: string;
@@ -72,6 +79,8 @@ export function TournamentCreateForm({
   initialDraft?: TournamentDraftRow;
   initial?: TournamentFormInitial;
   edit?: { competitionId: string; eventSlug: string };
+  admin?: boolean;
+  returnTo?: string;
 }) {
   const router = useRouter();
   const savedDraft = initialDraft?.data;
@@ -202,7 +211,7 @@ export function TournamentCreateForm({
   }
 
   useEffect(() => {
-    if (edit || pending || leaving.current || published.current) return;
+    if (edit || admin || pending || leaving.current || published.current) return;
     if (firstAutosave.current) {
       firstAutosave.current = false;
       return;
@@ -334,17 +343,37 @@ export function TournamentCreateForm({
         rated,
       };
       if (edit) {
-        const result = await updateTournament({
-          competitionId: edit.competitionId,
-          eventSlug: edit.eventSlug,
-          orgSlug,
-          ...fields,
-        });
+        const result = admin
+          ? await adminUpdateTournament({
+              competitionId: edit.competitionId,
+              eventSlug: edit.eventSlug,
+              orgSlug,
+              ...fields,
+            })
+          : await updateTournament({
+              competitionId: edit.competitionId,
+              eventSlug: edit.eventSlug,
+              orgSlug,
+              ...fields,
+            });
         if (!result.ok) {
           setError(result.error);
           return;
         }
-        router.push(`/event/${result.slug}`);
+        router.push(returnTo ?? `/event/${result.slug}`);
+        router.refresh();
+        return;
+      }
+
+      // Platform admin create stays on the SEC-06 draft-competition path
+      // (no cover upload required); coaches use resumable drafts + cover.
+      if (admin) {
+        const result = await adminCreateTournament({ orgId, orgSlug, ...fields });
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        router.push(returnTo ?? `/event/${result.slug}`);
         router.refresh();
         return;
       }
@@ -377,7 +406,7 @@ export function TournamentCreateForm({
         return;
       }
       published.current = true;
-      router.push(`/event/${result.slug}`);
+      router.push(returnTo ?? `/event/${result.slug}`);
       router.refresh();
     } finally {
       setPending(false);
@@ -768,10 +797,14 @@ export function TournamentCreateForm({
           {pending
             ? edit
               ? "Saving changes…"
-              : "Saving draft…"
+              : admin
+                ? "Creating…"
+                : "Saving draft…"
             : edit
               ? "Save changes"
-              : "Preview tournament"}
+              : admin
+                ? "Create tournament draft"
+                : "Preview tournament"}
         </button>
       )}
     </form>

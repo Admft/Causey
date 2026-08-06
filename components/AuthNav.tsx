@@ -18,6 +18,7 @@ export function AuthNav() {
   );
   const [email, setEmail] = useState<string | null | undefined>(undefined);
   const [role, setRole] = useState<AccountRole | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!configured) {
@@ -26,26 +27,31 @@ export function AuthNav() {
     }
     const supabase = createBrowserSupabaseClient();
 
-    async function loadRole(userId: string | undefined) {
+    async function loadAccess(userId: string | undefined) {
       if (!userId) {
         setRole(null);
+        setIsAdmin(false);
         return;
       }
-      const { data } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .maybeSingle();
-      setRole((data?.role as AccountRole) ?? null);
+      const [profileResult, adminResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase.rpc("is_platform_admin"),
+      ]);
+      setRole((profileResult.data?.role as AccountRole) ?? null);
+      setIsAdmin(adminResult.error ? false : adminResult.data === true);
     }
 
     supabase.auth.getUser().then(({ data }) => {
       setEmail(data.user?.email ?? null);
-      void loadRole(data.user?.id);
+      void loadAccess(data.user?.id);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setEmail(session?.user?.email ?? null);
-      void loadRole(session?.user?.id);
+      void loadAccess(session?.user?.id);
     });
     return () => sub.subscription.unsubscribe();
   }, [configured]);
@@ -91,6 +97,14 @@ export function AuthNav() {
 
   return (
     <div className="flex items-center gap-3">
+      {isAdmin ? (
+        <Link
+          href="/admin"
+          className="text-sm font-semibold text-brand-red transition-colors hover:text-foreground"
+        >
+          Admin
+        </Link>
+      ) : null}
       {portalLink ? (
         <Link
           href={portalLink.href}

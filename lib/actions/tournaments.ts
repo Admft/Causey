@@ -5,12 +5,25 @@ import { z } from "zod";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { canCreateOrg } from "@/lib/org-permissions";
 import {
+  getTournamentZip,
+  insertTournamentRecord,
+  updateTournamentRecord,
+} from "@/lib/data/tournament-mutations";
+import {
   TournamentDraftDataSchema,
   type TournamentDraftData,
 } from "@/lib/schemas";
 import { slugify, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
+import {
+  TournamentCreateSchema as ValidatedTournamentCreateSchema,
+  TournamentUpdateSchema as ValidatedTournamentUpdateSchema,
+  type TournamentCreateInput,
+  type TournamentUpdateInput,
+} from "@/lib/validation/tournament";
+
+export type { TournamentCreateInput, TournamentUpdateInput };
 
 const DateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a real date.");
 
@@ -65,6 +78,85 @@ export type TournamentDraftSaveInput = {
   data: TournamentDraftData;
   coverImagePath?: string;
 };
+
+/**
+ * Organizer/admin create path (SEC-06): events start as drafts and stay out of
+ * public discovery until publishTournament / PublishTournamentPanel.
+ */
+export async function createTournament(
+  input: TournamentCreateInput
+): Promise<ActionResult<{ slug: string }>> {
+  const parsed = ValidatedTournamentCreateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the form." };
+  }
+  const values = parsed.data;
+
+  const profile = await getCurrentProfile();
+  if (!profile) return { ok: false, error: "Sign in to continue." };
+  if (!canCreateOrg(profile)) {
+    return { ok: false, error: "Only coach / organizer accounts can create tournaments." };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id, name, created_by")
+    .eq("id", values.orgId)
+    .maybeSingle();
+  if (!org) return { ok: false, error: "Organization not found." };
+
+  const zipResult = await getTournamentZip(supabase, values.zip);
+  if (!zipResult.ok) return zipResult;
+
+  const result = await insertTournamentRecord({
+    supabase,
+    values,
+    orgName: org.name,
+    profileId: profile.id,
+    zipRow: { lat: zipResult.lat, lng: zipResult.lng },
+    status: "draft",
+  });
+  if (!result.ok) return result;
+
+  revalidatePath(`/orgs/${values.orgSlug}`);
+  return result;
+}
+
+/**
+ * Draft competition -> published. Used by PublishTournamentPanel / admin.
+ */
+export async function publishTournament(input: {
+  competitionId: string;
+  eventSlug: string;
+}): Promise<ActionResult> {
+  const profile = await getCurrentProfile();
+  if (!profile) return { ok: false, error: "Sign in to continue." };
+
+  const supabase = await createServerSupabaseClient();
+  const { data: existing } = await supabase
+    .from("competitions")
+    .select("organizations(slug)")
+    .eq("id", input.competitionId)
+    .maybeSingle();
+
+  const { count, error } = await supabase
+    .from("competitions")
+    .update({ status: "published" }, { count: "exact" })
+    .eq("id", input.competitionId)
+    .eq("status", "draft");
+
+  if (error || !count) {
+    return { ok: false, error: "Could not publish this tournament." };
+  }
+
+  const orgSlug = (existing?.organizations as { slug?: string } | null)?.slug;
+  revalidatePath("/chess");
+  revalidatePath(`/event/${input.eventSlug}`);
+  revalidatePath(`/event/${input.eventSlug}/manage`);
+  if (orgSlug) revalidatePath(`/orgs/${orgSlug}`);
+  return { ok: true };
+}
 
 /**
  * Save incomplete organizer input in Postgres. The stable client-provided UUID
@@ -376,87 +468,31 @@ async function insertWithSlugRetry(
   return { ok: false, error: "A tournament with that name and date already exists." };
 }
 
-const TournamentUpdateSchema = z
-  .object({
-    competitionId: z.string().uuid(),
-    eventSlug: z.string().min(1),
-    orgSlug: z.string().min(1),
-    name: z.string().trim().min(3, "Name the tournament.").max(120),
-    startDate: DateString,
-    endDate: DateString.nullable(),
-    regDeadline: DateString.nullable(),
-    venueName: z.string().trim().max(120).transform((v) => v || null),
-    address: z.string().trim().max(160).transform((v) => v || null),
-    city: z.string().trim().min(2, "Enter the city.").max(80),
-    state: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, "Pick a state."),
-    zip: z.string().trim().regex(/^\d{5}$/, "Zip must be 5 digits."),
-    entryFeeCents: z.number().int().nonnegative().nullable(),
-    regUrl: z
-      .string()
-      .trim()
-      .url("Registration link must be a full URL.")
-      .nullable()
-      .or(z.literal("").transform(() => null)),
-    visibility: z.enum(["public", "private"]),
-    rated: z.boolean(),
-  })
-  .refine((v) => !v.endDate || v.endDate >= v.startDate, {
-    message: "End date can’t be before the start date.",
-    path: ["endDate"],
-  });
-
-export type TournamentUpdateInput = z.input<typeof TournamentUpdateSchema>;
-
 /** Edit a hosted tournament. The slug never changes — shared links stay live. */
 export async function updateTournament(
   input: TournamentUpdateInput
 ): Promise<ActionResult<{ slug: string }>> {
-  const parsed = TournamentUpdateSchema.safeParse(input);
+  const parsed = ValidatedTournamentUpdateSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the form." };
   }
   const values = parsed.data;
 
   const supabase = await createServerSupabaseClient();
-  const { data: zipRow } = await supabase
-    .from("zips")
-    .select("lat, lng")
-    .eq("zip", values.zip)
-    .maybeSingle();
-  if (!zipRow) {
-    return { ok: false, error: "We don’t recognize that zip code — double-check it." };
-  }
-
-  const { data, error } = await supabase
-    .from("competitions")
-    .update({
-      name: values.name,
-      venue_name: values.venueName,
-      address: values.address,
-      city: values.city,
-      state: values.state,
-      zip: values.zip,
-      lat: zipRow.lat,
-      lng: zipRow.lng,
-      start_date: values.startDate,
-      end_date: values.endDate,
-      reg_deadline: values.regDeadline,
-      reg_url: values.regUrl,
-      entry_fee_cents: values.entryFeeCents,
-      rated: values.rated,
-      visibility: values.visibility,
-    })
-    .eq("id", values.competitionId)
-    .select("slug");
-  if (error || !data?.length) {
-    return { ok: false, error: "Could not save changes. Try again." };
-  }
+  const zipResult = await getTournamentZip(supabase, values.zip);
+  if (!zipResult.ok) return zipResult;
+  const result = await updateTournamentRecord({
+    supabase,
+    values,
+    zipRow: { lat: zipResult.lat, lng: zipResult.lng },
+  });
+  if (!result.ok) return result;
 
   revalidatePath("/chess");
   revalidatePath(`/event/${values.eventSlug}`);
   revalidatePath(`/event/${values.eventSlug}/manage`);
   revalidatePath(`/orgs/${values.orgSlug}`);
-  return { ok: true, slug: values.eventSlug };
+  return result;
 }
 
 /** Cancel = archive. The event disappears for everyone, including the coach. */

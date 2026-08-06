@@ -2,7 +2,10 @@
 #
 # Prerequisites:
 #   1. Run supabase migrations through 0007_pathway_enrichment.sql.
-#   2. Repo secrets: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+#   2. Repo secrets (Settings → Secrets → Actions):
+#        NEXT_PUBLIC_SUPABASE_URL
+#        SUPABASE_SERVICE_ROLE_KEY
+#      Must match the Causey Supabase project (same values as local .env).
 #   3. Optional: OPENAI_API_KEY for pathway enrichment (gpt-4.1-mini)
 #   4. Manual dry-run locally: npm run scrape:all
 #
@@ -26,6 +29,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Check Supabase secrets
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing Actions secrets NEXT_PUBLIC_SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY."
+            echo "Add them under Repo Settings → Secrets and variables → Actions"
+            echo "(use the same Causey project values as local .env)."
+            exit 1
+          fi
+          echo "Supabase secrets present."
       - name: Scrape US Chess + CCA (+ pathway enrich)
         run: npm run scrape:all
         env:
@@ -34,6 +49,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ENRICH_MAX_AI: "80"
           ENRICH_BATCH_SIZE: "20"
+          # Fail instead of silently staging-only when secrets are wrong.
+          REQUIRE_SUPABASE: "1"
       - name: Purge competitions ended over a year ago
         run: npm run purge:stale
         env:
