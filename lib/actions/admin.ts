@@ -33,8 +33,31 @@ const AdminOrgCreateSchema = z.object({
 const AdminStatusSchema = z.object({
   competitionId: z.string().uuid(),
   eventSlug: z.string().min(1),
-  status: z.enum(["draft", "published", "archived"]),
+  status: z.enum([
+    "draft",
+    "pending_review",
+    "published",
+    "rejected",
+    "archived",
+  ]),
 });
+
+const AdminReviewSchema = z
+  .object({
+    competitionId: z.string().uuid(),
+    eventSlug: z.string().min(1),
+    decision: z.enum(["approve", "reject"]),
+    note: z.string().trim().max(1000).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.decision === "reject" && !value.note) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["note"],
+        message: "Add a review note explaining what needs correction.",
+      });
+    }
+  });
 
 export async function adminCreateOrganization(input: {
   name: string;
@@ -152,8 +175,12 @@ export async function adminUpdateTournament(
 export async function adminSetTournamentStatus(input: {
   competitionId: string;
   eventSlug: string;
-  status: "draft" | "published" | "archived";
-}): Promise<ActionResult<{ status: "draft" | "published" | "archived" }>> {
+  status: "draft" | "pending_review" | "published" | "rejected" | "archived";
+}): Promise<
+  ActionResult<{
+    status: "draft" | "pending_review" | "published" | "rejected" | "archived";
+  }>
+> {
   const admin = await getPlatformAdminUser();
   if (!admin) return { ok: false, error: "Platform administrator access required." };
 
@@ -177,4 +204,45 @@ export async function adminSetTournamentStatus(input: {
   revalidatePath("/chess");
   revalidatePath(`/event/${parsed.data.eventSlug}`);
   return { ok: true, status: parsed.data.status };
+}
+
+export async function adminReviewTournament(input: {
+  competitionId: string;
+  eventSlug: string;
+  decision: "approve" | "reject";
+  note?: string;
+}): Promise<ActionResult<{ status: "published" | "rejected" }>> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) return { ok: false, error: "Platform administrator access required." };
+  const parsed = AdminReviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the review decision.",
+    };
+  }
+
+  const status = parsed.data.decision === "approve" ? "published" : "rejected";
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("competitions")
+    .update({
+      status,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: admin.id,
+      moderation_note: parsed.data.note || null,
+    })
+    .eq("id", parsed.data.competitionId)
+    .eq("status", "pending_review")
+    .select("id");
+  if (error || !data?.length) {
+    return { ok: false, error: "This tournament is no longer awaiting review." };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/tournaments");
+  revalidatePath("/admin/moderation");
+  revalidatePath("/chess");
+  revalidatePath(`/event/${parsed.data.eventSlug}`);
+  return { ok: true, status };
 }

@@ -28,8 +28,9 @@ export type AdminTournamentRow = {
   entry_fee_cents: number | null;
   rated: boolean;
   visibility: "public" | "private";
+  audience: "public" | "district" | "school" | "invite_only";
   source: string;
-  status: "draft" | "published" | "archived";
+  status: "draft" | "pending_review" | "published" | "rejected" | "archived";
   org_id: string | null;
   created_at: string;
   updated_at: string;
@@ -49,6 +50,32 @@ export type AdminAuditRow = {
   target_id: string;
   details: Record<string, unknown>;
   created_at: string;
+};
+
+export type AdminModerationQueueRow = {
+  id: string;
+  slug: string;
+  name: string;
+  organizer_name: string | null;
+  venue_name: string | null;
+  city: string;
+  state: string;
+  start_date: string;
+  end_date: string | null;
+  reg_deadline: string | null;
+  reg_url: string | null;
+  entry_fee_cents: number | null;
+  rated: boolean;
+  audience: "public" | "district" | "school" | "invite_only";
+  source: string;
+  status: "pending_review";
+  submitted_for_review_at: string | null;
+  organizations: {
+    id: string;
+    name: string;
+    slug: string;
+    verification_status: "pending" | "verified" | "rejected";
+  } | null;
 };
 
 export async function getAdminOverview() {
@@ -96,12 +123,17 @@ export async function getAdminTournaments(filters?: {
   let query = supabase
     .from("competitions")
     .select(
-      "id, slug, name, organizer_name, venue_name, address, city, state, zip, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, source, status, org_id, created_at, updated_at, organizations(id, name, slug, state)"
+      "id, slug, name, organizer_name, venue_name, address, city, state, zip, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations(id, name, slug, state)"
     )
     .order("start_date", { ascending: false })
     .limit(250);
 
-  if (filters?.status && ["draft", "published", "archived"].includes(filters.status)) {
+  if (
+    filters?.status &&
+    ["draft", "pending_review", "published", "rejected", "archived"].includes(
+      filters.status
+    )
+  ) {
     query = query.eq("status", filters.status);
   }
   if (filters?.source) {
@@ -119,12 +151,38 @@ export async function getAdminTournament(
   const { data } = await supabase
     .from("competitions")
     .select(
-      "id, slug, name, organizer_name, venue_name, address, city, state, zip, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, source, status, org_id, created_at, updated_at, organizations(id, name, slug, state)"
+      "id, slug, name, organizer_name, venue_name, address, city, state, zip, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations(id, name, slug, state)"
     )
     .eq("id", id)
     .maybeSingle();
 
   return (data as unknown as AdminTournamentRow | null) ?? null;
+}
+
+export async function getAdminModerationQueue(): Promise<{
+  queue: AdminModerationQueueRow[];
+  error: string | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("competitions")
+    .select(
+      "id, slug, name, organizer_name, venue_name, city, state, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, audience, source, status, submitted_for_review_at, organizations(id, name, slug, verification_status)"
+    )
+    .eq("status", "pending_review")
+    .order("submitted_for_review_at", { ascending: true });
+
+  if (error) {
+    return {
+      queue: [],
+      error: "The moderation queue could not be loaded.",
+    };
+  }
+
+  return {
+    queue: (data ?? []) as unknown as AdminModerationQueueRow[],
+    error: null,
+  };
 }
 
 export async function getAdminAuditLog(limit = 20): Promise<AdminAuditRow[]> {

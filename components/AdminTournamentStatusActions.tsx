@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminSetTournamentStatus } from "@/lib/actions/admin";
 
-type TournamentStatus = "draft" | "published" | "archived";
+type TournamentStatus =
+  | "draft"
+  | "pending_review"
+  | "published"
+  | "rejected"
+  | "archived";
 
 export function AdminTournamentStatusActions({
   competitionId,
@@ -63,7 +69,27 @@ export function AdminTournamentStatusActions({
             {pending === "published" ? "Restoring…" : "Restore"}
           </button>
         ) : null}
-        {status !== "archived" ? (
+        {status === "rejected" ? (
+          <button
+            type="button"
+            disabled={pending !== null}
+            onClick={() => changeStatus("draft")}
+            className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+          >
+            {pending === "draft" ? "Moving…" : "Move to draft"}
+          </button>
+        ) : null}
+        {status === "pending_review" ? (
+          <Link
+            href="/admin/moderation"
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Review
+          </Link>
+        ) : null}
+        {status === "draft" ||
+        status === "published" ||
+        status === "rejected" ? (
           confirmingArchive ? (
             <>
               <button

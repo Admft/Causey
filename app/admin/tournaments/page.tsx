@@ -11,7 +11,9 @@ export const metadata: Metadata = {
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
+  pending_review: "Awaiting review",
   published: "Published",
+  rejected: "Rejected",
   archived: "Archived",
 };
 
@@ -39,8 +41,9 @@ export default async function AdminTournamentsPage({
             Tournaments
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Drafts are not public. Archiving removes a tournament from discovery
-            without deleting its history and can be reversed here.
+            Drafts and rejected records are not public. Organizer submissions
+            awaiting a decision belong in Moderation. Archiving removes a
+            tournament from discovery without deleting its history.
           </p>
         </div>
         <Link href="/admin/tournaments/new" className="cta-enabled">
@@ -57,7 +60,9 @@ export default async function AdminTournamentsPage({
           <select className="field" name="status" defaultValue={filters.status ?? ""}>
             <option value="">All statuses</option>
             <option value="draft">Draft</option>
+            <option value="pending_review">Awaiting review</option>
             <option value="published">Published</option>
+            <option value="rejected">Rejected</option>
             <option value="archived">Archived</option>
           </select>
         </label>
@@ -90,9 +95,21 @@ export default async function AdminTournamentsPage({
           <span className="text-xs text-muted">{tournaments.length} shown</span>
         </div>
         {!tournaments.length ? (
-          <p className="mt-4 text-sm text-muted">
-            No tournaments match these filters.
-          </p>
+          <div className="mt-4 text-sm text-muted">
+            <p>No tournaments match these filters.</p>
+            <Link
+              href={
+                filters.status || filters.source
+                  ? "/admin/tournaments"
+                  : "/admin/tournaments/new"
+              }
+              className="mt-2 inline-block font-semibold text-brand-red hover:underline"
+            >
+              {filters.status || filters.source
+                ? "Clear filters and show all records"
+                : "Add the first tournament draft"}
+            </Link>
+          </div>
         ) : (
           <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
             {tournaments.map((tournament) => (
