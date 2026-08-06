@@ -202,7 +202,14 @@ export async function saveTournamentDraft(
     .eq("org_id", values.orgId)
     .maybeSingle();
   if (readError) {
-    return { ok: false, error: "Could not save the draft. Try again." };
+    return {
+      ok: false,
+      error:
+        readError.message?.includes("tournament_drafts") ||
+        readError.code === "42P01"
+          ? "Tournament drafts aren’t set up in the database yet. Apply migration 0017 and try again."
+          : "Could not save the draft. Try again.",
+    };
   }
 
   let coverImageUrl = (existing?.cover_image_url as string | null | undefined) ?? null;
@@ -244,7 +251,14 @@ export async function saveTournamentDraft(
         .select("id")
         .maybeSingle();
   if (write.error || !write.data) {
-    return { ok: false, error: "Could not save the draft. Try again." };
+    const message = write.error?.message?.toLowerCase() ?? "";
+    return {
+      ok: false,
+      error:
+        message.includes("row-level security") || message.includes("policy")
+          ? "You don’t have permission to save drafts for this organization."
+          : "Could not save the draft. Try again.",
+    };
   }
 
   const oldPath = existing?.cover_image_path as string | null | undefined;

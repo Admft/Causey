@@ -237,6 +237,14 @@ export function TournamentCreateForm({
   }
 
   useEffect(() => {
+    if (edit || admin || !draftId || initialDraft) return;
+    // Create the draft row immediately so cover uploads and leave-saves
+    // don't race an empty tournament_drafts table.
+    void persistDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftId, edit, admin, initialDraft]);
+
+  useEffect(() => {
     if (edit || admin || pending || leaving.current || published.current) return;
     if (firstAutosave.current) {
       firstAutosave.current = false;
@@ -310,7 +318,14 @@ export function TournamentCreateForm({
           upsert: false,
         });
       if (uploadError) {
-        setError("Could not upload the cover image. Try a smaller image or try again.");
+        const detail = uploadError.message?.toLowerCase() ?? "";
+        setError(
+          detail.includes("bucket") || detail.includes("not found")
+            ? "Cover storage isn’t set up yet. Ask an admin to apply the tournament-covers migration, then try again."
+            : detail.includes("row-level security") || detail.includes("policy")
+              ? "You don’t have permission to upload a cover for this organization."
+              : "Could not upload the cover image. Try a smaller JPG, PNG, or WebP and try again."
+        );
         return;
       }
 
