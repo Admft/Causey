@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { ProfileEditor } from "@/components/ProfileEditor";
+import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import type { AccountRole } from "@/lib/auth/types";
 import {
@@ -135,6 +136,12 @@ export default async function MePage() {
   const registered = trackedRegistrations.filter(
     (row) => row.status === "registered"
   );
+  const upcomingInvitations = entrantRows.filter(
+    (row) =>
+      row.status === "invited" &&
+      row.competition &&
+      isUpcomingEvent(row.competition, today)
+  );
   const schedule = entrantRows.filter(
     (row) =>
       row.status === "going" &&
@@ -187,20 +194,60 @@ export default async function MePage() {
           My tournaments
         </h2>
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Keep organizer-site registrations from getting lost after you leave
-          Causey.
+          Answer tournament invitations and keep organizer-site registrations
+          from getting lost after you leave Causey.
         </p>
-        {!trackedRegistrations.length ? (
+        {!upcomingInvitations.length && !trackedRegistrations.length ? (
           <p className="mt-4 text-sm text-muted">
-            No upcoming registrations to track. Open a tournament and choose{" "}
-            <span className="font-medium text-foreground">Register</span> while
-            signed in.{" "}
+            No tournament invitations or registrations need your attention.{" "}
             <Link href="/chess" className="font-semibold text-brand-red hover:underline">
               Search tournaments
             </Link>
           </p>
         ) : (
           <div className="mt-6 flex flex-col gap-7">
+            {upcomingInvitations.length ? (
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Invited
+                </h3>
+                <p className="mt-1 text-sm text-muted">
+                  Your coach needs to know whether you can attend.
+                </p>
+                <ul className="mt-3 flex flex-col gap-3">
+                  {upcomingInvitations.map((row) => (
+                    <li
+                      key={row.competition_id}
+                      className="rounded-xl border border-line bg-surface px-4 py-3"
+                    >
+                      <Link
+                        href={`/event/${row.competition!.slug}`}
+                        className="font-semibold text-foreground hover:text-brand-red"
+                      >
+                        {row.competition!.name}
+                      </Link>
+                      <span className="mt-1 block text-xs text-muted">
+                        {formatDateRange(
+                          row.competition!.start_date,
+                          row.competition!.end_date
+                        )}
+                        {row.competition!.city
+                          ? ` · ${row.competition!.city}, ${row.competition!.state}`
+                          : ""}
+                      </span>
+                      <div className="mt-3">
+                        <RsvpButtons
+                          competitionId={row.competition_id}
+                          profileId={profile.id}
+                          status={row.status}
+                          eventSlug={row.competition!.slug}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {registrationNeeded.length ? (
               <div>
                 <h3 className="text-sm font-semibold text-foreground">

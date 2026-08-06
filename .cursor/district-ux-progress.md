@@ -18,6 +18,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [x] Loading/empty states that feel designed (not dead) — 2026-08-05 (route skeletons for /orgs + /family account surfaces; search already had skeletons)
 
 ## Done
+- [x] 2026-08-05 — My tournaments now puts unanswered coach invitations first and lets students RSVP without leaving the workspace
 - [x] 2026-08-05 — Account surfaces no longer hang on the old screen while data loads: `app/orgs/loading.tsx` + `app/family/loading.tsx` mirror each page's header/panel/row structure with the shared `.skeleton` pulse (reduced-motion safe, `role="status"` labels)
 - [x] 2026-08-05 — External registration handoff: signed-in users get a “Did you register?” confirmation after leaving for the organizer site, with Registration needed / Registered lists in My tournaments
 - [x] 2026-08-05 — Event pages without a cover image go text-first: dead grey 2:1 placeholder removed, featured mark moves inline with the eyebrow (same pattern as cards)
@@ -33,7 +34,7 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 - [ ] Tournament create flow: required image, preview, audience, then publish (guided steps) — details → audience/review → publish shipped 2026-08-05; image upload and persisted drafts remain
 - [ ] Signup / join-org copy + flow: match real unlocks; remove contradictory coach language — join-link auth handoff shipped 2026-08-05; broader copy audit remains
 - [x] External registration tracking: Register → registration_opened → “Did you register?” → My tournaments — shipped 2026-08-05
-- [ ] My tournaments workspace: Registration needed / Registered shipped 2026-08-05; Invited / Upcoming / Past remain
+- [ ] My tournaments workspace: Registration needed / Registered / Invited shipped 2026-08-05; Upcoming / Past remain
 - [ ] Search defaults: popularity + provenance; org’s own events boosted for members without burying public discovery
 - [ ] Empty/error/success states that always name the next action
 - [ ] Navigation consistency: same terms for org, event, RSVP, register across pages
@@ -49,4 +50,4 @@ Pick the highest-impact **open** item each tick. Prefer workflow clarity over ch
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Last tick: 2026-08-05 — tracked external registration handoffs through account confirmation and My tournaments (UX); designed route-loading skeletons for the orgs and family workspaces (frontend polish)
+- Last tick: 2026-08-05 — put unanswered coach invitations and RSVP actions first in My tournaments (UX); designed route-loading skeletons for the orgs and family workspaces (frontend polish)

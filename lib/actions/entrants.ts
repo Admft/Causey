@@ -8,6 +8,7 @@ import type { ActionResult } from "@/lib/actions/result";
 function revalidateEventSurfaces(eventSlug?: string) {
   revalidatePath("/orgs");
   revalidatePath("/family");
+  revalidatePath("/me");
   if (eventSlug) {
     revalidatePath(`/event/${eventSlug}`);
     revalidatePath(`/event/${eventSlug}/manage`);
