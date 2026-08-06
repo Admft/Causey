@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HomeAccountPitch } from "@/components/HomeAccountPitch";
 import { HomeHeroSearch } from "@/components/HomeHeroSearch";
 import { TournamentSources } from "@/components/TournamentSources";
 
@@ -114,6 +115,8 @@ export default function CompetitionTypesPage() {
       </section>
 
       <TournamentSources />
+
+      <HomeAccountPitch />
     </>
   );
 }
