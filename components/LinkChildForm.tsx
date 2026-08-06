@@ -59,8 +59,9 @@ export function LinkChildForm() {
         </button>
       </div>
       <p className="text-xs text-muted">
-        Your child confirms the link from their account page — nothing is
-        shared until they accept.
+        Your child needs a student account first, then confirms the link from{" "}
+        <span className="font-medium text-foreground">My tournaments</span>{" "}
+        (Plan) — nothing is shared until they accept.
       </p>
       {message ? (
         <div
@@ -72,8 +73,8 @@ export function LinkChildForm() {
           </p>
           <p className="mt-1 text-sm text-muted-strong">{message}</p>
           <p className="mt-2 text-sm font-medium text-foreground">
-            Next, ask your student to open Account and accept the Family
-            request.
+            Next, ask your student to open My tournaments (Plan) and accept the
+            Family request.
           </p>
         </div>
       ) : null}

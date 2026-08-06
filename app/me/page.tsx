@@ -9,6 +9,7 @@ import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import type { AccountRole } from "@/lib/auth/types";
 import {
   getMyEntrantRows,
+  getMyOrgs,
   getParentLinks,
   isUpcomingEvent,
 } from "@/lib/data/portal";
@@ -69,12 +70,12 @@ const ROLE_NEXT_ACTION: Record<
   }
 > = {
   student: {
-    title: "Find your next chess tournament",
+    title: "Join your school or club",
     description:
-      "Search scholastic events, save the ones that fit, and keep club invitations here.",
-    href: "/chess",
-    label: "Search tournaments",
-    secondary: { href: "/orgs", label: "Open my clubs" },
+      "Ask your coach for a join link or code. Club invitations and RSVPs show up here after you join.",
+    href: "/orgs",
+    label: "Open my clubs",
+    secondary: { href: "/chess", label: "Search tournaments" },
   },
   parent: {
     title: "See which student needs you",
@@ -120,6 +121,7 @@ export default async function MePage() {
     { data: registrationRows },
     parentLinks,
     entrantRows,
+    myOrgs,
   ] = await Promise.all([
     supabase
       .from("saved_competitions")
@@ -144,7 +146,11 @@ export default async function MePage() {
       ? getParentLinks(profile.id)
       : Promise.resolve([]),
     getMyEntrantRows(profile.id),
+    profile.role === "student" ? getMyOrgs(profile.id) : Promise.resolve([]),
   ]);
+  const pendingParentLinks = parentLinks.filter(
+    (link) => link.status === "pending"
+  );
 
   const today = new Date().toISOString().slice(0, 10);
   const registrationEvents = (registrationRows ?? [])
@@ -238,37 +244,61 @@ export default async function MePage() {
   const isStudent = profile.role === "student";
   const nextAction = ROLE_NEXT_ACTION[profile.role];
   const studentMission =
-    actionCount > 0
+    pendingParentLinks.length > 0
       ? {
           title:
-            upcomingInvitations.length > 0
-              ? `${upcomingInvitations.length} ${
-                  upcomingInvitations.length === 1 ? "invite needs" : "invites need"
-                } your RSVP`
-              : `${registrationNeeded.length} ${
-                  registrationNeeded.length === 1
-                    ? "registration is"
-                    : "registrations are"
-                } unfinished`,
+            pendingParentLinks.length === 1
+              ? "A parent wants to link"
+              : `${pendingParentLinks.length} parents want to link`,
           description:
-            upcomingInvitations.length > 0
-              ? "Tell your coach whether you can attend, then finish any organizer registration still open."
-              : "Finish registration and payment on each organizer’s site, then mark it complete here.",
-          action: {
-            href: "#plan",
-            label:
-              upcomingInvitations.length > 0
-                ? "Answer invitations"
-                : "Finish registration",
-          },
-          secondary: { href: "/chess", label: "Search more tournaments" },
+            "Accept so they can see your clubs and help with RSVPs. Nothing is shared until you approve.",
+          action: { href: "#family", label: "Review family requests" },
+          secondary:
+            myOrgs.length === 0
+              ? { href: "/orgs", label: "Join a club" }
+              : { href: "/chess", label: "Search tournaments" },
         }
-      : {
-          title: nextAction.title,
-          description: nextAction.description,
-          action: { href: nextAction.href, label: nextAction.label },
-          secondary: nextAction.secondary,
-        };
+      : actionCount > 0
+        ? {
+            title:
+              upcomingInvitations.length > 0
+                ? `${upcomingInvitations.length} ${
+                    upcomingInvitations.length === 1
+                      ? "invite needs"
+                      : "invites need"
+                  } your RSVP`
+                : `${registrationNeeded.length} ${
+                    registrationNeeded.length === 1
+                      ? "registration is"
+                      : "registrations are"
+                  } unfinished`,
+            description:
+              upcomingInvitations.length > 0
+                ? "Tell your coach whether you can attend, then finish any organizer registration still open."
+                : "Finish registration and payment on each organizer’s site, then mark it complete here.",
+            action: {
+              href: "#plan",
+              label:
+                upcomingInvitations.length > 0
+                  ? "Answer invitations"
+                  : "Finish registration",
+            },
+            secondary: { href: "/chess", label: "Search more tournaments" },
+          }
+        : myOrgs.length === 0
+          ? {
+              title: nextAction.title,
+              description: nextAction.description,
+              action: { href: nextAction.href, label: nextAction.label },
+              secondary: nextAction.secondary,
+            }
+          : {
+              title: "Find your next chess tournament",
+              description:
+                "You’re on a roster. Search scholastic events, or wait here for club invitations.",
+              action: { href: "/chess", label: "Search tournaments" },
+              secondary: { href: "/orgs", label: "Open my clubs" },
+            };
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
@@ -313,6 +343,37 @@ export default async function MePage() {
         />
       </div>
 
+      {pendingParentLinks.length ? (
+        <section id="family" className="mt-10 scroll-mt-24">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            Family
+          </h2>
+          <ul className="mt-3 flex flex-col gap-2">
+            {parentLinks.map((link) => (
+              <li
+                key={link.parent_profile_id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3"
+              >
+                <div>
+                  <span className="text-sm font-semibold text-foreground">
+                    {link.parent_name}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {link.status === "pending"
+                      ? "wants to link as your parent — they’ll see your clubs and can RSVP for you"
+                      : "linked as your parent"}
+                  </span>
+                </div>
+                <HouseholdRequestActions
+                  parentProfileId={link.parent_profile_id}
+                  linked={link.status === "active"}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section id="plan" className="mt-10 scroll-mt-24">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
           {isStudent ? "Plan" : "My tournaments"}
@@ -325,10 +386,27 @@ export default async function MePage() {
         ) : null}
         {!hasTournamentWorkspace ? (
           <p className="mt-4 text-sm text-muted">
-            You don&rsquo;t have tournament plans yet.{" "}
-            <Link href="/chess" className="font-semibold text-brand-red hover:underline">
-              Search tournaments
-            </Link>
+            {isStudent && myOrgs.length === 0 ? (
+              <>
+                No invitations yet — join your school or club first.{" "}
+                <Link
+                  href="/orgs"
+                  className="font-semibold text-brand-red hover:underline"
+                >
+                  Open my clubs
+                </Link>
+              </>
+            ) : (
+              <>
+                You don&rsquo;t have tournament plans yet.{" "}
+                <Link
+                  href="/chess"
+                  className="font-semibold text-brand-red hover:underline"
+                >
+                  Search tournaments
+                </Link>
+              </>
+            )}
           </p>
         ) : (
           <div className="mt-4 flex flex-col gap-8">
@@ -456,8 +534,11 @@ export default async function MePage() {
         )}
       </section>
 
-      {parentLinks.length ? (
-        <section className="mt-12 border-t border-line pt-8">
+      {parentLinks.length && !pendingParentLinks.length ? (
+        <section
+          id="family"
+          className="mt-12 scroll-mt-24 border-t border-line pt-8"
+        >
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
             Family
           </h2>
@@ -472,9 +553,7 @@ export default async function MePage() {
                     {link.parent_name}
                   </span>
                   <span className="mt-0.5 block text-xs text-muted">
-                    {link.status === "pending"
-                      ? "wants to link as your parent — they’ll see your clubs and can RSVP for you"
-                      : "linked as your parent"}
+                    linked as your parent
                   </span>
                 </div>
                 <HouseholdRequestActions

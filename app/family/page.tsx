@@ -119,16 +119,21 @@ export default async function FamilyPage() {
   let missionTitle: string;
   let missionDescription: string;
   let missionAction: { href: string; label: string } | undefined;
+  let missionSecondary: { href: string; label: string } | undefined =
+    undefined;
   if (!children.length) {
     missionTitle = pendingCount
       ? "Waiting for your student"
       : "Link your first student";
     missionDescription = pendingCount
-      ? "Your request is pending. Your student needs to accept it before their activity appears here."
-      : "Send a link request so tournament invitations and registration tasks appear in this desk.";
+      ? "Your request is pending. Ask your student to open My tournaments (Plan), then accept the Family request."
+      : "Your student needs their own Causey account first. Then send a link request so invitations appear here.";
     missionAction = pendingCount
-      ? undefined
+      ? { href: "#tell-student", label: "What to tell your student" }
       : { href: "#link-student", label: "Link a student" };
+    missionSecondary = pendingCount
+      ? undefined
+      : { href: "/signup?role=student", label: "Create a student account" };
   } else if (totalActionsNeeded) {
     const parts: string[] = [];
     if (totalResponsesNeeded) {
@@ -166,14 +171,42 @@ export default async function FamilyPage() {
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
         {pendingCount > 0 ? "Link another student" : "Link a student"}
       </h2>
+      {!children.length && !pendingCount ? (
+        <p className="mt-2 max-w-prose text-sm text-muted">
+          No student account yet?{" "}
+          <Link
+            href="/signup?role=student"
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Create a student account
+          </Link>{" "}
+          with their email, then come back and send the link request below.
+        </p>
+      ) : null}
       <div className="mt-3 max-w-lg">
         <LinkChildForm />
       </div>
       {pendingCount > 0 ? (
-        <p className="mt-3 text-sm text-muted-strong">
-          {pendingCount} pending {pendingCount === 1 ? "request" : "requests"}.
-          Your student needs to accept from their account page.
-        </p>
+        <div
+          id="tell-student"
+          className="mt-6 max-w-lg scroll-mt-24 rounded-xl border border-accent/25 bg-accent-soft/40 p-4"
+        >
+          <p className="text-sm font-semibold text-foreground">
+            What to tell your student
+          </p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-strong">
+            <li>Sign in to Causey with the email you used for the request.</li>
+            <li>
+              Open <span className="font-semibold text-foreground">My tournaments</span>{" "}
+              (Plan in the header).
+            </li>
+            <li>Accept the Family request near the top of the page.</li>
+          </ol>
+          <p className="mt-3 text-sm text-muted">
+            {pendingCount} pending {pendingCount === 1 ? "request" : "requests"}{" "}
+            until they accept.
+          </p>
+        </div>
       ) : null}
     </section>
   );
@@ -198,6 +231,7 @@ export default async function FamilyPage() {
               title={missionTitle}
               description={missionDescription}
               action={missionAction}
+              secondary={missionSecondary}
             />
           </div>
 

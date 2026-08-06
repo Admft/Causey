@@ -50,16 +50,17 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-06 — **Student/parent activation**: empty `/me` leads join-club; pending parent requests surface first; `/family` pending CTA + create-student handoff; Plan/Family copy aligned in signup + LinkChildForm.
 - 2026-08-06 — **Roster school-safe composition**: `/orgs/[slug]/roster` leads with PortalMission (join → group → ready), students as hairline rows, groups for invites, staff demoted; join-first empty state.
 - 2026-08-06 — **Portal mobile sticky next-action**: PortalMission pins the primary CTA to the bottom on phones for `/family` `/me` `/orgs`; Notifications returns as short “Alerts” in mobile AuthNav.
 - 2026-08-06 — **Moderation-first admin home** + queue schema `0024`.
-- 2026-08-06 — Cover upload restored; manage↔org workspace; mobile header short labels.
 
-## Backlog candidates (tick 10)
+## Backlog candidates (tick 11)
 
-### Done recently
-- Roster school-safe composition, mobile sticky portal CTA, moderation-first admin, manage↔org
+### Done this tick
+- Student/parent activation after signup
 
-### P1
-- District admin distinct landing (schema-gated — full 0018 still incomplete)
-- Org detail sticky mission (optional follow-on)
+### P1 leftover
+- District admin distinct landing (schema-gated)
+- School-safe tournament manage (invite mission + fix `#rsvps`)
+- Org empty-roster should prefer join before create-first tournament
