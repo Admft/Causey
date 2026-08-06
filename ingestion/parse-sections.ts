@@ -71,6 +71,8 @@ function openSection(name = "Open"): ParsedSectionDraft {
   };
 }
 
+export { openSection };
+
 function parseGradeToken(raw: string): number | null {
   const t = raw.toLowerCase().replace(/\./g, "");
   if (t in GRADE_WORD) return GRADE_WORD[t]!;

@@ -38,6 +38,7 @@ import {
   type CoachOrgAttendance,
   type RecommendTarget,
 } from "@/lib/data/portal";
+import type { EntrantStatus } from "@/lib/auth/orgs";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,7 @@ export default async function EventPage({ params }: Params) {
   let rsvpTargets: {
     profileId: string;
     label: string;
-    status: "invited" | "going" | "not_going";
+    status: EntrantStatus;
   }[] = [];
   let coachOrgs: CoachOrgAttendance[] = [];
   let recommendTargets: RecommendTarget[] = [];

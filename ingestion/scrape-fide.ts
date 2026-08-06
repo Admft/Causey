@@ -19,6 +19,7 @@ import {
   runUpsertOnly,
   upsertOrExit,
 } from "./scrape-hub-utils";
+import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 
 const STAGING_FILE = "fide-drafts.json";
@@ -42,7 +43,7 @@ async function main() {
     if (!competition) continue;
     drafts.push({
       ...competition,
-      sections: [{ name: "Open", entry_fee_cents: null }],
+      sections: [openSection("Open")],
     });
   }
 
