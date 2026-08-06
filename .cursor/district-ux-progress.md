@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Roster school-safe composition: mission (join → group → ready), student hairline list, groups for invites, staff demoted — 2026-08-06
 - [x] Portal mobile sticky next-action: mission CTA pinned on phones; Alerts in mobile AuthNav — 2026-08-06
 - [x] Moderation queue: applied `0024` columns (`submitted_for_review_at`, review fields, org `verification_status`) + clearer schema-gap error — 2026-08-06
 - [x] Moderation-first admin home: pending-review mission + queue preview; create tasks demoted; Moderation leads subnav — 2026-08-06

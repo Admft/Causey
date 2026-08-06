@@ -50,16 +50,16 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-06 — **Roster school-safe composition**: `/orgs/[slug]/roster` leads with PortalMission (join → group → ready), students as hairline rows, groups for invites, staff demoted; join-first empty state.
 - 2026-08-06 — **Portal mobile sticky next-action**: PortalMission pins the primary CTA to the bottom on phones for `/family` `/me` `/orgs`; Notifications returns as short “Alerts” in mobile AuthNav.
 - 2026-08-06 — **Moderation-first admin home** + queue schema `0024`.
 - 2026-08-06 — Cover upload restored; manage↔org workspace; mobile header short labels.
 
-## Backlog candidates (tick 9)
+## Backlog candidates (tick 10)
 
 ### Done recently
-- Manage orphaned / pending 404, admin moderation-first, cover drafts, mobile sticky portal CTA
+- Roster school-safe composition, mobile sticky portal CTA, moderation-first admin, manage↔org
 
 ### P1
 - District admin distinct landing (schema-gated — full 0018 still incomplete)
-- Roster school-safe composition
 - Org detail sticky mission (optional follow-on)
