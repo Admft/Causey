@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { JoinCodePanel } from "@/components/JoinCodePanel";
 import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { RsvpButtons } from "@/components/RsvpButtons";
@@ -74,30 +73,35 @@ export default async function OrgPage({
           {isCoach ? " · you coach this organization" : ""}
         </p>
 
-        {isCoach ? (
-          <div className="mt-6">
-            <Link
-              href={`/orgs/${org.slug}/tournaments/new`}
-              className="cta-enabled inline-flex"
-            >
-              Create tournament
-            </Link>
-          </div>
-        ) : null}
-
-        {isCoach && org.join_code ? (
-          <section className="section-rule mt-10 pt-8">
-            <JoinCodePanel orgId={org.id} orgSlug={org.slug} joinCode={org.join_code} />
-          </section>
-        ) : null}
-
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">Upcoming tournaments</h2>
+        <section className="section-rule mt-8 pt-8">
+          {isCoach ? (
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Hosted tournaments
+                </h2>
+                <p className="mt-1 max-w-lg text-xs text-muted">
+                  Create and publish an event page, then invite your roster and
+                  track replies.
+                </p>
+              </div>
+              <Link
+                href={`/orgs/${org.slug}/tournaments/new`}
+                className="cta-enabled inline-flex shrink-0"
+              >
+                Create tournament
+              </Link>
+            </div>
+          ) : (
+            <h2 className="text-sm font-semibold text-foreground">
+              Upcoming tournaments
+            </h2>
+          )}
           {!upcoming.length ? (
             <p className="mt-3 text-sm text-muted">
               {isCoach
-                ? "Nothing scheduled. Create a tournament and invite your roster."
-                : "Nothing scheduled yet — check back soon."}
+                ? "No hosted tournaments yet. Create one, then invite your roster."
+                : "Nothing scheduled yet. Check back soon."}
             </p>
           ) : (
             <ul className="mt-4 flex flex-col gap-3">
@@ -134,7 +138,7 @@ export default async function OrgPage({
                         href={`/event/${event.slug}/manage`}
                         className="text-sm font-semibold text-brand-red hover:underline"
                       >
-                        Manage entrants
+                        Manage invites
                       </Link>
                     ) : null}
                   </li>
@@ -197,7 +201,9 @@ export default async function OrgPage({
 
         {past.length ? (
           <section className="section-rule mt-10 pt-8">
-            <h2 className="text-sm font-semibold text-foreground">Past tournaments</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              {isCoach ? "Past hosted tournaments" : "Past tournaments"}
+            </h2>
             <ul className="mt-4 flex flex-col gap-2">
               {past.map((event) => (
                 <li key={event.id} className="flex items-baseline justify-between gap-3 text-sm">

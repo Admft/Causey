@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { GroupManager } from "@/components/GroupManager";
+import { JoinCodePanel } from "@/components/JoinCodePanel";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { RemoveMemberButton } from "@/components/RemoveMemberButton";
 import { ageBandLabel } from "@/lib/auth/age-band";
@@ -52,16 +53,34 @@ export default async function RosterPage({
         </h1>
         <p className="mt-2 text-sm text-muted">
           {activeMembers.length} active{" "}
-          {activeMembers.length === 1 ? "member" : "members"}. Students appear
-          here the moment they use your join code.
+          {activeMembers.length === 1 ? "member" : "members"}.{" "}
+          {org.join_code
+            ? "Share the join link below, then organize students into groups."
+            : "Students appear here when they join your organization."}
         </p>
+
+        {org.join_code ? (
+          <section className="section-rule mt-8 pt-8">
+            <h2 className="text-sm font-semibold text-foreground">
+              Add students
+            </h2>
+            <div className="mt-4">
+              <JoinCodePanel
+                orgId={org.id}
+                orgSlug={org.slug}
+                joinCode={org.join_code}
+              />
+            </div>
+          </section>
+        ) : null}
 
         <section className="section-rule mt-10 pt-8">
           <h2 className="text-sm font-semibold text-foreground">Members</h2>
           {!roster.length ? (
             <p className="mt-3 text-sm text-muted">
-              Nobody yet. Share your join code (Overview tab) and students
-              land here.
+              {org.join_code
+                ? "No roster members yet. Copy the join link above and send it to students."
+                : "No roster members have joined yet."}
             </p>
           ) : (
             <ul className="mt-4 flex flex-col gap-2">
