@@ -13,10 +13,11 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 
 ## Major UI backlog (kimi-k3-max — prefer these)
 - [x] Visual hierarchy overhaul: consistent spacing/typography rhythm across home, search, event, account; kill template-default feel (event/account section heads shipped in fc953a4; home + search shipped 2026-08-05)
-- [ ] Search results composition redesign (results + filters as one scannable system)
+- [x] Search results composition redesign (results + filters as one scannable system) — 2026-08-05
 - [ ] Org workspace visual redesign (coach home reads as one clear mission, not panel soup)
 
 ## Frontend polish shipped
+- [x] Search composition: applied rail filters restate as removable chips above the results (visible in every state, even with the rail collapsed/scrolled away), desktop rail goes sticky, and paging moves to the bottom row where "load more" happens — 2026-08-05
 - [x] Home/search hierarchy: chess gets the one big coverage panel (unbuilt types demoted to a plain list), hero copy de-doubled, /chess search controls read as one labeled cluster, result count anchors the results header — 2026-08-05
 - [x] Tournament display: make events easier to scan (date/venue/level sections, cleaner hierarchy on event cards) — 2026-08-05
 - [x] Responsive audit: phone/tablet/desktop without clashing grids — 2026-08-05 (/chess filter rail collapses into a disclosure below lg)
@@ -68,5 +69,5 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
 - Last UX tick: 2026-08-05 — made generic signup role-aware through account choice, name guidance, and email confirmation.
 - Next UX: add next actions to the highest-impact empty, error, and success states.
-- Last polish tick: 2026-08-05 — home + search visual hierarchy (coverage section tells the truth about what works; one search cluster; count-anchored results header).
-- Next polish: search results composition redesign, or org workspace visual redesign once UX org files settle.
+- Last polish tick: 2026-08-05 — search results composition (removable active-filter chips, sticky rail, paging at the bottom row).
+- Next polish: org workspace visual redesign once UX org files settle.

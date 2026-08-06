@@ -5,7 +5,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
 import { SEARCH_LOAD_ALL_LIMIT, type SearchSort } from "@/lib/schemas";
 import { CompetitionCard } from "@/components/CompetitionCard";
-import { SearchFilters, type FilterState } from "@/components/SearchFilters";
+import {
+  ActiveFilterChips,
+  SearchFilters,
+  type FilterState,
+} from "@/components/SearchFilters";
 import {
   ResultsLayoutToggle,
   resultsGridClass,
@@ -321,11 +325,15 @@ export function SearchClient() {
 
       <section className="section-rule">
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[220px_1fr]">
-          <aside>
+          {/* Sticky on desktop so the rail stays in reach while scanning a
+              long results column; short viewports scroll the rail internally. */}
+          <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
             <SearchFilters filters={filters} onChange={setFilters} />
           </aside>
 
           <div aria-live="polite">
+            <ActiveFilterChips filters={filters} onChange={setFilters} />
+
             {status.kind === "loading" && (
               <div className={resultsGridClass(layout)} aria-label="Loading results">
                 {Array.from({ length: layout === "grid3" ? 9 : layout === "list" ? 5 : 6 }, (_, i) => (
@@ -397,26 +405,6 @@ export function SearchClient() {
                         <option value="soonest">Soonest first</option>
                       </select>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
-                        Load
-                      </label>
-                      <select
-                        id="page-size"
-                        className="field h-9 w-auto py-0 pr-8 text-sm"
-                        value={String(pageSize)}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setPageSize(v === "all" ? "all" : Number(v));
-                        }}
-                      >
-                        {PAGE_SIZES.map((size) => (
-                          <option key={String(size.value)} value={String(size.value)}>
-                            {size.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                 </div>
                 <div className={resultsGridClass(layout)}>
@@ -424,8 +412,34 @@ export function SearchClient() {
                     <CompetitionCard key={r.id} result={r} layout={layout} />
                   ))}
                 </div>
-                {hasMore && (
-                  <div className="mt-6 flex justify-center">
+                {/* Paging lives at the bottom, where "load more" happens. The
+                    count + page-size select stay visible even when everything
+                    is loaded, so the choice is always recoverable. */}
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted">
+                      Showing {shown} of {total}
+                    </span>
+                    <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
+                      Load
+                    </label>
+                    <select
+                      id="page-size"
+                      className="field h-9 w-auto py-0 pr-8 text-sm"
+                      value={String(pageSize)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPageSize(v === "all" ? "all" : Number(v));
+                      }}
+                    >
+                      {PAGE_SIZES.map((size) => (
+                        <option key={String(size.value)} value={String(size.value)}>
+                          {size.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {hasMore && (
                     <button
                       type="button"
                       onClick={loadMore}
@@ -438,8 +452,8 @@ export function SearchClient() {
                           ? `Load remaining ${total - shown}`
                           : `Load ${Math.min(resolvePageLimit(pageSize), total - shown)} more`}
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </div>

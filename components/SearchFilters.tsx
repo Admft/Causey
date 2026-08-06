@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { GRADE_BANDS, RATING_BANDS } from "@/lib/schemas";
+import { GRADE_BANDS, RATING_BANDS, type GradeBand, type RatingBand } from "@/lib/schemas";
 import { INGESTION_SOURCES } from "@/lib/ingestion-sources";
+import { formatDate } from "@/lib/format";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import type { TimingFilter } from "@/lib/competition-timing";
 
@@ -279,6 +280,117 @@ export function SearchFilters({
         />
       </Field>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Applied rail filters restated as removable chips at the top of the results
+ * column, so results + filters read as one system: the rail sets constraints,
+ * and the results view always names what it's showing — even when the rail is
+ * scrolled away on desktop or collapsed behind the disclosure on phones.
+ * Every chip is a button: one click removes that one constraint.
+ */
+
+type Chip = { key: keyof FilterState; label: string; value: string };
+
+function activeChips(filters: FilterState): Chip[] {
+  const chips: Chip[] = [];
+  if (filters.timing === "ended") {
+    chips.push({ key: "timing", label: "Ended only", value: "upcoming" });
+  } else if (filters.timing === "all") {
+    chips.push({ key: "timing", label: "Including ended", value: "upcoming" });
+  }
+  if (filters.featured) {
+    chips.push({ key: "featured", label: "Featured only", value: "" });
+  }
+  const source = SOURCE_OPTIONS.find((s) => s.value === filters.source);
+  if (source) {
+    chips.push({ key: "source", label: `Source: ${source.label}`, value: "" });
+  }
+  const grade = GRADE_BANDS[filters.grade_band as GradeBand];
+  if (grade) {
+    chips.push({ key: "grade_band", label: `Grade: ${grade.label}`, value: "" });
+  }
+  const rating = RATING_BANDS[filters.rating_band as RatingBand];
+  if (rating) {
+    chips.push({ key: "rating_band", label: `Rating: ${rating.label}`, value: "" });
+  }
+  const fee = FEE_CEILINGS.find((f) => f.value === filters.max_fee_dollars);
+  if (fee) {
+    chips.push({ key: "max_fee_dollars", label: `Fee: ${fee.label}`, value: "" });
+  }
+  if (filters.state) {
+    chips.push({ key: "state", label: `State: ${filters.state}`, value: "" });
+  }
+  if (filters.date_from) {
+    chips.push({
+      key: "date_from",
+      label: `From ${formatDate(filters.date_from)}`,
+      value: "",
+    });
+  }
+  if (filters.date_to) {
+    chips.push({
+      key: "date_to",
+      label: `By ${formatDate(filters.date_to)}`,
+      value: "",
+    });
+  }
+  return chips;
+}
+
+export function ActiveFilterChips({
+  filters,
+  onChange,
+}: {
+  filters: FilterState;
+  onChange: (next: FilterState) => void;
+}) {
+  const chips = activeChips(filters);
+  if (chips.length === 0) return null;
+
+  const remove = (chip: Chip) =>
+    onChange({ ...filters, [chip.key]: chip.value } as FilterState);
+
+  return (
+    <div className="mb-5 flex flex-wrap items-center gap-2" aria-label="Active filters">
+      <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
+        Filtered by
+      </span>
+      {chips.map((chip) => (
+        <button
+          key={chip.key}
+          type="button"
+          onClick={() => remove(chip)}
+          aria-label={`Remove filter: ${chip.label}`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-line bg-white px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red"
+        >
+          {chip.label}
+          <svg
+            aria-hidden="true"
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            className="shrink-0"
+          >
+            <path
+              d="M3 3l6 6M9 3l-6 6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange(EMPTY_FILTERS)}
+        className="text-xs font-medium text-muted-strong transition-colors hover:text-brand-red"
+      >
+        Clear all
+      </button>
     </div>
   );
 }
