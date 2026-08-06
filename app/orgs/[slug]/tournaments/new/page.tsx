@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   description: "Host a tournament for your organization — private or public.",
 };
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default async function NewTournamentPage({
   params,
   searchParams,
@@ -35,7 +38,7 @@ export default async function NewTournamentPage({
   if (!view.isCoach) redirect(`/orgs/${slug}`);
   const { org } = view;
   const requestedDraft =
-    requestedDraftId && /^[0-9a-f-]{36}$/i.test(requestedDraftId)
+    requestedDraftId && UUID_PATTERN.test(requestedDraftId)
       ? await getTournamentDraftForViewer(requestedDraftId, org.id)
       : null;
   if (requestedDraftId && !requestedDraft) {

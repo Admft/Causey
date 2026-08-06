@@ -16,6 +16,14 @@ create table if not exists public.tournament_drafts (
 create index if not exists tournament_drafts_org_updated_idx
   on public.tournament_drafts (org_id, updated_at desc);
 
+-- Makes publish retries idempotent without retaining the draft after success.
+alter table public.competitions
+  add column if not exists source_draft_id uuid;
+
+create unique index if not exists competitions_source_draft_id_idx
+  on public.competitions (source_draft_id)
+  where source_draft_id is not null;
+
 alter table public.tournament_drafts enable row level security;
 
 drop policy if exists "tournament_drafts_select_coach" on public.tournament_drafts;
@@ -76,9 +84,16 @@ create policy "tournament_covers_insert_coach"
   on storage.objects for insert to authenticated
   with check (
     bucket_id = 'tournament-covers'
+    and array_length(storage.foldername(name), 1) = 2
     and public.is_org_coach(
       ((storage.foldername(name))[1])::uuid,
       auth.uid()
+    )
+    and exists (
+      select 1
+      from public.tournament_drafts d
+      where d.id = ((storage.foldername(name))[2])::uuid
+        and d.org_id = ((storage.foldername(name))[1])::uuid
     )
   );
 
@@ -87,16 +102,30 @@ create policy "tournament_covers_update_coach"
   on storage.objects for update to authenticated
   using (
     bucket_id = 'tournament-covers'
+    and array_length(storage.foldername(name), 1) = 2
     and public.is_org_coach(
       ((storage.foldername(name))[1])::uuid,
       auth.uid()
     )
+    and exists (
+      select 1
+      from public.tournament_drafts d
+      where d.id = ((storage.foldername(name))[2])::uuid
+        and d.org_id = ((storage.foldername(name))[1])::uuid
+    )
   )
   with check (
     bucket_id = 'tournament-covers'
+    and array_length(storage.foldername(name), 1) = 2
     and public.is_org_coach(
       ((storage.foldername(name))[1])::uuid,
       auth.uid()
+    )
+    and exists (
+      select 1
+      from public.tournament_drafts d
+      where d.id = ((storage.foldername(name))[2])::uuid
+        and d.org_id = ((storage.foldername(name))[1])::uuid
     )
   );
 
