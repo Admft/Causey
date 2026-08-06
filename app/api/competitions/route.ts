@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDataSource } from "@/lib/data";
+import { getRequestDataSource } from "@/lib/data";
 import { DEFAULT_SEARCH_LIMIT, SearchFiltersSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const data = getDataSource();
+  const data = await getRequestDataSource();
   const filters = {
     ...parsed.data,
     limit: parsed.data.limit ?? DEFAULT_SEARCH_LIMIT,

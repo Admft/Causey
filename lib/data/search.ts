@@ -16,11 +16,13 @@ import {
 import type { CompetitionResult, CompetitionSearchPage } from "@/lib/data/types";
 
 const POPULARITY_DISTANCE_BAND_MILES = 25;
+export const ORG_MEMBER_INTEREST_BOOST = 2;
 
 /** Shared post-filter sort used by mock + supabase search. */
 export function sortCompetitionResults(
   results: CompetitionResult[],
-  filters: SearchFilters
+  filters: SearchFilters,
+  preferredOrgIds: ReadonlySet<string> = new Set()
 ): void {
   results.sort((a, b) => {
     if (filters.q) {
@@ -44,8 +46,19 @@ export function sortCompetitionResults(
         if (distanceBandDelta !== 0) return distanceBandDelta;
       }
 
-      const interestDelta = b.interest_count - a.interest_count;
+      // Give a member's organization a small, bounded lift. Public events
+      // with stronger real interest still rank ahead, preserving discovery.
+      const aMemberBoost =
+        a.org_id && preferredOrgIds.has(a.org_id) ? ORG_MEMBER_INTEREST_BOOST : 0;
+      const bMemberBoost =
+        b.org_id && preferredOrgIds.has(b.org_id) ? ORG_MEMBER_INTEREST_BOOST : 0;
+      const interestDelta =
+        b.interest_count + bMemberBoost - (a.interest_count + aMemberBoost);
       if (interestDelta !== 0) return interestDelta;
+
+      // On an equal boosted score, keep real interest as the tie-breaker.
+      const realInterestDelta = b.interest_count - a.interest_count;
+      if (realInterestDelta !== 0) return realInterestDelta;
     }
 
     if (a.distance_miles !== null && b.distance_miles !== null) {

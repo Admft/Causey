@@ -49,6 +49,27 @@ describe("search ranking", () => {
     ]);
   });
 
+  it("lifts a member's org without burying stronger public interest", () => {
+    const orgId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const results = [
+      result("popular-public", { interest_count: 4 }),
+      result("member-event", { interest_count: 1, org_id: orgId }),
+      result("less-popular-public", { interest_count: 2 }),
+    ];
+
+    sortCompetitionResults(
+      results,
+      { timing: "upcoming", sort: "popular" } as SearchFilters,
+      new Set([orgId])
+    );
+
+    expect(results.map((item) => item.id)).toEqual([
+      "popular-public",
+      "member-event",
+      "less-popular-public",
+    ]);
+  });
+
   it("honors the explicit soonest-first option", () => {
     const results = [
       result("popular-later", { start_date: "2026-10-01", interest_count: 10 }),

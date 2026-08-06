@@ -21,4 +21,17 @@ export function getDataSource(): DataSource {
   return instance;
 }
 
+/**
+ * Request-bound search data source. Supabase search needs the viewer's cookie
+ * session so RLS can include private org events and rank their organizations.
+ */
+export async function getRequestDataSource(): Promise<DataSource> {
+  if ((process.env.DATA_SOURCE ?? "mock") !== "supabase") {
+    return getDataSource();
+  }
+
+  const { createServerSupabaseClient } = await import("@/lib/supabase/server");
+  return new SupabaseDataSource(await createServerSupabaseClient());
+}
+
 export type { DataSource } from "@/lib/data/types";

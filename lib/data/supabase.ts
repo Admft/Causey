@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "@/lib/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   CompetitionSchema,
   DEFAULT_SEARCH_LIMIT,
@@ -57,17 +58,53 @@ function hasSectionFilters(filters: SearchFilters): boolean {
 }
 
 export class SupabaseDataSource implements DataSource {
+  constructor(private readonly requestClient?: SupabaseClient) {}
+
+  private client(): SupabaseClient {
+    return this.requestClient ?? requireClient();
+  }
+
+  private async preferredOrgIds(client: SupabaseClient): Promise<Set<string>> {
+    if (!this.requestClient) return new Set();
+
+    const {
+      data: { user },
+    } = await client.auth.getUser();
+    if (!user) return new Set();
+
+    const [memberships, ownedOrgs] = await Promise.all([
+      client
+        .from("org_memberships")
+        .select("org_id")
+        .eq("profile_id", user.id)
+        .eq("status", "active"),
+      client.from("organizations").select("id").eq("created_by", user.id),
+    ]);
+
+    return new Set([
+      ...(memberships.data ?? []).map((membership) => membership.org_id as string),
+      ...(ownedOrgs.data ?? []).map((org) => org.id as string),
+    ]);
+  }
+
   async searchCompetitions(filters: SearchFilters): Promise<CompetitionSearchPage> {
-    const client = requireClient();
+    const client = this.client();
     const limit = filters.limit ?? DEFAULT_SEARCH_LIMIT;
     const offset = filters.offset ?? 0;
-    const origin = filters.zip ? await this.getZip(filters.zip) : null;
+    const [origin, preferredOrgIds] = await Promise.all([
+      filters.zip ? this.getZip(filters.zip) : Promise.resolve(null),
+      this.preferredOrgIds(client),
+    ]);
     const radius = filters.radius_miles ?? 50;
 
     // Fast path: no geo sort needed — page in SQL using the requested rank.
     // Skip when JS filters need the full set (sections, name, featured).
     const canPageInSql =
       !origin && !hasSectionFilters(filters) && !filters.q && !filters.featured;
+    const shouldBoostMemberOrgs =
+      canPageInSql &&
+      preferredOrgIds.size > 0 &&
+      (filters.sort ?? "popular") === "popular";
 
     let query = client
       .from("competitions")
@@ -110,18 +147,56 @@ export class SupabaseDataSource implements DataSource {
       query = query
         .order("start_date", { ascending: true })
         .order("id", { ascending: true })
-        .range(offset, offset + limit - 1);
+        .range(shouldBoostMemberOrgs ? 0 : offset, offset + limit - 1);
     } else {
       query = query.order("start_date", { ascending: true });
     }
 
-    const { data, error, count } = await query;
+    let preferredQuery = shouldBoostMemberOrgs
+      ? client
+          .from("competitions")
+          .select("*, sections(*), series(*)")
+          .eq("status", "published")
+          .in("org_id", [...preferredOrgIds])
+      : null;
+    if (preferredQuery && filters.state) {
+      preferredQuery = preferredQuery.eq("state", filters.state);
+    }
+    if (preferredQuery && filters.source) {
+      preferredQuery = preferredQuery.eq("source", filters.source);
+    }
+    if (preferredQuery && filters.date_from) {
+      preferredQuery = preferredQuery.gte("start_date", filters.date_from);
+    }
+    if (preferredQuery && filters.date_to) {
+      preferredQuery = preferredQuery.lte("start_date", filters.date_to);
+    }
+    if (preferredQuery && timing === "upcoming") {
+      preferredQuery = preferredQuery.or(
+        `end_date.gte.${today},and(end_date.is.null,start_date.gte.${today})`
+      );
+    } else if (preferredQuery && timing === "ended") {
+      preferredQuery = preferredQuery.or(
+        `end_date.lt.${today},and(end_date.is.null,start_date.lt.${today})`
+      );
+    }
+
+    const [searchResponse, preferredResponse] = await Promise.all([
+      query,
+      preferredQuery?.order("start_date", { ascending: true }) ?? Promise.resolve(null),
+    ]);
+    const { data, error, count } = searchResponse;
     if (error) throw new Error(`Supabase search failed: ${error.message}`);
+    if (preferredResponse?.error) {
+      throw new Error(`Supabase member search failed: ${preferredResponse.error.message}`);
+    }
 
     const results: CompetitionResult[] = [];
-    for (const row of data ?? []) {
+    const seen = new Set<string>();
+    for (const row of [...(data ?? []), ...(preferredResponse?.data ?? [])]) {
       const parsed = parseCompetitionRow(row as Record<string, unknown>);
-      if (!parsed) continue;
+      if (!parsed || seen.has(parsed.competition.id)) continue;
+      seen.add(parsed.competition.id);
 
       if (filters.featured) {
         const series =
@@ -161,6 +236,16 @@ export class SupabaseDataSource implements DataSource {
     }
 
     if (canPageInSql) {
+      if (shouldBoostMemberOrgs) {
+        sortCompetitionResults(results, filters, preferredOrgIds);
+        return {
+          results: results.slice(offset, offset + limit),
+          total: count ?? results.length,
+          limit,
+          offset,
+        };
+      }
+
       // Already paged in SQL; keep date order (no distance). Name search uses slow path.
       return {
         results,
@@ -170,12 +255,12 @@ export class SupabaseDataSource implements DataSource {
       };
     }
 
-    sortCompetitionResults(results, filters);
+    sortCompetitionResults(results, filters, preferredOrgIds);
     return paginateResults(results, { ...filters, limit, offset });
   }
 
   async getCompetitionBySlug(slug: string): Promise<CompetitionDetail | null> {
-    const client = requireClient();
+    const client = this.client();
     const { data, error } = await client
       .from("competitions")
       .select("*, sections(*), series(*)")
@@ -194,7 +279,7 @@ export class SupabaseDataSource implements DataSource {
   }
 
   async listCompetitionRefs(): Promise<CompetitionRef[]> {
-    const client = requireClient();
+    const client = this.client();
     const { data, error } = await client
       .from("competitions")
       .select("id, slug, name, series_id, state, start_date, canonical_id")
@@ -226,21 +311,21 @@ export class SupabaseDataSource implements DataSource {
   }
 
   async listSeries(): Promise<Series[]> {
-    const client = requireClient();
+    const client = this.client();
     const { data, error } = await client.from("series").select("*").order("name");
     if (error) throw new Error(`Supabase series list failed: ${error.message}`);
     return (data ?? []).map((s) => SeriesSchema.parse(s));
   }
 
   async listQualificationRules(): Promise<QualificationRule[]> {
-    const client = requireClient();
+    const client = this.client();
     const { data, error } = await client.from("qualification_rules").select("*");
     if (error) throw new Error(`Supabase rules list failed: ${error.message}`);
     return (data ?? []).map((r) => QualificationRuleSchema.parse(r));
   }
 
   async getZip(zip: string): Promise<ZipRow | null> {
-    const client = requireClient();
+    const client = this.client();
     const { data, error } = await client
       .from("zips")
       .select("*")
