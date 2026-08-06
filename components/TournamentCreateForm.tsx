@@ -592,7 +592,7 @@ export function TournamentCreateForm({
 
       {!reviewing ? (
         <>
-          {!edit ? (
+          {!edit && draftId ? (
             <fieldset className="flex flex-col gap-3">
               <div>
                 <legend className="text-xs font-semibold text-muted-strong">
