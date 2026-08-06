@@ -97,9 +97,18 @@ export const CompetitionSchema = z.object({
    * - manual: hand-entered / seed
    * - tla_scrape: US Chess upcoming-tournaments scraper
    * - cca_scrape: Continental Chess Association (chesstour.com)
-   * - organizer: future partner / registration-platform feeds
+   * - organizer: coach-hosted / partner feeds
+   * - onlinereg_scrape | chess_results_scrape | fide_calendar_scrape: hub scrapers
    */
-  source: z.enum(["manual", "tla_scrape", "cca_scrape", "organizer"]),
+  source: z.enum([
+    "manual",
+    "tla_scrape",
+    "cca_scrape",
+    "organizer",
+    "onlinereg_scrape",
+    "chess_results_scrape",
+    "fide_calendar_scrape",
+  ]),
   /** Exact upstream page the scraper read (null for hand-entered rows). */
   source_url: z.string().url().nullable().default(null),
   /**
@@ -222,7 +231,17 @@ export const SearchFiltersSchema = z.object({
   radius_miles: z.coerce.number().positive().max(3000).optional(),
   state: z.string().length(2).optional(),
   /** Which scrape hub wrote the row — e.g. tla_scrape (US Chess), cca_scrape. */
-  source: z.enum(["manual", "tla_scrape", "cca_scrape", "organizer"]).optional(),
+  source: z
+    .enum([
+      "manual",
+      "tla_scrape",
+      "cca_scrape",
+      "organizer",
+      "onlinereg_scrape",
+      "chess_results_scrape",
+      "fide_calendar_scrape",
+    ])
+    .optional(),
   /** Only national / international / named major opens (award-tier). */
   featured: z
     .union([z.literal("1"), z.literal("true"), z.boolean()])

@@ -83,6 +83,7 @@ export function CompetitionCard({
     name: result.name,
     source: result.source,
     series: result.series,
+    details: result.details,
   });
   const featured = isFeaturedStanding(standing);
   const ended = isCompetitionEnded(result);

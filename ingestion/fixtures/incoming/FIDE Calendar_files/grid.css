@@ -1,0 +1,294 @@
+/*************************
+ * GRID SCHEDULE LAYOUT
+ *************************/
+@media screen and (max-width:599px) {
+	.empty-cell {
+		display: none;
+	}
+}
+
+@media screen and (min-width:600px) {
+	.schedule {
+		border: solid 1px;
+		display: grid;
+		grid-gap: 1px;
+		background-color: black;
+		grid-template-rows:
+			[tracks] auto [time-01] auto [time-02] auto [time-03] auto [time-04] auto [time-05] auto [time-06] auto [time-07] auto [time-08] auto [time-09] auto [time-10] auto [time-11] auto [time-12] auto;
+		/* Note 1:
+			Use 24hr time for gridline names for simplicity
+
+			Note 2: Use "auto" instead of "1fr" for a more compact schedule where height of a slot is not proportional to the session length. Implementing a "compact" shortcode attribute might make sense for this!
+			Try 0.5fr for more compact equal rows. I don't quite understand how that works :)
+			*/
+
+		grid-template-columns:
+			[times] 7em [track-1-start] 1fr [track-1-end track-2-start] 1fr [track-2-end track-3-start] 1fr [track-3-end];
+	}
+
+	.major_schedule {
+		border: solid 1px;
+		display: grid;
+		grid-gap: 1px;
+		background-color: black;
+		grid-template-rows:
+			[tracks] auto [time-01] auto [time-02] auto [time-03] auto [time-04] auto [time-05] auto [time-06] auto [time-07] auto [time-08] auto [time-09] auto [time-10] auto [time-11] auto [time-12] auto;
+		/* Note 1:
+			Use 24hr time for gridline names for simplicity
+
+			Note 2: Use "auto" instead of "1fr" for a more compact schedule where height of a slot is not proportional to the session length. Implementing a "compact" shortcode attribute might make sense for this!
+			Try 0.5fr for more compact equal rows. I don't quite understand how that works :)
+			*/
+
+		grid-template-columns:
+			[times] 7em [track-1-start] 1fr [track-1-end track-2-start] 1fr [track-2-end track-3-start] 1fr [track-3-end];
+	}
+}
+
+.time-slot {
+	grid-column: times;
+}
+
+.track-slot {
+	display: none;
+	/* hidden on small screens and browsers without grid support */
+}
+
+@supports(display:grid) {
+	@media screen and (min-width:600px) {
+		.track-slot {
+			display: block;
+			padding: 5px 5px 5px;
+			position: sticky;
+			top: 0;
+			z-index: 50;
+			background-color: rgba(255, 255, 255, .9);
+		}
+	}
+}
+
+/* Small-screen & fallback styles */
+.session {
+	margin-bottom: 1em;
+}
+
+@supports(display:grid) {
+	@media screen and (min-width: 1200px) {
+		.session {
+			margin: 0;
+		}
+	}
+}
+
+/*************************
+ * VISUAL STYLES
+ * Design-y stuff ot particularly important to the demo
+ *************************/
+.border-info {
+	padding: 5px;
+	/* border-color: #144a80; */
+	/* border-image: linear-gradient(45deg, #3485d9, #FFFFFF, #2362b9) 20; */
+	border-color: #c8d6e3;
+	border-style: solid;
+	/* border-radius: 5px; */
+	border-width: 1px;
+}
+
+.circuit-column {
+	/* border-image: linear-gradient(45deg, silver, #FFFFFF, gray) 20; */
+	padding-right: 28px;
+}
+
+/* .wcc-column::after {
+	display: block;
+	position: relative;
+	top:10px;
+	right: 10px;
+	overflow: hidden;
+	content: "";
+    width: 20px;
+    height: 20px;
+    background: transparent url('../img/reshot-icon-king.svg') no-repeat;
+} */
+
+.wcc-column {
+	border-image: linear-gradient(45deg, goldenrod, #FFFFFF, goldenrod) 20;
+	border-width: 4px;
+	border-style: solid;
+}
+
+.circuit_column_icon_div {
+	position: relative;
+	float: right;
+	top: -20px;
+	right: -20px;
+}
+
+.circuit_column_icon {
+	width: 20px;
+	height: 28px;
+}
+
+.session {
+	padding: .5em;
+	border-radius: 2px;
+	font-size: 14px;
+	/* box-shadow: rgba(255, 255, 255, .6) 1px 1px 0, rgba(0, 0, 0, .3) 4px 4px 0; */
+	background-color: white;
+	color: #FF7F5B;
+}
+
+.session-title,
+.session-track,
+.session-presenter {
+	display: block;
+}
+
+.session-time {
+	font-size: 12px;
+	display: block;
+
+}
+
+.session-title {
+	margin: 0;
+	font-size: 1.3em;
+}
+
+.time-slot {
+	margin: 0;
+	font-size: 1em;
+}
+
+.session-title a {
+	/* color: #000000; */
+	text-decoration: none;
+
+	&:hover {
+		font-style: italic;
+	}
+
+	&:focus {
+		outline: 2px dotted rgba(255, 255, 255, .8);
+	}
+}
+
+.event_status0::before {
+	content: "[draft] ";
+	font-weight: bold;
+	color: brown;
+}
+
+.event_status0 {
+	color: brown;
+}
+
+.event_status1::before {
+	content: "[on moderation] ";
+	font-weight: bold;
+	color: brown;
+}
+
+.event_status1 {
+	color: brown;
+}
+
+.track-slot {
+	font-weight: bold;
+	font-size: 1em;
+}
+
+.time-slot {
+	font-weight: bold;
+	/* font-size:0.7em; */
+	overflow-wrap: break-word;
+}
+
+.track-1 .border-info {
+	background-color: #e3e7f7;
+	color: #000000;
+}
+
+.track-2 .border-info {
+	background-color: #91c1f7;
+	color: #000000;
+}
+
+.track-3 .border-info {
+	background-color: #c6ebf9;
+	color: #000000;
+}
+
+.track-4 .border-info {
+	background-color: #ffffff;
+	color: #000000;
+}
+
+.track-5 .border-info {
+	background-color: #edf8f9;
+	color: #000000;
+}
+
+.track-all {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: #ccc;
+	color: #000;
+	box-shadow: none;
+}
+
+.text {
+	max-width: 750px;
+	font-size: 18px;
+	margin: 0 auto 50px;
+}
+
+.meta {
+	color: #555;
+	font-style: italic;
+}
+
+.meta a {
+	color: #555;
+}
+
+hr {
+	margin: 40px 0;
+}
+
+.tentative {
+	padding: 5px;
+	border-width: 4px;
+	border-color: #144a80;
+}
+
+.tentative:after {
+	content: "* tentative";
+}
+
+.senior-column {
+	border-image: linear-gradient(45deg, silver, #FFF, silver) 20;
+	border-width: 4px;
+	border-style: solid;
+}
+
+.youth-column {
+	border-image: linear-gradient(45deg, #bf96ee, #FFF, #bf96ee) 20;
+	border-width: 4px;
+	border-style: solid;
+}
+
+.chcom {
+	background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!-- Generator: Adobe Illustrator 28.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0) --%3E%3Csvg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 600 166' style='enable-background:new 0 0 600 166;' xml:space='preserve'%3E%3Cstyle type='text/css'%3E .st0%7Bfill:%23231F20;%7D%0A%3C/style%3E%3Cg%3E%3Cpath class='st0' d='M110.3,146.6c-9.9-2.5-18.8-7.2-25.9-14c-11-10.5-17.1-25.1-17.1-41c0-6.6,1.1-13,3.1-18.9c0-0.1,0-0.1,0-0.2 h0.1c2.2-6.6,5.6-12.6,10.1-17.8l-9.5-6.2c6.7-4.9,11.1-12.7,11.1-21.6c0-11.2-6.9-20.8-16.7-24.8h0C62.4,0.7,59,0,55.5,0 C40.8,0,28.8,12,28.8,26.7c0,8.9,4.4,16.8,11.1,21.6L20.6,61.1c0,4.3,1,7.7,3,11.4h17c-0.1,1.6-0.1,3.7-0.1,6.3 c-0.3,9.3-3.1,24.3-25,41.1c-5.7,4.3-10,10.5-12.6,17.9c0,0.1-0.1,0.1-0.1,0.2c-0.1,0.3-0.2,0.6-0.3,0.9l0,0l0,0 c-1.6,5-2.5,10.5-2.5,16.5c0,0.7,1.5,10.8,55.5,10.8s55.5-10.1,55.5-10.8C111,152.3,110.8,149.4,110.3,146.6L110.3,146.6z'/%3E%3Cpath class='st0' d='M226.8,97.1v37.9c0,1.3-1.1,2.4-2.4,2.4h-15.5c-1.3,0-2.4-1.1-2.4-2.4v-34.7c0-11.4-3.2-16.6-11.2-16.6 c-9.4,0-14,6-14,19v32.4c0,1.3-1.1,2.4-2.4,2.4h-15.5c-1.3,0-2.4-1.1-2.4-2.4V46.6c0-1.3,1.1-2.4,2.4-2.4h15.5 c1.3,0,2.4,1.1,2.4,2.4v26.2c5.3-5.2,10.3-6.9,19.3-6.9C217.1,65.9,226.8,75.6,226.8,97.1L226.8,97.1z'/%3E%3Cpath class='st0' d='M270.1,65.9c-21.4,0-34.6,15.2-34.6,36.3c0,18.3,10.6,36.3,36,36.3c10.9,0,21.6-1.6,28.4-5.3 c1-0.6,1.5-1.8,1-2.9l-4.9-10.6c-0.5-1.2-2-1.6-3.1-1c-7,3.7-11.1,4.4-20.2,4.4s-16.6-7.7-17.1-15.1h46.1c1,0,1.8-0.8,1.9-1.8 c0.1-1.3,0.2-2.7,0.2-3.7C303.8,79.8,290.7,65.9,270.1,65.9L270.1,65.9z M255.3,96c0.6-9,6-14.7,15-14.7s13.9,5.8,14.6,14.7 L255.3,96L255.3,96z'/%3E%3Cpath class='st0' d='M376.3,130.2l4.9-10.6c0.5-1.2,2-1.6,3.1-1c6.2,3.4,12.8,4.4,20.5,4.4c9.4,0,12.9-2.5,12.9-6.4 c0-11.5-42.5,0.3-42.5-27.9c0-13.3,12-22.8,32.5-22.8c8.8,0,17.8,2,24.5,5.3c1.1,0.5,1.5,1.8,1,2.9l-4.9,10.5 c-0.5,1.1-1.9,1.6-3,1.1c-6.2-3.1-11.8-4.3-17.6-4.3c-9.1,0-13.1,2.9-13.1,6.5c0,12,42.5,0.4,42.5,28.1c0,13.1-12.1,22.4-33.2,22.4 c-10.9,0-20-1.6-26.8-5.3C376.2,132.5,375.7,131.2,376.3,130.2L376.3,130.2z'/%3E%3Cpath class='st0' d='M438.2,132.9c0-3.2,2.5-5.5,5.5-5.5s5.3,2.2,5.3,5.5s-2.4,5.6-5.3,5.6S438.2,136.1,438.2,132.9z'/%3E%3Cpath class='st0' d='M489.5,115.1c0-13.6,9.5-23.3,22.3-23.3c12.9,0,22.2,9.7,22.2,23.3s-9.4,23.4-22.2,23.4 S489.5,128.7,489.5,115.1L489.5,115.1z M526.2,115.1c0-9.7-6.2-16-14.4-16s-14.5,6.3-14.5,16s6.2,16.1,14.5,16.1 C520.1,131.2,526.2,124.8,526.2,115.1z'/%3E%3Cpath class='st0' d='M600,111.6v24.6c0,0.9-0.7,1.6-1.6,1.6h-5c-0.9,0-1.6-0.7-1.6-1.6v-23.7c0-9-2.6-13.4-9.9-13.4 c-6.9,0-7.9,5.3-7.9,15.2v21.9c0,0.9-0.7,1.6-1.6,1.6h-5c-0.9,0-1.6-0.7-1.6-1.6v-23.7c0-9-2.2-13.4-9.4-13.4 c-6.7,0-8.4,5.3-8.4,15.2v21.9c0,0.9-0.7,1.6-1.6,1.6h-5c-0.9,0-1.6-0.7-1.6-1.6V93.9c0-0.9,0.7-1.7,1.6-1.7h4.6 c0.9,0,1.6,0.7,1.6,1.7v2.4c0.6-1,3.1-4.5,10-4.5c6.2,0,10,2.2,12.8,6.6c0,0,2.9-6.6,12.9-6.6C594.4,91.8,600,98.2,600,111.6 L600,111.6z'/%3E%3Cpath class='st0' d='M473.5,131.2c-9,0-14.5-6.2-14.5-16.1s5.5-16,14.5-16c4,0,7.8,1.4,10.6,4.2c0.7,0.7,1.8,0.2,1.8-0.8v-6.4 c0-0.7-0.4-1.3-1-1.6c-3.2-1.8-7.1-2.7-11.4-2.7c-14.1,0-22.9,9.7-22.9,23.3s8.8,23.4,22.9,23.4c4.2,0,8.1-0.9,11.4-2.7 c0.6-0.3,1-0.9,1-1.6v-6.4c0-1-1.2-1.5-1.8-0.8C481.2,129.8,477.5,131.2,473.5,131.2z'/%3E%3Cpath class='st0' d='M330,87.8c0-3.8,4-6.7,13.4-6.7c5.9,0,11.6,1.3,18.1,4.5c1.2,0.6,2.6,0.1,3.1-1.1l5-10.8c0.5-1.1,0.1-2.5-1-3 c-6.9-3.4-16.1-5.5-25.2-5.5c-21.1,0-33.5,9.7-33.5,23.4c0,28.9,43.7,16.8,43.7,28.7c0,4-3.6,6.6-13.3,6.6 c-7.9,0-14.8-1.1-21.1-4.6c-1.2-0.6-2.6-0.2-3.2,1l-5.1,10.9c-0.5,1.1-0.1,2.4,1,3c7,3.9,16.4,5.5,27.6,5.5 c21.6,0,34.1-9.6,34.1-23C373.7,88.2,330,100.2,330,87.8L330,87.8z'/%3E%3Cpath class='st0' d='M127.7,120.9c-17.1,0-29.3-12-29.3-29.3s12.2-29.3,29.3-29.3c7.1,0,13.4,2.2,18.7,6.5c1.7,1.4,4.3,0.2,4.3-2 V51.5c0-1.2-0.7-2.3-1.8-2.8c-6.5-3-14-4.5-22.2-4.5C98.1,44.2,77,63.9,77,91.6s21.2,47.4,49.5,47.4c8.3,0,15.8-1.6,22.4-4.5 c1.1-0.5,1.8-1.6,1.8-2.8v-15.3c0-2.2-2.6-3.4-4.3-2C141,118.6,134.8,120.9,127.7,120.9L127.7,120.9z'/%3E%3C/g%3E%3C/svg%3E%0A");
+	position: relative;
+	bottom: 0;
+	right: 0;
+	background-repeat: no-repeat;
+	width: 80px;
+	display: inline-block;
+	height: 20px;
+	/* align-content:  */
+	/* margin-top: 8px; */
+	margin-top: 8px;
+}

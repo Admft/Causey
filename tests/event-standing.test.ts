@@ -53,4 +53,37 @@ describe("eventStanding", () => {
     expect(s.id).toBe("local");
     expect(isFeaturedStanding(s)).toBe(false);
   });
+
+  it("uses FIDE catalog class for international standing", () => {
+    const s = eventStanding({
+      name: "FIDE World Cup",
+      source: "fide_calendar_scrape",
+      series: null,
+      details: { catalog_standing: "world_fide", catalog_class: "world_fide" },
+    });
+    expect(s.id).toBe("international");
+    expect(isFeaturedStanding(s)).toBe(true);
+  });
+
+  it("treats large Chess-Results fields as regional, not featured", () => {
+    const s = eventStanding({
+      name: "Weekend Swiss",
+      source: "chess_results_scrape",
+      series: null,
+      details: { catalog_standing: "major_field" },
+    });
+    expect(s.id).toBe("regional");
+    expect(isFeaturedStanding(s)).toBe(false);
+  });
+
+  it("defaults OnlineReg club events to local", () => {
+    const s = eventStanding({
+      name: "Thursday Night Quads",
+      source: "onlinereg_scrape",
+      series: null,
+      details: { catalog_standing: "local" },
+    });
+    expect(s.id).toBe("local");
+    expect(isFeaturedStanding(s)).toBe(false);
+  });
 });

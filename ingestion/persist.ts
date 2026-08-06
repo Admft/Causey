@@ -80,7 +80,14 @@ export async function persistScrapeBatch(
 ): Promise<PersistResult> {
   const runId = await startScrapeRun(
     client,
-    opts.scrapeRunSource ?? (source === "tla_scrape" || source === "cca_scrape" ? source : "all"),
+    opts.scrapeRunSource ??
+      (source === "tla_scrape" ||
+      source === "cca_scrape" ||
+      source === "onlinereg_scrape" ||
+      source === "chess_results_scrape" ||
+      source === "fide_calendar_scrape"
+        ? source
+        : "all"),
     opts.meta ?? {}
   );
 

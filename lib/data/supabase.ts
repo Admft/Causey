@@ -208,6 +208,7 @@ export class SupabaseDataSource implements DataSource {
             name: parsed.competition.name,
             source: parsed.competition.source,
             series,
+            details: parsed.competition.details,
           })
         ) {
           continue;

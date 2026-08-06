@@ -68,7 +68,12 @@ export class MockDataSource implements DataSource {
       const seriesRow = c.series_id ? seriesById.get(c.series_id) ?? null : null;
       if (
         filters.featured &&
-        !competitionIsFeatured({ name: c.name, source: c.source, series: seriesRow })
+        !competitionIsFeatured({
+          name: c.name,
+          source: c.source,
+          series: seriesRow,
+          details: c.details,
+        })
       ) {
         continue;
       }

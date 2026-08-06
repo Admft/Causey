@@ -2,11 +2,12 @@ import type { Series, SeriesLevel } from "@/lib/schemas";
 
 /**
  * How "big" / official an event is — for parents scanning search results.
- * Derived from curated series.level when linked; otherwise name + source
- * heuristics. Default is local/open (honest majority). Not a prestige score.
+ * Derived from curated series.level when linked; otherwise scrape catalog
+ * hints (FIDE tile class, player counts) then name + source heuristics.
+ * Default is local/open (honest majority). Not a prestige score.
  *
  * Featured (award mark): international, national, and named major opens.
- * Automated — scrapers attach series_id / names; the UI derives the mark.
+ * Automated — scrapers attach series_id / catalog hints; the UI derives the mark.
  */
 
 export type EventStandingId =
@@ -70,6 +71,12 @@ const FEATURED_STANDINGS = new Set<EventStandingId>([
   "major_open",
 ]);
 
+const LOCAL: EventStanding = {
+  id: "local",
+  label: "Local / open",
+  hint: "Local club or open event. Fine for rated games and practice — usually not a national qualifier seat.",
+};
+
 /** Award mark for the top-tier events only. */
 export function isFeaturedStanding(standing: EventStanding): boolean {
   return FEATURED_STANDINGS.has(standing.id);
@@ -80,17 +87,86 @@ export function competitionIsFeatured(input: {
   name: string;
   source: string;
   series: Pick<Series, "level" | "name"> | null;
+  details?: Record<string, unknown> | null;
 }): boolean {
   return isFeaturedStanding(eventStanding(input));
+}
+
+/**
+ * Map scrape-time catalog_standing / catalog_class into UI standing.
+ * Returns null when the hint is absent or only "local"/"other" (fall through).
+ */
+function fromCatalogHint(
+  details: Record<string, unknown> | null | undefined
+): EventStanding | null {
+  if (!details) return null;
+  const standing =
+    typeof details.catalog_standing === "string"
+      ? details.catalog_standing
+      : typeof details.catalog_class === "string"
+        ? details.catalog_class
+        : null;
+  if (!standing) return null;
+
+  switch (standing) {
+    case "world_fide":
+    case "world_top":
+    case "international":
+      return FROM_SERIES_LEVEL.international;
+    case "circuit":
+      return {
+        id: "major_open",
+        label: "FIDE Circuit",
+        hint: "FIDE Circuit event. Strong international field — not a US scholastic pathway seat by itself.",
+      };
+    case "youth":
+      return {
+        id: "national",
+        label: "Youth / junior",
+        hint: "FIDE youth or junior calendar event. Check age and rating rules on the organizer site.",
+      };
+    case "national_or_major":
+      return {
+        id: "major_open",
+        label: "Major open",
+        hint: "Large open with national or international draw. Serious field — not automatically a pathway seat.",
+      };
+    case "major_field":
+      return {
+        id: "regional",
+        label: "Large open",
+        hint: "Bigger than a typical club swiss (large entry list). Still usually local/open standing, not a national award.",
+      };
+    case "solid_open":
+      return {
+        id: "local",
+        label: "Open event",
+        hint: "Rated open or sectional. Fine for practice and rating — usually not a national qualifier seat.",
+      };
+    case "local":
+    case "other":
+      return null;
+    default:
+      return null;
+  }
 }
 
 export function eventStanding(input: {
   name: string;
   source: string;
   series: Pick<Series, "level" | "name"> | null;
+  details?: Record<string, unknown> | null;
 }): EventStanding {
   if (input.series) {
     return FROM_SERIES_LEVEL[input.series.level];
+  }
+
+  const fromCatalog = fromCatalogHint(input.details);
+  if (fromCatalog) return fromCatalog;
+
+  // FIDE calendar rows without a usable class still deserve international framing.
+  if (input.source === "fide_calendar_scrape") {
+    return FROM_SERIES_LEVEL.international;
   }
 
   const name = input.name;
@@ -111,17 +187,15 @@ export function eventStanding(input: {
   if (REGIONAL_NAME.test(name)) {
     return FROM_SERIES_LEVEL.local;
   }
-  if (LOCAL_OPEN.test(name) || input.source === "tla_scrape" || input.source === "cca_scrape") {
-    return {
-      id: "local",
-      label: "Local / open",
-      hint: "Local club or open event. Fine for rated games and practice — usually not a national qualifier seat.",
-    };
+  if (
+    LOCAL_OPEN.test(name) ||
+    input.source === "tla_scrape" ||
+    input.source === "cca_scrape" ||
+    input.source === "onlinereg_scrape" ||
+    input.source === "chess_results_scrape"
+  ) {
+    return LOCAL;
   }
 
-  return {
-    id: "local",
-    label: "Local / open",
-    hint: "Local club or open event. Fine for rated games and practice — usually not a national qualifier seat.",
-  };
+  return LOCAL;
 }
