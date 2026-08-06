@@ -47,7 +47,9 @@ export function ExternalRegistrationPanel({
       router.refresh();
     } catch {
       setStatus(previous);
-      setError("Could not save the registration status. Try again.");
+      setError(
+        "Could not update this registration. Check your connection and try again."
+      );
     } finally {
       setPending(false);
     }
@@ -64,11 +66,12 @@ export function ExternalRegistrationPanel({
           id="external-registration-status"
           className="text-base font-semibold text-foreground"
         >
-          Registration marked complete
+          Organizer registration complete
         </h2>
         <p className="mt-1 max-w-prose text-sm text-muted-strong">
-          Causey will keep this tournament in My tournaments. The organizer
-          remains the source of truth for your entry and payment.
+          You marked this complete, so Causey will keep the tournament in My
+          tournaments. The organizer remains the source of truth for your entry
+          and payment.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <a
@@ -86,7 +89,7 @@ export function ExternalRegistrationPanel({
             onClick={() => respond("not_registered")}
             className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
           >
-            {pending ? "Saving…" : "Mark as registration needed"}
+            {pending ? "Saving…" : "Registration is still needed"}
           </button>
         </div>
         {error ? (
@@ -109,11 +112,11 @@ export function ExternalRegistrationPanel({
           id="external-registration-question"
           className="text-base font-semibold text-foreground"
         >
-          Did you finish registering?
+          Is organizer registration complete?
         </h2>
         <p className="mt-1 max-w-prose text-sm text-muted">
           Causey cannot see the organizer&rsquo;s checkout. Confirm here after
-          you submit the registration and payment.
+          you submit any required registration and payment.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
@@ -122,7 +125,7 @@ export function ExternalRegistrationPanel({
             onClick={() => respond("registered")}
             className="cta-enabled disabled:opacity-60"
           >
-            {pending ? "Saving…" : "Yes, I registered"}
+            {pending ? "Saving…" : "Yes, registration is complete"}
           </button>
           <button
             type="button"
@@ -130,7 +133,7 @@ export function ExternalRegistrationPanel({
             onClick={() => respond("not_registered")}
             className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground disabled:opacity-60"
           >
-            Not yet
+            I still need to register
           </button>
           <a
             href={registrationHref}
@@ -163,8 +166,10 @@ export function ExternalRegistrationPanel({
           if (signedIn) setStatus("opened");
         }}
       >
-        {status === "not_registered" ? "Continue registration" : "Register"} on{" "}
-        {registrationHost} <span aria-hidden="true">↗</span>
+        {status === "not_registered"
+          ? "Finish organizer registration"
+          : "Register on organizer site"}{" "}
+        <span aria-hidden="true">↗</span>
       </a>
       <p className="mt-2 max-w-prose text-2xs text-muted">
         Registration and payment happen on the organizer&rsquo;s site, never on
@@ -189,7 +194,7 @@ export function ExternalRegistrationPanel({
               onClick={() => respond("registered")}
               className="font-semibold text-brand-red hover:underline disabled:opacity-60"
             >
-              Already finished? Mark registered
+              Already finished? Mark registration complete
             </button>
           </>
         ) : null}

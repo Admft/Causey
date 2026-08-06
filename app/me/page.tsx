@@ -272,7 +272,7 @@ export default async function MePage() {
           My tournaments
         </h2>
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Answer invitations, finish organizer-site registration, and keep
+          Answer invitations, finish organizer registration, and keep
           upcoming and past plans in one place.
         </p>
         {!hasTournamentWorkspace ? (
@@ -329,8 +329,12 @@ export default async function MePage() {
             {registrationNeeded.length ? (
               <div>
                 <h3 className="text-xs font-semibold text-muted-strong">
-                  Registration needed
+                  Organizer registration needed
                 </h3>
+                <p className="mt-1 text-sm text-muted">
+                  Finish registration and payment on each organizer&rsquo;s
+                  site, then mark it complete on Causey.
+                </p>
                 <ul className="mt-3 flex flex-col gap-3">
                   {registrationNeeded.map(({ competitionId, competition }) => (
                     <li key={competitionId}>
@@ -349,7 +353,7 @@ export default async function MePage() {
                           · {competition.city}, {competition.state}
                         </span>
                         <span className="mt-2 block text-sm font-semibold text-brand-red">
-                          Finish registration
+                          Finish organizer registration
                         </span>
                       </Link>
                     </li>

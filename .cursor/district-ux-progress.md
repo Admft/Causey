@@ -28,6 +28,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — External tournament entry now consistently says “organizer registration,” distinguishes it from Causey RSVPs, and tells families where to finish and how to confirm completion
 - [x] 2026-08-05 — RSVP controls now show which answer is saving, confirm exactly what the organization can see, explain that the answer remains changeable, and recover from unexpected connection failures
 - [x] 2026-08-05 — Platform moderation now shows the event, source, audience, and organizer context needed for a decision; rejected listings require a useful note; every decision confirms what changed and points to the next review or record
 - [x] 2026-08-05 — Roster group changes now show action-specific progress, confirm what changed and what coaches can do next, guide the first empty state, and protect deletion with a student-safe confirmation
@@ -61,7 +62,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Signup / join-org copy + flow: student join links preserve invitations; generic signup now carries student, parent, and coach intent through account creation and confirmation
 - [x] Search: org-member tournaments receive a bounded interest boost; stronger public interest and explicit soonest sorting still win
 - [ ] Empty/error/success states that always name the next action
-- [ ] Navigation consistency: same terms for org, event, RSVP, register across pages
+- [ ] Navigation consistency: same terms for org and event across pages (RSVP vs. organizer registration aligned 2026-08-05)
 
 ## Open — P2 (after P1)
 - [ ] Bulk invite UX (CSV/email claim links) — district/school staff first
@@ -75,7 +76,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Last UX tick: 2026-08-05 — made RSVP changes explicit and recoverable across event, account, organization, and family views.
-- Next UX: audit external registration language for consistent terms and explicit next actions.
+- Last UX tick: 2026-08-05 — aligned external tournament entry around “organizer registration,” kept it distinct from Causey RSVPs, and named the next action in every state.
+- Next UX: audit organization and tournament naming across account, family, and coach workspaces.
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: family workspace composition, or empty/error/success-state visual pass.
