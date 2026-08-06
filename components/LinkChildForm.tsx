@@ -25,6 +25,10 @@ export function LinkChildForm() {
       setMessage(result.message);
       setEmail("");
       router.refresh();
+    } catch {
+      setError(
+        "Could not send the link request. Check your connection and try again."
+      );
     } finally {
       setPending(false);
     }
@@ -58,11 +62,28 @@ export function LinkChildForm() {
         Your child confirms the link from their account page — nothing is
         shared until they accept.
       </p>
-      {message ? <p className="text-sm text-muted-strong">{message}</p> : null}
+      {message ? (
+        <div
+          className="rounded-xl border border-brand-red/25 bg-accent-soft p-4"
+          role="status"
+        >
+          <p className="text-sm font-semibold text-foreground">
+            Link request submitted
+          </p>
+          <p className="mt-1 text-sm text-muted-strong">{message}</p>
+          <p className="mt-2 text-sm font-medium text-foreground">
+            Next, ask your student to open Account and accept the Family
+            request.
+          </p>
+        </div>
+      ) : null}
       {error ? (
-        <p className="text-sm font-medium text-brand-red" role="alert">
-          {error}
-        </p>
+        <div role="alert">
+          <p className="text-sm font-medium text-brand-red">{error}</p>
+          <p className="mt-1 text-xs text-muted">
+            Your email entry is still here so you can retry.
+          </p>
+        </div>
       ) : null}
     </form>
   );

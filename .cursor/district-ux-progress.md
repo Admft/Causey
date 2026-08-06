@@ -26,6 +26,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-05 — Family link requests now confirm the privacy-safe handoff, tell parents exactly where students accept, and preserve the email for retry after unexpected failures
 - [x] 2026-08-05 — Signed-in organization members see their own public/private tournaments in search with a bounded ranking lift that still keeps higher-interest public events discoverable
 - [x] 2026-08-05 — Coach tournament invites distinguish an empty student roster from an already-invited roster, confirm exactly how many invitations were sent, and point to the next action
 - [x] 2026-08-05 — Signup carries each role through plain-language account choices, roster-visible name guidance, and a next-step email confirmation handoff
@@ -69,7 +70,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
-- Last UX tick: 2026-08-05 — made search cookie-aware for org visibility and added bounded member-org ranking that preserves public discovery.
+- Last UX tick: 2026-08-05 — made the parent-to-student family link handoff explicit, actionable, and recoverable without exposing whether an email has an account.
 - Next UX: continue adding next actions to the highest-impact empty, error, and success states.
 - Last polish tick: 2026-08-05 — search results composition (removable active-filter chips, sticky rail, paging at the bottom row).
 - Next polish: org workspace visual redesign once UX org files settle.
