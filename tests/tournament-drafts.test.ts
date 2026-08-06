@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TournamentDraftDataSchema } from "@/lib/schemas";
 
 describe("TournamentDraftDataSchema", () => {
-  it("keeps incomplete server-backed drafts valid", () => {
+  it("accepts an incomplete draft and fills resumable defaults", () => {
     expect(TournamentDraftDataSchema.parse({})).toEqual({
       name: "",
       startDate: "",
@@ -20,10 +20,22 @@ describe("TournamentDraftDataSchema", () => {
     });
   });
 
-  it("rejects draft values beyond publish field limits", () => {
-    const parsed = TournamentDraftDataSchema.safeParse({
-      name: "x".repeat(121),
+  it("preserves organizer choices while the draft is incomplete", () => {
+    const draft = TournamentDraftDataSchema.parse({
+      name: "District Chess Day",
+      visibility: "public",
+      rated: true,
     });
-    expect(parsed.success).toBe(false);
+
+    expect(draft.name).toBe("District Chess Day");
+    expect(draft.visibility).toBe("public");
+    expect(draft.rated).toBe(true);
+    expect(draft.startDate).toBe("");
+  });
+
+  it("rejects values that cannot fit the publish form", () => {
+    expect(
+      TournamentDraftDataSchema.safeParse({ name: "x".repeat(121) }).success
+    ).toBe(false);
   });
 });
