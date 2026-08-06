@@ -12,11 +12,12 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Update this file every tick.
 
 ## Major UI backlog (kimi-k3-max — prefer these)
-- [ ] Visual hierarchy overhaul: consistent spacing/typography rhythm across home, search, event, account; kill template-default feel (event/account section heads shipped in fc953a4; home + search remain)
+- [x] Visual hierarchy overhaul: consistent spacing/typography rhythm across home, search, event, account; kill template-default feel (event/account section heads shipped in fc953a4; home + search shipped 2026-08-05)
 - [ ] Search results composition redesign (results + filters as one scannable system)
 - [ ] Org workspace visual redesign (coach home reads as one clear mission, not panel soup)
 
 ## Frontend polish shipped
+- [x] Home/search hierarchy: chess gets the one big coverage panel (unbuilt types demoted to a plain list), hero copy de-doubled, /chess search controls read as one labeled cluster, result count anchors the results header — 2026-08-05
 - [x] Tournament display: make events easier to scan (date/venue/level sections, cleaner hierarchy on event cards) — 2026-08-05
 - [x] Responsive audit: phone/tablet/desktop without clashing grids — 2026-08-05 (/chess filter rail collapses into a disclosure below lg)
 - [x] Alive feel: intentional micro-interaction — 2026-08-05 (`.nudge-x`, card-lift focus-visible, reduced-motion)
@@ -65,4 +66,5 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
 - Last UX tick: 2026-08-05 — completed required cover upload and persisted tournament drafts through preview, audience review, and publish.
 - Next UX: finish the broader signup / join-org role-copy audit.
-- Next polish: home/search visual hierarchy or search results composition redesign.
+- Last polish tick: 2026-08-05 — home + search visual hierarchy (coverage section tells the truth about what works; one search cluster; count-anchored results header).
+- Next polish: search results composition redesign, or org workspace visual redesign once UX org files settle.

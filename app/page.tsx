@@ -42,10 +42,6 @@ export default function CompetitionTypesPage() {
               Scholastic chess tournaments across the US, indexed in one place.
               Search by zip to see what is actually within reach.
             </p>
-            <p className="animate-rise animate-rise-delay-1 mt-3 max-w-prose text-sm text-muted">
-              Chess is the first competition type we have finished. Four more
-              are in progress below.
-            </p>
           </div>
           <div className="animate-rise animate-rise-delay-2 relative z-10">
             <HomeHeroSearch />
@@ -59,54 +55,53 @@ export default function CompetitionTypesPage() {
             What Causey covers
           </h2>
           <p className="mt-2 max-w-prose text-base text-muted">
-            Every type below is on the roadmap. Only chess has real listings
-            behind it today.
+            Chess has real listings behind it today. Four more competition
+            types are in progress.
           </p>
-          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-            <Link
-              href="/chess"
-              className="card-lift group rounded-2xl border border-brand-red/30 bg-surface p-6 shadow-[var(--shadow-card)]"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-                    Chess first
-                  </p>
-                  <h3 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
-                    Chess
-                  </h3>
-                </div>
-                <span aria-hidden="true" className="nudge-x text-xl text-brand-red">
-                  →
-                </span>
-              </div>
-              <p className="mt-3 max-w-md text-base text-muted">
-                Find scholastic tournaments near you and trace qualification
-                pathways from local events to national invitationals.
-              </p>
-              <span className="mt-6 inline-flex text-sm font-semibold text-brand-red">
-                Explore chess competitions
-              </span>
-            </Link>
 
-            {upcomingCompetitionTypes.map((type) => (
-              <div
-                key={type.name}
-                className="rounded-2xl border border-line bg-surface-soft p-6"
-                aria-disabled="true"
-              >
-                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                  Not built yet
+          {/* Chess is the one working surface, so it gets the one big panel;
+              the unbuilt types are a plain list — nothing to click yet, so
+              no cards. */}
+          <Link
+            href="/chess"
+            className="card-lift group mt-8 block rounded-2xl border border-brand-red/30 bg-surface p-6 shadow-[var(--shadow-card)] sm:p-8"
+          >
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
+              <div>
+                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+                  Searchable today
                 </p>
                 <h3 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
-                  {type.name}
+                  Chess
                 </h3>
-                <p className="mt-3 max-w-md text-base text-muted">{type.description}</p>
-                <span className="mt-6 inline-flex text-sm font-semibold text-muted">
-                  Not available yet
-                </span>
+                <p className="mt-3 max-w-xl text-base text-muted">
+                  Find scholastic tournaments near you and trace qualification
+                  pathways from local events to national invitationals.
+                </p>
               </div>
-            ))}
+              <span className="inline-flex items-center gap-2 text-base font-semibold text-brand-red">
+                Search chess tournaments
+                <span aria-hidden="true" className="nudge-x">
+                  →
+                </span>
+              </span>
+            </div>
+          </Link>
+
+          <div className="mt-10">
+            <h3 className="text-xs font-semibold text-muted-strong">
+              In progress
+            </h3>
+            <dl className="mt-4 grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+              {upcomingCompetitionTypes.map((type) => (
+                <div key={type.name}>
+                  <dt className="text-base font-semibold text-foreground">
+                    {type.name}
+                  </dt>
+                  <dd className="mt-1 text-sm text-muted">{type.description}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
       </section>

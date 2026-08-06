@@ -248,9 +248,12 @@ export function SearchClient() {
             Enter a zip code to see what&rsquo;s in reach, with the entry fee and
             who can play shown before you commit to anything.
           </p>
+          {/* One search cluster: name it, or place it. Keyword applies as you
+              type; zip + radius apply on submit/blur. All three controls share
+              one label treatment so the band reads as a single tool. */}
           <div className="mt-6 max-w-lg">
             <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
-              Search by tournament name
+              Tournament name
             </label>
             <input
               id="tournament-search"
@@ -262,22 +265,22 @@ export function SearchClient() {
             />
           </div>
           <form
-            className="mt-3 flex max-w-lg flex-col gap-2.5 sm:flex-row sm:items-start"
+            className="mt-2.5 flex max-w-lg flex-col gap-2.5 sm:flex-row sm:items-end"
             onSubmit={(e) => {
               e.preventDefault();
               applyZip();
             }}
           >
             <div className="flex-1">
-              <label htmlFor="zip" className="sr-only">
+              <label htmlFor="zip" className="text-xs font-semibold text-muted-strong">
                 Zip code
               </label>
               <input
                 id="zip"
-                className="field"
+                className="field mt-1"
                 inputMode="numeric"
                 autoComplete="postal-code"
-                placeholder="Zip code — try 75201"
+                placeholder="75201"
                 value={zipInput}
                 onChange={(e) => setZipInput(e.target.value)}
                 onBlur={applyZip}
@@ -291,12 +294,12 @@ export function SearchClient() {
               )}
             </div>
             <div>
-              <label htmlFor="radius" className="sr-only">
-                Search radius
+              <label htmlFor="radius" className="text-xs font-semibold text-muted-strong">
+                Distance
               </label>
               <select
                 id="radius"
-                className="field sm:w-36"
+                className="field mt-1 sm:w-36"
                 value={radius}
                 onChange={(e) => setRadius(e.target.value)}
               >
@@ -362,25 +365,22 @@ export function SearchClient() {
 
             {status.kind === "ready" && status.results.length > 0 && (
               <>
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-muted">
-                    <span className="font-semibold text-foreground">
+                <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">
                       {total} tournament{total === 1 ? "" : "s"}
-                    </span>
-                    {keyword.trim() && ` matching “${keyword.trim()}”`}
-                    {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
-                    {sort === "popular"
-                      ? zip
-                        ? ", prioritizing closer 25-mile ranges and then real save and registration interest."
-                        : ", ranked by real save and registration interest."
-                      : ", soonest first."}
-                    {shown < total && (
-                      <span className="text-muted">
-                        {" "}
-                        Showing {shown}.
-                      </span>
-                    )}
-                  </p>
+                      {zip ? ` within ${radius} miles of ${zip}` : " across all listed states"}
+                    </p>
+                    <p className="mt-0.5 max-w-prose text-sm text-muted">
+                      {keyword.trim() && `Matching “${keyword.trim()}”. `}
+                      {sort === "popular"
+                        ? zip
+                          ? "Closer 25-mile ranges first, then real save and registration interest."
+                          : "Ranked by real save and registration interest."
+                        : "Soonest first."}
+                      {shown < total && ` Showing ${shown} so far.`}
+                    </p>
+                  </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <ResultsLayoutToggle value={layout} onChange={setLayout} />
                     <div className="flex items-center gap-2">
