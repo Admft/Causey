@@ -50,18 +50,16 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
-- 2026-08-06 — **Moderation-first admin home**: `/admin` leads with pending-review mission + queue preview; create org/draft demoted; Moderation tab first in subnav; overview counts include awaiting review.
-- 2026-08-06 — Cover upload restored (admin+coach draft flow) + `tournament_drafts` applied on production.
-- 2026-08-06 — **Manage tournament linked into org workspace**: manage/edit keep OrgSubnav + back-to-org; `getCompetitionBySlugAuthed` resolves `pending_review`/`rejected`; empty invite deep-links to that org’s roster; roster/create keep admin tabs. Also shipped mobile header short labels.
+- 2026-08-06 — **Portal mobile sticky next-action**: PortalMission pins the primary CTA to the bottom on phones for `/family` `/me` `/orgs`; Notifications returns as short “Alerts” in mobile AuthNav.
+- 2026-08-06 — **Moderation-first admin home** + queue schema `0024`.
+- 2026-08-06 — Cover upload restored; manage↔org workspace; mobile header short labels.
 
-## Backlog candidates (tick 8)
+## Backlog candidates (tick 9)
 
-### P0 / first-session killers
-- Manage orphaned from org + pending_review 404 — **done**
-- Admin home not moderation-first — **done 2026-08-06**
+### Done recently
+- Manage orphaned / pending 404, admin moderation-first, cover drafts, mobile sticky portal CTA
 
 ### P1
-- District admin distinct landing (schema-gated)
-- Portal mobile sticky next-action / chrome stack
-- Notifications hidden on mobile AuthNav
-- Roster still table/admin feel
+- District admin distinct landing (schema-gated — full 0018 still incomplete)
+- Roster school-safe composition
+- Org detail sticky mission (optional follow-on)
