@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { inviteEntrants, inviteGroup, removeEntrant } from "@/lib/actions/entrants";
+import { markEntrantAttendance } from "@/lib/actions/district";
 
 type Candidate = { profile_id: string; display_name: string };
 type GroupOption = { id: string; name: string; memberCount: number };
@@ -235,5 +236,69 @@ export function RemoveEntrantButton({
     >
       Remove
     </button>
+  );
+}
+
+export function AttendanceButtons({
+  competitionId,
+  eventSlug,
+  profileId,
+  status,
+}: {
+  competitionId: string;
+  eventSlug: string;
+  profileId: string;
+  status: string;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function mark(nextStatus: "attended" | "did_not_attend") {
+    setError(null);
+    startTransition(async () => {
+      const result = await markEntrantAttendance({
+        competitionId,
+        eventSlug,
+        profileId,
+        status: nextStatus,
+      });
+      if (!result.ok) setError(result.error);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => mark("attended")}
+          disabled={isPending}
+          className={
+            status === "attended"
+              ? "rounded-md border border-brand-red/25 bg-accent-soft px-2.5 py-1 text-xs font-semibold text-brand-red"
+              : "text-xs font-semibold text-muted-strong hover:text-brand-red"
+          }
+        >
+          Attended
+        </button>
+        <button
+          type="button"
+          onClick={() => mark("did_not_attend")}
+          disabled={isPending}
+          className={
+            status === "did_not_attend"
+              ? "rounded-md border border-line bg-surface-soft px-2.5 py-1 text-xs font-semibold text-foreground"
+              : "text-xs font-semibold text-muted-strong hover:text-brand-red"
+          }
+        >
+          Did not attend
+        </button>
+      </div>
+      {error ? (
+        <span className="text-xs font-medium text-brand-red">{error}</span>
+      ) : null}
+    </div>
   );
 }

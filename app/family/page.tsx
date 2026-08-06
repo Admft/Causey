@@ -148,102 +148,112 @@ export default async function FamilyPage() {
 
       {!children.length ? linkStudentSection : null}
 
-      {!children.length ? (
-        <section className="section-rule mt-10 pt-8">
-          <p className="text-sm text-muted">
-            No linked students yet. Once your child accepts, their clubs and
-            tournament invites show up here.
-          </p>
-        </section>
-      ) : (
-        childrenByPriority.map((child) => {
-          return (
-            <section
-              id={`student-${child.profile_id}`}
-              key={child.profile_id}
-              className="section-rule mt-10 scroll-mt-24 pt-8"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <div>
-                  <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
-                    {child.display_name}
-                  </h2>
-                  {child.responseCount ? (
-                    <p className="mt-1 text-sm font-semibold text-brand-red">
-                      {child.responseCount}{" "}
-                      {child.responseCount === 1 ? "RSVP needs" : "RSVPs need"}{" "}
-                      your response
-                    </p>
-                  ) : null}
-                </div>
-                <UnlinkChildButton
-                  childProfileId={child.profile_id}
-                  childName={child.display_name}
-                />
-              </div>
-              <p className="mt-1 text-sm text-muted">
-                {child.orgs.length
-                  ? child.orgs.map((org, i) => (
-                      <span key={org.id}>
-                        {i > 0 ? " · " : ""}
-                        <Link
-                          href={`/orgs/${org.slug}`}
-                          className="font-medium text-muted-strong hover:text-foreground"
-                        >
-                          {org.name}
-                        </Link>
-                      </span>
-                    ))
-                  : "Not in any club yet."}
-              </p>
+      {childrenByPriority.map((child) => {
+        const needsResponse = child.upcoming.filter(
+          (row) => row.status === "invited"
+        );
+        const answered = child.upcoming.filter(
+          (row) => row.status !== "invited"
+        );
+        const renderEventRow = (row: (typeof child.upcoming)[number]) => (
+          <li
+            key={row.competition_id}
+            className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <Link
+                href={`/event/${row.competition!.slug}`}
+                className="font-semibold text-foreground hover:text-brand-red"
+              >
+                {row.competition!.name}
+              </Link>
+              <span className="mt-1 block text-xs text-muted">
+                {formatDateRange(
+                  row.competition!.start_date,
+                  row.competition!.end_date
+                )}
+                {row.competition!.city
+                  ? ` · ${row.competition!.city}, ${row.competition!.state}`
+                  : ""}
+                {row.responded_by === user.id
+                  ? " · RSVP’d by you"
+                  : row.responded_by === child.profile_id
+                    ? ` · RSVP’d by ${child.display_name}`
+                    : ""}
+              </span>
+            </div>
+            <RsvpButtons
+              competitionId={row.competition_id}
+              profileId={child.profile_id}
+              status={row.status}
+              eventSlug={row.competition!.slug}
+            />
+          </li>
+        );
+        return (
+          <section
+            id={`student-${child.profile_id}`}
+            key={child.profile_id}
+            className="section-rule mt-10 scroll-mt-24 pt-8"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
+                {child.display_name}
+              </h2>
+              <UnlinkChildButton
+                childProfileId={child.profile_id}
+                childName={child.display_name}
+              />
+            </div>
+            <p className="mt-1 text-sm text-muted">
+              {child.orgs.length
+                ? child.orgs.map((org, i) => (
+                    <span key={org.id}>
+                      {i > 0 ? " · " : ""}
+                      <Link
+                        href={`/orgs/${org.slug}`}
+                        className="font-medium text-muted-strong hover:text-foreground"
+                      >
+                        {org.name}
+                      </Link>
+                    </span>
+                  ))
+                : "Not in any club yet."}
+            </p>
 
-              {!child.upcoming.length ? (
-                <p className="mt-4 text-sm text-muted">
-                  No upcoming tournament invites.
-                </p>
-              ) : (
-                <ul className="mt-4 flex flex-col gap-3">
-                  {child.upcoming.map((row) => (
-                    <li
-                      key={row.competition_id}
-                      className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <Link
-                          href={`/event/${row.competition!.slug}`}
-                          className="font-semibold text-foreground hover:text-brand-red"
-                        >
-                          {row.competition!.name}
-                        </Link>
-                        <span className="mt-1 block text-xs text-muted">
-                          {formatDateRange(
-                            row.competition!.start_date,
-                            row.competition!.end_date
-                          )}
-                          {row.competition!.city
-                            ? ` · ${row.competition!.city}, ${row.competition!.state}`
-                            : ""}
-                          {row.responded_by === user.id
-                            ? " · RSVP’d by you"
-                            : row.responded_by === child.profile_id
-                              ? ` · RSVP’d by ${child.display_name}`
-                              : ""}
-                        </span>
-                      </div>
-                      <RsvpButtons
-                        competitionId={row.competition_id}
-                        profileId={child.profile_id}
-                        status={row.status}
-                        eventSlug={row.competition!.slug}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })
-      )}
+            {!child.upcoming.length ? (
+              <p className="mt-4 text-sm text-muted">
+                No upcoming tournament invites.
+              </p>
+            ) : (
+              <div className="mt-4 flex flex-col gap-6">
+                {needsResponse.length ? (
+                  <div>
+                    <h3 className="text-xs font-semibold text-brand-red">
+                      {needsResponse.length === 1
+                        ? "1 invitation needs your response"
+                        : `${needsResponse.length} invitations need your response`}
+                    </h3>
+                    <ul className="mt-3 flex flex-col gap-3">
+                      {needsResponse.map(renderEventRow)}
+                    </ul>
+                  </div>
+                ) : null}
+                {answered.length ? (
+                  <div>
+                    <h3 className="text-xs font-semibold text-muted-strong">
+                      Answered
+                    </h3>
+                    <ul className="mt-3 flex flex-col gap-3">
+                      {answered.map(renderEventRow)}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </section>
+        );
+      })}
 
       {children.length ? linkStudentSection : null}
 

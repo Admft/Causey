@@ -57,26 +57,101 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] 2026-08-05 — Escalation lockdown + draft→publish (migration 0016)
 - [x] 2026-08-05 — Role-aware post-auth landing (a81e453)
 
-## Open — P0/P1 UX (do these first)
+## Open — P0/P1 UX leftovers
 - [x] Tournament create flow: required image + persisted drafts — completed 2026-08-05 with cover upload, autosave/resume, preview, audience review, and publish validation
 - [x] Signup / join-org copy + flow: student join links preserve invitations; generic signup now carries student, parent, and coach intent through account creation and confirmation
 - [x] Search: org-member tournaments receive a bounded interest boost; stronger public interest and explicit soonest sorting still win
 - [ ] Empty/error/success states that always name the next action
 - [ ] Navigation consistency: same terms for org and event across pages (RSVP vs. organizer registration aligned 2026-08-05)
 
-## Open — P2 (after P1)
-- [ ] Bulk invite UX (CSV/email claim links) — district/school staff first
-- [ ] Coach announcements on org page
-- [ ] Assistant coach invite path
-- [ ] Org settings (rename, type/state, ownership transfer)
-- [ ] Notification preferences + deadline reminders
-- [ ] Parent linked-children action list
+## Must have for a real district pilot (UX — gpt-5.6-sol-xhigh)
+Pick these before polish. One major end-to-end win per tick.
+- [ ] District → school hierarchy — verified district tenant, create schools under it, delegate school admins (today orgs are mostly flat clubs)
+- [ ] Bulk provisioning — CSV/email invites with claim links, invite status, no shared passwords
+- [ ] Real role split — district admin vs school admin vs coach vs student (coach/admin are still collapsed in places)
+- [ ] Audience-scoped events — public / district-only / school-only / invite-only (not just public/private)
+- [ ] Parent action list — “this child needs RSVP / register / reminder” as the landing, not a generic portal
+- [ ] Notifications that matter — invite, deadline, 7-day/1-day reminder, schedule change, cancel (with prefs + guardian routing)
+- [ ] District reporting — aggregate by school (counts, attendance, who’s going) without dumping student-level browsing data
+
+## Strongly needed for trust / ops (UX — gpt-5.6-sol-xhigh)
+- [ ] Org settings + ownership transfer
+- [ ] Assistant coaches / staff invites
+- [ ] Coach announcements
+- [ ] Attendance history / season view
+- [ ] Multi-section tournaments at create time
+- [ ] Tournament change history → notify trackers
+- [ ] Platform moderation for public org events
+- [ ] Consistent empty/error/success “what’s next” + nav terms
+
+## Already looks intentional (do not re-polish unless regressing)
+- Home + `/chess` search (hierarchy, chips, mobile filters)
+- Tournament cards + event pages (less dead chrome)
+- Brand tokens, type pairing, light motion (`.nudge-x`, card-lift)
+- Org workspace mission panel (426148a)
+- Global header chess/account nav active states
+
+## Still visually unfinished for districts (UI — kimi-k3-max)
+
+### Biggest gap — role workspaces
+- [x] Coach org home panel soup → one mission panel (426148a)
+- [ ] `/family`, `/me`, `/orgs` still share one recipe: red eyebrow → H1 → section rule → stacked rows in `max-w-3xl`
+- [ ] Nothing reads as “parent desk” vs “student plan” vs “coach mission” vs “district overview”
+
+### Chrome / IA
+- [x] Header chess link for signed-in/out discovery (partial)
+- [ ] Header still thin for signed-in district work — needs real product IA beyond logo + auth + chess
+- [ ] No district-scale layout (multi-school); everything stays a narrow single-org column
+- [ ] Roster / manage still feel like admin tables, not school-safe tools
+
+### Mobile
+- [x] Search mobile pass (filter disclosure)
+- [ ] Portals didn’t get a mobile pass — tall lists, no sticky “next action” on phone
+- [ ] Subnav + banner + header can eat the viewport
+
+### Feedback / trust
+- [ ] Motion mostly stops at discovery; portals feel static
+- [ ] No shared success/confirm visual language (RSVP, invite, save)
+- [ ] Config/error dumps can look unfinished; provenance is present but quiet
+
+## Recommended build sequence (audits 2026-08-05)
+Evidence from schema audit, event-ops map, and role-workspace map. Prefer this order over picking random open boxes.
+
+### Schema / UX foundation (do first — unblocks the rest)
+1. **`0018` hierarchy + role split + governance** — `parent_org_id` / verification, split `is_org_coach` → `is_org_staff` / `is_org_admin` / `is_district_admin` (keep `is_org_coach` as staff alias for 0017 policies), staff invites, provision claim tables, ownership-transfer RPC. Extend `0016` column grants if touching `competitions`.
+2. **Real role split in app** — mirror helpers in `lib/org-permissions.ts` + portal; stop treating coach ≡ admin ≡ creator in UI.
+3. **Bulk provisioning UX** — CSV/email claim links on top of provision tables (join codes stay student-only).
+4. **Public-event moderation gate** — `pending_review` (or `moderation_status`) + platform admin; public organizer publish must not skip review. Re-check `/admin` shell exists before assuming greenfield.
+5. **Audience-scoped events** — `public` / `district` / `school` / `invite_only` + RLS; **requires hierarchy** or district/school audiences collapse to single-org private.
+
+### Coach ops (can parallel after foundation starts)
+6. Multi-section create/edit (schema + RLS already exist; only default Open section today).
+7. Tournament change history → feeds tracker notifications.
+8. Coach announcements (org page; low dependency).
+9. Attendance season view (RPC + page; clarify RSVP history vs check-in).
+10. Org settings + ownership transfer UI (RPC from step 1).
+11. Notifications/reminders + prefs + guardian routing (needs email infra + change history).
+12. District aggregate reports (needs hierarchy; aggregate only, no student browsing PII).
+
+### Visual / portal shell (UI — kimi-k3-max; can start in parallel)
+13. Extract shared portal primitives (mission panel, list row, success/confirm feedback, subnav tabs) — reuse `/family` mission panel + EntrantManager success patterns.
+14. Portal layout + role-aware signed-in nav (beyond logo + auth + chess).
+15. Differentiate `/family` (parent desk) vs `/me` (student plan) vs `/orgs` (coach mission) vs future district overview.
+16. Mobile sticky next-action on portals; tame subnav + banner + header stack.
+17. School-safe roster/manage composition; quieter config/error dumps; louder provenance.
+
+### Hard dependencies (do not skip)
+- District/school audiences and district reporting **block on hierarchy**.
+- Tracker emails **block on change history** (+ email provider).
+- Staff/admin roles **block on splitting `is_org_coach`** and a non-join-code invite path.
+- Any new organizer-writable `competitions` column must append to the `0016` UPDATE grant whitelist.
 
 ## Notes for the agent
 - Source audit: `~/.cursor/plans/causey_district_readiness_audit_baa4181f.plan.md`
 - Roadmap: `ROADMAP.md`
-- Parallel UX + polish loops stay on (user requested). Prefer bigger wins.
+- Prefer district-pilot / trust-ops majors over micro-polish. UX → `gpt-5.6-sol-xhigh`. UI → `kimi-k3-max`.
+- Schema truth: district is still a cosmetic `organizations.type`; coach/admin collapsed via `is_org_coach`; join codes always grant `student`.
 - Last UX tick: 2026-08-05 — aligned external tournament entry around “organizer registration,” kept it distinct from Causey RSVPs, and named the next action in every state.
-- Next UX: audit organization and tournament naming across account, family, and coach workspaces.
+- Next UX: start sequence item 1 — `0018` hierarchy + role-split helpers + staff/provision tables (then app mirrors).
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
-- Next polish: family workspace composition, or empty/error/success-state visual pass.
+- Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.

@@ -1,6 +1,6 @@
 /**
- * Route skeleton for the family workspace. Mirrors the status panel + child
- * sections so parents see the page's shape while household data loads.
+ * Route skeleton for the family workspace. Mirrors the status panel + grouped
+ * child sections so parents see the page's shape while household data loads.
  */
 export default function FamilyLoading() {
   return (
@@ -17,12 +17,18 @@ export default function FamilyLoading() {
           <div className="skeleton mt-5 h-11 w-36" />
         </section>
 
+        {/* Matches a child section: name, club line, group label, event rows. */}
         <section className="section-rule mt-10 pt-8">
           <div className="skeleton h-7 w-44" />
           <div className="skeleton mt-2 h-4 w-64 max-w-full" />
-          <div className="mt-4 flex flex-col gap-3">
-            <div className="skeleton h-16" />
-            <div className="skeleton h-16" />
+          <div className="mt-4 flex flex-col gap-6">
+            <div>
+              <div className="skeleton h-4 w-48" />
+              <div className="mt-3 flex flex-col gap-3">
+                <div className="skeleton h-16" />
+                <div className="skeleton h-16" />
+              </div>
+            </div>
           </div>
         </section>
       </div>

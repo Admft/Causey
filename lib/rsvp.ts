@@ -6,14 +6,19 @@
 
 export const RSVP_STATUSES = ["invited", "going", "not_going"] as const;
 export type RsvpStatus = (typeof RSVP_STATUSES)[number];
+export type AttendanceOutcome = "attended" | "did_not_attend";
 
 /** The only forbidden target is un-answering back to invited. */
 export function canTransition(from: RsvpStatus, to: RsvpStatus): boolean {
   return to !== "invited";
 }
 
-export function rsvpLabel(status: RsvpStatus): string {
+export function rsvpLabel(status: RsvpStatus | AttendanceOutcome): string {
   switch (status) {
+    case "attended":
+      return "Attended";
+    case "did_not_attend":
+      return "Did not attend";
     case "going":
       return "Going";
     case "not_going":
@@ -23,7 +28,9 @@ export function rsvpLabel(status: RsvpStatus): string {
   }
 }
 
-export function summarizeAttendance(rows: { status: RsvpStatus }[]): {
+export function summarizeAttendance(
+  rows: { status: RsvpStatus | AttendanceOutcome }[]
+): {
   going: number;
   notGoing: number;
   awaiting: number;
@@ -33,8 +40,10 @@ export function summarizeAttendance(rows: { status: RsvpStatus }[]): {
   let notGoing = 0;
   let awaiting = 0;
   for (const row of rows) {
-    if (row.status === "going") going += 1;
-    else if (row.status === "not_going") notGoing += 1;
+    if (row.status === "going" || row.status === "attended") going += 1;
+    else if (row.status === "not_going" || row.status === "did_not_attend") {
+      notGoing += 1;
+    }
     else awaiting += 1;
   }
   return { going, notGoing, awaiting, total: rows.length };

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { EntrantManager, RemoveEntrantButton } from "@/components/EntrantManager";
+import {
+  AttendanceButtons,
+  EntrantManager,
+  RemoveEntrantButton,
+} from "@/components/EntrantManager";
 import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { getSessionUser } from "@/lib/auth/session";
 import {
@@ -75,6 +79,9 @@ export default async function ManageEventPage({
     })
     .map((row) => ({ profile_id: row.profile_id, display_name: row.display_name }));
   const summary = summarizeAttendance(attendance);
+  const isPast =
+    (competition.end_date ?? competition.start_date) <
+    new Date().toISOString().slice(0, 10);
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
@@ -144,12 +151,21 @@ export default async function ManageEventPage({
                     {row.member_status !== "active" ? " · no longer on roster" : ""}
                   </span>
                 </div>
-                <RemoveEntrantButton
-                  competitionId={competition.id}
-                  eventSlug={competition.slug}
-                  profileId={row.profile_id}
-                  displayName={row.display_name || "this student"}
-                />
+                {isPast ? (
+                  <AttendanceButtons
+                    competitionId={competition.id}
+                    eventSlug={competition.slug}
+                    profileId={row.profile_id}
+                    status={row.status}
+                  />
+                ) : (
+                  <RemoveEntrantButton
+                    competitionId={competition.id}
+                    eventSlug={competition.slug}
+                    profileId={row.profile_id}
+                    displayName={row.display_name || "this student"}
+                  />
+                )}
               </li>
             ))}
           </ul>
