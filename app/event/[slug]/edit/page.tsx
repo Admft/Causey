@@ -51,7 +51,7 @@ export default async function EditEventPage({
         <OrgSubnavBar
           slug={view.org.slug}
           orgName={view.org.name}
-          tab="overview"
+          tab={null}
           showRoster={view.isCoach}
           showAdmin={view.isAdmin}
         />

@@ -7,6 +7,7 @@ import {
   RemoveEntrantButton,
 } from "@/components/EntrantManager";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
+import { PortalMission } from "@/components/PortalPrimitives";
 import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { getSessionUser } from "@/lib/auth/session";
 import {
@@ -80,11 +81,21 @@ export default async function ManageEventPage({
       seenCandidates.add(row.profile_id);
       return true;
     })
-    .map((row) => ({ profile_id: row.profile_id, display_name: row.display_name }));
+    .map((row) => ({
+      profile_id: row.profile_id,
+      display_name: row.display_name,
+    }));
   const summary = summarizeAttendance(attendance);
   const isPast =
     (competition.end_date ?? competition.start_date) <
     new Date().toISOString().slice(0, 10);
+  const isDraft = canManage && competition.status === "draft";
+  const needsInvite = !isDraft && !attendance.length;
+  const needsReplies = !isDraft && summary.awaiting > 0;
+  const inviteFirst =
+    !isDraft &&
+    (needsInvite ||
+      (candidates.length > 0 && !needsReplies && !isPast));
 
   // Keep coaches inside the org workspace shell (subnav + roster deep link).
   let orgShell: {
@@ -119,6 +130,154 @@ export default async function ManageEventPage({
   const rosterHref = orgShell
     ? `/orgs/${orgShell.slug}/roster`
     : "/orgs#organizations";
+  const workspaceHref = orgShell ? `/orgs/${orgShell.slug}` : "/orgs";
+
+  let mission: {
+    title: string;
+    description: string;
+    action: { href: string; label: string };
+    secondary?: { href: string; label: string };
+  };
+  if (isDraft) {
+    mission = {
+      title: "Publish before inviting",
+      description:
+        "Students only see invitations after this tournament is published. Finish audience and publish below.",
+      action: { href: "#publish", label: "Review and publish" },
+      secondary: { href: workspaceHref, label: "Back to workspace" },
+    };
+  } else if (isPast) {
+    mission = {
+      title: "Mark who attended",
+      description: `${summary.going} ${
+        summary.going === 1 ? "student was" : "students were"
+      } marked going. Record attendance for your season records.`,
+      action: { href: "#rsvps", label: "Review attendance" },
+      secondary: { href: workspaceHref, label: "Back to workspace" },
+    };
+  } else if (needsInvite) {
+    mission = {
+      title: activeStudents.length
+        ? "Invite students or a group"
+        : "Add students, then invite",
+      description: activeStudents.length
+        ? "Nobody is invited yet. Invite a group in one tap, or pick students from your roster."
+        : "Your roster has no active students. Share a join link, then come back to invite them.",
+      action: activeStudents.length
+        ? { href: "#invite", label: "Invite students" }
+        : { href: rosterHref, label: "Open roster" },
+      secondary: activeStudents.length
+        ? { href: rosterHref, label: "Open roster" }
+        : { href: workspaceHref, label: "Back to workspace" },
+    };
+  } else if (needsReplies) {
+    mission = {
+      title: `${summary.awaiting} ${
+        summary.awaiting === 1 ? "reply is" : "replies are"
+      } still open`,
+      description: `${summary.going} going · ${summary.notGoing} can’t go. Follow up, or invite more students if the roster grew.`,
+      action: { href: "#rsvps", label: "Review replies" },
+      secondary:
+        candidates.length > 0
+          ? { href: "#invite", label: "Invite more" }
+          : { href: workspaceHref, label: "Back to workspace" },
+    };
+  } else {
+    mission = {
+      title: "Invites are in",
+      description: `${summary.going} going · ${summary.notGoing} can’t go. Invite more if needed, or return to your workspace.`,
+      action: { href: workspaceHref, label: "Back to workspace" },
+      secondary:
+        candidates.length > 0
+          ? { href: "#invite", label: "Invite more" }
+          : undefined,
+    };
+  }
+
+  const inviteSection = (
+    <section id="invite" className="section-rule mt-10 scroll-mt-24 pt-8">
+      <h2 className="text-sm font-semibold text-foreground">Invite</h2>
+      <p className="mt-1 text-sm text-muted">
+        Groups invite in one step. Individual picks work when you only need a
+        few students.
+      </p>
+      <div className="mt-4">
+        <EntrantManager
+          competitionId={competition.id}
+          eventSlug={competition.slug}
+          candidates={candidates}
+          groups={groups.map((g) => ({
+            id: g.id,
+            name: g.name,
+            memberCount: g.member_ids.length,
+          }))}
+          hasActiveRoster={activeStudents.length > 0}
+          rosterHref={rosterHref}
+        />
+      </div>
+    </section>
+  );
+
+  const rsvpSection = (
+    <section id="rsvps" className="section-rule mt-10 scroll-mt-24 pt-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-semibold text-foreground">
+          {isPast ? "Attendance" : "Replies"}
+        </h2>
+        <p className="text-xs text-muted">
+          <span className="font-semibold text-foreground">
+            {summary.going} going
+          </span>
+          {" · "}
+          {summary.notGoing} can&rsquo;t go · {summary.awaiting} awaiting
+        </p>
+      </div>
+      {!attendance.length ? (
+        <p className="mt-3 text-sm text-muted">
+          Nobody is invited yet — invite students or a group
+          {inviteFirst ? " above" : " below"}.
+        </p>
+      ) : (
+        <ul className="mt-4 divide-y divide-line border-y border-line">
+          {attendance.map((row) => (
+            <li
+              key={row.profile_id}
+              className={`flex flex-wrap items-center justify-between gap-3 py-3 ${
+                row.member_status !== "active" ? "opacity-60" : ""
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  {row.display_name || "Unnamed student"}
+                </p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {rsvpLabel(row.status)}
+                  {row.member_status !== "active"
+                    ? " · no longer on roster"
+                    : ""}
+                </p>
+              </div>
+              {isPast ? (
+                <AttendanceButtons
+                  competitionId={competition.id}
+                  eventSlug={competition.slug}
+                  profileId={row.profile_id}
+                  status={row.status}
+                />
+              ) : (
+                <RemoveEntrantButton
+                  competitionId={competition.id}
+                  eventSlug={competition.slug}
+                  profileId={row.profile_id}
+                  displayName={row.display_name || "this student"}
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
 
   return (
     <>
@@ -126,7 +285,7 @@ export default async function ManageEventPage({
         <OrgSubnavBar
           slug={orgShell.slug}
           orgName={orgShell.name}
-          tab="overview"
+          tab={null}
           showRoster={orgShell.showRoster}
           showAdmin={orgShell.showAdmin}
         />
@@ -148,18 +307,9 @@ export default async function ManageEventPage({
             {orgShell ? "Event page" : "← Back to event page"}
           </Link>
         </div>
-        <p className="mt-6 text-sm font-semibold text-brand-red">Hosting</p>
-        {canManage && competition.status === "draft" ? (
-          <div className="mt-4">
-            <PublishTournamentPanel
-              competitionId={competition.id}
-              eventSlug={competition.slug}
-              visibility={
-                competition.visibility === "private" ? "private" : "public"
-              }
-            />
-          </div>
-        ) : null}
+        <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
+          Tournament
+        </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           {competition.name}
         </h1>
@@ -181,77 +331,38 @@ export default async function ManageEventPage({
           ) : null}
         </p>
 
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">RSVPs</h2>
-          <p className="mt-2 text-sm text-muted-strong">
-            <span className="font-semibold text-foreground">
-              {summary.going} going
-            </span>
-            {" · "}
-            {summary.notGoing} can&rsquo;t go · {summary.awaiting} awaiting reply
-          </p>
-          {!attendance.length ? (
-            <p className="mt-3 text-sm text-muted">
-              Nobody is invited yet — invite students or a group below.
-            </p>
-          ) : (
-            <ul className="mt-4 flex flex-col gap-2">
-              {attendance.map((row) => (
-                <li
-                  key={row.profile_id}
-                  className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3 ${
-                    row.member_status !== "active" ? "opacity-60" : ""
-                  }`}
-                >
-                  <div>
-                    <span className="text-sm font-semibold text-foreground">
-                      {row.display_name || "Unnamed student"}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-muted">
-                      {rsvpLabel(row.status)}
-                      {row.member_status !== "active"
-                        ? " · no longer on roster"
-                        : ""}
-                    </span>
-                  </div>
-                  {isPast ? (
-                    <AttendanceButtons
-                      competitionId={competition.id}
-                      eventSlug={competition.slug}
-                      profileId={row.profile_id}
-                      status={row.status}
-                    />
-                  ) : (
-                    <RemoveEntrantButton
-                      competitionId={competition.id}
-                      eventSlug={competition.slug}
-                      profileId={row.profile_id}
-                      displayName={row.display_name || "this student"}
-                    />
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="section-rule mt-10 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">Invite</h2>
-          <div className="mt-4">
-            <EntrantManager
+        {isDraft ? (
+          <div id="publish" className="mt-8 scroll-mt-24">
+            <PublishTournamentPanel
               competitionId={competition.id}
               eventSlug={competition.slug}
-              candidates={candidates}
-              groups={groups.map((g) => ({
-                id: g.id,
-                name: g.name,
-                memberCount: g.member_ids.length,
-              }))}
-              hasActiveRoster={activeStudents.length > 0}
-              rosterHref={rosterHref}
+              visibility={
+                competition.visibility === "private" ? "private" : "public"
+              }
             />
           </div>
-        </section>
+        ) : null}
+
+        <div className="mt-8">
+          <PortalMission
+            title={mission.title}
+            description={mission.description}
+            action={mission.action}
+            secondary={mission.secondary}
+          />
+        </div>
+
+        {isDraft ? null : inviteFirst ? (
+          <>
+            {inviteSection}
+            {rsvpSection}
+          </>
+        ) : (
+          <>
+            {rsvpSection}
+            {inviteSection}
+          </>
+        )}
       </div>
     </>
   );

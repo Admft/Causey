@@ -30,7 +30,8 @@ export function OrgSubnavBar({
 }: {
   slug: string;
   orgName: string;
-  tab: OrgTab;
+  /** Pass null on tournament manage/edit so Overview isn’t falsely active. */
+  tab: OrgTab | null;
   showRoster: boolean;
   showAdmin?: boolean;
 }) {
@@ -53,7 +54,7 @@ export function OrgSubnavBar({
           className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-0.5"
         >
           {tabs.map((t) => {
-            const active = t.id === tab;
+            const active = tab !== null && t.id === tab;
             if (active) {
               return (
                 <span key={t.id} aria-current="page" className={tabClass(true)}>

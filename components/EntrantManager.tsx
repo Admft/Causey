@@ -120,14 +120,14 @@ export function EntrantManager({
           ) : (
             <div className="mt-2">
               <p className="max-w-prose text-sm text-muted">
-                No active students are available to invite. Add students to an
-                organization roster, then return to this event.
+                No active students to invite yet. Share a join link on your
+                roster, then return here.
               </p>
               <Link
                 href={rosterHref}
                 className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
               >
-                Open organization roster
+                Open roster
               </Link>
             </div>
           )
