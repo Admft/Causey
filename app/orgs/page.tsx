@@ -10,6 +10,7 @@ import {
   getMyEntrantRows,
   getMyOrgs,
   getMyRecommendations,
+  getOrgRoster,
   isSupabaseConfigured,
   isUpcomingEvent,
 } from "@/lib/data/portal";
@@ -71,6 +72,17 @@ export default async function OrgsPage() {
   ).length;
   const coachedOrgs = myOrgs.filter(({ isCoach }) => isCoach);
   const primaryOrg = coachedOrgs[0] ?? myOrgs[0];
+  const primaryNeedsStudents =
+    isCoachRole &&
+    primaryOrg?.isCoach &&
+    primaryOrg.org.type !== "district"
+      ? (
+          await getOrgRoster(primaryOrg.org.id)
+        ).filter(
+          (row) =>
+            row.member_status === "active" && row.member_role === "student"
+        ).length === 0
+      : false;
 
   const invitationsSection = (
     <section id="rsvps" className="mt-10 scroll-mt-24">
@@ -141,35 +153,51 @@ export default async function OrgsPage() {
               title={
                 !myOrgs.length
                   ? "Start your first organization"
-                  : primaryOrg
-                    ? `Continue with ${primaryOrg.org.name}`
-                    : "Open an organization"
+                  : primaryNeedsStudents && primaryOrg
+                    ? `Invite students to ${primaryOrg.org.name}`
+                    : primaryOrg
+                      ? `Continue with ${primaryOrg.org.name}`
+                      : "Open an organization"
               }
               description={
                 !myOrgs.length
                   ? "Create a school or club workspace to get a join code, roster, and tournament tools."
-                  : pendingInviteCount
-                    ? `You also have ${pendingInviteCount} personal ${
-                        pendingInviteCount === 1 ? "invitation" : "invitations"
-                      } waiting — answer those after org work, or jump to them below.`
-                    : "Rosters, invites, and tournaments live inside each organization workspace."
+                  : primaryNeedsStudents
+                    ? "Your roster is empty. Share a join link so students can join before you create tournaments."
+                    : pendingInviteCount
+                      ? `You also have ${pendingInviteCount} personal ${
+                          pendingInviteCount === 1
+                            ? "invitation"
+                            : "invitations"
+                        } waiting — answer those after org work, or jump to them below.`
+                      : "Rosters, invites, and tournaments live inside each organization workspace."
               }
               action={
                 !myOrgs.length
                   ? { href: "/orgs/new", label: "Start an organization" }
-                  : primaryOrg
+                  : primaryNeedsStudents && primaryOrg
                     ? {
-                        href: `/orgs/${primaryOrg.org.slug}`,
-                        label: "Open workspace",
+                        href: `/orgs/${primaryOrg.org.slug}/roster#add-students`,
+                        label: "Open roster",
                       }
-                    : undefined
+                    : primaryOrg
+                      ? {
+                          href: `/orgs/${primaryOrg.org.slug}`,
+                          label: "Open workspace",
+                        }
+                      : undefined
               }
               secondary={
                 pendingInviteCount
                   ? { href: "#rsvps", label: "Review my RSVPs" }
-                  : myOrgs.length
-                    ? { href: "/orgs/new", label: "Start another" }
-                    : undefined
+                  : primaryNeedsStudents && primaryOrg
+                    ? {
+                        href: `/orgs/${primaryOrg.org.slug}`,
+                        label: "Open workspace",
+                      }
+                    : myOrgs.length
+                      ? { href: "/orgs/new", label: "Start another" }
+                      : undefined
               }
             />
           </div>

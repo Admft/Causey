@@ -11,6 +11,7 @@ import {
   getMyEntrantRows,
   getOrgAttendedEvents,
   getOrgBySlugForViewer,
+  getOrgRoster,
   isSupabaseConfigured,
   isUpcomingEvent,
 } from "@/lib/data/portal";
@@ -84,13 +85,20 @@ export default async function OrgPage({
     announcements,
   } = view;
 
-  const [entrantRows, attendedEvents] = await Promise.all([
+  const [entrantRows, attendedEvents, roster] = await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
     getOrgAttendedEvents(org.id),
+    isCoach && org.type !== "district"
+      ? getOrgRoster(org.id)
+      : Promise.resolve([]),
   ]);
   const myRsvpByCompetition = new Map(
     entrantRows.map((row) => [row.competition_id, row])
   );
+  const activeStudentCount = roster.filter(
+    (row) => row.member_status === "active" && row.member_role === "student"
+  ).length;
+  const hasStudents = activeStudentCount > 0;
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = events.filter((e) => isUpcomingEvent(e, today));
@@ -151,12 +159,37 @@ export default async function OrgPage({
             ? "Platform review returned this listing — update it and resubmit."
             : priorityUpcoming.status === "pending_review"
               ? "You can still prep invites while the listing is in review."
-              : "Invite your roster and track RSVPs from manage."
+              : hasStudents
+                ? "Invite your roster and track RSVPs from manage."
+                : "Add students to the roster before invites will have anyone to reach."
         }`,
-        action: { href: action.href, label: action.label },
+        action: hasStudents
+          ? { href: action.href, label: action.label }
+          : {
+              href: `/orgs/${org.slug}/roster#add-students`,
+              label: "Invite students",
+            },
+        secondary: hasStudents
+          ? {
+              href: `/orgs/${org.slug}/tournaments/new`,
+              label: "Create another tournament",
+            }
+          : { href: action.href, label: action.label },
+      };
+    }
+    if (!hasStudents) {
+      return {
+        title: "Invite your first students",
+        description: org.join_code
+          ? "Share the join link from the roster so students can join. Create a tournament once you have people to invite."
+          : "Open the roster to add students. Create a tournament once you have people to invite.",
+        action: {
+          href: `/orgs/${org.slug}/roster#add-students`,
+          label: "Open roster",
+        },
         secondary: {
           href: `/orgs/${org.slug}/tournaments/new`,
-          label: "Create another tournament",
+          label: "Create tournament anyway",
         },
       };
     }
@@ -200,7 +233,13 @@ export default async function OrgPage({
           {org.name}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          {activeMemberCount} active {activeMemberCount === 1 ? "member" : "members"}
+          {isCoach && org.type !== "district"
+            ? `${activeStudentCount} active ${
+                activeStudentCount === 1 ? "student" : "students"
+              }`
+            : `${activeMemberCount} active ${
+                activeMemberCount === 1 ? "member" : "members"
+              }`}
           {isAdmin
             ? org.type === "district"
               ? " · district administration"

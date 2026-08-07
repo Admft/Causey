@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Coach empty-org join before create: overview + `/orgs` invite-students first when roster empty; student count meta — 2026-08-07
 - [x] School-safe tournament manage: invite/reply/attendance mission, invite-first empty state, hairline replies, `#rsvps` + OrgSubnav fix — 2026-08-06
 - [x] Student/parent activation: join-club-first student plan; family pending CTA + create-student handoff; Plan/Family copy aligned — 2026-08-06
 - [x] Roster school-safe composition: mission (join → group → ready), student hairline list, groups for invites, staff demoted — 2026-08-06
@@ -171,3 +172,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Last polish tick: 2026-08-05 — global header nav: persistent chess link + active states + mobile-safe cluster.
 - Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.
 - Last persona batch (2026-08-06): portal mobile sticky next-action + Alerts in AuthNav. Next: roster school-safe or district landing (schema-gated).
+- Tick 13 audit (2026-08-07): empty-roster→join on `/orgs/[slug]` still P1; Active batch locked as coach empty-org join-before-create (overview ± `/orgs` hint). People/settings deferred.
