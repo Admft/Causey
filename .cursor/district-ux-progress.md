@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Org admin people mission: join-link vs email-invite guidance; CSV demoted; copyable claim-path success — 2026-08-07
 - [x] Coach empty-org join before create: overview + `/orgs` invite-students first when roster empty; student count meta — 2026-08-07
 - [x] School-safe tournament manage: invite/reply/attendance mission, invite-first empty state, hairline replies, `#rsvps` + OrgSubnav fix — 2026-08-06
 - [x] Student/parent activation: join-club-first student plan; family pending CTA + create-student handoff; Plan/Family copy aligned — 2026-08-06

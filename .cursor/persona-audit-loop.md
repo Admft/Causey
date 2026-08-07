@@ -50,16 +50,16 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-07 — **Org admin people mission**: `/people` leads with join-link vs email-invite guidance; CSV demoted; claim-path success is copyable (not a raw dump); empty state no longer says “invite staff first.”
 - 2026-08-07 — **Coach empty-org join before create**: overview + `/orgs` lead with invite-students when roster has no students; create demoted; coach meta shows student count (not coach-as-member).
 - 2026-08-06 — **School-safe tournament manage**: `/event/[slug]/manage` leads with invite/reply/attendance mission; invite-first when empty; hairline reply rows; `#rsvps` fixed; OrgSubnav no longer fakes Overview on manage/edit.
-- 2026-08-06 — **Student/parent activation**: empty `/me` leads join-club; pending parent requests surface first; `/family` pending CTA + create-student handoff; Plan/Family copy aligned in signup + LinkChildForm.
-- 2026-08-06 — **Roster school-safe composition** + portal sticky CTA.
+- 2026-08-06 — **Student/parent activation** + roster school-safe + portal sticky CTA.
 
-## Backlog candidates (tick 13–14)
+## Backlog candidates (tick 14)
 
 ### Done this tick
-- Coach empty-org join before create
+- Org admin `/people` mission
+- Coach empty-org join before create (tick 13)
 
 ### P1 leftover
-- Org admin `/people` mission (staff vs student invite clarity; claim-path when email unwired)
 - District admin distinct landing (schema-gated)

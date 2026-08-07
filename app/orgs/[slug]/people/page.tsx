@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OrganizationPeopleManager } from "@/components/OrganizationPeopleManager";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
+import { PortalMission } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import { getOrgInvitations } from "@/lib/data/district";
-import { getOrgBySlugForViewer } from "@/lib/data/portal";
+import { getOrgBySlugForViewer, getOrgRoster } from "@/lib/data/portal";
 
 export const metadata: Metadata = {
   title: "Invites and staff",
@@ -22,7 +24,66 @@ export default async function OrganizationPeoplePage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
-  const invitations = await getOrgInvitations(view.org.id);
+  const [invitations, roster] = await Promise.all([
+    getOrgInvitations(view.org.id),
+    getOrgRoster(view.org.id),
+  ]);
+  const pendingInvites = invitations.filter(
+    (row) =>
+      row.status === "pending" && new Date(row.expires_at) > new Date()
+  );
+  const activeStudents = roster.filter(
+    (row) => row.member_status === "active" && row.member_role === "student"
+  ).length;
+  const rosterHref = `/orgs/${view.org.slug}/roster#add-students`;
+  const hasJoinCode = Boolean(view.org.join_code);
+
+  let mission: {
+    title: string;
+    description: string;
+    action: { href: string; label: string };
+    secondary?: { href: string; label: string };
+  };
+  if (pendingInvites.length) {
+    mission = {
+      title: `${pendingInvites.length} ${
+        pendingInvites.length === 1 ? "invite is" : "invites are"
+      } waiting`,
+      description:
+        "Recipients claim their own accounts from the email link. Follow up on anything still pending below.",
+      action: { href: "#invitation-status", label: "Review invitations" },
+      secondary: hasJoinCode
+        ? { href: rosterHref, label: "Share student join link" }
+        : { href: "#invite-one", label: "Invite someone else" },
+    };
+  } else if (!activeStudents && hasJoinCode) {
+    mission = {
+      title: "Students join with a code",
+      description:
+        "Share the roster join link for students. Use email invites on this page when you need staff or a one-off claim link.",
+      action: { href: rosterHref, label: "Open roster join link" },
+      secondary: { href: "#invite-one", label: "Email an invite" },
+    };
+  } else if (!activeStudents) {
+    mission = {
+      title: "Invite your first people",
+      description:
+        "Email invites create an expiring claim link — Causey never shares a password. Students can also join later from a roster code.",
+      action: { href: "#invite-one", label: "Create an invitation" },
+      secondary: { href: `/orgs/${view.org.slug}/roster`, label: "Open roster" },
+    };
+  } else {
+    mission = {
+      title: "Add staff or more students",
+      description: `${activeStudents} ${
+        activeStudents === 1 ? "student is" : "students are"
+      } on the roster. Email invites here for staff; keep using the join link for most students.`,
+      action: { href: "#invite-one", label: "Email an invite" },
+      secondary: hasJoinCode
+        ? { href: rosterHref, label: "Share student join link" }
+        : undefined,
+    };
+  }
 
   return (
     <>
@@ -33,22 +94,46 @@ export default async function OrganizationPeoplePage({
         showRoster={view.isCoach}
         showAdmin={view.isAdmin}
       />
-      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        <p className="text-sm font-semibold text-brand-red">People</p>
-        <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-          Invite without sharing passwords
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted">
-          Invite one person or import a CSV. Every recipient claims their own
-          account through an expiring email link, and you can see what is still
-          pending.
+      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+          People
         </p>
-        <section className="section-rule mt-8 pt-8">
+        <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+          Invites &amp; staff
+        </h1>
+        <p className="mt-2 max-w-prose text-sm text-muted">
+          Students usually join from a roster link. Use this page for staff and
+          email claim invites — no shared passwords.
+        </p>
+
+        <div className="mt-8">
+          <PortalMission
+            title={mission.title}
+            description={mission.description}
+            action={mission.action}
+            secondary={mission.secondary}
+          />
+        </div>
+
+        {hasJoinCode ? (
+          <p className="mt-6 text-sm text-muted">
+            Prefer the join link for whole classes?{" "}
+            <Link
+              href={rosterHref}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Open roster
+            </Link>
+          </p>
+        ) : null}
+
+        <section className="section-rule mt-10 pt-8">
           <OrganizationPeopleManager
             orgId={view.org.id}
             orgSlug={view.org.slug}
             orgType={view.org.type}
             invitations={invitations}
+            rosterHref={rosterHref}
           />
         </section>
       </main>
