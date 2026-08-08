@@ -87,6 +87,100 @@ export function maxPagerPage($: CheerioAPI): number {
   return max;
 }
 
+function absoluteHttpUrl(href: string | undefined, baseUrl?: string): string | null {
+  if (!href) return null;
+  try {
+    const url = new URL(href, baseUrl || LISTING_URL);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function eventSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Find a strict event-name match in an organizer sitemap. US Chess frequently
+ * stores only the organizer homepage, while commerce-backed organizers expose
+ * the actual entry page in sitemap.xml.
+ */
+export function findOrganizerEventUrlInSitemap(
+  sitemapXml: string,
+  eventName: string,
+  organizerWebsite: string,
+  eventDate?: string | null
+): string | null {
+  const slug = eventSlug(eventName);
+  if (!slug) return null;
+  const year = eventDate?.match(/\b(20\d{2})\b/)?.[1] ?? null;
+
+  let organizerOrigin: string;
+  try {
+    organizerOrigin = new URL(organizerWebsite).origin;
+  } catch {
+    return null;
+  }
+
+  const $ = load(sitemapXml, { xmlMode: true });
+  const candidates = $("url")
+    .toArray()
+    .map((entry) => {
+      const loc = $(entry).find("loc").first().text().trim();
+      const url = absoluteHttpUrl(loc, organizerWebsite);
+      if (!url) return null;
+      const parsed = new URL(url);
+      if (parsed.origin !== organizerOrigin) return null;
+      const leaf = decodeURIComponent(parsed.pathname)
+        .split("/")
+        .filter(Boolean)
+        .pop();
+      return {
+        url,
+        path: parsed.pathname,
+        leaf: leaf ? eventSlug(leaf) : "",
+        text: eventSlug($(entry).text()),
+      };
+    })
+    .filter(
+      (
+        candidate
+      ): candidate is { url: string; path: string; leaf: string; text: string } =>
+        candidate !== null
+    );
+
+  const exactPath = candidates.find((candidate) => candidate.leaf === slug);
+  if (exactPath) return exactPath.url;
+
+  if (year) {
+    const datedPath = candidates.find(
+      (candidate) => candidate.leaf === `${slug}-${year}`
+    );
+    if (datedPath) return datedPath.url;
+  }
+
+  const eventPageMatches = candidates.filter(
+    (candidate) =>
+      /^\/(?:store\/p|fide-calendar|scholastic-calendar)\//.test(candidate.path) &&
+      candidate.text.includes(slug) &&
+      (!year || candidate.text.includes(year))
+  );
+  if (eventPageMatches.length === 1) return eventPageMatches[0]!.url;
+
+  const titleMatches = candidates.filter(
+    (candidate) =>
+      /^\/(?:store\/p|fide-calendar|scholastic-calendar)\//.test(candidate.path) &&
+      candidate.text.includes(slug)
+  );
+  return titleMatches.length === 1 ? titleMatches[0]!.url : null;
+}
+
 export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichment {
   const $ = load(html);
 
@@ -107,7 +201,18 @@ export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichmen
   const address = addressParts.length ? addressParts.join(", ") : null;
 
   const organizerWebsite =
-    $(".views-field-field-organizer-website a").first().attr("href")?.trim() || null;
+    absoluteHttpUrl(
+      $(".views-field-field-organizer-website a").first().attr("href")?.trim(),
+      pageUrl
+    );
+
+  let registrationUrl: string | null = null;
+  $(".views-field-body a[href]").each((_, anchor) => {
+    if (registrationUrl) return;
+    const label = $(anchor).text().replace(/\s+/g, " ").trim();
+    if (!/register|registration|sign up|enter online/i.test(label)) return;
+    registrationUrl = absoluteHttpUrl($(anchor).attr("href"), pageUrl);
+  });
 
   const onlineText = $(".views-field-field-online-event .field-content")
     .first()
@@ -137,6 +242,7 @@ export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichmen
     state: stateRaw ? stateToCode(stateRaw) : null,
     zip: zip && /^\d{5}(-\d{4})?$/.test(zip) ? zip.slice(0, 5) : null,
     organizerWebsite,
+    registrationUrl,
     online,
     endDate,
     imageUrl,

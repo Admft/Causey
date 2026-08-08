@@ -8,7 +8,6 @@ import {
 
 export const CCA_SCRAPER_ID = "cca_scrape" as const;
 export const CCA_LISTING_URL = "https://www.chesstour.com/refs.html";
-export const CCA_REG_URL = "https://www.chessaction.com/";
 
 export const RawCcaSchema = z.object({
   name: z.string().min(3),
@@ -164,7 +163,10 @@ export function normalizeRawCca(
     start_date: dates.start,
     end_date: detail?.endDate ?? dates.end,
     reg_deadline: null,
-    reg_url: CCA_REG_URL,
+    // ChessAction only exposes a generic homepage from CCA detail pages. Keep
+    // the event-specific CCA page instead of pretending the homepage registers
+    // this tournament.
+    reg_url: raw.detailUrl,
     entry_fee_cents: extras.entry_fee_cents,
     rated: extras.rated,
     rating_system: "uschess",

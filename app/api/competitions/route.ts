@@ -51,12 +51,26 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const page = await data.searchCompetitions(filters);
-  return NextResponse.json({
-    results: page.results,
-    total: page.total,
-    limit: page.limit,
-    offset: page.offset,
-    count: page.results.length,
-  });
+  try {
+    const page = await data.searchCompetitions(filters);
+    return NextResponse.json({
+      results: page.results,
+      total: page.total,
+      limit: page.limit,
+      offset: page.offset,
+      count: page.results.length,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : "Search failed.";
+    console.error("GET /api/competitions", err);
+    return NextResponse.json(
+      {
+        error:
+          process.env.NODE_ENV === "development"
+            ? detail
+            : "We couldn’t run that search. Try again in a moment.",
+      },
+      { status: 500 }
+    );
+  }
 }

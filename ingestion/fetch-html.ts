@@ -104,7 +104,10 @@ export async function fetchHtml(
     res = await fetch(url, {
       headers: {
         "User-Agent": opts.userAgent ?? USER_AGENT,
-        Accept: "text/html",
+        // Organizer discovery also reads sitemap.xml. Some hosts reject an
+        // HTML-only Accept header for XML even though the same fetcher handles
+        // both safely as decoded text.
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
       signal: AbortSignal.timeout(timeoutMs),
     });

@@ -62,7 +62,7 @@ These are not missing by accident; they are deliberate early constraints:
   is configured separately)
 - Self-serve district creation (platform administrators provision districts)
 
-Accounts and district workflows are live — apply migrations through `0036`
+Accounts and district workflows are live — apply migrations through `0038`
 and use `/signup`. Coaches create school/club workspaces with join codes,
 district administrators create connected schools, platform administrators
 verify organizations, and staff use expiring claim links instead of shared

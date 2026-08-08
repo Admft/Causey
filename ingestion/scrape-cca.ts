@@ -3,7 +3,7 @@
  *
  * Pipeline id: source = 'cca_scrape'
  * Provenance:   source_url = CCA event detail page (or refs.html#coming-… )
- * Registration: reg_url = https://www.chessaction.com/
+ * Registration: event-specific CCA page; never the generic ChessAction homepage
  *
  * Resilience (same lessons as TLA runs):
  *   - Shared fetchHtml with timeout + windows-1252 charset decode

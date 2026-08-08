@@ -55,4 +55,43 @@ describe("mergeCompetitionFields", () => {
     expect(patch.organizer_name).toBeUndefined(); // winner already had one
     expect(patch.details).toMatchObject({ a: 1, catalog_standing: "local" });
   });
+
+  it("replaces an organizer homepage and generic cover with an exact event page", () => {
+    const winner = {
+      id: "w",
+      source: "tla_scrape",
+      fingerprint: "x",
+      status: "published",
+      canonical_id: null,
+      reg_url: "https://organizer.example/",
+      source_url: "https://new.uschess.org/event",
+      address: "1 Main",
+      city: "Austin",
+      zip: "78701",
+      lat: 30.2,
+      lng: -97.7,
+      entry_fee_cents: null,
+      reg_deadline: null,
+      image_url: "https://organizer.example/generic.jpg",
+      organizer_name: "Organizer",
+      venue_name: "Hall",
+      details: {},
+    };
+    const exactEvent = {
+      ...winner,
+      id: "l",
+      source: "tca_scrape",
+      reg_url: "https://organizer.example/store/p/fall-championship",
+      image_url: "https://organizer.example/fall-championship.jpg",
+    };
+
+    const patch = mergeCompetitionFields(winner, [exactEvent]);
+
+    expect(patch.reg_url).toBe(
+      "https://organizer.example/store/p/fall-championship"
+    );
+    expect(patch.image_url).toBe(
+      "https://organizer.example/fall-championship.jpg"
+    );
+  });
 });

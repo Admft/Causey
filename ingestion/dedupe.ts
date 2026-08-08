@@ -52,6 +52,34 @@ function isBlankZip(v: unknown): boolean {
   return isBlank(v) || v === "00000";
 }
 
+function registrationUrlSpecificity(value: string | null): number {
+  if (!value) return 0;
+  try {
+    const url = new URL(value);
+    const path = url.pathname.replace(/\/+$/, "");
+    let score = 1;
+    if (path && path !== "/") score += 2;
+    if (url.search) score += 1;
+    if (
+      /\/(?:store\/p|event|events|tournament|tournaments|register|registration)\//i.test(
+        `${path}/`
+      )
+    ) {
+      score += 2;
+    }
+    if (
+      /(?:onlineregistration|kingregistration|chessaction|reg4chess|eventbrite)\./i.test(
+        url.hostname
+      )
+    ) {
+      score += 1;
+    }
+    return score;
+  } catch {
+    return 0;
+  }
+}
+
 /** Prefer winner values; fill gaps from losers (first non-blank wins per field). */
 export function mergeCompetitionFields(
   winner: CompRow,
@@ -59,7 +87,6 @@ export function mergeCompetitionFields(
 ): Record<string, unknown> {
   const patch: Record<string, unknown> = {};
   const keys = [
-    "reg_url",
     "source_url",
     "address",
     "city",
@@ -77,6 +104,25 @@ export function mergeCompetitionFields(
         patch[key] = loser[key];
         break;
       }
+    }
+  }
+
+  const betterRegistration = losers
+    .filter(
+      (loser) =>
+        registrationUrlSpecificity(loser.reg_url) >
+        registrationUrlSpecificity(winner.reg_url)
+    )
+    .sort(
+      (a, b) =>
+        registrationUrlSpecificity(b.reg_url) -
+        registrationUrlSpecificity(a.reg_url)
+    )[0];
+  if (betterRegistration?.reg_url) {
+    patch.reg_url = betterRegistration.reg_url;
+    // The better event page is also the more trustworthy source for its cover.
+    if (betterRegistration.image_url) {
+      patch.image_url = betterRegistration.image_url;
     }
   }
 

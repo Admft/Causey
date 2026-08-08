@@ -161,7 +161,8 @@ the same DB on the same schedule.
 ## CCA (`scrape-cca.ts`)
 
 - Site: https://www.chesstour.com/refs.html
-- `source='cca_scrape'`, `reg_url` → chessaction.com
+- `source='cca_scrape'`; `reg_url` stays on the event-specific CCA page because
+  CCA currently links only to the generic ChessAction homepage
 - Requires `0003_cca_source.sql` once
 
 ## Texas Chess Association (`scrape-tca.ts`)

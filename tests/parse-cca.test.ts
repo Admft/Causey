@@ -77,7 +77,7 @@ describe("CCA listing parser", () => {
     );
     expect(row?.competition.source).toBe("cca_scrape");
     expect(row?.competition.source_url).toContain("so26.htm");
-    expect(row?.competition.reg_url).toContain("chessaction.com");
+    expect(row?.competition.reg_url).toBe(row?.competition.source_url);
     expect(row?.competition.status).toBe("published");
     expect(row?.competition.slug).toMatch(/^cca-/);
   });

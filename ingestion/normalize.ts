@@ -40,6 +40,8 @@ export type DetailEnrichment = {
   state: string | null;
   zip: string | null;
   organizerWebsite: string | null;
+  /** Event-specific entry page when it can be distinguished from the organizer homepage. */
+  registrationUrl: string | null;
   online: boolean;
   endDate: string | null;
   /** Best-effort cover; null when the page has nothing usable. */
@@ -137,6 +139,20 @@ export function slugFromSourceUrl(sourceUrl: string, fallback: string): string {
   return fallback;
 }
 
+function isEventSpecificUrl(value: string | null | undefined): boolean {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return (
+      url.pathname.replace(/\/+$/, "") !== "" ||
+      Boolean(url.search) ||
+      Boolean(url.hash)
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Sentinels a reviewer must replace before publishing a draft. */
 export const NEEDS_REVIEW = {
   zip: "00000",
@@ -173,7 +189,12 @@ export function normalizeRawTla(
   const hasCoords = Boolean(opts.coords);
   const city = detail?.city?.trim() || raw.city;
   const state = (detail?.state && stateToCode(detail.state)) || raw.state;
-  const regUrl = detail?.organizerWebsite || raw.detailUrl;
+  const regUrl =
+    detail?.registrationUrl ||
+    (isEventSpecificUrl(detail?.organizerWebsite)
+      ? detail?.organizerWebsite
+      : null) ||
+    raw.detailUrl;
   const ready = zip !== NEEDS_REVIEW.zip && hasCoords;
 
   const extras = parseEventTextExtras(
