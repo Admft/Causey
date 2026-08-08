@@ -58,7 +58,7 @@ export function NotificationPreferencesForm({
         setError(result.error);
         return;
       }
-      setMessage("Preferences saved. In-app alerts follow these choices; email is not connected yet.");
+      setMessage("Preferences saved. In-app and product-email alerts follow these choices.");
     } finally {
       setPending(false);
     }
@@ -114,15 +114,15 @@ export function NotificationPreferencesForm({
     },
     {
       key: "email_enabled",
-      label: "Email when delivery becomes available",
+      label: "Product email",
       description:
-        "Email is not connected yet. Saves whether you want email later.",
+        "Send enabled invitations, deadlines, reminders, and important updates by email.",
     },
     {
       key: "guardian_routing",
       label: "Route student deadlines to linked guardians",
       description:
-        "Saved for later guardian routing — not wired for delivery yet.",
+        "Also email active linked guardians when a student has an enabled tournament alert.",
     },
   ];
 

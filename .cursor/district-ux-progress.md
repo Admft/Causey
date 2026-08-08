@@ -17,6 +17,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Product email delivery: verified `mail.causey.dev` Resend integration; service-role outbox claiming; idempotent retries; invitation claims, deadline/7-day/1-day alerts, change/cancel/RSVP/announcement delivery; prefs-aware active-guardian routing; protected Vercel cron (`0036`) — 2026-08-08
+- [x] District-readiness audit batch: public district pilot path, privacy/terms disclosure, separate-device parent→student handoff, fail-closed join links, role-safe assistant access, district-scale shell, aggregate CSV export, and explicit empty-state actions (`0035`) — 2026-08-08
 - [x] Admin organizations overhaul: stat-filter strip, search + type filter, single scannable queue (pending first), on-demand detail panels with member/tournament counts, one-click verify / correction-note actions, district school roster + bulk verify inside the district panel, collapsible Add organization form — 2026-08-08
 - [x] Admin TCA publish honesty: status counts + Published/Draft splits, stronger Published badge, bulk-publish follow-up that chess defaults to upcoming; search empty copy for source + ended listings — 2026-08-08
 - [x] District pilot bootstrap: aggregate readiness model + one-next-action district command center; school create → admin claim → ownership handoff; district-grouped platform verification with guarded bulk verify; assisted-pilot runbook (`0034`) — 2026-08-08
@@ -109,11 +111,11 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 ## Must have for a real district pilot (UX — gpt-5.6-sol-xhigh)
 Pick these before polish. One major end-to-end win per tick.
 - [x] District → school hierarchy — verified district tenant, child-school creation, readiness command center, school-admin claim/ownership handoff, and grouped platform verification — 2026-08-08
-- [x] Bulk provisioning — CSV/email invites with claim links, invite status, reissue, and bulk claim export; no shared passwords (email delivery still inactive / owner decision) — 2026-08-08
-- [ ] Real role split — district admin vs school admin vs coach vs student (coach/admin are still collapsed in places)
+- [x] Bulk provisioning — CSV/email invites with claim links, invite status, reissue, bulk claim export, and Resend delivery; no shared passwords — 2026-08-08
+- [x] Real role split — assistants now have read-only scoped staff access; coaches operate rosters/tournaments; school and district administrators lead with administration work (`0035`) — 2026-08-08
 - [x] Audience-scoped events — public / district-only / school-only / invite-only enforced through tournament creation + RLS — 2026-08-08
 - [x] Parent action list — family landing leads with per-child RSVP and unfinished organizer registration — 2026-08-06
-- [ ] Notifications that matter — invite, deadline, 7-day/1-day reminder, schedule change, cancel (with prefs + guardian routing)
+- [x] Notifications that matter — invite, deadline, 7-day/1-day reminder, schedule change, cancel (with prefs + guardian routing) — 2026-08-08
 - [x] District reporting — aggregate school counts for students, upcoming events, pending RSVPs, going, and attendance without browsing data — 2026-08-08
 
 ## Strongly needed for trust / ops (UX — gpt-5.6-sol-xhigh)
@@ -143,8 +145,8 @@ Pick these before polish. One major end-to-end win per tick.
 ### Chrome / IA
 - [x] Header chess link for signed-in/out discovery (partial)
 - [x] Personal Account settings hub at `/account` (profile/alerts/family/orgs); role workspaces stay mission-first
-- [ ] Header still thin for signed-in district work — needs district-scale IA beyond logo + chess + account
-- [ ] No district-scale layout (multi-school); everything stays a narrow single-org column
+- [x] Header and org subnav distinguish district work with Schools / District staff / Reports / Settings — 2026-08-08
+- [x] District landing uses a two-column command center + multi-school readiness directory and is prioritized from `/orgs` — 2026-08-08
 - [ ] Roster / manage still feel like admin tables, not school-safe tools
 
 ## Account settings backlog (Exists / Wire / Pilot / Legal)

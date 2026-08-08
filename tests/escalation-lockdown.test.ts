@@ -50,7 +50,7 @@ describe("SEC-06: organizer events are created as drafts", () => {
     mocks.insertTournamentRecord.mockResolvedValue({ ok: true, slug: "spring-open" });
     mocks.createServerSupabaseClient.mockResolvedValue({
       rpc: async (name: string) => ({
-        data: name === "is_org_staff",
+        data: name === "is_org_coach",
         error: null,
       }),
       from: () => ({

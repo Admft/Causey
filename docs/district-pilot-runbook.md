@@ -1,14 +1,14 @@
 # District pilot runbook
 
 This runbook is for one Causey-assisted district pilot. It assumes chess is
-the active competition surface, staff claim links are distributed manually,
-and email reminders are not operating.
+the active competition surface and product email is delivered through the
+verified `mail.causey.dev` Resend integration.
 
 ## 1. Prepare the pilot environment
 
 1. Link the intended Supabase project and inspect `supabase migration list`.
    Apply every SQL migration through
-   `0034_bulk_district_school_verification.sql`, skipping
+   `0036_product_email_delivery.sql`, skipping
    `PENDING_SCRAPE.sql`. This repository currently has duplicate numeric
    prefixes for `0015` and `0016`; on a fresh project, apply those files in
    filename order through the SQL editor instead of assuming `db push` can
@@ -29,10 +29,13 @@ and email reminders are not operating.
    ```
 
 5. Configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `SUPABASE_SERVICE_ROLE_KEY`, and `DATA_SOURCE=supabase`.
+   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `CRON_SECRET`, and
+   `DATA_SOURCE=supabase`.
 6. Configure Supabase Auth custom SMTP before inviting a real cohort. This
-   covers signup, confirmation, and password reset only; Causey product email
-   remains inactive.
+   covers signup, confirmation, and password reset. The Resend product-email
+   integration separately sends claims, reminders, and app notifications.
+7. Confirm `mail.causey.dev` is verified in Resend and run the protected
+   `/api/cron/product-email` route once before onboarding participants.
 
 ## 2. Provision and verify the district
 
@@ -54,9 +57,8 @@ For every participating school:
 2. Create the school with its official name and state.
 3. Causey redirects to the school People page. Create a
    `school_admin` invitation.
-4. Copy the generated claim link and send it to the named administrator
-   through the district's approved communication channel. Causey does not send
-   this product email yet.
+4. Confirm Causey queued the invitation email. Keep the generated claim link
+   as a fallback through the district's approved communication channel.
 5. After the administrator claims the account, open school Settings →
    Ownership and transfer ownership to them.
 6. Return to the district workspace and confirm the school advances to
@@ -105,14 +107,16 @@ At one school:
    exposing browsing, saved-event, or search activity.
 8. Confirm invite, RSVP, announcement, and tournament-change updates appear
    in `/me/notifications` according to preferences.
+9. Confirm enabled product-email alerts arrive once and active linked
+   guardians receive student reminders only when guardian routing is enabled.
 
 ## 7. Record pilot limitations
 
 Tell pilot participants before onboarding:
 
 - Chess search is usable, but listing data can be incomplete.
-- Product invitation and reminder email is not operating; claim links are
-  distributed manually.
+- Product email depends on the verified Resend sending domain; staff retain
+  fallback claim links when delivery is delayed or suppressed.
 - Registration on scraped events remains on the organizer's website.
 - Causey does not provide payments or student-to-student messaging.
 - Account deletion/export, legal agreements for student data, production

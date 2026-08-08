@@ -155,7 +155,7 @@ export function getDistrictReadinessAction(
         stage: "invite_admin",
         title: `Delegate ${school.name}`,
         description:
-          "Invite a school administrator and give them the claim link. Email delivery is not operating yet.",
+          "Invite a school administrator. Causey emails the claim link and keeps a copyable fallback for district staff.",
         href: `/orgs/${school.slug}/people?setup=school-admin&district=${encodeURIComponent(
           readiness.districtSlug
         )}`,

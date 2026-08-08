@@ -13,7 +13,7 @@ export function isActiveMember(
   return membership?.status === "active";
 }
 
-export function isOrgCoach(
+export function isOrgStaff(
   org: Pick<Organization, "owner_profile_id">,
   membership: Pick<OrgMembership, "role" | "status"> | null | undefined,
   profileId: string
@@ -28,6 +28,25 @@ export function isOrgCoach(
       "school_admin",
       "district_admin",
     ].includes(membership.role)
+  );
+}
+
+/**
+ * Operator authority is intentionally narrower than staff access.
+ * Assistant coaches may enter the roster workspace and read scoped data, but
+ * cannot mutate rosters, publish announcements, or operate tournaments.
+ */
+export function isOrgCoach(
+  org: Pick<Organization, "owner_profile_id">,
+  membership: Pick<OrgMembership, "role" | "status"> | null | undefined,
+  profileId: string
+): boolean {
+  if (org.owner_profile_id === profileId) return true;
+  return (
+    membership?.status === "active" &&
+    ["coach", "admin", "school_admin", "district_admin"].includes(
+      membership.role
+    )
   );
 }
 

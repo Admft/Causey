@@ -87,6 +87,10 @@ export default async function OrgsPage() {
     (row) => row.status === "invited"
   ).length;
   const coachedOrgs = myOrgs.filter(({ isCoach }) => isCoach);
+  const districtOrg = coachedOrgs.find(({ org, memberRole }) =>
+    Boolean(org.type === "district" && (memberRole === "district_admin" || isStaffWorkspace))
+  );
+  const hasDistrictWorkspace = Boolean(districtOrg);
   const staffOrgsNeedingStudents = new Set<string>();
   if (isStaffWorkspace) {
     await Promise.all(
@@ -102,12 +106,15 @@ export default async function OrgsPage() {
     );
   }
   const sortedOrgs = [...myOrgs].sort((a, b) => {
+    if (a.org.type === "district" && b.org.type !== "district") return -1;
+    if (b.org.type === "district" && a.org.type !== "district") return 1;
     const aNeeds = staffOrgsNeedingStudents.has(a.org.id) ? 0 : 1;
     const bNeeds = staffOrgsNeedingStudents.has(b.org.id) ? 0 : 1;
     if (aNeeds !== bNeeds) return aNeeds - bNeeds;
     return a.org.name.localeCompare(b.org.name);
   });
   const primaryOrg =
+    districtOrg ??
     sortedOrgs.find(({ org, isCoach }) =>
       Boolean(isCoach && staffOrgsNeedingStudents.has(org.id))
     ) ??
@@ -172,13 +179,15 @@ export default async function OrgsPage() {
       {isStaffWorkspace ? (
         <>
           <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
-            Your organizations
+            {hasDistrictWorkspace ? "Districts and schools" : "Your organizations"}
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
             {!myOrgs.length
               ? canStartOrganization
                 ? "Create a school or club to get a join link, roster, and tournament tools."
                 : "Ask an administrator for a staff invitation, then come back here."
+              : hasDistrictWorkspace && districtOrg
+                ? `Open ${districtOrg.org.name} to provision schools, complete administrator handoffs, and review aggregate participation.`
               : primaryNeedsStudents && primaryOrg
                 ? `${primaryOrg.org.name} has an empty roster. Invite students before you create tournaments.`
                 : "Rosters, invites, and tournaments live inside each workspace."}
@@ -227,7 +236,9 @@ export default async function OrgsPage() {
                   href={`/orgs/${primaryOrg.org.slug}`}
                   className="cta-enabled inline-flex"
                 >
-                  Open workspace
+                  {primaryOrg.org.type === "district"
+                    ? "Open district workspace"
+                    : "Open workspace"}
                 </Link>
               ) : null}
               {pendingInviteCount ? (
@@ -297,7 +308,11 @@ export default async function OrgsPage() {
 
       <section id="organizations" className="mt-10 scroll-mt-24">
         <h2 className="text-sm font-semibold text-foreground">
-          {isStaffWorkspace ? "All organizations" : "Where you belong"}
+          {isStaffWorkspace
+            ? hasDistrictWorkspace
+              ? "Districts, schools, and clubs"
+              : "All organizations"
+            : "Where you belong"}
         </h2>
 
         {!myOrgs.length ? (

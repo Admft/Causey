@@ -59,9 +59,17 @@ export default async function RosterPage({
   const students = activeMembers.filter((row) => row.member_role === "student");
   const staff = activeMembers.filter((row) => row.member_role !== "student");
   const emptyRoster = activeMembers.length === 0;
+  const canOperate = view.canManageTournaments;
 
-  const mission = emptyRoster
+  const mission = !canOperate
     ? {
+        title: "Review the roster",
+        description:
+          "Assistant coaches can review students and groups. A coach or administrator handles invitations, roster changes, and tournament operations.",
+        action: { href: `/orgs/${org.slug}`, label: "Back to workspace" },
+      }
+    : emptyRoster
+      ? {
         title: "Add your first students",
         description: org.join_code
           ? "Share the join link, then come back to put students into groups for tournament invites."
@@ -70,8 +78,8 @@ export default async function RosterPage({
           ? { href: "#add-students", label: "Copy join link" }
           : { href: `/orgs/${org.slug}`, label: "Back to workspace" },
       }
-    : groups.length === 0
-      ? {
+      : groups.length === 0
+        ? {
           title: "Create a group for invites",
           description:
             "Groups let you invite Varsity, JV, or a grade in one tap when you manage a tournament.",
@@ -80,7 +88,7 @@ export default async function RosterPage({
             ? { href: "#add-students", label: "Invite more students" }
             : undefined,
         }
-      : {
+        : {
           title: "Roster is ready for tournaments",
           description: `${students.length} ${
             students.length === 1 ? "student" : "students"
@@ -127,7 +135,7 @@ export default async function RosterPage({
           />
         </div>
 
-        {org.join_code ? (
+        {canOperate && org.join_code ? (
           <section id="add-students" className="section-rule mt-10 scroll-mt-24 pt-8">
             <h2 className="text-sm font-semibold text-foreground">
               Add students
@@ -176,12 +184,14 @@ export default async function RosterPage({
                       {` · joined ${formatDate(row.joined_at.slice(0, 10))}`}
                     </p>
                   </div>
-                  <RemoveMemberButton
-                    orgId={org.id}
-                    orgSlug={org.slug}
-                    profileId={row.profile_id}
-                    displayName={row.display_name || "this student"}
-                  />
+                  {canOperate ? (
+                    <RemoveMemberButton
+                      orgId={org.id}
+                      orgSlug={org.slug}
+                      profileId={row.profile_id}
+                      displayName={row.display_name || "this student"}
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -194,17 +204,40 @@ export default async function RosterPage({
             Optional. Use groups to invite a subset of students to a tournament
             in one step.
           </p>
-          <div className="mt-4">
-            <GroupManager
-              orgId={org.id}
-              orgSlug={org.slug}
-              groups={groups}
-              roster={students.map((row) => ({
-                profile_id: row.profile_id,
-                display_name: row.display_name,
-              }))}
-            />
-          </div>
+          {canOperate ? (
+            <div className="mt-4">
+              <GroupManager
+                orgId={org.id}
+                orgSlug={org.slug}
+                groups={groups}
+                roster={students.map((row) => ({
+                  profile_id: row.profile_id,
+                  display_name: row.display_name,
+                }))}
+              />
+            </div>
+          ) : groups.length ? (
+            <ul className="mt-4 divide-y divide-line border-y border-line">
+              {groups.map((group) => (
+                <li
+                  key={group.id}
+                  className="flex items-baseline justify-between gap-4 py-3"
+                >
+                  <span className="text-sm font-semibold text-foreground">
+                    {group.name}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {group.member_ids.length}{" "}
+                    {group.member_ids.length === 1 ? "student" : "students"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-muted">
+              No groups yet. A coach or administrator can create them.
+            </p>
+          )}
         </section>
 
         {staff.length ? (
@@ -228,7 +261,7 @@ export default async function RosterPage({
                       {roleLabel(row.member_role)}
                     </p>
                   </div>
-                  {row.profile_id !== user.id ? (
+                  {canOperate && row.profile_id !== user.id ? (
                     <RemoveMemberButton
                       orgId={org.id}
                       orgSlug={org.slug}

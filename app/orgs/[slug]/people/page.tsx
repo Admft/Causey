@@ -102,7 +102,7 @@ export default async function OrganizationPeoplePage({
     mission = {
       title: "Administrator claim is pending",
       description:
-        "Causey email delivery is not operating yet. Copy or reissue the claim link below and send it to the school administrator directly.",
+        "Causey queued the claim email. Copy or reissue the link below if the school administrator needs a delivery fallback.",
       action: {
         href: "#invitation-status",
         label: "Review claim link",
@@ -118,7 +118,7 @@ export default async function OrganizationPeoplePage({
     mission = {
       title: "Delegate this school",
       description:
-        "Invite a school administrator before provisioning students. Create the claim link here, then send it to them directly.",
+        "Invite a school administrator before provisioning students. Causey emails the claim link and keeps a copyable fallback here.",
       action: { href: "#invite-one", label: "Invite school administrator" },
       secondary: districtSlug
         ? {
@@ -136,7 +136,7 @@ export default async function OrganizationPeoplePage({
         pendingInvites.length === 1 ? "invite is" : "invites are"
       } waiting`,
       description:
-        "Recipients claim their own accounts from a private claim link. Email delivery is not operating yet, so follow up directly.",
+        "Recipients claim their own accounts from the private link Causey emails. Use the fallback link if delivery is delayed.",
       action: { href: "#invitation-status", label: "Review invitations" },
       secondary: hasJoinCode
         ? { href: rosterHref, label: "Share student join link" }
@@ -190,6 +190,7 @@ export default async function OrganizationPeoplePage({
         tab="people"
         showRoster={view.isCoach && !isDistrict}
         showAdmin={view.isAdmin}
+        orgType={view.org.type}
       />
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">

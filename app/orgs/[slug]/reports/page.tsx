@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
+import { PortalEmptyState } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   getDistrictSchoolRollup,
@@ -45,6 +46,7 @@ export default async function OrganizationReportsPage({
         tab="reports"
         showRoster={view.isCoach && view.org.type !== "district"}
         showAdmin={view.isAdmin}
+        orgType={view.org.type}
       />
       <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">Reporting</p>
@@ -56,6 +58,14 @@ export default async function OrganizationReportsPage({
             ? "This view stays aggregate by default. It does not expose students’ private searches, saves, or browsing activity."
             : "Review attendance outcomes for organization-hosted tournaments this calendar year."}
         </p>
+        {view.isDistrictAdmin && districtRollup.length ? (
+          <a
+            href={`/orgs/${view.org.slug}/reports/export`}
+            className="mt-5 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+          >
+            Download participation CSV
+          </a>
+        ) : null}
 
         {view.isDistrictAdmin ? (
           !districtRollup.length ? (
@@ -140,10 +150,14 @@ export default async function OrganizationReportsPage({
                 Recorded outcomes
               </h2>
               {!attendance.length ? (
-                <p className="mt-3 text-sm text-muted">
-                  No attendance has been marked yet. Open a past hosted
-                  tournament and record who attended.
-                </p>
+                <PortalEmptyState
+                  title="No attendance has been recorded"
+                  description="Attendance appears here after a coach marks outcomes on a past hosted tournament."
+                  action={{
+                    href: `/orgs/${view.org.slug}`,
+                    label: "Open hosted tournaments",
+                  }}
+                />
               ) : (
                 <ul className="mt-4 divide-y divide-line border-y border-line">
                   {attendance.map((row) => (

@@ -6,6 +6,7 @@ import { FamilyRegistrationActions } from "@/components/FamilyRegistrationAction
 import { LinkChildForm } from "@/components/LinkChildForm";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
+import { StudentAccountHandoff } from "@/components/StudentAccountHandoff";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
@@ -133,7 +134,10 @@ export default async function FamilyPage() {
       : { href: "#link-student", label: "Link a student" };
     missionSecondary = pendingCount
       ? undefined
-      : { href: "/signup?role=student", label: "Create a student account" };
+      : {
+          href: "#student-account-setup",
+          label: "Set up student account",
+        };
   } else if (totalActionsNeeded) {
     const parts: string[] = [];
     if (totalResponsesNeeded) {
@@ -173,14 +177,8 @@ export default async function FamilyPage() {
       </h2>
       {!children.length && !pendingCount ? (
         <p className="mt-2 max-w-prose text-sm text-muted">
-          No student account yet?{" "}
-          <Link
-            href="/signup?role=student"
-            className="font-semibold text-brand-red hover:underline"
-          >
-            Create a student account
-          </Link>{" "}
-          with their email, then come back and send the link request below.
+          Once the student has confirmed their own account, enter that account
+          email below.
         </p>
       ) : null}
       <div className="mt-3 max-w-lg">
@@ -235,7 +233,12 @@ export default async function FamilyPage() {
             />
           </div>
 
-          {!children.length ? linkStudentSection : null}
+          {!children.length ? (
+            <>
+              {!pendingCount ? <StudentAccountHandoff /> : null}
+              {linkStudentSection}
+            </>
+          ) : null}
 
           {rsvpInbox.length || registrationInbox.length ? (
             <section id="needs-response" className="mt-10 scroll-mt-24">

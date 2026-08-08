@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { OrganizationType } from "@/lib/auth/orgs";
 
 /**
  * Org context bar — mirrors ChessSubnav's tab styling for portal surfaces.
@@ -13,7 +14,17 @@ const TABS = [
   { id: "settings", label: "Settings", path: "/settings", access: "admin" },
 ] as const;
 
-export type OrgTab = (typeof TABS)[number]["id"];
+const DISTRICT_TABS = [
+  { id: "overview", label: "Overview", path: "", access: "member" },
+  { id: "schools", label: "Schools", path: "/settings#schools", access: "admin" },
+  { id: "people", label: "District staff", path: "/people", access: "admin" },
+  { id: "reports", label: "Reports", path: "/reports", access: "admin" },
+  { id: "settings", label: "Settings", path: "/settings", access: "admin" },
+] as const;
+
+export type OrgTab =
+  | (typeof TABS)[number]["id"]
+  | (typeof DISTRICT_TABS)[number]["id"];
 
 function tabClass(active: boolean) {
   return active
@@ -27,6 +38,7 @@ export function OrgSubnavBar({
   tab,
   showRoster,
   showAdmin = false,
+  orgType,
 }: {
   slug: string;
   orgName: string;
@@ -34,8 +46,10 @@ export function OrgSubnavBar({
   tab: OrgTab | null;
   showRoster: boolean;
   showAdmin?: boolean;
+  orgType?: OrganizationType;
 }) {
-  const tabs = TABS.filter((item) => {
+  const sourceTabs = orgType === "district" ? DISTRICT_TABS : TABS;
+  const tabs = sourceTabs.filter((item) => {
     if (item.access === "member") return true;
     if (item.access === "staff") return showRoster;
     return showAdmin;
@@ -45,7 +59,7 @@ export function OrgSubnavBar({
       <div className="mx-auto grid max-w-6xl gap-2 px-5 py-2.5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <p className="truncate text-xs font-semibold text-muted">
           <Link href="/orgs" className="hover:text-foreground">
-            Organizations
+            {orgType === "district" ? "Districts and schools" : "Organizations"}
           </Link>{" "}
           / <span className="text-muted-strong">{orgName}</span>
         </p>

@@ -4,7 +4,11 @@ import { notFound, redirect } from "next/navigation";
 import { AnnouncementForm } from "@/components/AnnouncementForm";
 import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
-import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
+import {
+  PortalEmptyState,
+  PortalListRow,
+  PortalMission,
+} from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDistrictPilotReadiness } from "@/lib/data/district";
@@ -82,6 +86,7 @@ export default async function OrgPage({
     org,
     membership,
     isCoach,
+    canManageTournaments,
     isAdmin,
     isDistrictAdmin,
     activeMemberCount,
@@ -117,6 +122,12 @@ export default async function OrgPage({
         row.member_status === "active" &&
         row.member_role !== "student"
     );
+  const isDirectSchoolAdmin =
+    org.type === "school" &&
+    isAdmin &&
+    (org.owner_profile_id === user.id ||
+      membership?.role === "admin" ||
+      membership?.role === "school_admin");
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = events.filter((e) => isUpcomingEvent(e, today));
@@ -138,6 +149,18 @@ export default async function OrgPage({
 
   const coachMission = (() => {
     if (!isCoach || org.type === "district") return null;
+    if (!canManageTournaments) {
+      return {
+        title: "Review the roster and groups",
+        description:
+          "Your assistant-coach access is read-only. A coach or administrator handles invitations, roster changes, announcements, and tournament operations.",
+        action: {
+          href: `/orgs/${org.slug}/roster`,
+          label: "Review roster",
+        },
+        secondary: { href: "/orgs", label: "Back to organizations" },
+      };
+    }
     if (needsSchoolAdminHandoff) {
       return {
         title: "Delegate this school",
@@ -148,6 +171,41 @@ export default async function OrgPage({
           label: "Invite school administrator",
         },
         secondary: { href: "/orgs", label: "Back to organizations" },
+      };
+    }
+    if (isDirectSchoolAdmin) {
+      if (org.verification_status !== "verified") {
+        return {
+          title:
+            org.verification_status === "rejected"
+              ? "Correct the school record"
+              : "School verification is pending",
+          description:
+            org.verification_status === "rejected"
+              ? "Review the platform note and correct the school details before asking for another verification review."
+              : "You can continue staffing the school while Causey verifies its identity.",
+          action: {
+            href: `/orgs/${org.slug}/settings`,
+            label: "Review school settings",
+          },
+          secondary: {
+            href: `/orgs/${org.slug}/people`,
+            label: "Manage people",
+          },
+        };
+      }
+      return {
+        title: "Review school staffing",
+        description:
+          "Keep administrator and coach access current before working on roster or tournament tasks.",
+        action: {
+          href: `/orgs/${org.slug}/people`,
+          label: "Manage people",
+        },
+        secondary: {
+          href: `/orgs/${org.slug}/reports`,
+          label: "Review attendance",
+        },
       };
     }
     if (freshestDraft) {
@@ -261,6 +319,7 @@ export default async function OrgPage({
         tab="overview"
         showRoster={isCoach && org.type !== "district"}
         showAdmin={isAdmin}
+        orgType={org.type}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
@@ -282,27 +341,31 @@ export default async function OrgPage({
             ? org.type === "district"
               ? " · district administration"
               : " · school administration"
-            : isCoach
+            : canManageTournaments
               ? " · coaching workspace"
+              : isCoach
+                ? " · assistant workspace"
               : ""}
         </p>
 
         {org.type === "district" && isAdmin && districtAction ? (
-          <section className="mt-8">
-            <PortalMission
-              title={districtAction.title}
-              description={districtAction.description}
-              action={{
-                href: districtAction.href,
-                label: districtAction.label,
-              }}
-              secondary={{
-                href: `/orgs/${org.slug}/reports`,
-                label: "View aggregate reporting",
-              }}
-            />
+          <section className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+            <div>
+              <PortalMission
+                title={districtAction.title}
+                description={districtAction.description}
+                action={{
+                  href: districtAction.href,
+                  label: districtAction.label,
+                }}
+                secondary={{
+                  href: `/orgs/${org.slug}/reports`,
+                  label: "View aggregate reporting",
+                }}
+              />
+            </div>
 
-            <div className="section-rule mt-8 pt-8">
+            <div className="border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">
@@ -396,7 +459,7 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {isCoach && !coachMission ? (
+        {canManageTournaments && !coachMission ? (
           <section className="mt-8">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div>
@@ -417,15 +480,28 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {!isCoach ? (
+        {!canManageTournaments ? (
           <section className="mt-8">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
               Upcoming tournaments
             </h2>
             {!upcoming.length ? (
-              <p className="mt-3 text-sm text-muted">
-                Nothing scheduled yet. Check back soon.
-              </p>
+              <PortalEmptyState
+                title="No tournaments are scheduled"
+                description={
+                  isCoach
+                    ? "A coach or administrator publishes tournaments. You can review the roster while you wait."
+                    : "Search public chess listings, or check back after your coach publishes an event."
+                }
+                action={
+                  isCoach
+                    ? {
+                        href: `/orgs/${org.slug}/roster`,
+                        label: "Review roster",
+                      }
+                    : { href: "/chess", label: "Search tournaments" }
+                }
+              />
             ) : (
               <ul className="mt-2">
                 {upcoming.map((event) => {
@@ -461,7 +537,7 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {isCoach &&
+        {canManageTournaments &&
         (otherDrafts.length > 0 ||
           otherUpcoming.length > 0 ||
           Boolean(freshestDraft && priorityUpcoming)) ? (
@@ -582,7 +658,7 @@ export default async function OrgPage({
                           status={rsvp.status}
                           eventSlug={event.slug}
                         />
-                      ) : isCoach ? (
+                      ) : canManageTournaments ? (
                         <Link
                           href={`/event/${event.slug}/manage`}
                           className="text-sm font-semibold text-brand-red hover:underline"
@@ -601,7 +677,7 @@ export default async function OrgPage({
         {past.length ? (
           <section className="mt-10 border-t border-line pt-8">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-              {isCoach ? "Past hosted" : "Past tournaments"}
+              {canManageTournaments ? "Past hosted" : "Past tournaments"}
             </h2>
             <ul className="mt-2">
               {past.map((event) => (
@@ -616,7 +692,7 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {isCoach ? (
+        {canManageTournaments ? (
           <section className="mt-10 border-t border-line pt-8">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
               <div>

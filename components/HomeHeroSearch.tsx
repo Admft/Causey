@@ -114,10 +114,8 @@ export function HomeHeroSearch() {
       </button>
 
       <p className="mt-4 text-2xs text-muted">
-        Indexed from{" "}
-        <span className="font-medium text-muted-strong">US Chess</span> and{" "}
-        <span className="font-medium text-muted-strong">Continental Chess</span>{" "}
-        listings.{" "}
+        Indexed from US Chess, Continental Chess, OnlineRegistration.cc,
+        Chess-Results, FIDE, and Texas Chess Association listings.{" "}
         <Link href="/chess" className="font-semibold text-brand-red hover:underline">
           Browse without a zip
         </Link>

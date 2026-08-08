@@ -35,7 +35,7 @@ export default async function NewTournamentPage({
 
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
-  if (!view.isCoach) redirect(`/orgs/${slug}`);
+  if (!view.canManageTournaments) redirect(`/orgs/${slug}`);
   const { org } = view;
   const requestedDraft =
     requestedDraftId && UUID_PATTERN.test(requestedDraftId)

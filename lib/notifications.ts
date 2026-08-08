@@ -1,7 +1,4 @@
-/**
- * In-app notification helpers. Email delivery is not wired — prefs gate
- * in-app rows and (later) email; reminder toggles also filter live attention.
- */
+/** Shared in-app and product-email notification preferences. */
 
 export const NOTIFICATION_KINDS = [
   "invitation",
@@ -26,6 +23,10 @@ export type NotificationPrefsLike = {
   cancellation: boolean;
   rsvp_update: boolean;
   announcement: boolean;
+};
+
+export type NotificationEmailPrefsLike = NotificationPrefsLike & {
+  email_enabled: boolean;
 };
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefsLike = {
@@ -72,6 +73,15 @@ export function prefersInAppKind(
   }
 }
 
+/** Product email requires both the kind preference and the email master switch. */
+export function prefersEmailKind(
+  prefs: NotificationEmailPrefsLike | null | undefined,
+  kind: NotificationKind
+): boolean {
+  if (!prefs?.email_enabled) return false;
+  return prefersInAppKind(prefs, kind);
+}
+
 export type AttentionSourceEvent = {
   competitionId: string;
   slug: string;
@@ -114,7 +124,7 @@ function isUpcoming(
 
 /**
  * Build live “needs attention” rows from saved/going/invited + deadlines.
- * Reminder and registration toggles filter visibility; no cron / email.
+ * Reminder and registration toggles filter visibility in every delivery channel.
  */
 export function buildAttentionItems(
   events: AttentionSourceEvent[],

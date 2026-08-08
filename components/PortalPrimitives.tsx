@@ -129,3 +129,27 @@ export function PortalListRow({
     </li>
   );
 }
+
+/** Empty state with an explicit recovery or next action. */
+export function PortalEmptyState({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action: { href: string; label: string };
+}) {
+  return (
+    <div className="mt-4 border-y border-line py-5">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 max-w-prose text-sm text-muted">{description}</p>
+      <Link
+        href={action.href}
+        className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
+      >
+        {action.label} →
+      </Link>
+    </div>
+  );
+}

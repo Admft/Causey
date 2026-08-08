@@ -370,6 +370,24 @@ export function SignupForm({
             : `Create ${roleOption.accountLabel} account`}
       </button>
 
+      <p className="text-xs text-muted">
+        By creating an account, you agree to the{" "}
+        <Link
+          href="/terms"
+          className="font-semibold text-muted-strong hover:text-brand-red"
+        >
+          Terms of use
+        </Link>{" "}
+        and acknowledge how Causey handles account and student information in{" "}
+        <Link
+          href="/privacy"
+          className="font-semibold text-muted-strong hover:text-brand-red"
+        >
+          Privacy and student data
+        </Link>
+        .
+      </p>
+
       <p className="text-sm text-muted">
         Already have an account?{" "}
         <Link href={loginHref} className="font-semibold text-brand-red hover:underline">

@@ -62,8 +62,8 @@ export default async function NotificationsPage() {
       </h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
         In-app updates for invitations, RSVPs, announcements, account changes,
-        and tournament schedule or cancellation notices. Email delivery is not
-        operating yet — choose preferences in{" "}
+        and tournament schedule or cancellation notices. Product email follows
+        the choices in{" "}
         <Link
           href="/account#alerts"
           className="font-semibold text-brand-red hover:underline"

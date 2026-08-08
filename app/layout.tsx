@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s · Causey",
   },
   description:
-    "Discover student competitions with eligibility, costs, and qualification pathways shown clearly.",
+    "Search a growing, incomplete index of scholastic chess tournaments, then coordinate invitations and attendance with your organization.",
 };
 
 function ExternalMark() {
@@ -68,6 +68,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className="font-medium text-muted-strong transition-colors hover:text-brand-red"
               >
                 Qualification pathways
+              </Link>
+              <Link
+                href="/districts"
+                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+              >
+                Schools and districts
+              </Link>
+              <Link
+                href="/privacy"
+                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+              >
+                Privacy and student data
+              </Link>
+              <Link
+                href="/terms"
+                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+              >
+                Terms of use
               </Link>
               <a
                 href="https://causey.dev"

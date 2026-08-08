@@ -317,9 +317,8 @@ export function OrganizationPeopleManager({
           {claimPath ? (
             <div className="mt-3">
               <p className="text-sm text-muted-strong">
-                Email delivery isn&rsquo;t connected yet. Copy this claim link
-                and send it yourself — it expires, and they set their own
-                password.
+                Causey queued the invitation email. Keep this claim link as a
+                fallback — it expires, and they set their own password.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <code className="max-w-full break-all rounded-md border border-line bg-white px-2 py-1 text-xs text-foreground">
@@ -338,9 +337,9 @@ export function OrganizationPeopleManager({
           {bulkClaims.length ? (
             <div className="mt-3">
               <p className="text-sm text-muted-strong">
-                Email delivery isn&rsquo;t connected yet. Copy or download these
-                claim links now — tokens are not recoverable after you leave
-                this page.
+                Causey queued the invitation emails. Copy or download these
+                fallback claim links now — tokens are not recoverable after
+                you leave this page.
               </p>
               <div className="mt-2 flex flex-wrap gap-3">
                 <button
@@ -460,7 +459,7 @@ export function OrganizationPeopleManager({
         {invitations.some(canReissueInvitation) ? (
           <p className="mt-3 text-xs text-muted">
             Reissue creates a fresh claim link and revokes the previous pending
-            one. Send the new link yourself until email delivery is connected.
+            one. Causey queues a new email; copy the link as a delivery fallback.
           </p>
         ) : null}
       </section>

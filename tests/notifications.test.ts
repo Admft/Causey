@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildAttentionItems,
   DEFAULT_NOTIFICATION_PREFS,
+  prefersEmailKind,
   prefersInAppKind,
   type AttentionSourceEvent,
 } from "@/lib/notifications";
@@ -35,6 +36,33 @@ describe("prefersInAppKind", () => {
         "schedule_change"
       )
     ).toBe(false);
+  });
+});
+
+describe("prefersEmailKind", () => {
+  it("requires the email master switch and the per-kind preference", () => {
+    expect(
+      prefersEmailKind(
+        { ...DEFAULT_NOTIFICATION_PREFS, email_enabled: false },
+        "invitation"
+      )
+    ).toBe(false);
+    expect(
+      prefersEmailKind(
+        {
+          ...DEFAULT_NOTIFICATION_PREFS,
+          email_enabled: true,
+          reminder_1_day: false,
+        },
+        "reminder_1_day"
+      )
+    ).toBe(false);
+    expect(
+      prefersEmailKind(
+        { ...DEFAULT_NOTIFICATION_PREFS, email_enabled: true },
+        "reminder_7_day"
+      )
+    ).toBe(true);
   });
 });
 

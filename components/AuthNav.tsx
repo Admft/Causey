@@ -27,6 +27,7 @@ export function AuthNav() {
   const [role, setRole] = useState<AccountRole | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasOrgStaffAccess, setHasOrgStaffAccess] = useState(false);
+  const [hasDistrictAccess, setHasDistrictAccess] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export function AuthNav() {
         setRole(null);
         setIsAdmin(false);
         setHasOrgStaffAccess(false);
+        setHasDistrictAccess(false);
         setUnreadAlerts(0);
         return;
       }
@@ -59,7 +61,7 @@ export function AuthNav() {
         supabase.rpc("is_platform_admin"),
         supabase
           .from("org_memberships")
-          .select("org_id")
+          .select("org_id, role")
           .eq("profile_id", userId)
           .eq("status", "active")
           .in("role", [
@@ -72,7 +74,7 @@ export function AuthNav() {
           .limit(1),
         supabase
           .from("organizations")
-          .select("id")
+          .select("id, type")
           .eq("owner_profile_id", userId)
           .limit(1),
         supabase
@@ -85,6 +87,14 @@ export function AuthNav() {
       setIsAdmin(adminResult.error ? false : adminResult.data === true);
       setHasOrgStaffAccess(
         Boolean(membershipResult.data?.length || ownedOrgResult.data?.length)
+      );
+      setHasDistrictAccess(
+        Boolean(
+          membershipResult.data?.some(
+            (membership) => membership.role === "district_admin"
+          ) ||
+            ownedOrgResult.data?.some((organization) => organization.type === "district")
+        )
       );
       setUnreadAlerts(unreadResult.error ? 0 : unreadResult.count ?? 0);
     }
@@ -132,8 +142,8 @@ export function AuthNav() {
 
   const organizationLink = {
     href: "/orgs",
-    label: "My organizations",
-    shortLabel: "Orgs",
+    label: hasDistrictAccess ? "Districts & schools" : "My organizations",
+    shortLabel: hasDistrictAccess ? "District" : "Orgs",
   };
   const portalLinks =
     role === "parent"

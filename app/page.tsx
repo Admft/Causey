@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { HomeAccountPitch } from "@/components/HomeAccountPitch";
+import { HomeDistrictPitch } from "@/components/HomeDistrictPitch";
 import { HomeHeroSearch } from "@/components/HomeHeroSearch";
 import { TournamentSources } from "@/components/TournamentSources";
 
@@ -113,6 +114,8 @@ export default function CompetitionTypesPage() {
       </section>
 
       <TournamentSources />
+
+      <HomeDistrictPitch />
 
       <HomeAccountPitch />
     </>

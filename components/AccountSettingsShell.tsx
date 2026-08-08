@@ -58,10 +58,10 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
   const current = panels.find((panel) => panel.id === active) ?? panels[0];
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-10">
       <nav
         aria-label="Settings sections"
-        className="flex flex-wrap gap-x-5 gap-y-2 border-b border-line"
+        className="flex gap-1 overflow-x-auto border-b border-line pb-2.5 lg:hidden"
       >
         {panels.map((panel) => {
           const isActive = panel.id === active;
@@ -71,11 +71,11 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
               type="button"
               onClick={() => select(panel.id)}
               aria-current={isActive ? "page" : undefined}
-              className={`-mb-px border-b-2 pb-2 text-sm transition-colors ${
+              className={
                 isActive
-                  ? "border-brand-red font-semibold text-brand-red"
-                  : "border-transparent font-medium text-muted-strong hover:text-foreground"
-              }`}
+                  ? "inline-flex shrink-0 items-center rounded-md border border-brand-red/25 bg-accent-soft px-2.5 py-1 text-sm font-semibold text-brand-red"
+                  : "inline-flex shrink-0 items-center rounded-md px-2.5 py-1 text-sm font-medium text-muted-strong transition-colors hover:bg-white hover:text-foreground"
+              }
             >
               {panel.label}
             </button>
@@ -83,7 +83,33 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
         })}
       </nav>
 
-      <div className="mt-8" id={current?.id} role="tabpanel">
+      <nav
+        aria-label="Settings sections"
+        className="hidden lg:block lg:border-r lg:border-line"
+      >
+        <div className="sticky top-6 grid gap-0.5 pr-6">
+          {panels.map((panel) => {
+            const isActive = panel.id === active;
+            return (
+              <button
+                key={panel.id}
+                type="button"
+                onClick={() => select(panel.id)}
+                aria-current={isActive ? "page" : undefined}
+                className={
+                  isActive
+                    ? "rounded-md bg-accent-soft px-3 py-2 text-left text-sm font-semibold text-brand-red"
+                    : "rounded-md px-3 py-2 text-left text-sm font-medium text-muted-strong transition-colors hover:bg-surface-soft hover:text-foreground"
+                }
+              >
+                {panel.label}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      <div className="mt-8 lg:mt-0" id={current?.id} role="tabpanel">
         {current?.content}
       </div>
     </div>

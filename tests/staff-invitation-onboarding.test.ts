@@ -92,7 +92,7 @@ describe("staff invitation onboarding", () => {
     expect(authNav).toContain('"school_admin"');
   });
 
-  it("allows scoped staff to create organization tournaments", () => {
+  it("establishes scoped staff authority before finer role boundaries", () => {
     expect(scopedAuthorityMigration).toContain(
       "public.is_org_staff(org_id, auth.uid())"
     );
@@ -100,7 +100,7 @@ describe("staff invitation onboarding", () => {
       "org_id is null"
     );
     expect(tournamentActions).toContain(
-      'supabase.rpc("is_org_staff"'
+      'supabase.rpc("is_org_coach"'
     );
   });
 

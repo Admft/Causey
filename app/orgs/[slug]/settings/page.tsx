@@ -51,16 +51,21 @@ export default async function OrganizationSettingsPage({
         tab="settings"
         showRoster={view.isCoach && view.org.type !== "district"}
         showAdmin={view.isAdmin}
+        orgType={view.org.type}
       />
       <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">Settings</p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-          Organization controls
+          {view.org.type === "district"
+            ? "District controls"
+            : view.org.type === "school"
+              ? "School controls"
+              : "Organization controls"}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Keep the organization record accurate and make ownership changes
-          deliberately. Coaches manage tournaments; administrators manage the
-          organization itself.
+          {view.org.type === "district"
+            ? "Keep the district record accurate, provision school workspaces, and make ownership changes deliberately."
+            : "Keep the organization record accurate and make ownership changes deliberately. Coaches manage tournaments; administrators manage the organization itself."}
         </p>
         {isOwnershipSetup ? (
           <section className="mt-8 border-l-2 border-brand-red pl-5">

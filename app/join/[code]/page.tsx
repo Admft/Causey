@@ -93,9 +93,9 @@ export default async function JoinPage({
 
   const user = await getSessionUser();
   const org = await loadOrgPreview(code);
-  // Invalid codes still 404 for signed-in users; unsigned visitors may hit a
-  // preview RPC that isn’t migrated yet — show a code-forward invite landing.
-  if (user && !org) return <NoMatch code={code} />;
+  // Fail closed for everyone. Never ask a visitor to create an account unless
+  // the anonymous preview resolved a real, current organization.
+  if (!org) return <NoMatch code={code} />;
 
   const joinPath = `/join/${code}`;
   const signupHref = `/signup?next=${encodeURIComponent(joinPath)}`;
@@ -108,17 +108,11 @@ export default async function JoinPage({
           Student invite · {formatJoinCode(code)}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-          {org ? `Join ${org.name}` : "Join your school or club"}
+          Join {org.name}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          {org ? (
-            <>
-              {ORG_TYPE_LABEL[org.type] ?? org.type}
-              {org.state ? ` · ${org.state}` : ""}
-            </>
-          ) : (
-            <>Your coach shared this join link.</>
-          )}
+          {ORG_TYPE_LABEL[org.type] ?? org.type}
+          {org.state ? ` · ${org.state}` : ""}
         </p>
         <p className="mt-4 text-sm text-muted">
           Create a student account to get on the roster. Your coach will see
@@ -152,9 +146,6 @@ export default async function JoinPage({
       </div>
     );
   }
-
-  if (!org) return <NoMatch code={code} />;
-
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">

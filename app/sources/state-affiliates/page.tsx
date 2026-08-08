@@ -26,13 +26,13 @@ export default function StateAffiliatesPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
       <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-        Data sources · Coming soon
+        Source directory
       </p>
       <h1 className="mt-2 max-w-[18ch] font-display text-display font-bold tracking-tight text-foreground">
         USCF state affiliates
       </h1>
       <p className="mt-4 max-w-2xl text-md text-muted">
-        Causey will index calendars from every US Chess state affiliate —{" "}
+        Causey has mapped calendars from every US Chess state affiliate —{" "}
         {STATE_AFFILIATES.length} organizations across all 50 states and DC.
         These sites host scholastic qualifiers and state championships that feed
         Denker, Barber, Rockefeller, Haring, and related national invitationals.

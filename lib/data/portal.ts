@@ -100,7 +100,10 @@ export type MyOrgRow = {
 export type OrgForViewer = {
   org: Organization;
   membership: OrgMembership | null;
+  /** Broad scoped staff access, including read-only assistant coaches. */
   isCoach: boolean;
+  /** Narrow operator access: coach/admin/owner, never assistant coach. */
+  canManageTournaments: boolean;
   isAdmin: boolean;
   isDistrictAdmin: boolean;
   activeMemberCount: number;
@@ -216,6 +219,7 @@ export async function getOrgBySlugForViewer(
     schoolsRes,
     announcementsRes,
     staffAccessRes,
+    coachAccessRes,
     adminAccessRes,
     districtAccessRes,
   ] =
@@ -265,6 +269,10 @@ export async function getOrgBySlugForViewer(
       p_org_id: org.id,
       p_profile_id: userId,
     }),
+    supabase.rpc("is_org_coach", {
+      p_org_id: org.id,
+      p_profile_id: userId,
+    }),
     supabase.rpc("can_administer_org", {
       p_org_id: org.id,
       p_profile_id: userId,
@@ -293,6 +301,7 @@ export async function getOrgBySlugForViewer(
     org: typedOrg,
     membership,
     isCoach: staffAccessRes.data === true,
+    canManageTournaments: coachAccessRes.data === true,
     isAdmin,
     isDistrictAdmin:
       typedOrg.type === "district" &&

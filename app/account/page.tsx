@@ -178,8 +178,7 @@ export default async function AccountPage() {
         Alerts
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        These preferences control in-app alerts now. Email delivery is not
-        connected yet.{" "}
+        These preferences control in-app and product-email alerts.{" "}
         <Link
           href="/me/notifications"
           className="font-semibold text-brand-red hover:underline"
@@ -423,7 +422,7 @@ export default async function AccountPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <Link
           href={workspaceHref}

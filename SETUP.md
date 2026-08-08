@@ -58,11 +58,11 @@ These are not missing by accident; they are deliberate early constraints:
 - Friends graph between students (orgs + groups cover the social layer)
 - In-app registration/payments for scraped events (external `reg_url` only —
   org-hosted events RSVP on Causey instead)
-- Product email delivery, push, and SMS (staff claim links are distributed
-  manually; Supabase Auth email is configured separately)
+- Push and SMS notifications (product email uses Resend; Supabase Auth email
+  is configured separately)
 - Self-serve district creation (platform administrators provision districts)
 
-Accounts and district workflows are live — apply migrations through `0034`
+Accounts and district workflows are live — apply migrations through `0036`
 and use `/signup`. Coaches create school/club workspaces with join codes,
 district administrators create connected schools, platform administrators
 verify organizations, and staff use expiring claim links instead of shared

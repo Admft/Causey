@@ -5,6 +5,7 @@ import {
   canRsvpFor,
   isActiveMember,
   isOrgCoach,
+  isOrgStaff,
 } from "@/lib/org-permissions";
 
 const coachProfile = { id: "coach-1", role: "coach" as const, role_unlocked: true };
@@ -39,10 +40,29 @@ describe("isOrgCoach", () => {
     expect(isOrgCoach(org, { role: "admin", status: "active" }, "other")).toBe(true);
   });
 
-  it("students and removed coaches do not", () => {
+  it("assistants, students, and removed coaches do not get operator authority", () => {
+    expect(
+      isOrgCoach(
+        org,
+        { role: "assistant_coach", status: "active" },
+        "other"
+      )
+    ).toBe(false);
     expect(isOrgCoach(org, { role: "student", status: "active" }, "other")).toBe(false);
     expect(isOrgCoach(org, { role: "coach", status: "removed" }, "other")).toBe(false);
     expect(isOrgCoach(org, null, "other")).toBe(false);
+  });
+});
+
+describe("isOrgStaff", () => {
+  it("keeps assistant coaches in the scoped staff workspace", () => {
+    expect(
+      isOrgStaff(
+        org,
+        { role: "assistant_coach", status: "active" },
+        "other"
+      )
+    ).toBe(true);
   });
 });
 

@@ -89,7 +89,7 @@ async function canOperateOrganizationTournament(
   orgId: string,
   profileId: string
 ): Promise<boolean> {
-  const { data, error } = await supabase.rpc("is_org_staff", {
+  const { data, error } = await supabase.rpc("is_org_coach", {
     p_org_id: orgId,
     p_profile_id: profileId,
   });
@@ -123,7 +123,8 @@ export async function createTournament(
   ) {
     return {
       ok: false,
-      error: "Only staff for this organization can create tournaments.",
+      error:
+        "Only a coach or organization administrator can create tournaments.",
     };
   }
   const { data: org } = await supabase

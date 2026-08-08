@@ -50,6 +50,8 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-08 — **Product email live path**: verified `mail.causey.dev` with Resend; protected Vercel worker claims the service-role outbox with idempotent retries; invitations, reminders, stored updates, and active-guardian copies respect email and per-kind preferences (`0036`).
+- 2026-08-08 — **District-readiness audit batch**: public district pilot + trust pages, fail-closed join links, separate-device student signup handoff, assistant/coach/admin capability boundaries, district-first navigation and multi-school command center, aggregate CSV export, and next-action empty states.
 - 2026-08-08 — **TCA publish honesty**: Admin tournament list counts published vs draft, highlights Published badges, and points chess search at Timing: All so accepted TCA rows are not mistaken for failed publishes. Incomplete Unknown/00000 drafts stay out of search on purpose.
 - 2026-08-08 — **Claim-link ops without email**: People can reissue and copy fresh claim links for pending invites, CSV imports return copy/download claim lists, and login uses the invitation preview so staff vs student signup CTAs stay correct while email delivery remains offline.
 - 2026-08-07 — **Staff invitation onboarding**: migrations `0029`–`0030` add a privacy-minimized invitation preview, invalid/expired claims fail closed, staff signup avoids DOB, and organization membership—not a destructive global-role rewrite—drives staff navigation and tournament authority while preserving Family/Student access.
@@ -70,9 +72,9 @@ _(none — ready for next audit tick)_
 - District admin · school creation · previously landed on student roster mission instead of delegation · **P1 · done**
 - District admin · nav · district exposed coach-style roster/groups · **P1 · done**
 - Operator · org type · freely mutable after creation despite access/hierarchy impact · **P1 · done**
-- Parent/student · signup/footer · Causey stores student birth dates but has no visible data-practices/privacy route · material trust/legal gap for minors · **L · owner/legal decision required**
-- Engineering/operator · README · still claims no accounts, auth, student PII, or admin UI, contradicting the product · operational trust gap · **M · documentation batch**
-- Buyer · signed-out home · unsupported “Searching is free” commitment removed; school/district commercial path remains underspecified · **L · pricing/go-to-market decision required**
+- Parent/student · signup/footer · public privacy/terms and student-data disclosure now linked; district agreement still requires owner/legal approval · **done / legal review remains**
+- Engineering/operator · README · product state now matches accounts, student data, assisted districts, and platform admin · **done**
+- Buyer · signed-out home · district pilot path and founding-team CTA now exist; commercial packaging still requires an owner decision · **partially done**
 - District admin · org landing · a distinct district panel, schools, and reporting already exist; backlog still labels the entire landing schema-gated · roadmap truth needs refresh · **S · documentation**
 - Platform admin · user access · no global account lookup by name/email and no governed privilege assignment surface · account support and access correction required direct database work · **P1 · done in `0026` + `/admin/users`**
 
