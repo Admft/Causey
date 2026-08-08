@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Claim-link ops without email: People can reissue+copy pending invites and export bulk CSV claim links; login uses invitation preview for staff vs student handoff — 2026-08-08
 - [x] Staff invitation onboarding: trusted preview, fail-closed dead links, no-DOB signup, preserved parent/student persona, membership-driven staff navigation and tournament authority (`0029`–`0030`) — 2026-08-07
 - [x] Effective organization authority: owner replaces creator as authority after transfer; district admins retain child-school controls; event auth preserves context; moderation publish confirms (`0028`) — 2026-08-07
 - [x] Platform organization verification: private review queue + correction notes, pending-by-default schools, org-admin status handoff, and database self-verification guard (`0027`) — 2026-08-07
@@ -89,7 +90,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 ## Must have for a real district pilot (UX — gpt-5.6-sol-xhigh)
 Pick these before polish. One major end-to-end win per tick.
 - [ ] District → school hierarchy — verified district tenant, create schools under it, delegate school admins (today orgs are mostly flat clubs)
-- [ ] Bulk provisioning — CSV/email invites with claim links, invite status, no shared passwords
+- [x] Bulk provisioning — CSV/email invites with claim links, invite status, reissue, and bulk claim export; no shared passwords (email delivery still inactive / owner decision) — 2026-08-08
 - [ ] Real role split — district admin vs school admin vs coach vs student (coach/admin are still collapsed in places)
 - [ ] Audience-scoped events — public / district-only / school-only / invite-only (not just public/private)
 - [ ] Parent action list — “this child needs RSVP / register / reminder” as the landing, not a generic portal
@@ -186,3 +187,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Tick 16: organization verification is now a governed workflow. Migration `0027` blocks direct self-verification and keeps correction notes private; platform admins get a pending-first queue, while organization admins see the decision and next step in Settings.
 - Tick 16 audit follow-up: migration `0028` removes creator-derived authority after ownership transfer and centralizes child-school/tournament checks in database helpers. Also preserved event return paths through login, confirmed public publication, and distinguished migration gaps from user-search outages.
 - Tick 17: migrations `0029`–`0030` make claim links a trustworthy staff onboarding flow. Anonymous previews are privacy-minimized, dead links fail before signup, and invitation signup skips student DOB. Existing parent/student personas remain intact; active organization roles add staff navigation and scoped tournament authority instead of overwriting global account access.
+- Tick 18 (2026-08-08): claim-link ops without email — People reissue+copy for pending invites, CSV bulk claim-link export, and login handoff that uses the invitation preview so staff vs student account creation stays aligned.

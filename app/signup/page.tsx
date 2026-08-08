@@ -3,6 +3,11 @@ import Link from "next/link";
 import { SignupForm } from "@/components/SignupForm";
 import { sanitizeNextPath } from "@/lib/auth/next-path";
 import { AccountRoleSchema } from "@/lib/auth/types";
+import {
+  accountRoleForOrgInvitationRole,
+  extractClaimToken,
+  isJoinCodeNextPath,
+} from "@/lib/invitations/claim-path";
 import { getOrganizationInvitationPreview } from "@/lib/data/portal";
 
 export const metadata: Metadata = {
@@ -27,14 +32,15 @@ export default async function SignupPage({
   const { role, next: requestedNext } = await searchParams;
   const parsedRole = AccountRoleSchema.safeParse(role);
   const requestedPath = sanitizeNextPath(requestedNext);
-  const claimMatch = requestedPath?.match(/^\/claim\/([a-f0-9]{64})$/i);
-  const invitation = claimMatch
-    ? await getOrganizationInvitationPreview(claimMatch[1])
+  const claimToken = extractClaimToken(requestedPath);
+  const invitation = claimToken
+    ? await getOrganizationInvitationPreview(claimToken)
     : null;
-  const next = claimMatch && !invitation ? undefined : requestedPath;
-  const isJoiningOrganization = next?.startsWith("/join/") ?? false;
-  const invitationAccountRole =
-    invitation?.member_role === "student" ? "student" : "coach";
+  const next = claimToken && !invitation ? undefined : requestedPath;
+  const isJoiningOrganization = isJoinCodeNextPath(next);
+  const invitationAccountRole = invitation
+    ? accountRoleForOrgInvitationRole(invitation.member_role)
+    : "student";
 
   return (
     <div className="mx-auto max-w-xl px-5 py-10 sm:px-8">

@@ -5,6 +5,10 @@ import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
 import type { OrgMemberRole } from "@/lib/auth/orgs";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import {
+  buildClaimPath,
+  invitationRoleFitsOrganization,
+} from "@/lib/invitations/claim-path";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -250,7 +254,7 @@ async function createInvitationRecord(input: {
   return {
     ok: true,
     invitationId: row.invitation_id,
-    claimPath: `/claim/${row.claim_token}`,
+    claimPath: buildClaimPath(row.claim_token),
     expiresAt: row.expires_at,
   };
 }
@@ -263,16 +267,6 @@ async function getOrganizationType(orgId: string): Promise<string | null> {
     .eq("id", orgId)
     .maybeSingle();
   return data?.type ?? null;
-}
-
-function invitationRoleFitsOrganization(
-  orgType: string,
-  role: OrgMemberRole
-): boolean {
-  if (orgType === "district") {
-    return role !== "student" && role !== "school_admin";
-  }
-  return role !== "district_admin";
 }
 
 export async function inviteOrganizationMember(input: {
@@ -338,6 +332,13 @@ function parseCsvLine(line: string): string[] {
   return values;
 }
 
+export type BulkInviteClaimRow = {
+  email: string;
+  role: OrgMemberRole;
+  claimPath: string;
+  expiresAt: string;
+};
+
 export async function bulkInviteOrganizationMembers(input: {
   orgId: string;
   orgSlug: string;
@@ -347,6 +348,7 @@ export async function bulkInviteOrganizationMembers(input: {
   ActionResult<{
     invited: number;
     failed: { row: number; email: string; error: string }[];
+    claims: BulkInviteClaimRow[];
   }>
 > {
   const parsed = z
@@ -410,6 +412,7 @@ export async function bulkInviteOrganizationMembers(input: {
 
   let invited = 0;
   const failed: { row: number; email: string; error: string }[] = [];
+  const claims: BulkInviteClaimRow[] = [];
   for (let index = 1; index < lines.length; index += 1) {
     const values = parseCsvLine(lines[index]);
     const email = values[emailIndex] ?? "";
@@ -441,8 +444,15 @@ export async function bulkInviteOrganizationMembers(input: {
       role: roleParsed.data,
       batchId: batch.id,
     });
-    if (result.ok) invited += 1;
-    else failed.push({ row: index + 1, email, error: result.error });
+    if (result.ok) {
+      invited += 1;
+      claims.push({
+        email: emailParsed.data,
+        role: roleParsed.data,
+        claimPath: result.claimPath,
+        expiresAt: result.expiresAt,
+      });
+    } else failed.push({ row: index + 1, email, error: result.error });
   }
 
   await supabase
@@ -450,7 +460,82 @@ export async function bulkInviteOrganizationMembers(input: {
     .update({ invited_rows: invited, failed_rows: failed.length })
     .eq("id", batch.id);
   revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
-  return { ok: true, invited, failed };
+  return { ok: true, invited, failed, claims };
+}
+
+export async function reissueOrganizationInvitation(input: {
+  orgId: string;
+  orgSlug: string;
+  invitationId: string;
+}): Promise<ActionResult<InvitationResult & { email: string }>> {
+  const parsed = z
+    .object({
+      orgId: z.string().uuid(),
+      orgSlug: z.string().min(1),
+      invitationId: z.string().uuid(),
+    })
+    .safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Choose a pending invitation to reissue." };
+  }
+  const user = await currentUserOrError();
+  if (!user.ok) return user;
+
+  const supabase = await createServerSupabaseClient();
+  const { data: allowed } = await supabase.rpc("can_administer_org", {
+    p_org_id: parsed.data.orgId,
+    p_profile_id: user.id,
+  });
+  if (allowed !== true) {
+    return { ok: false, error: "Organization administrator access required." };
+  }
+
+  const { data: invitation } = await supabase
+    .from("org_invitations")
+    .select("id, org_id, email, display_name, role, status, expires_at")
+    .eq("id", parsed.data.invitationId)
+    .eq("org_id", parsed.data.orgId)
+    .maybeSingle();
+  if (!invitation) {
+    return { ok: false, error: "That invitation could not be found." };
+  }
+  if (invitation.status === "claimed") {
+    return {
+      ok: false,
+      error: "This invitation was already claimed. Create a new one instead.",
+    };
+  }
+  if (
+    invitation.status !== "pending" &&
+    invitation.status !== "revoked" &&
+    invitation.status !== "expired"
+  ) {
+    return { ok: false, error: "Only open invitations can be reissued." };
+  }
+
+  const orgType = await getOrganizationType(parsed.data.orgId);
+  if (!orgType) {
+    return { ok: false, error: "Could not identify this organization." };
+  }
+  if (!invitationRoleFitsOrganization(orgType, invitation.role)) {
+    return {
+      ok: false,
+      error:
+        orgType === "district"
+          ? "Invite district staff here. Students and school administrators belong in a school workspace."
+          : "District administrators can only be invited to a district workspace.",
+    };
+  }
+
+  const result = await createInvitationRecord({
+    orgId: parsed.data.orgId,
+    email: invitation.email,
+    displayName: invitation.display_name ?? undefined,
+    role: invitation.role as OrgMemberRole,
+  });
+  if (!result.ok) return result;
+  revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
+  return { ...result, email: invitation.email };
 }
 
 export async function claimOrganizationInvitation(

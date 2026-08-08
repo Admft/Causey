@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import {
   bulkInviteOrganizationMembers,
   inviteOrganizationMember,
+  reissueOrganizationInvitation,
+  type BulkInviteClaimRow,
 } from "@/lib/actions/district";
 import { ORG_ROLE_LABELS, type OrgMemberRole } from "@/lib/auth/orgs";
 import type { OrgInvitationRow } from "@/lib/data/district";
@@ -17,6 +19,35 @@ const INVITABLE_ROLES: OrgMemberRole[] = [
   "school_admin",
   "district_admin",
 ];
+
+function invitationStatusLabel(invitation: OrgInvitationRow): string {
+  if (
+    invitation.status === "pending" &&
+    new Date(invitation.expires_at) <= new Date()
+  ) {
+    return "Expired";
+  }
+  return (
+    invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)
+  );
+}
+
+function canReissueInvitation(invitation: OrgInvitationRow): boolean {
+  if (invitation.status === "claimed") return false;
+  if (invitation.status === "pending") return true;
+  return invitation.status === "revoked" || invitation.status === "expired";
+}
+
+function claimsToCsv(claims: BulkInviteClaimRow[]): string {
+  const header = "email,role,claim_path,expires_at";
+  const rows = claims.map((claim) => {
+    const path = claim.claimPath.includes(",")
+      ? `"${claim.claimPath}"`
+      : claim.claimPath;
+    return `${claim.email},${claim.role},${path},${claim.expiresAt}`;
+  });
+  return [header, ...rows].join("\n");
+}
 
 export function OrganizationPeopleManager({
   orgId,
@@ -41,11 +72,29 @@ export function OrganizationPeopleManager({
   );
   const [csv, setCsv] = useState("");
   const [filename, setFilename] = useState("");
-  const [pending, setPending] = useState<"single" | "bulk" | null>(null);
+  const [pending, setPending] = useState<"single" | "bulk" | string | null>(
+    null
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [claimPath, setClaimPath] = useState<string | null>(null);
+  const [bulkClaims, setBulkClaims] = useState<BulkInviteClaimRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  async function copyText(value: string) {
+    const absolute =
+      typeof window !== "undefined" && value.startsWith("/")
+        ? new URL(value, window.location.origin).toString()
+        : value;
+    try {
+      await navigator.clipboard.writeText(absolute);
+      setCopied(true);
+      return true;
+    } catch {
+      setCopied(false);
+      return false;
+    }
+  }
 
   async function inviteOne(event: FormEvent) {
     event.preventDefault();
@@ -53,6 +102,7 @@ export function OrganizationPeopleManager({
     setError(null);
     setMessage(null);
     setClaimPath(null);
+    setBulkClaims([]);
     setCopied(false);
     try {
       const result = await inviteOrganizationMember({
@@ -89,6 +139,8 @@ export function OrganizationPeopleManager({
     setError(null);
     setMessage(null);
     setClaimPath(null);
+    setBulkClaims([]);
+    setCopied(false);
     try {
       const result = await bulkInviteOrganizationMembers({
         orgId,
@@ -109,6 +161,7 @@ export function OrganizationPeopleManager({
             : ""
         }.`
       );
+      setBulkClaims(result.claims);
       setCsv("");
       setFilename("");
       router.refresh();
@@ -117,18 +170,66 @@ export function OrganizationPeopleManager({
     }
   }
 
+  async function reissue(invitation: OrgInvitationRow) {
+    setPending(invitation.id);
+    setError(null);
+    setMessage(null);
+    setClaimPath(null);
+    setBulkClaims([]);
+    setCopied(false);
+    try {
+      const result = await reissueOrganizationInvitation({
+        orgId,
+        orgSlug,
+        invitationId: invitation.id,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setMessage(`New claim link ready for ${result.email}.`);
+      setClaimPath(result.claimPath);
+      await copyText(result.claimPath);
+      router.refresh();
+    } finally {
+      setPending(null);
+    }
+  }
+
   async function copyClaimPath() {
     if (!claimPath) return;
-    const absolute =
-      typeof window !== "undefined"
-        ? new URL(claimPath, window.location.origin).toString()
-        : claimPath;
+    await copyText(claimPath);
+  }
+
+  async function copyBulkClaims() {
+    if (!bulkClaims.length) return;
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const lines = bulkClaims.map((claim) => {
+      const absolute = origin
+        ? new URL(claim.claimPath, origin).toString()
+        : claim.claimPath;
+      return `${claim.email}\t${ORG_ROLE_LABELS[claim.role]}\t${absolute}`;
+    });
     try {
-      await navigator.clipboard.writeText(absolute);
+      await navigator.clipboard.writeText(lines.join("\n"));
       setCopied(true);
     } catch {
       setCopied(false);
     }
+  }
+
+  function downloadBulkClaims() {
+    if (!bulkClaims.length) return;
+    const blob = new Blob([claimsToCsv(bulkClaims)], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `causey-claim-links-${orgSlug}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   const availableRoles = INVITABLE_ROLES.filter((candidate) =>
@@ -233,11 +334,55 @@ export function OrganizationPeopleManager({
                 </button>
               </div>
             </div>
-          ) : (
+          ) : null}
+          {bulkClaims.length ? (
+            <div className="mt-3">
+              <p className="text-sm text-muted-strong">
+                Email delivery isn&rsquo;t connected yet. Copy or download these
+                claim links now — tokens are not recoverable after you leave
+                this page.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={copyBulkClaims}
+                  className="text-sm font-semibold text-brand-red hover:underline"
+                >
+                  {copied ? "Copied list" : "Copy all claim links"}
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadBulkClaims}
+                  className="text-sm font-semibold text-brand-red hover:underline"
+                >
+                  Download CSV
+                </button>
+              </div>
+              <ul className="mt-3 max-h-48 overflow-auto divide-y divide-line border-y border-line">
+                {bulkClaims.slice(0, 8).map((claim) => (
+                  <li key={`${claim.email}-${claim.claimPath}`} className="py-2">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {claim.email}
+                    </p>
+                    <p className="truncate text-xs text-muted">
+                      {ORG_ROLE_LABELS[claim.role]} · {claim.claimPath}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {bulkClaims.length > 8 ? (
+                <p className="mt-2 text-xs text-muted">
+                  Showing 8 of {bulkClaims.length}. Use copy or download for the
+                  full set.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {!claimPath && !bulkClaims.length ? (
             <p className="mt-1 text-sm text-muted">
               They&rsquo;ll get an email with an expiring claim link.
             </p>
-          )}
+          ) : null}
         </div>
       ) : null}
       {error ? (
@@ -272,31 +417,51 @@ export function OrganizationPeopleManager({
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">
-            {invitations.map((invitation) => (
-              <li
-                key={invitation.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {invitation.display_name || invitation.email}
-                  </p>
-                  <p className="truncate text-xs text-muted">
-                    {invitation.display_name ? `${invitation.email} · ` : ""}
-                    {ORG_ROLE_LABELS[invitation.role]}
-                  </p>
-                </div>
-                <span className="text-xs font-semibold text-muted-strong">
-                  {invitation.status === "pending" &&
-                  new Date(invitation.expires_at) <= new Date()
-                    ? "Expired"
-                    : invitation.status.charAt(0).toUpperCase() +
-                      invitation.status.slice(1)}
-                </span>
-              </li>
-            ))}
+            {invitations.map((invitation) => {
+              const statusLabel = invitationStatusLabel(invitation);
+              const reissuable = canReissueInvitation(invitation);
+              return (
+                <li
+                  key={invitation.id}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {invitation.display_name || invitation.email}
+                    </p>
+                    <p className="truncate text-xs text-muted">
+                      {invitation.display_name ? `${invitation.email} · ` : ""}
+                      {ORG_ROLE_LABELS[invitation.role]}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-xs font-semibold text-muted-strong">
+                      {statusLabel}
+                    </span>
+                    {reissuable ? (
+                      <button
+                        type="button"
+                        disabled={pending !== null}
+                        onClick={() => reissue(invitation)}
+                        className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                      >
+                        {pending === invitation.id
+                          ? "Reissuing…"
+                          : "Reissue & copy link"}
+                      </button>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
+        {invitations.some(canReissueInvitation) ? (
+          <p className="mt-3 text-xs text-muted">
+            Reissue creates a fresh claim link and revokes the previous pending
+            one. Send the new link yourself until email delivery is connected.
+          </p>
+        ) : null}
       </section>
 
       <details className="section-rule pt-8">
@@ -315,7 +480,8 @@ export function OrganizationPeopleManager({
               <>
                 an optional <strong>role</strong> column.
               </>
-            )}
+            )}{" "}
+            After import, copy or download claim links immediately.
           </p>
           <input
             className="field mt-4"

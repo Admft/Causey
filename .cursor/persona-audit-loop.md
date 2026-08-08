@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-08 — **Claim-link ops without email**: People can reissue and copy fresh claim links for pending invites, CSV imports return copy/download claim lists, and login uses the invitation preview so staff vs student signup CTAs stay correct while email delivery remains offline.
 - 2026-08-07 — **Staff invitation onboarding**: migrations `0029`–`0030` add a privacy-minimized invitation preview, invalid/expired claims fail closed, staff signup avoids DOB, and organization membership—not a destructive global-role rewrite—drives staff navigation and tournament authority while preserving Family/Student access.
 - 2026-08-07 — **Effective organization authority follow-up**: migration `0028` makes `owner_profile_id` authoritative after transfer, removes creator delete/private-event powers, and gives district admins database-backed child-school controls. Event auth keeps context, public publication confirms, and user-directory outages no longer masquerade as missing migrations.
 - 2026-08-07 — **Platform organization verification workflow**: migration `0027` prevents organization self-verification, district-created schools start pending, `/admin/organizations` provides a review queue with private correction notes, and organization Settings shows the decision and next step.
@@ -87,7 +88,7 @@ _(none — ready for next audit tick)_
 - Platform admin · user directory · migration `0026` remains unapplied, so the shipped account search surface will show a schema-gap error in environments missing migrations · **P1 · deployment**
 - Coach/org owner · ownership transfer · creator-derived authority remains effective after owner transfer, including delete and private tournament access · **P0 · done in `0028`**
 - District admin · child school · SQL grants parent-district administration but portal UI checks only direct school roles · additional district admins lose People, Reports, and Settings · **P1 · done in `0028`**
-- Invited staff · claim/signup · school and district administrator invitations default to Student signup and DOB collection · wrong persona and unnecessary minor-data field block staff onboarding · **P1 · L**
+- Invited staff · claim/signup · school and district administrator invitations default to Student signup and DOB collection · wrong persona and unnecessary minor-data field block staff onboarding · **P1 · done in `0029` + 2026-08-08 claim-link ops**
 - Org staff · tournament actions · create/manage gates disagree across global account role, org role, and event creator · valid staff can reach actions that reject them · **P1 · partially fixed in `0028`; creation persona remains**
 - Signed-out student · join link · failed organization preview still presents a believable invitation and signup CTA, then rejects the code after account creation · **P1 · M**
 - Signed-out visitor · event save/rate · login omitted the event return path and sent the user to a role landing · tournament context was lost · **P1 · done**

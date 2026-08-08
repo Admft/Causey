@@ -6,6 +6,9 @@ describe("sanitizeNextPath", () => {
     expect(sanitizeNextPath("/join/BCDFGHJK?from=invite")).toBe(
       "/join/BCDFGHJK?from=invite"
     );
+    expect(sanitizeNextPath(`/claim/${"a".repeat(64)}`)).toBe(
+      `/claim/${"a".repeat(64)}`
+    );
   });
 
   it("rejects external and protocol-relative destinations", () => {

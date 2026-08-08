@@ -4,19 +4,31 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { homePathForRole } from "@/lib/auth/home-path";
+import type { AccountRole } from "@/lib/auth/types";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export function LoginForm({
   next,
   joiningOrganization = false,
+  claimingInvitation = false,
+  claimAccountRole,
 }: {
   next?: string;
   joiningOrganization?: boolean;
+  claimingInvitation?: boolean;
+  claimAccountRole?: AccountRole;
 }) {
   const router = useRouter();
   const signupHref = next
     ? `/signup?next=${encodeURIComponent(next)}`
     : "/signup";
+  const createAccountLabel = claimingInvitation
+    ? claimAccountRole === "coach"
+      ? "Create a staff account"
+      : "Create a student account"
+    : joiningOrganization
+      ? "Create a student account"
+      : "Create an account";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +116,7 @@ export function LoginForm({
           href={signupHref}
           className="font-semibold text-brand-red hover:underline"
         >
-          {joiningOrganization ? "Create a student account" : "Create an account"}
+          {createAccountLabel}
         </Link>
         {" · "}
         <Link
