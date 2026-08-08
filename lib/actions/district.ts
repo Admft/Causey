@@ -644,8 +644,6 @@ export async function saveNotificationPreferences(
   return { ok: true };
 }
 
-export { markNotificationRead } from "@/lib/actions/notifications";
-
 export async function markEntrantAttendance(input: {
   competitionId: string;
   profileId: string;

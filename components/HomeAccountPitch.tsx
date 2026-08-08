@@ -76,10 +76,10 @@ export async function HomeAccountPitch() {
         aria-labelledby="account-heading"
       >
         {/*
-          Same md+ grid as signed-out: copy left, next-actions right so the
-          blue band isn’t a left strip with a dead right plane.
+          md+ two-col fills the band. Secondary actions stay compact text links
+          (not full-bleed justify-between cards — short labels look stretched).
         */}
-        <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-14">
           <div className="min-w-0 max-w-xl">
             <h2
               id="account-heading"
@@ -90,33 +90,40 @@ export async function HomeAccountPitch() {
             <p className="mt-3 max-w-prose text-base text-muted">{next.blurb}</p>
           </div>
 
-          <div className="min-w-0 w-full max-w-md space-y-3 md:max-w-none">
-            {primary ? (
-              <Link
-                href={primary.href}
-                className="cta-enabled inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold"
-              >
-                {primary.label}
-              </Link>
-            ) : null}
-            {secondary.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="card-lift group flex items-center justify-between gap-4 rounded-2xl border border-line bg-surface px-5 py-4"
-              >
-                <span className="min-w-0 text-sm font-semibold text-foreground">
-                  {action.label}
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="nudge-x shrink-0 text-xl text-brand-red"
+          <nav
+            aria-label="Signed-in next steps"
+            className="min-w-0 w-full max-w-xs md:max-w-none"
+          >
+            <p className="text-sm font-semibold text-foreground">Next</p>
+            <div className="mt-3 flex flex-col gap-3">
+              {primary ? (
+                <Link
+                  href={primary.href}
+                  className="cta-enabled inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold"
                 >
-                  →
-                </span>
-              </Link>
-            ))}
-          </div>
+                  {primary.label}
+                </Link>
+              ) : null}
+              <ul className="flex flex-col gap-2 border-t border-brand-blue/35 pt-3">
+                {secondary.map((action) => (
+                  <li key={action.href}>
+                    <Link
+                      href={action.href}
+                      className="group inline-flex items-center gap-1.5 text-sm font-semibold text-muted-strong hover:text-brand-red"
+                    >
+                      {action.label}
+                      <span
+                        aria-hidden="true"
+                        className="nudge-x text-brand-red"
+                      >
+                        →
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
         </div>
       </section>
     );
