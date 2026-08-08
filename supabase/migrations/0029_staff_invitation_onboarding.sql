@@ -1,6 +1,9 @@
 -- Trustworthy staff invitation preview and membership handoff.
 -- Run after 0028_effective_organization_authority.sql.
 
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+
 create or replace function public.get_org_invitation_preview(p_token text)
 returns table (
   org_slug text,
@@ -27,7 +30,7 @@ as $$
   from public.org_invitations i
   join public.organizations o on o.id = i.org_id
   where i.token_hash = encode(
-      digest(coalesce(p_token, ''), 'sha256'),
+      extensions.digest(coalesce(p_token, ''), 'sha256'),
       'hex'
     )
     and i.status = 'pending'
@@ -58,7 +61,10 @@ begin
   select *
   into target
   from public.org_invitations i
-  where i.token_hash = encode(digest(coalesce(p_token, ''), 'sha256'), 'hex')
+  where i.token_hash = encode(
+    extensions.digest(coalesce(p_token, ''), 'sha256'),
+    'hex'
+  )
   for update;
 
   if target.id is null

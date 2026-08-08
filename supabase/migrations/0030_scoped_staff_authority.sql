@@ -19,7 +19,10 @@ begin
   select *
   into target
   from public.org_invitations i
-  where i.token_hash = encode(digest(coalesce(p_token, ''), 'sha256'), 'hex')
+  where i.token_hash = encode(
+    extensions.digest(coalesce(p_token, ''), 'sha256'),
+    'hex'
+  )
   for update;
 
   if target.id is null
@@ -49,6 +52,12 @@ revoke execute on function public.claim_org_invitation(text)
   from public, anon;
 grant execute on function public.claim_org_invitation(text)
   to authenticated;
+
+-- 0018 intentionally restricts this SECURITY DEFINER function's search path;
+-- include Supabase's extension schema so token generation and hashing resolve.
+alter function public.create_org_invitation(
+  uuid, text, text, text, uuid
+) set search_path = public, extensions;
 
 -- The first 0029 version briefly rewrote existing parent/student claimants to
 -- coach. Its self-authored role audit and same-transaction invitation claim

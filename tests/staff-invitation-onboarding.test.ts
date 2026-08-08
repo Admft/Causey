@@ -51,6 +51,7 @@ describe("staff invitation onboarding", () => {
     expect(migration).toContain("i.expires_at > now()");
     expect(migration).toContain("email_hint");
     expect(migration).toContain("to anon, authenticated");
+    expect(migration).toContain("extensions.digest");
     expect(migration).not.toMatch(/returns table \([\s\S]*?\bemail text\b/);
   });
 
@@ -63,6 +64,9 @@ describe("staff invitation onboarding", () => {
       "insert into public.org_memberships"
     );
     expect(scopedAuthorityMigration).toContain("affected_claimants");
+    expect(scopedAuthorityMigration).toContain(
+      "set search_path = public, extensions"
+    );
     expect(scopedAuthorityMigration).toContain(
       "e.detail->>'from_role' in ('student', 'parent')"
     );
