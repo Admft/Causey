@@ -1,9 +1,16 @@
 import * as cheerio from "cheerio";
+import type { AnyNode } from "domhandler";
 import { extractPageImage } from "./extract-page-image";
 import { parseDateRange, stateToCode } from "./normalize";
 
 export const TCA_LISTING_URL =
   "https://texaschess.org/tca-and-tca-club-events/";
+
+const REGISTRAR_HOST =
+  /kingregistration\.com|onlineregistration\.cc|chessstream\.com|austinchesstournaments|chessentry|formstack\.com|eventbrite\.com|google\.com\/forms|forms\.gle/i;
+
+const STREET_SUFFIX =
+  "Street|Road|Avenue|Drive|Boulevard|Lane|Court|Parkway|Blvd|Ave|Pkwy|Rd|Ln|Ct|Way|Dr|St";
 
 export type RawTcaEvent = {
   externalKey: string;
@@ -35,6 +42,16 @@ function cleanText(value: string): string {
   return value.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 }
 
+/** Divi/WordPress often glues block text; repair common joins before parsing. */
+function unglueAnnouncementText(value: string): string {
+  return cleanText(
+    value
+      .replace(/(20\d{2})([A-Za-z])/g, "$1 $2")
+      .replace(/([a-z.])(\d{1,6}\s+[A-Za-z])/gi, "$1 $2")
+      .replace(/([A-Za-z])(\d{5})\b/g, "$1 $2")
+  );
+}
+
 function absoluteUrl(raw: string | undefined, baseUrl: string): string | null {
   if (!raw) return null;
   try {
@@ -43,6 +60,32 @@ function absoluteUrl(raw: string | undefined, baseUrl: string): string | null {
   } catch {
     return null;
   }
+}
+
+function firstMatching(
+  $: cheerio.CheerioAPI,
+  selectors: string[]
+): cheerio.Cheerio<AnyNode> {
+  for (const selector of selectors) {
+    const match = $(selector).first();
+    if (match.length) return match;
+  }
+  return $("body");
+}
+
+function readableContentText(
+  $: cheerio.CheerioAPI,
+  root: cheerio.Cheerio<AnyNode>
+): string {
+  const clone = root.clone();
+  clone.find("script, style, noscript").remove();
+  clone.find("br").replaceWith("\n");
+  clone
+    .find("p, div, h1, h2, h3, h4, h5, li, tr, section, header, footer, figure")
+    .each((_, el) => {
+      $(el).prepend("\n").append("\n");
+    });
+  return unglueAnnouncementText(clone.text());
 }
 
 export function parseTcaListingHtml(
@@ -112,32 +155,113 @@ export function parseTcaDateRange(text: string): {
   start: string;
   end: string | null;
 } | null {
-  const cleaned = cleanText(text).replace(
+  const cleaned = unglueAnnouncementText(text).replace(
     /(\d{1,2})(?:st|nd|rd|th)\b/gi,
     "$1"
   );
-  const fullRange = cleaned.match(
-    /\b([A-Za-z]{3,9}\s+\d{1,2},?\s+20\d{2})\s+(?:to|through|[-–])\s+([A-Za-z]{3,9}\s+\d{1,2},?\s+20\d{2})\b/i
-  );
-  if (fullRange) {
-    const start = parseDateRange(fullRange[1]);
-    const end = parseDateRange(fullRange[2]);
+
+  // Ranges first. Do not require a trailing word boundary after the year —
+  // Divi often glues the venue immediately after the end date (2026La Quinta).
+  const rangeRe =
+    /\b([A-Za-z]{3,9}\s+\d{1,2},?\s+20\d{2})\s+(?:to|through|[-–])\s+([A-Za-z]{3,9}\s+\d{1,2},?\s+20\d{2})(?!\d)/gi;
+  let rangeMatch: RegExpExecArray | null;
+  while ((rangeMatch = rangeRe.exec(cleaned))) {
+    const start = parseDateRange(rangeMatch[1]!);
+    const end = parseDateRange(rangeMatch[2]!);
     if (start && end) {
       return {
-        dateText: fullRange[0],
+        dateText: rangeMatch[0],
         start: start.start,
         end: end.start,
       };
     }
   }
 
-  const parsed = parseDateRange(cleaned);
+  // Ignore WordPress "Posted by … | Jun 20, 2026 |" before single-date fallback.
+  const withoutPostMeta = cleaned.replace(
+    /Posted by[\s\S]{0,120}?\|\s*[A-Za-z]{3,9}\s+\d{1,2},?\s+20\d{2}/gi,
+    " "
+  );
+  const parsed = parseDateRange(withoutPostMeta);
   if (!parsed) return null;
   const dateText =
-    cleaned.match(
-      /\b[A-Za-z]{3,9}\s+\d{1,2}(?:\s*[-–]\s*(?:[A-Za-z]{3,9}\s+)?\d{1,2})?,?\s+20\d{2}\b/i
+    withoutPostMeta.match(
+      /\b[A-Za-z]{3,9}\s+\d{1,2}(?:\s*[-–]\s*(?:[A-Za-z]{3,9}\s+)?\d{1,2})?,?\s+20\d{2}(?!\d)/i
     )?.[0] ?? parsed.start;
   return { dateText, start: parsed.start, end: parsed.end };
+}
+
+function parseTcaLocation(bodyText: string): {
+  venueName: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+} {
+  const streetRe = new RegExp(
+    `\\b(\\d{1,6}\\s+[A-Za-z0-9 .'#/-]{2,70}?\\b(?:${STREET_SUFFIX})\\.?)(?:,)?\\s+([A-Za-z .'-]{2,50}),?\\s*(Texas|TX)\\s+(\\d{5})(?:-\\d{4})?\\b`,
+    "i"
+  );
+  const addressMatch = bodyText.match(streetRe);
+  const cityZipMatch = bodyText.match(
+    /\b([A-Za-z .'-]{2,50}),?\s*(Texas|TX)\s+(\d{5})(?:-\d{4})?\b/i
+  );
+
+  const city =
+    cleanText(addressMatch?.[2] ?? cityZipMatch?.[1] ?? "") || null;
+  const stateRaw = addressMatch?.[3] ?? cityZipMatch?.[2] ?? "";
+  const zip = addressMatch?.[4] ?? cityZipMatch?.[3] ?? null;
+  const address = addressMatch ? cleanText(addressMatch[1]!) : null;
+
+  let venueName: string | null = null;
+  if (address) {
+    const escaped = address.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const before = bodyText.match(
+      new RegExp(
+        `([A-Za-z0-9][A-Za-z0-9 &.'/-]{3,90}?(?:Inn|Hotel|Suites|School|Center|Centre|Church|Library|Hall|Campus|University|College|Club|Academy|Riverwalk))\\s+${escaped}`,
+        "i"
+      )
+    );
+    if (before?.[1]) {
+      venueName = cleanText(before[1])
+        .replace(/^(?:to|through)\s+/i, "")
+        .replace(/^20\d{2}\s+/, "");
+    }
+  }
+
+  return {
+    venueName,
+    address,
+    city,
+    state: stateToCode(stateRaw),
+    zip,
+  };
+}
+
+function parseTcaRegistrationUrl(
+  $: cheerio.CheerioAPI,
+  pageUrl: string
+): string | null {
+  let registrationUrl: string | null = null;
+  let registrarFallback: string | null = null;
+
+  $("a[href]").each((_, element) => {
+    if (registrationUrl) return;
+    const link = $(element);
+    const label = cleanText(link.text());
+    const href = absoluteUrl(link.attr("href"), pageUrl);
+    if (!href || href.startsWith("mailto:")) return;
+
+    if (/register|registration|entry form|sign up|online entry/i.test(label)) {
+      registrationUrl = href;
+      return;
+    }
+    if (!registrarFallback && REGISTRAR_HOST.test(href)) {
+      registrarFallback = href;
+    }
+  });
+
+  return registrationUrl ?? registrarFallback;
 }
 
 export function parseTcaDetailHtml(
@@ -145,52 +269,35 @@ export function parseTcaDetailHtml(
   pageUrl: string
 ): TcaDetail {
   const $ = cheerio.load(html);
-  const content = $(
-    "article .entry-content, article .post-content, .et_pb_post_content, #main-content"
-  ).first();
-  const bodyText = cleanText(content.length ? content.text() : $("body").text());
+  // Try selectors in priority order — jQuery `.first()` is document order, not
+  // selector-list order, so `#main-content` must not win over the article body.
+  const content = firstMatching($, [
+    "article .entry-content",
+    "article .post-content",
+    ".et_pb_post_content",
+    "article",
+    "#main-content",
+  ]);
+  const bodyText = readableContentText($, content);
   const dates = parseTcaDateRange(bodyText);
-
-  const addressMatch = bodyText.match(
-    /\b(\d{1,6}\s+[A-Za-z0-9 .'#/-]{2,70}?\b(?:Street|Road|Avenue|Drive|Boulevard|Lane|Court|Parkway|Blvd|Ave|Pkwy|Rd|Ln|Ct|Way|Dr|St)\.?),?\s+([A-Za-z .'-]{2,50}),\s*(Texas|TX)\s+(\d{5})(?:-\d{4})?\b/i
-  );
-  const cityZipMatch = bodyText.match(
-    /\b([A-Za-z .'-]{2,50}),\s*(Texas|TX)\s+(\d{5})(?:-\d{4})?\b/i
-  );
-  const city = cleanText(addressMatch?.[2] ?? cityZipMatch?.[1] ?? "") || null;
-  const stateRaw = addressMatch?.[3] ?? cityZipMatch?.[2] ?? "";
-  const zip = addressMatch?.[4] ?? cityZipMatch?.[3] ?? null;
-
-  let registrationUrl: string | null = null;
-  $("a[href]").each((_, element) => {
-    if (registrationUrl) return;
-    const link = $(element);
-    const label = cleanText(link.text());
-    const href = absoluteUrl(link.attr("href"), pageUrl);
-    if (
-      href &&
-      /register|registration|entry form|sign up/i.test(label) &&
-      !href.startsWith("mailto:")
-    ) {
-      registrationUrl = href;
-    }
-  });
+  const location = parseTcaLocation(bodyText);
+  const registrationUrl = parseTcaRegistrationUrl($, pageUrl);
 
   return {
     dateText: dates?.dateText ?? null,
     startDate: dates?.start ?? null,
     endDate: dates?.end ?? null,
-    venueName: null,
-    address: addressMatch ? cleanText(addressMatch[1]) : null,
-    city,
-    state: stateToCode(stateRaw),
-    zip,
+    venueName: location.venueName,
+    address: location.address,
+    city: location.city,
+    state: location.state,
+    zip: location.zip,
     registrationUrl,
     imageUrl: extractPageImage(html, pageUrl),
     bodyText,
     onlineOnly:
       /\b(?:online[- ]only|online chess tournament|played online)\b/i.test(
         bodyText
-      ) && !addressMatch,
+      ) && !location.address,
   };
 }

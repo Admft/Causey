@@ -45,6 +45,9 @@ describe("Texas Chess Association scraper", () => {
     expect(
       parseTcaDateRange("September 4, 2026 to September 7, 2026")
     ).toMatchObject({ start: "2026-09-04", end: "2026-09-07" });
+    expect(
+      parseTcaDateRange("September 4, 2026 to September 7, 2026La Quinta")
+    ).toMatchObject({ start: "2026-09-04", end: "2026-09-07" });
     expect(parseTcaDateRange("(March 21st, 2026)")).toMatchObject({
       start: "2026-03-21",
     });
@@ -71,6 +74,32 @@ describe("Texas Chess Association scraper", () => {
       registrationUrl: "https://register.example.com/swo",
       imageUrl: "https://texaschess.org/cover-1280.jpg",
     });
+  });
+
+  it("parses the live Southwest Open detail page without a comma before TX", () => {
+    const html = readFileSync(
+      join(
+        process.cwd(),
+        "ingestion/fixtures/incoming/tca-92nd-southwest-open.html"
+      ),
+      "utf8"
+    );
+    const detail = parseTcaDetailHtml(
+      html,
+      "https://texaschess.org/92nd-southwest-open/"
+    );
+    expect(detail).toMatchObject({
+      startDate: "2026-09-04",
+      endDate: "2026-09-07",
+      city: "San Antonio",
+      state: "TX",
+      zip: "78205",
+      address: "303 Blum St",
+      registrationUrl: "https://www.kingregistration.com/event/92SWO",
+    });
+    expect(detail.venueName).toMatch(/La Quinta Inn/i);
+    expect(detail.venueName).not.toMatch(/^20\d{2}/);
+    expect(detail.startDate).not.toBe("2026-06-20");
   });
 
   it("preserves the listing picture on the staged competition", () => {

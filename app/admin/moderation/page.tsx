@@ -3,18 +3,11 @@ import Link from "next/link";
 import { ModerationReviewForm } from "@/components/ModerationReviewForm";
 import { getAdminModerationQueue } from "@/lib/data/admin";
 import { formatDateRange, formatFeeCents } from "@/lib/format";
+import { competitionSourceLabel } from "@/lib/ingestion-sources";
 
 export const metadata: Metadata = {
   title: "Tournament moderation",
   description: "Review organizer-submitted public tournaments before discovery.",
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  organizer: "Organizer submission",
-  tla_scrape: "US Chess TLA",
-  cca_scrape: "Continental Chess Association",
-  tca_scrape: "Texas Chess Association",
-  manual: "Platform admin",
 };
 
 const VERIFICATION_LABELS = {
@@ -117,7 +110,7 @@ export default async function ModerationPage() {
                 <div>
                   <dt className="text-xs font-semibold text-muted">Source</dt>
                   <dd className="mt-0.5 text-foreground">
-                    {SOURCE_LABELS[tournament.source] ?? tournament.source}
+                    {competitionSourceLabel(tournament.source)}
                   </dd>
                 </div>
                 <div>

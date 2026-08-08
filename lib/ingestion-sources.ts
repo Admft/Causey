@@ -101,3 +101,27 @@ export function sourceByCompetitionSource(
 export function sourceById(id: string): IngestionSource | undefined {
   return INGESTION_SOURCES.find((s) => s.id === id);
 }
+
+/** Plain-language filter options for competitions.source (search + admin). */
+export const COMPETITION_SOURCE_FILTER_OPTIONS: {
+  value: string;
+  label: string;
+}[] = [
+  ...INGESTION_SOURCES.filter((s) => s.competitionSource).map((s) => ({
+    value: s.competitionSource as string,
+    label: s.name,
+  })),
+  { value: "organizer", label: "Provided by organizer" },
+  { value: "manual", label: "Entered in Causey" },
+];
+
+export function competitionSourceLabel(source: string): string {
+  return (
+    COMPETITION_SOURCE_FILTER_OPTIONS.find((s) => s.value === source)?.label ??
+    source
+  );
+}
+
+export function isCompetitionSourceFilter(source: string): boolean {
+  return COMPETITION_SOURCE_FILTER_OPTIONS.some((s) => s.value === source);
+}

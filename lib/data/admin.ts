@@ -1,5 +1,6 @@
 import "server-only";
 
+import { isCompetitionSourceFilter } from "@/lib/ingestion-sources";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type AdminOrganizationRow = {
@@ -203,7 +204,7 @@ export async function getAdminTournaments(filters?: {
   ) {
     query = query.eq("status", filters.status);
   }
-  if (filters?.source) {
+  if (filters?.source && isCompetitionSourceFilter(filters.source)) {
     query = query.eq("source", filters.source);
   }
 

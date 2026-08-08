@@ -3,6 +3,10 @@ import Link from "next/link";
 import { AdminTournamentStatusActions } from "@/components/AdminTournamentStatusActions";
 import { getAdminTournaments } from "@/lib/data/admin";
 import { formatDateRange } from "@/lib/format";
+import {
+  COMPETITION_SOURCE_FILTER_OPTIONS,
+  competitionSourceLabel,
+} from "@/lib/ingestion-sources";
 
 export const metadata: Metadata = {
   title: "Admin tournaments",
@@ -15,14 +19,6 @@ const STATUS_LABELS: Record<string, string> = {
   published: "Published",
   rejected: "Rejected",
   archived: "Archived",
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  organizer: "Organizer",
-  tla_scrape: "US Chess TLA",
-  cca_scrape: "CCA",
-  tca_scrape: "Texas Chess Association",
-  manual: "Manual",
 };
 
 export default async function AdminTournamentsPage({
@@ -71,10 +67,11 @@ export default async function AdminTournamentsPage({
           <span className="text-xs font-semibold text-muted-strong">Source</span>
           <select className="field" name="source" defaultValue={filters.source ?? ""}>
             <option value="">All sources</option>
-            <option value="organizer">Organizer</option>
-            <option value="tla_scrape">US Chess TLA</option>
-            <option value="cca_scrape">CCA</option>
-            <option value="manual">Manual</option>
+            {COMPETITION_SOURCE_FILTER_OPTIONS.map((source) => (
+              <option key={source.value} value={source.value}>
+                {source.label}
+              </option>
+            ))}
           </select>
         </label>
         <button type="submit" className="cta-enabled">
@@ -139,7 +136,7 @@ export default async function AdminTournamentsPage({
                   <p className="mt-1 text-xs text-muted">
                     {formatDateRange(tournament.start_date, tournament.end_date)}
                     {` · ${tournament.city}, ${tournament.state}`}
-                    {` · ${SOURCE_LABELS[tournament.source] ?? tournament.source}`}
+                    {` · ${competitionSourceLabel(tournament.source)}`}
                     {tournament.organizations
                       ? ` · ${tournament.organizations.name}`
                       : ""}

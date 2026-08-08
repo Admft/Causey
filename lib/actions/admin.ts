@@ -63,6 +63,44 @@ const AdminReviewSchema = z
     }
   });
 
+const BULK_TOURNAMENT_CAP = 100;
+
+const AdminBulkStatusSchema = z.object({
+  competitionIds: z
+    .array(z.string().uuid())
+    .min(1, "Select at least one tournament.")
+    .max(BULK_TOURNAMENT_CAP, `Select at most ${BULK_TOURNAMENT_CAP} tournaments.`),
+  status: z.enum([
+    "draft",
+    "pending_review",
+    "published",
+    "rejected",
+    "archived",
+  ]),
+});
+
+const AdminBulkReviewSchema = z
+  .object({
+    competitionIds: z
+      .array(z.string().uuid())
+      .min(1, "Select at least one tournament.")
+      .max(
+        BULK_TOURNAMENT_CAP,
+        `Select at most ${BULK_TOURNAMENT_CAP} tournaments.`
+      ),
+    decision: z.enum(["approve", "reject"]),
+    note: z.string().trim().max(1000).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.decision === "reject" && !value.note) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["note"],
+        message: "Add a review note explaining what needs correction.",
+      });
+    }
+  });
+
 const AdminUserAccessSchema = z.object({
   profileId: z.string().uuid(),
   accountRole: z.enum(["student", "parent", "coach"]),
@@ -407,4 +445,85 @@ export async function adminReviewTournament(input: {
   revalidatePath("/chess");
   revalidatePath(`/event/${parsed.data.eventSlug}`);
   return { ok: true, status };
+}
+
+export async function adminBulkSetTournamentStatus(input: {
+  competitionIds: string[];
+  status: "draft" | "pending_review" | "published" | "rejected" | "archived";
+}): Promise<ActionResult<{ updated: number; skipped: number }>> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) return { ok: false, error: "Platform administrator access required." };
+
+  const parsed = AdminBulkStatusSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid bulk status change.",
+    };
+  }
+
+  const ids = [...new Set(parsed.data.competitionIds)];
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("competitions")
+    .update({ status: parsed.data.status })
+    .in("id", ids)
+    .select("id");
+  if (error) {
+    return { ok: false, error: "Could not update the selected tournaments." };
+  }
+
+  const updated = data?.length ?? 0;
+  revalidatePath("/admin");
+  revalidatePath("/admin/tournaments");
+  revalidatePath("/admin/moderation");
+  revalidatePath("/chess");
+  return { ok: true, updated, skipped: ids.length - updated };
+}
+
+export async function adminBulkReviewTournaments(input: {
+  competitionIds: string[];
+  decision: "approve" | "reject";
+  note?: string;
+}): Promise<ActionResult<{ updated: number; skipped: number; status: "published" | "rejected" }>> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) return { ok: false, error: "Platform administrator access required." };
+
+  const parsed = AdminBulkReviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the review decision.",
+    };
+  }
+
+  const ids = [...new Set(parsed.data.competitionIds)];
+  const status = parsed.data.decision === "approve" ? "published" : "rejected";
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("competitions")
+    .update({
+      status,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: admin.id,
+      moderation_note: parsed.data.note || null,
+    })
+    .in("id", ids)
+    .eq("status", "pending_review")
+    .select("id");
+  if (error) {
+    return { ok: false, error: "Could not review the selected tournaments." };
+  }
+
+  const updated = data?.length ?? 0;
+  revalidatePath("/admin");
+  revalidatePath("/admin/tournaments");
+  revalidatePath("/admin/moderation");
+  revalidatePath("/chess");
+  return {
+    ok: true,
+    updated,
+    skipped: ids.length - updated,
+    status,
+  };
 }

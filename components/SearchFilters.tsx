@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { GRADE_BANDS, RATING_BANDS, type GradeBand, type RatingBand } from "@/lib/schemas";
-import { INGESTION_SOURCES } from "@/lib/ingestion-sources";
+import { COMPETITION_SOURCE_FILTER_OPTIONS } from "@/lib/ingestion-sources";
 import { formatDate } from "@/lib/format";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import type { TimingFilter } from "@/lib/competition-timing";
@@ -51,14 +51,7 @@ const FEE_CEILINGS = [
 ];
 
 /** Listing origins shown in plain language; values match competitions.source. */
-const SOURCE_OPTIONS = [
-  ...INGESTION_SOURCES.filter((s) => s.competitionSource).map((s) => ({
-    value: s.competitionSource as string,
-    label: s.name,
-  })),
-  { value: "organizer", label: "Provided by organizer" },
-  { value: "manual", label: "Entered in Causey" },
-];
+const SOURCE_OPTIONS = COMPETITION_SOURCE_FILTER_OPTIONS;
 
 const TIMING_OPTIONS: { value: TimingFilter; label: string }[] = [
   { value: "upcoming", label: "Upcoming" },

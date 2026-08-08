@@ -105,15 +105,36 @@ export function parseSectionsFromText(text: string): ParsedSectionDraft[] {
     });
   }
 
-  // Championship / Major / Open as open (no ceiling) — only when labeled as sections.
-  if (/\b(?:Championship|Major)\s+Section\b/i.test(t) || /\bMajor\s+Section\b/i.test(t)) {
+  // Championship / Major / Reserve / Open — only when labeled as sections.
+  if (/\bMajor\s+Section\b/i.test(t)) {
     pushUnique(out, openSection("Major"));
   }
-  if (/\bChampionship\b/i.test(t) && /\bsections?\b/i.test(t)) {
-    // Irving: "Championship / U1000 / U600"
-    if (!out.some((s) => /championship|major|open/i.test(s.name))) {
+  if (
+    /\bChampionship\s+Section\b/i.test(t) ||
+    (/\bChampionship\b/i.test(t) && /\bsections?\b/i.test(t)) ||
+    /\bChampionship\s*:\s*(?:FIDE|US\s*Chess|rated)/i.test(t)
+  ) {
+    if (!out.some((s) => /^championship$/i.test(s.name))) {
       pushUnique(out, openSection("Championship"));
     }
+  }
+  if (
+    /\bReserve\s+Section\b/i.test(t) ||
+    /\bReserve\s*:\s*(?:US\s*Chess|FIDE|rated|Open to)/i.test(t) ||
+    (/\bReserve\b/i.test(t) && /\bsections?\b/i.test(t) && /\bunder\s+\d{3,4}\b/i.test(t))
+  ) {
+    const reserveUnder = t.match(
+      /Reserve[^.]{0,120}?(?:under|U)\s*[-–]?\s*(\d{3,4})/i
+    );
+    const cap = reserveUnder ? Number(reserveUnder[1]) : null;
+    pushUnique(out, {
+      name: "Reserve",
+      min_rating: null,
+      max_rating: cap && cap >= 100 && cap <= 3000 ? underCap(cap) : null,
+      min_grade: null,
+      max_grade: null,
+      entry_fee_cents: null,
+    });
   }
   if (/\bOpen\s+Section\b/i.test(t) || /\bsections?[^.|]{0,40}\bOpen\b/i.test(t)) {
     pushUnique(out, openSection("Open"));
@@ -162,6 +183,14 @@ export function parseSectionsFromText(text: string): ParsedSectionDraft[] {
       max_grade: 12,
       entry_fee_cents: null,
     });
+  }
+
+  // When Championship + Reserve are the real sections, prize-table U-bands
+  // (Top U2200, etc.) are noise — keep the named sections only.
+  const hasChampionship = out.some((s) => /^championship$/i.test(s.name));
+  const hasReserve = out.some((s) => /^reserve$/i.test(s.name));
+  if (hasChampionship && hasReserve) {
+    return out.filter((s) => !/^U\d+/i.test(s.name));
   }
 
   return out;
@@ -227,6 +256,7 @@ export function parseEntryFeeCents(text: string): number | null {
     /\$\s*(\d{1,3})(?:\.\d{2})?\s*(?:entry|EF|online|at\s+site)/gi,
     /Top\s+\d+\s+sections?\s+entry\s+fee[:\s]*\$?\s*(\d{1,3})/gi,
     /\$\s*(\d{1,3})\s+online\b/gi,
+    /\$\s*(\d{1,3})(?:\.\d{2})?\s+through\b/gi,
   ];
   for (const re of patterns) {
     let m: RegExpExecArray | null;

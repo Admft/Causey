@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Admin tournament source filter: dropdown now includes all live scrape sources (TCA, FIDE, OnlineReg, Chess-Results) from the shared ingestion list — 2026-08-07
 - [x] Home brand handoff: the header starts with centered navigation while the hero Causey mark is visible, then reveals its logo and shifts navigation right after that mark scrolls away — 2026-08-07
 - [x] Claim-link ops without email: People can reissue+copy pending invites and export bulk CSV claim links; login uses invitation preview for staff vs student handoff — 2026-08-08
 - [x] Staff invitation onboarding: trusted preview, fail-closed dead links, no-DOB signup, preserved parent/student persona, membership-driven staff navigation and tournament authority (`0029`–`0030`) — 2026-08-07
