@@ -28,10 +28,10 @@ import { ChessHeroGraphic } from "@/components/ChessHeroGraphic";
 
 const RADII = ["10", "25", "50", "100", "250"];
 const PAGE_SIZES = [
-  { value: 20, label: "20 at a time" },
-  { value: 50, label: "50 at a time" },
-  { value: 100, label: "100 at a time" },
-  { value: "all", label: "All matching" },
+  { value: 20, label: "20" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+  { value: "all", label: "All" },
 ] as const;
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -420,44 +420,54 @@ export function SearchClient() {
                 {/* Paging lives at the bottom, where "load more" happens. The
                     count + page-size select stay visible even when everything
                     is loaded, so the choice is always recoverable. */}
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted">
-                      Showing {shown} of {total}
-                    </span>
-                    <label htmlFor="page-size" className="text-xs font-semibold text-muted-strong">
-                      Load
-                    </label>
-                    <select
-                      id="page-size"
-                      className="field h-9 w-auto py-0 pr-8 text-sm"
-                      value={String(pageSize)}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setPageSize(v === "all" ? "all" : Number(v));
-                      }}
-                    >
-                      {PAGE_SIZES.map((size) => (
-                        <option key={String(size.value)} value={String(size.value)}>
-                          {size.label}
-                        </option>
-                      ))}
-                    </select>
+                <div className="mt-6 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="whitespace-nowrap text-sm text-muted">
+                    {shown === total
+                      ? `${total} shown`
+                      : `${shown} of ${total} shown`}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor="page-size"
+                        className="whitespace-nowrap text-xs font-semibold text-muted-strong"
+                      >
+                        Per page
+                      </label>
+                      <select
+                        id="page-size"
+                        className="field h-9 w-auto min-w-[4.5rem] py-0 pr-8 text-sm"
+                        value={String(pageSize)}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setPageSize(v === "all" ? "all" : Number(v));
+                        }}
+                      >
+                        {PAGE_SIZES.map((size) => (
+                          <option
+                            key={String(size.value)}
+                            value={String(size.value)}
+                          >
+                            {size.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {hasMore ? (
+                      <button
+                        type="button"
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                        className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red disabled:cursor-wait disabled:opacity-60"
+                      >
+                        {loadingMore
+                          ? "Loading…"
+                          : pageSize === "all"
+                            ? `Load remaining ${total - shown}`
+                            : `Load ${Math.min(resolvePageLimit(pageSize), total - shown)} more`}
+                      </button>
+                    ) : null}
                   </div>
-                  {hasMore && (
-                    <button
-                      type="button"
-                      onClick={loadMore}
-                      disabled={loadingMore}
-                      className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red disabled:cursor-wait disabled:opacity-60"
-                    >
-                      {loadingMore
-                        ? "Loading…"
-                        : pageSize === "all"
-                          ? `Load remaining ${total - shown}`
-                          : `Load ${Math.min(resolvePageLimit(pageSize), total - shown)} more`}
-                    </button>
-                  )}
                 </div>
               </>
             )}
