@@ -8,6 +8,8 @@ alwaysApply: false
 
 Before new UI: reuse an existing pattern in this repo. If none fits, follow tokens below — do not invent a variant "because it looks modern."
 
+Every screen must be easy to read and intuitive to use on first view: clear type hierarchy, plain-language labels, one obvious next action. If a layout needs explaining, it is wrong.
+
 ## Brand
 - Fonts: Source Sans 3 (UI/body), Source Serif 4 (`font-display` for headlines/wordmark). Never Inter/Roboto/system-as-brand.
 - Colors: only CSS tokens (`brand-red`, `brand-blue`, `surface`, `muted`, etc.). Red = primary action; blue = secondary/calm. Never equal-weight red+blue CTAs.
@@ -16,6 +18,7 @@ Before new UI: reuse an existing pattern in this repo. If none fits, follow toke
 ## Layout & components
 - One job per section; one dominant CTA per view.
 - Filled panels, not bubbles with air: any card/panel/band must be composed so its content fills it — no large dead blank areas, and no lopsided two-column layouts where one side runs long while the other sits empty. Rebalance (move or trim content, cap the long column, stack earlier) or cut the container.
+- Same rule at page scale: no dead blank zones anywhere on a page. A page with a composed panel on one side and an empty expanse on the other was not planned. Plan the whole canvas — fill it, rebalance it, or narrow the layout — so pages ship right the first time instead of needing redesign passes later.
 - Cards only when they hold interaction or repeating units. Default: no cards. No icon-per-feature bento grids.
 - No `rounded-full` status pills above heroes. Badges must be functional (real filter/status/category) or deleted.
 - Results layout toggle: desktop (`lg+`) only — mobile stays single column.
