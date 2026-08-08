@@ -114,8 +114,12 @@ export async function HomeAccountPitch() {
       className="home-band band-join band-join--blue bg-brand-blue-soft/50"
       aria-labelledby="account-heading"
     >
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_minmax(0,28rem)] lg:gap-16">
-        <div>
+      {/*
+        Two-col from md so iPad doesn't leave a dead right column + stretched
+        role cards. Cards stay capped (design-system tablet rule).
+      */}
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
+        <div className="min-w-0 max-w-xl">
           <h2
             id="account-heading"
             className="max-w-[20ch] font-display text-display font-bold tracking-tight text-foreground"
@@ -140,7 +144,7 @@ export async function HomeAccountPitch() {
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0 w-full max-w-md md:max-w-none">
           <h3 className="text-sm font-semibold text-foreground">Or start as</h3>
           <ul className="mt-4 space-y-3">
             {ROLE_ROUTES.map((option) => (

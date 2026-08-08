@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Home account pitch iPad fix: 2-col from md + capped role cards so signup bubbles don’t stretch full-bleed — 2026-08-07
 - [x] Account Sign-in panel: official change-email + change-password forms (current password required); pending email status; `#signin` deep link — 2026-08-07
 - [x] Calm `/account` UX: segmented Profile/Alerts/Family/Orgs panels (one job at a time), no mission dump; quieter alert prefs list — 2026-08-07
 - [x] Home section color rhythm: canvas → white → soft grey → soft blue → white with token-based band joins (no flat accidental planes) — 2026-08-07
