@@ -57,9 +57,20 @@ describe("platform admin actions", () => {
       adminUpdateUserAccess({
         profileId: "00000000-0000-0000-0000-000000000000",
         accountRole: "coach",
-        roleUnlocked: true,
         platformAdmin: true,
       })
+    ).resolves.toEqual({
+      ok: false,
+      error: "Platform administrator access required.",
+    });
+  });
+
+  it("rejects user searches for non-admins", async () => {
+    mocks.getPlatformAdminUser.mockResolvedValue(null);
+    const { adminSearchUsers } = await import("@/lib/actions/admin");
+
+    await expect(
+      adminSearchUsers({ query: "student@example.com", page: 1 })
     ).resolves.toEqual({
       ok: false,
       error: "Platform administrator access required.",
@@ -120,8 +131,12 @@ describe("platform user directory migration", () => {
   it("guards privilege changes and records them", () => {
     expect(sql).toContain("cannot_change_own_access");
     expect(sql).toContain("cannot_remove_last_platform_admin");
+    expect(sql).toContain("pg_advisory_xact_lock");
     expect(sql).toContain("invalid_account_role");
     expect(sql).toContain("insert into public.admin_audit_log");
     expect(sql).toContain("'update_access'");
+    expect(sql).not.toMatch(
+      /update public\.profiles[\s\S]*?set[\s\S]*?role_unlocked\s*=/i
+    );
   });
 });

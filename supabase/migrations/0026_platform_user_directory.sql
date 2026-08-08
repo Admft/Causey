@@ -55,7 +55,6 @@ $$;
 create or replace function public.update_platform_user_access(
   p_profile_id uuid,
   p_account_role text,
-  p_role_unlocked boolean,
   p_platform_admin boolean
 )
 returns void
@@ -66,9 +65,7 @@ as $$
 declare
   actor uuid := auth.uid();
   previous_role text;
-  previous_unlocked boolean;
   previous_admin boolean;
-  next_unlocked boolean;
   admin_count integer;
 begin
   if actor is null or not public.is_platform_admin() then
@@ -84,15 +81,20 @@ begin
     raise exception 'platform_admin_flag_required';
   end if;
 
+  -- Serialize global-admin grants/revocations so two concurrent requests
+  -- cannot both observe another admin and remove the final two accounts.
+  perform pg_advisory_xact_lock(
+    hashtext('causey_platform_admin_access_control')
+  );
+
   select
     p.role,
-    p.role_unlocked,
     exists (
       select 1
       from public.platform_admins a
       where a.profile_id = p.id
     )
-  into previous_role, previous_unlocked, previous_admin
+  into previous_role, previous_admin
   from public.profiles p
   where p.id = p_profile_id
   for update;
@@ -100,8 +102,6 @@ begin
   if previous_role is null then
     raise exception 'profile_not_found';
   end if;
-
-  next_unlocked := p_account_role = 'coach' and coalesce(p_role_unlocked, false);
 
   if previous_admin and not p_platform_admin then
     select count(*) into admin_count from public.platform_admins;
@@ -113,7 +113,6 @@ begin
   update public.profiles
   set
     role = p_account_role,
-    role_unlocked = next_unlocked,
     updated_at = now()
   where id = p_profile_id;
 
@@ -141,8 +140,6 @@ begin
     jsonb_build_object(
       'previous_role', previous_role,
       'account_role', p_account_role,
-      'previous_role_unlocked', previous_unlocked,
-      'role_unlocked', next_unlocked,
       'previous_platform_admin', previous_admin,
       'platform_admin', p_platform_admin
     )
@@ -158,12 +155,10 @@ grant execute on function public.search_platform_users(text, integer, integer)
 revoke execute on function public.update_platform_user_access(
   uuid,
   text,
-  boolean,
   boolean
 ) from public, anon;
 grant execute on function public.update_platform_user_access(
   uuid,
   text,
-  boolean,
   boolean
 ) to authenticated;

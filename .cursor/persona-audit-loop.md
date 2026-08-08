@@ -50,7 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
-- 2026-08-07 — **Platform user access directory**: `/admin/users` lists and searches accounts by name/email, exposes only access-relevant fields, and lets a platform admin change account role, coach-tool access, or platform-admin status with confirmation, self-change/last-admin guards, and an audit record.
+- 2026-08-07 — **Platform user access directory**: `/admin/users` lists and privately searches accounts by name/email, exposes only access-relevant fields, and lets a platform admin change account role or platform-admin status with confirmation, self-change/last-admin guards, serialized revocation, and an audit record.
 - 2026-08-07 — **District-safe organization lifecycle**: coaches cannot create districts; district join codes/student invitations are blocked in UI, actions, and migration `0025`; district roster paths removed; school creation hands off to administrator delegation; org type is locked.
 - 2026-08-07 — **Honest alerts center**: real in-app records lead; empty state names the role workspace; automated/email delivery is explicitly not operating; preferences are framed as future choices; nav says “Alerts & settings.”
 - 2026-08-07 — **Org admin people mission**: `/people` leads with join-link vs email-invite guidance; CSV demoted; claim-path success is copyable (not a raw dump); empty state no longer says “invite staff first.”

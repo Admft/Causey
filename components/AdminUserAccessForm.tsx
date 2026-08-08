@@ -13,12 +13,16 @@ type AdminUserAccessRecord = {
 export function AdminUserAccessForm({
   user,
   isSelf,
+  onUpdated,
 }: {
   user: AdminUserAccessRecord;
   isSelf: boolean;
+  onUpdated?: (
+    accountRole: AdminUserAccessRecord["account_role"],
+    platformAdmin: boolean
+  ) => void;
 }) {
   const [accountRole, setAccountRole] = useState(user.account_role);
-  const [roleUnlocked, setRoleUnlocked] = useState(user.role_unlocked);
   const [platformAdmin, setPlatformAdmin] = useState(user.platform_admin);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,18 +34,18 @@ export function AdminUserAccessForm({
 
     const privilegeChanged =
       platformAdmin !== user.platform_admin ||
-      accountRole !== user.account_role ||
-      (accountRole === "coach" && roleUnlocked !== user.role_unlocked);
+      accountRole !== user.account_role;
     if (!privilegeChanged) {
       setMessage("No access changes to save.");
       return;
     }
 
-    const warning = platformAdmin
-      ? "Platform admin grants access to every Causey account and administration surface."
-      : user.platform_admin
-        ? "This removes platform-wide administration from the account."
-        : "This changes which account workspace and coach tools the person can use.";
+    const warning =
+      platformAdmin !== user.platform_admin
+        ? platformAdmin
+          ? "Platform admin grants access to every Causey account and administration surface."
+          : "This removes platform-wide administration from the account."
+        : "This changes which account workspace the person uses.";
     if (!window.confirm(`${warning} Save this access change?`)) return;
 
     setMessage(null);
@@ -50,13 +54,13 @@ export function AdminUserAccessForm({
       const result = await adminUpdateUserAccess({
         profileId: user.profile_id,
         accountRole,
-        roleUnlocked: accountRole === "coach" && roleUnlocked,
         platformAdmin,
       });
       if (!result.ok) {
         setError(result.error);
         return;
       }
+      onUpdated?.(accountRole, platformAdmin);
       setMessage("Access updated and added to the admin audit log.");
     });
   }
@@ -86,7 +90,6 @@ export function AdminUserAccessForm({
                 | "parent"
                 | "coach";
               setAccountRole(next);
-              if (next !== "coach") setRoleUnlocked(false);
             }}
             disabled={isPending}
           >
@@ -115,25 +118,11 @@ export function AdminUserAccessForm({
         </label>
       </div>
 
-      {accountRole === "coach" ? (
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            checked={roleUnlocked}
-            onChange={() => setRoleUnlocked((current) => !current)}
-            disabled={isPending}
-            className="mt-1 size-4 accent-[var(--brand-red)]"
-          />
-          <span>
-            <span className="block text-sm font-semibold text-foreground">
-              Allow organization and tournament creation
-            </span>
-            <span className="mt-1 block text-xs text-muted">
-              Organization-specific roles are still assigned inside each
-              organization.
-            </span>
-          </span>
-        </label>
+      {!user.role_unlocked ? (
+        <p className="text-xs font-medium text-brand-red">
+          This account is restricted by the abuse-control kill switch. That
+          control is not a grantable privilege.
+        </p>
       ) : null}
 
       <button

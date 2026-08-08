@@ -9,6 +9,10 @@ import {
   insertTournamentRecord,
   updateTournamentRecord,
 } from "@/lib/data/tournament-mutations";
+import {
+  getAdminUsers,
+  type AdminUserDirectoryRow,
+} from "@/lib/data/admin";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
@@ -62,14 +66,53 @@ const AdminReviewSchema = z
 const AdminUserAccessSchema = z.object({
   profileId: z.string().uuid(),
   accountRole: z.enum(["student", "parent", "coach"]),
-  roleUnlocked: z.boolean(),
   platformAdmin: z.boolean(),
 });
+
+const AdminUserSearchSchema = z.object({
+  query: z.string().trim().max(200),
+  page: z.number().int().min(1).max(10_000),
+});
+
+export async function adminSearchUsers(input: {
+  query: string;
+  page: number;
+}): Promise<
+  ActionResult<{
+    users: AdminUserDirectoryRow[];
+    total: number;
+    page: number;
+  }>
+> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Platform administrator access required.",
+    };
+  }
+  const parsed = AdminUserSearchSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Check the account search." };
+  }
+
+  const result = await getAdminUsers({
+    query: parsed.data.query,
+    limit: 50,
+    offset: (parsed.data.page - 1) * 50,
+  });
+  if (result.error) return { ok: false, error: result.error };
+  return {
+    ok: true,
+    users: result.users,
+    total: result.total,
+    page: parsed.data.page,
+  };
+}
 
 export async function adminUpdateUserAccess(input: {
   profileId: string;
   accountRole: string;
-  roleUnlocked: boolean;
   platformAdmin: boolean;
 }): Promise<ActionResult> {
   const admin = await getPlatformAdminUser();
@@ -88,8 +131,6 @@ export async function adminUpdateUserAccess(input: {
   const { error } = await supabase.rpc("update_platform_user_access", {
     p_profile_id: parsed.data.profileId,
     p_account_role: parsed.data.accountRole,
-    p_role_unlocked:
-      parsed.data.accountRole === "coach" && parsed.data.roleUnlocked,
     p_platform_admin: parsed.data.platformAdmin,
   });
   if (error) {
