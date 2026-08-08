@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AccountSecurityForm } from "@/components/AccountSecurityForm";
 import { AccountSettingsShell } from "@/components/AccountSettingsShell";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { NotificationPreferencesForm } from "@/components/NotificationPreferencesForm";
@@ -107,6 +108,10 @@ export default async function AccountPage() {
         : "Open my tournaments";
   const showFamily = profile.role === "student" || profile.role === "parent";
   const emailConfirmed = Boolean(user.email_confirmed_at);
+  const pendingEmail =
+    typeof user.new_email === "string" && user.new_email
+      ? user.new_email
+      : null;
   const searchHref = profile.zip
     ? `/chess?zip=${encodeURIComponent(profile.zip)}`
     : "/chess";
@@ -145,23 +150,24 @@ export default async function AccountPage() {
           </Link>
         </p>
       ) : null}
+    </div>
+  );
 
-      <div className="mt-10 border-t border-line pt-6">
-        <h3 className="text-sm font-semibold text-foreground">Sign-in</h3>
-        <p className="mt-2 text-sm text-foreground">{user.email}</p>
-        <p className="mt-1 text-xs text-muted">
-          {emailConfirmed
-            ? "Email confirmed."
-            : "Email not confirmed yet — check your inbox for the link."}
-        </p>
-        <p className="mt-3">
-          <Link
-            href="/forgot-password"
-            className="text-sm font-semibold text-brand-red hover:underline"
-          >
-            Send a password reset email
-          </Link>
-        </p>
+  const signinPanel = (
+    <div>
+      <h2 className="font-display text-xl font-bold text-foreground">
+        Sign-in
+      </h2>
+      <p className="mt-2 max-w-prose text-sm text-muted">
+        Change the email or password used to access Causey. Both require your
+        current password.
+      </p>
+      <div className="mt-6">
+        <AccountSecurityForm
+          email={user.email ?? ""}
+          emailConfirmed={emailConfirmed}
+          pendingEmail={pendingEmail}
+        />
       </div>
     </div>
   );
@@ -403,6 +409,7 @@ export default async function AccountPage() {
 
   const panels = [
     { id: "profile" as const, label: "Profile", content: profilePanel },
+    { id: "signin" as const, label: "Sign-in", content: signinPanel },
     { id: "alerts" as const, label: "Alerts", content: alertsPanel },
     ...(familyPanel
       ? [{ id: "family" as const, label: "Family", content: familyPanel }]

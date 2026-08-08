@@ -35,7 +35,7 @@ export function ResetPasswordForm() {
       }
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      router.push("/me");
+      router.push("/account#signin");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update the password.");

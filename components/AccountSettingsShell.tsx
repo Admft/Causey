@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 export type AccountSettingsPanelId =
   | "profile"
+  | "signin"
   | "alerts"
   | "family"
   | "organizations";
