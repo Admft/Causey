@@ -66,6 +66,20 @@ export type OrganizationVerificationReview = {
   reviewed_at: string;
 };
 
+export type OrganizationInvitationPreview = {
+  org_slug: string;
+  org_name: string;
+  org_type: "school" | "district" | "club" | "team";
+  member_role:
+    | "student"
+    | "assistant_coach"
+    | "coach"
+    | "school_admin"
+    | "district_admin";
+  email_hint: string;
+  expires_at: string;
+};
+
 export type TournamentDraftRow = {
   id: string;
   org_id: string;
@@ -106,6 +120,18 @@ export async function getOrganizationVerificationReview(
     .eq("org_id", orgId)
     .maybeSingle();
   return (data as OrganizationVerificationReview | null) ?? null;
+}
+
+export async function getOrganizationInvitationPreview(
+  token: string
+): Promise<OrganizationInvitationPreview | null> {
+  if (!/^[a-f0-9]{64}$/i.test(token)) return null;
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_org_invitation_preview", {
+    p_token: token,
+  });
+  if (error) return null;
+  return (data?.[0] as OrganizationInvitationPreview | undefined) ?? null;
 }
 
 export type EntrantWithEvent = {

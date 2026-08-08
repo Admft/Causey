@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Staff invitation onboarding: trusted org/role preview, fail-closed dead links, staff-specific no-DOB signup, preserved email-confirmation claim, and staff persona handoff (`0029`) — 2026-08-07
 - [x] Effective organization authority: owner replaces creator as authority after transfer; district admins retain child-school controls; event auth preserves context; moderation publish confirms (`0028`) — 2026-08-07
 - [x] Platform organization verification: private review queue + correction notes, pending-by-default schools, org-admin status handoff, and database self-verification guard (`0027`) — 2026-08-07
 - [x] District-safe organization lifecycle: platform-only district creation; no district student join/invite/roster paths; school-admin handoff; immutable org type; migration `0025` — 2026-08-07
@@ -184,3 +185,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Platform admin user access (2026-08-07): `/admin/users` now provides paginated account search by display name/email plus confirmed, audited account-role and platform-admin changes. Search terms stay out of URLs, email remains behind an admin-checked RPC, the abuse kill switch is read-only, and self-access/concurrent last-admin removal are blocked.
 - Tick 16: organization verification is now a governed workflow. Migration `0027` blocks direct self-verification and keeps correction notes private; platform admins get a pending-first queue, while organization admins see the decision and next step in Settings.
 - Tick 16 audit follow-up: migration `0028` removes creator-derived authority after ownership transfer and centralizes child-school/tournament checks in database helpers. Also preserved event return paths through login, confirmed public publication, and distinguished migration gaps from user-search outages.
+- Tick 17: migration `0029` makes claim links a trustworthy staff onboarding flow. Anonymous previews reveal only organization, role, expiry, and a masked email hint; invalid/expired links fail before signup; staff accounts skip student DOB; accepting a staff invitation updates the account landing persona while preserving `role_unlocked` restrictions.

@@ -46,14 +46,22 @@ export function SignupForm({
   initialRole = "student",
   next,
   joiningOrganization = false,
+  invitation,
 }: {
   initialRole?: AccountRole;
   next?: string;
   joiningOrganization?: boolean;
+  invitation?: {
+    orgName: string;
+    roleLabel: string;
+    accountRole: "student" | "coach";
+  };
 }) {
   const router = useRouter();
   const [role, setRole] = useState<AccountRole>(
-    joiningOrganization ? "student" : initialRole
+    joiningOrganization
+      ? "student"
+      : invitation?.accountRole ?? initialRole
   );
   const loginHref = next
     ? `/login?next=${encodeURIComponent(next)}`
@@ -163,6 +171,8 @@ export function SignupForm({
           After you confirm, you&rsquo;ll{" "}
           {joiningOrganization
             ? "return to review the organization before joining its roster."
+            : invitation
+              ? `return to accept your ${invitation.roleLabel.toLowerCase()} invitation to ${invitation.orgName}.`
             : next
               ? "continue where you left off."
               : roleCopy.confirmationNext}
@@ -197,6 +207,19 @@ export function SignupForm({
           <p className="text-sm font-semibold text-foreground">Student</p>
           <p className="text-xs text-muted">
             Organization join links add students to a school or club roster.
+          </p>
+        </div>
+      ) : invitation ? (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-semibold text-muted-strong">
+            Account type
+          </p>
+          <p className="text-sm font-semibold text-foreground">
+            {invitation.accountRole === "student" ? "Student" : "Staff"}
+          </p>
+          <p className="text-xs text-muted">
+            After email confirmation, accept the {invitation.roleLabel.toLowerCase()}{" "}
+            role in {invitation.orgName}.
           </p>
         </div>
       ) : (
@@ -342,7 +365,9 @@ export function SignupForm({
       <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
         {pending
           ? "Creating account…"
-          : `Create ${roleOption.accountLabel} account`}
+          : invitation?.accountRole === "coach"
+            ? "Create staff account"
+            : `Create ${roleOption.accountLabel} account`}
       </button>
 
       <p className="text-sm text-muted">

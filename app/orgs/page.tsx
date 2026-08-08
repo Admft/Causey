@@ -49,7 +49,8 @@ export default async function OrgsPage() {
   if (!user) redirect("/login?next=/orgs");
   const profile = await getCurrentProfile();
   if (profile?.role === "parent") redirect("/family");
-  const isCoachRole = canCreateOrg(profile);
+  const isCoachRole = profile?.role === "coach";
+  const canStartOrganization = canCreateOrg(profile);
 
   const [myOrgs, entrantRows, recommendations] = await Promise.all([
     getMyOrgs(user.id),
@@ -152,7 +153,9 @@ export default async function OrgsPage() {
             <PortalMission
               title={
                 !myOrgs.length
-                  ? "Start your first organization"
+                  ? canStartOrganization
+                    ? "Start your first organization"
+                    : "No organization access yet"
                   : primaryNeedsStudents && primaryOrg
                     ? `Invite students to ${primaryOrg.org.name}`
                     : primaryOrg
@@ -161,7 +164,9 @@ export default async function OrgsPage() {
               }
               description={
                 !myOrgs.length
-                  ? "Create a school or club workspace to get a join code, roster, and tournament tools."
+                  ? canStartOrganization
+                    ? "Create a school or club workspace to get a join code, roster, and tournament tools."
+                    : "Ask an organization administrator to send a new staff invitation."
                   : primaryNeedsStudents
                     ? "Your roster is empty. Share a join link so students can join before you create tournaments."
                     : pendingInviteCount
@@ -174,7 +179,9 @@ export default async function OrgsPage() {
               }
               action={
                 !myOrgs.length
-                  ? { href: "/orgs/new", label: "Start an organization" }
+                  ? canStartOrganization
+                    ? { href: "/orgs/new", label: "Start an organization" }
+                    : undefined
                   : primaryNeedsStudents && primaryOrg
                     ? {
                         href: `/orgs/${primaryOrg.org.slug}/roster#add-students`,
@@ -195,7 +202,7 @@ export default async function OrgsPage() {
                         href: `/orgs/${primaryOrg.org.slug}`,
                         label: "Open workspace",
                       }
-                    : myOrgs.length
+                    : myOrgs.length && canStartOrganization
                       ? { href: "/orgs/new", label: "Start another" }
                       : undefined
               }
@@ -261,7 +268,7 @@ export default async function OrgsPage() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
             {isCoachRole ? "Organizations" : "Where you belong"}
           </h2>
-          {isCoachRole && myOrgs.length ? (
+          {isCoachRole && myOrgs.length && canStartOrganization ? (
             <Link
               href="/orgs/new"
               className="text-sm font-semibold text-brand-red hover:underline"
@@ -274,7 +281,7 @@ export default async function OrgsPage() {
         {!myOrgs.length ? (
           isCoachRole ? (
             <p className="mt-3 text-sm text-muted">
-              No organizations yet — use the mission above to start one.
+              No organizations yet — use the next step in the mission above.
             </p>
           ) : (
             <p className="mt-3 text-sm text-muted">
