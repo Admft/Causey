@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-07 — **Effective organization authority follow-up**: migration `0028` makes `owner_profile_id` authoritative after transfer, removes creator delete/private-event powers, and gives district admins database-backed child-school controls. Event auth keeps context, public publication confirms, and user-directory outages no longer masquerade as missing migrations.
 - 2026-08-07 — **Platform organization verification workflow**: migration `0027` prevents organization self-verification, district-created schools start pending, `/admin/organizations` provides a review queue with private correction notes, and organization Settings shows the decision and next step.
 - 2026-08-07 — **Platform user access directory**: `/admin/users` lists and privately searches accounts by name/email, exposes only access-relevant fields, and lets a platform admin change account role or platform-admin status with confirmation, self-change/last-admin guards, serialized revocation, and an audit record.
 - 2026-08-07 — **District-safe organization lifecycle**: coaches cannot create districts; district join codes/student invitations are blocked in UI, actions, and migration `0025`; district roster paths removed; school creation hands off to administrator delegation; org type is locked.
@@ -83,7 +84,16 @@ _(none — ready for next audit tick)_
 - District admin · school creation · `createDistrictSchool` writes `verification_status: "verified"` before platform review · child schools bypass the intended trust gate · **P0 · done**
 - Org admin · Settings · the organization’s own verification decision and rejection reason are absent · administrators cannot tell what is blocked or what to correct · **P1 · done**
 - Platform admin · user directory · migration `0026` remains unapplied, so the shipped account search surface will show a schema-gap error in environments missing migrations · **P1 · deployment**
-- Coach/org owner · ownership transfer · creator-derived authority remains effective after owner transfer, so a transfer cannot fully revoke the original creator · **P1 · L**
+- Coach/org owner · ownership transfer · creator-derived authority remains effective after owner transfer, including delete and private tournament access · **P0 · done in `0028`**
+- District admin · child school · SQL grants parent-district administration but portal UI checks only direct school roles · additional district admins lose People, Reports, and Settings · **P1 · done in `0028`**
+- Invited staff · claim/signup · school and district administrator invitations default to Student signup and DOB collection · wrong persona and unnecessary minor-data field block staff onboarding · **P1 · L**
+- Org staff · tournament actions · create/manage gates disagree across global account role, org role, and event creator · valid staff can reach actions that reject them · **P1 · partially fixed in `0028`; creation persona remains**
+- Signed-out student · join link · failed organization preview still presents a believable invitation and signup CTA, then rejects the code after account creation · **P1 · M**
+- Signed-out visitor · event save/rate · login omitted the event return path and sent the user to a role landing · tournament context was lost · **P1 · done**
+- Parent · first child setup · parent is told to create a separate student account while already signed in, creating session and credential-ownership ambiguity · **P1 · L**
+- Platform admin · user search errors · every RPC failure was labeled “migration 0026 missing,” hiding connection and permission incidents · **P1 · done**
+- Platform admin · organization-role handoff · user directory points to organization workspaces, but platform-admin status alone does not open scoped People/Settings controls · **P1 · M**
+- Platform admin · moderation · approval published a public family-facing listing with one click and no confirmation · **P1 · done**
 - Parent/student · signup/footer · student DOB is collected without a visible data-practices/privacy route · material minor-data trust gap · **P1 · L · owner/legal decision**
 - Buyer · signed-out path · school/district commercial packaging and buyer handoff remain unspecified · for-profit intent has no actionable institutional route yet · **P1 · L · owner decision**
 - Engineering/operator · README · documented product state still contradicts accounts, PII, districts, and platform administration · setup and trust decisions can be made from stale assumptions · **P1 · M**

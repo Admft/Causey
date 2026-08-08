@@ -64,6 +64,13 @@ export function OrganizationSettingsForm({
 
   async function transfer() {
     if (!nextOwner) return;
+    if (
+      !window.confirm(
+        "Transfer ownership? You will lose owner access unless you also have an active staff role."
+      )
+    ) {
+      return;
+    }
     setPending("owner");
     setError(null);
     setMessage(null);
@@ -77,7 +84,9 @@ export function OrganizationSettingsForm({
         setError(result.error);
         return;
       }
-      setMessage("Ownership transferred. The new owner now controls organization settings.");
+      setMessage(
+        "Ownership transferred. The new owner now controls organization settings."
+      );
       router.refresh();
     } finally {
       setPending(null);
@@ -138,7 +147,8 @@ export function OrganizationSettingsForm({
           Ownership
         </h2>
         <p className="mt-2 text-sm text-muted">
-          Ownership controls settings and future transfers. Staff access is managed
+          Ownership controls settings and future transfers. Creator history
+          does not preserve access after a transfer; staff access is managed
           separately from the people workspace.
         </p>
         {ownerId !== viewerId ? (

@@ -125,30 +125,6 @@ export type EntrantWithEvent = {
 
 export type GroupWithMembers = OrgGroup & { member_ids: string[] };
 
-function coachOf(org: Organization, membership: OrgMembership | null, userId: string) {
-  return (
-    org.owner_profile_id === userId ||
-    org.created_by === userId ||
-    (membership?.status === "active" &&
-      [
-        "assistant_coach",
-        "coach",
-        "school_admin",
-        "district_admin",
-      ].includes(membership.role))
-  );
-}
-
-function adminOf(org: Organization, membership: OrgMembership | null, userId: string) {
-  return (
-    org.owner_profile_id === userId ||
-    org.created_by === userId ||
-    (membership?.status === "active" &&
-      (membership.role === "school_admin" ||
-        membership.role === "district_admin"))
-  );
-}
-
 /** Events that haven't finished yet come first; the past is history. */
 export function isUpcomingEvent(
   row: { start_date: string; end_date: string | null },
@@ -159,17 +135,17 @@ export function isUpcomingEvent(
 
 export async function getMyOrgs(userId: string): Promise<MyOrgRow[]> {
   const supabase = await createServerSupabaseClient();
-  const [membershipRes, createdRes] = await Promise.all([
+  const [membershipRes, ownedRes] = await Promise.all([
     supabase
       .from("org_memberships")
       .select("role, status, organizations(*)")
       .eq("profile_id", userId)
       .eq("status", "active"),
-    supabase.from("organizations").select("*").eq("created_by", userId),
+    supabase.from("organizations").select("*").eq("owner_profile_id", userId),
   ]);
 
   const rows = new Map<string, MyOrgRow>();
-  for (const org of (createdRes.data ?? []) as unknown as Organization[]) {
+  for (const org of (ownedRes.data ?? []) as unknown as Organization[]) {
     rows.set(org.id, { org, memberRole: null, isCoach: true });
   }
   for (const row of membershipRes.data ?? []) {
@@ -205,7 +181,17 @@ export async function getOrgBySlugForViewer(
     .maybeSingle();
   if (!org) return null;
 
-  const [membershipRes, countRes, eventsRes, draftsRes, schoolsRes, announcementsRes] =
+  const [
+    membershipRes,
+    countRes,
+    eventsRes,
+    draftsRes,
+    schoolsRes,
+    announcementsRes,
+    staffAccessRes,
+    adminAccessRes,
+    districtAccessRes,
+  ] =
     await Promise.all([
     supabase
       .from("org_memberships")
@@ -248,6 +234,18 @@ export async function getOrgBySlugForViewer(
       .is("archived_at", null)
       .order("published_at", { ascending: false })
       .limit(5),
+    supabase.rpc("is_org_staff", {
+      p_org_id: org.id,
+      p_profile_id: userId,
+    }),
+    supabase.rpc("can_administer_org", {
+      p_org_id: org.id,
+      p_profile_id: userId,
+    }),
+    supabase.rpc("is_district_admin", {
+      p_district_id: org.id,
+      p_profile_id: userId,
+    }),
   ]);
 
   const membership = (membershipRes.data as OrgMembership | null) ?? null;
@@ -263,18 +261,15 @@ export async function getOrgBySlugForViewer(
       : [];
   });
   const typedOrg = org as Organization;
-  const isAdmin = adminOf(typedOrg, membership, userId);
+  const isAdmin = adminAccessRes.data === true;
   return {
     org: typedOrg,
     membership,
-    isCoach: coachOf(typedOrg, membership, userId),
+    isCoach: staffAccessRes.data === true,
     isAdmin,
     isDistrictAdmin:
       typedOrg.type === "district" &&
-      isAdmin &&
-      (membership?.role === "district_admin" ||
-        typedOrg.owner_profile_id === userId ||
-        typedOrg.created_by === userId),
+      districtAccessRes.data === true,
     activeMemberCount: countRes.count ?? 0,
     events: (eventsRes.data ?? []) as OrgEventRow[],
     drafts,
@@ -367,32 +362,17 @@ export async function getCompetitionBySlugAuthed(
   };
 }
 
-/** Can the viewer manage this competition (creator or coach of its org)? */
+/** Database-backed authority for standalone creators, org staff, and platform admins. */
 export async function canManageCompetitionAsViewer(
-  competition: Pick<CompetitionDetail, "created_by" | "org_id">,
+  competition: Pick<CompetitionDetail, "id" | "created_by" | "org_id">,
   userId: string
 ): Promise<boolean> {
-  if (competition.created_by === userId) return true;
-  if (!competition.org_id) return false;
   const supabase = await createServerSupabaseClient();
-  const [orgRes, membershipRes] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select("created_by")
-      .eq("id", competition.org_id)
-      .maybeSingle(),
-    supabase
-      .from("org_memberships")
-      .select("role, status")
-      .eq("org_id", competition.org_id)
-      .eq("profile_id", userId)
-      .maybeSingle(),
-  ]);
-  if (orgRes.data?.created_by === userId) return true;
-  const m = membershipRes.data;
-  return Boolean(
-    m && m.status === "active" && (m.role === "coach" || m.role === "admin")
-  );
+  const { data, error } = await supabase.rpc("can_manage_competition", {
+    p_competition_id: competition.id,
+    p_profile_id: userId,
+  });
+  return !error && data === true;
 }
 
 export async function getEventAttendance(

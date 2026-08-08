@@ -160,11 +160,16 @@ export async function getAdminUsers({
     p_offset: offset,
   });
   if (error) {
+    const missingMigration =
+      error.code === "PGRST202" ||
+      (error.message.includes("search_platform_users") &&
+        error.message.toLowerCase().includes("not found"));
     return {
       users: [],
       total: 0,
-      error:
-        "User search is unavailable until migration 0026 is applied.",
+      error: missingMigration
+        ? "User search is unavailable until migration 0026 is applied."
+        : "User search could not be loaded. Check the connection and try again.",
     };
   }
   const users = (data ?? []) as AdminUserDirectoryRow[];

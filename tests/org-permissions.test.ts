@@ -8,7 +8,7 @@ import {
 } from "@/lib/org-permissions";
 
 const coachProfile = { id: "coach-1", role: "coach" as const, role_unlocked: true };
-const org = { created_by: "coach-1" };
+const org = { owner_profile_id: "coach-1" };
 
 describe("isActiveMember", () => {
   it("only active memberships count", () => {
@@ -20,8 +20,18 @@ describe("isActiveMember", () => {
 });
 
 describe("isOrgCoach", () => {
-  it("the org creator is always a coach, even without a membership row", () => {
+  it("the org owner is staff even without a membership row", () => {
     expect(isOrgCoach(org, null, "coach-1")).toBe(true);
+  });
+
+  it("creator provenance does not preserve authority after transfer", () => {
+    expect(
+      isOrgCoach(
+        { owner_profile_id: "new-owner" },
+        null,
+        "coach-1"
+      )
+    ).toBe(false);
   });
 
   it("active coach/admin members qualify", () => {

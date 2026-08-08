@@ -178,7 +178,7 @@ export async function transferOrganizationOwnership(input: {
   const [{ data: org }, { data: nextOwner }] = await Promise.all([
     supabase
       .from("organizations")
-      .select("owner_profile_id, created_by")
+      .select("owner_profile_id")
       .eq("id", parsed.data.orgId)
       .maybeSingle(),
     supabase
@@ -189,7 +189,7 @@ export async function transferOrganizationOwnership(input: {
       .eq("status", "active")
       .maybeSingle(),
   ]);
-  if (!org || (org.owner_profile_id ?? org.created_by) !== user.id) {
+  if (!org || org.owner_profile_id !== user.id) {
     return { ok: false, error: "Only the current owner can transfer ownership." };
   }
   if (
@@ -199,12 +199,19 @@ export async function transferOrganizationOwnership(input: {
     return { ok: false, error: "Transfer ownership to an active administrator." };
   }
 
-  const { error } = await supabase
+  const { data: transferred, error } = await supabase
     .from("organizations")
     .update({ owner_profile_id: parsed.data.nextOwnerProfileId })
     .eq("id", parsed.data.orgId)
-    .eq("owner_profile_id", org.owner_profile_id);
-  if (error) return { ok: false, error: "Could not transfer ownership." };
+    .eq("owner_profile_id", org.owner_profile_id)
+    .select("id")
+    .maybeSingle();
+  if (error || !transferred) {
+    return {
+      ok: false,
+      error: "Ownership changed before this request. Refresh and try again.",
+    };
+  }
   revalidatePath(`/orgs/${parsed.data.orgSlug}/settings`);
   return { ok: true };
 }

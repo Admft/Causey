@@ -9,10 +9,12 @@ export function SaveCompetitionButton({
   competitionId,
   initiallySaved,
   signedIn,
+  returnPath,
 }: {
   competitionId: string;
   initiallySaved: boolean;
   signedIn: boolean;
+  returnPath: string;
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(initiallySaved);
@@ -22,7 +24,10 @@ export function SaveCompetitionButton({
   if (!signedIn) {
     return (
       <p className="text-sm text-muted">
-        <Link href="/login" className="font-semibold text-brand-red hover:underline">
+        <Link
+          href={`/login?next=${encodeURIComponent(returnPath)}`}
+          className="font-semibold text-brand-red hover:underline"
+        >
           Sign in
         </Link>{" "}
         to save this tournament to your profile.
@@ -90,10 +95,12 @@ export function DifficultyRating({
   competitionId,
   initialScore,
   signedIn,
+  returnPath,
 }: {
   competitionId: string;
   initialScore: number | null;
   signedIn: boolean;
+  returnPath: string;
 }) {
   const router = useRouter();
   const [score, setScore] = useState<number | null>(initialScore);
@@ -103,7 +110,10 @@ export function DifficultyRating({
   if (!signedIn) {
     return (
       <p className="text-sm text-muted">
-        <Link href="/login" className="font-semibold text-brand-red hover:underline">
+        <Link
+          href={`/login?next=${encodeURIComponent(returnPath)}`}
+          className="font-semibold text-brand-red hover:underline"
+        >
           Sign in
         </Link>{" "}
         to rate how hard this event feels (1–10).

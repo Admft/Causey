@@ -14,11 +14,11 @@ export function isActiveMember(
 }
 
 export function isOrgCoach(
-  org: Pick<Organization, "created_by">,
+  org: Pick<Organization, "owner_profile_id">,
   membership: Pick<OrgMembership, "role" | "status"> | null | undefined,
   profileId: string
 ): boolean {
-  if (org.created_by === profileId) return true;
+  if (org.owner_profile_id === profileId) return true;
   return (
     membership?.status === "active" &&
     [
@@ -32,29 +32,29 @@ export function isOrgCoach(
 }
 
 export function isOrgAdmin(
-  org: Pick<Organization, "created_by" | "owner_profile_id">,
+  org: Pick<Organization, "owner_profile_id">,
   membership: Pick<OrgMembership, "role" | "status"> | null | undefined,
   profileId: string
 ): boolean {
-  if (org.owner_profile_id === profileId || org.created_by === profileId) {
+  if (org.owner_profile_id === profileId) {
     return true;
   }
   return (
     membership?.status === "active" &&
-    (membership.role === "school_admin" ||
+    (membership.role === "admin" ||
+      membership.role === "school_admin" ||
       membership.role === "district_admin")
   );
 }
 
 export function isDistrictAdmin(
-  org: Pick<Organization, "type" | "created_by" | "owner_profile_id">,
+  org: Pick<Organization, "type" | "owner_profile_id">,
   membership: Pick<OrgMembership, "role" | "status"> | null | undefined,
   profileId: string
 ): boolean {
   return (
     org.type === "district" &&
     (org.owner_profile_id === profileId ||
-      org.created_by === profileId ||
       (membership?.status === "active" &&
         membership.role === "district_admin"))
   );
@@ -68,7 +68,7 @@ export function canCreateOrg(
 
 export function canCreateTournament(
   profile: Pick<Profile, "id" | "role" | "role_unlocked"> | null | undefined,
-  org: Pick<Organization, "created_by">,
+  org: Pick<Organization, "owner_profile_id">,
   membership: Pick<OrgMembership, "role" | "status"> | null | undefined
 ): boolean {
   if (!profile || !canCreateOrg(profile)) return false;

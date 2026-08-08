@@ -25,6 +25,14 @@ export function ModerationReviewForm({
       setError("Add a review note explaining what needs correction.");
       return;
     }
+    if (
+      nextDecision === "approve" &&
+      !window.confirm(
+        `Publish ${tournamentName}? Families will be able to find this listing immediately.`
+      )
+    ) {
+      return;
+    }
 
     setPending(nextDecision);
     setError(null);

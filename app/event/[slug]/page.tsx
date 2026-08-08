@@ -527,11 +527,13 @@ export default async function EventPage({ params }: Params) {
                 competitionId={competition.id}
                 initiallySaved={initiallySaved}
                 signedIn={Boolean(user)}
+                returnPath={`/event/${competition.slug}`}
               />
               <DifficultyRating
                 competitionId={competition.id}
                 initialScore={initialScore}
                 signedIn={Boolean(user)}
+                returnPath={`/event/${competition.slug}`}
               />
               {ratingSummary ? (
                 <p className="text-xs text-muted">

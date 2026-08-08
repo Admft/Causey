@@ -51,6 +51,7 @@ export async function createOrg(input: {
         type: parsed.data.type,
         state: parsed.data.state,
         created_by: profile.id,
+        owner_profile_id: profile.id,
       })
       .select("id, slug")
       .single();

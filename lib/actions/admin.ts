@@ -247,6 +247,7 @@ export async function adminCreateOrganization(input: {
         type: parsed.data.type,
         state: parsed.data.state,
         created_by: admin.id,
+        owner_profile_id: admin.id,
       })
       .select("id, slug")
       .single();
