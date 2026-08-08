@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Header/subnav lateral alignment: header container now matches the chess subnav (`px-5 sm:px-8`, brand absolute at the same left content edge), and auth controls pin to the right content edge on desktop (`lg+` absolute right, vertically centered) so Sign up always lands above the subnav's right edge; the old desktop nav right-shift transform is gone (brand fade-in handoff kept), mobile/tablet keep the flush-right nav group — 2026-08-08
 - [x] Home district pitch rebuild: brochure two-col replaced with a product moment — illustrative district pilot preview card (mirrors the real command center: next step, school-readiness hairline list, setup progress bar, "no student roster" caption; labeled Illustrative) + the four pilot stages as a numbered 01–04 strip. Shipped `ScrollReveal`, the site's one shared scroll-reveal pattern (12px rise + fade, once on entry, small-group staggers, reduced-motion/no-JS safe per the loosened §5 motion rules) — 2026-08-08
 - [x] Chess search 500: anon RLS no longer invokes `can_view_competition` or unpublished-manager `is_org_staff` (`0037`+`0038`); `/api/competitions` returns JSON on failure instead of a blank Next error that the UI treated as “couldn’t reach the API” — 2026-08-08
 - [x] Home coverage path: merged the "Where these tournaments come from" band and the "Four more competition types" roadmap band into one §8.11 progress path (six live feeds → state affiliates → four more types) — the adjacent bands read as two unrelated sections; the scroll-triggered red line draw + node fills are the page's one mid-page motion moment (reduced-motion and no-JS get the finished path). `TournamentSources` stays on `/chess` as search provenance — 2026-08-08
@@ -75,6 +76,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-08 — US Chess ingestion now resolves exact Squarespace event pages from organizer sitemaps instead of sending registration clicks to organizer homepages; corrected the live Halloween Championship link
 - [x] 2026-08-08 — Admin tournament list and chess search now say when TCA publishes succeeded but stay visible / are past-dated; incomplete Unknown/00000 rows stay draft
 - [x] 2026-08-07 — Scrape upserts preserve globally matched competition IDs across source collisions, preventing related sections from blocking imports; 42 staged TCA tournaments imported successfully
 - [x] 2026-08-05 — External tournament entry now consistently says “organizer registration,” distinguishes it from Causey RSVPs, and tells families where to finish and how to confirm completion

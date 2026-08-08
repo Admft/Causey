@@ -272,16 +272,16 @@ select.field {
   transform: translateX(0.25rem);
 }
 
-/* The home hero owns the brand until its logo leaves the viewport. The
- * header then takes over while the primary links make room for it. */
+/* The home hero owns the brand until its logo leaves the viewport; the
+ * header brand then fades in. Brand and auth pin to the same content edges
+ * as the chess subnav (px-5 / sm:px-8) so the two bars line up laterally. */
 .site-header-inner {
   position: relative;
-  container-type: inline-size;
   transition: padding-left 300ms var(--ease-brand);
 }
 .site-header-brand {
   position: absolute;
-  left: 1rem;
+  left: 1.25rem;
   pointer-events: none;
   opacity: 0;
   transform: translateX(-0.5rem);
@@ -299,7 +299,7 @@ select.field {
   transition: transform 300ms var(--ease-brand);
 }
 .site-header-inner--brand-visible {
-  padding-left: 7.25rem;
+  padding-left: 7.5rem;
 }
 
 @media (min-width: 640px) {
@@ -309,21 +309,25 @@ select.field {
   .site-header-brand {
     left: 2rem;
   }
-  /* Only nudge links right when spare room exists — negative values on
-   * tight iPad widths caused horizontal page overflow. */
-  .site-header-nav--brand-visible {
-    transform: translateX(max(0px, calc((100cqw - 4rem - 100%) / 2)));
-  }
 }
 
 @media (max-width: 1023px) {
-  /* Tablets: keep nav end-aligned after the logo; skip the center-slide. */
+  /* Tablets and phones: keep the whole nav group end-aligned after the logo. */
   .site-header-nav {
     margin-inline: 0;
     margin-left: auto;
   }
-  .site-header-nav--brand-visible {
-    transform: none;
+}
+
+/* Desktop: auth controls pin to the right content edge (mirroring the brand
+ * on the left) so Sign up always lands exactly above the subnav's right
+ * edge; the primary link stays centered and never collides with either. */
+@media (min-width: 1024px) {
+  .site-header-auth {
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
