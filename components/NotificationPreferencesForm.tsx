@@ -58,7 +58,7 @@ export function NotificationPreferencesForm({
         setError(result.error);
         return;
       }
-      setMessage("Preferences saved for future delivery.");
+      setMessage("Preferences saved. In-app alerts follow these choices; email is not connected yet.");
     } finally {
       setPending(false);
     }
@@ -72,54 +72,57 @@ export function NotificationPreferencesForm({
     {
       key: "invitation",
       label: "Tournament and organization invitations",
-      description: "A coach, school, or district needs a response.",
+      description: "In-app when a coach, school, or district needs a response.",
     },
     {
       key: "registration_deadline",
       label: "Registration deadlines",
-      description: "Registration is still unfinished as the deadline approaches.",
+      description:
+        "Show unfinished registration in Needs attention when a deadline is within a week.",
     },
     {
       key: "reminder_7_day",
       label: "Seven-day reminders",
-      description: "A planned tournament is one week away.",
+      description:
+        "Show saved or going tournaments in Needs attention about a week out.",
     },
     {
       key: "reminder_1_day",
       label: "One-day reminders",
-      description: "A planned tournament is tomorrow.",
+      description:
+        "Show saved or going tournaments in Needs attention for today or tomorrow.",
     },
     {
       key: "schedule_change",
-      label: "Date, venue, or eligibility changes",
-      description: "A tracked tournament changed in a way that affects plans.",
+      label: "Date, venue, or registration changes",
+      description: "In-app when a saved or planned tournament changes details.",
     },
     {
       key: "cancellation",
       label: "Cancellations",
-      description: "A tracked tournament was cancelled or archived.",
+      description: "In-app when a tracked tournament is cancelled or archived.",
     },
     {
       key: "rsvp_update",
       label: "RSVP updates",
-      description: "A student or linked parent responds to an invitation.",
+      description: "In-app when someone responds to an invitation you sent.",
     },
     {
       key: "announcement",
       label: "Coach announcements",
-      description: "Your organization posts an operational update.",
+      description: "In-app when your organization posts an update.",
     },
     {
       key: "email_enabled",
       label: "Email when delivery becomes available",
       description:
-        "Email is not connected yet. This saves whether you want it later.",
+        "Email is not connected yet. Saves whether you want email later.",
     },
     {
       key: "guardian_routing",
       label: "Route student deadlines to linked guardians",
       description:
-        "Guardians get the action and event name, never private browsing data.",
+        "Saved for later guardian routing — not wired for delivery yet.",
     },
   ];
 
@@ -175,7 +178,7 @@ export function NotificationPreferencesForm({
         disabled={pending}
         className="cta-enabled mt-6 disabled:opacity-60"
       >
-        {pending ? "Saving…" : "Save future preferences"}
+        {pending ? "Saving…" : "Save alert preferences"}
       </button>
       {message ? (
         <p className="mt-3 text-sm font-medium text-foreground">{message}</p>

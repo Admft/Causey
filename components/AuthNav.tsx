@@ -27,6 +27,7 @@ export function AuthNav() {
   const [role, setRole] = useState<AccountRole | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasOrgStaffAccess, setHasOrgStaffAccess] = useState(false);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
 
   useEffect(() => {
     if (!configured) {
@@ -40,10 +41,16 @@ export function AuthNav() {
         setRole(null);
         setIsAdmin(false);
         setHasOrgStaffAccess(false);
+        setUnreadAlerts(0);
         return;
       }
-      const [profileResult, adminResult, membershipResult, ownedOrgResult] =
-        await Promise.all([
+      const [
+        profileResult,
+        adminResult,
+        membershipResult,
+        ownedOrgResult,
+        unreadResult,
+      ] = await Promise.all([
         supabase
           .from("profiles")
           .select("role")
@@ -68,12 +75,18 @@ export function AuthNav() {
           .select("id")
           .eq("owner_profile_id", userId)
           .limit(1),
+        supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("recipient_id", userId)
+          .is("read_at", null),
       ]);
       setRole((profileResult.data?.role as AccountRole) ?? null);
       setIsAdmin(adminResult.error ? false : adminResult.data === true);
       setHasOrgStaffAccess(
         Boolean(membershipResult.data?.length || ownedOrgResult.data?.length)
       );
+      setUnreadAlerts(unreadResult.error ? 0 : unreadResult.count ?? 0);
     }
 
     supabase.auth.getUser().then(({ data }) => {
@@ -182,13 +195,20 @@ export function AuthNav() {
       ))}
       <Link
         href="/me/notifications"
-        aria-label="Alerts"
+        aria-label={
+          unreadAlerts
+            ? `Alerts, ${unreadAlerts} unread`
+            : "Alerts"
+        }
         aria-current={
           pathname.startsWith("/me/notifications") ? "page" : undefined
         }
         className={navLinkClass(pathname.startsWith("/me/notifications"))}
       >
         Alerts
+        {unreadAlerts > 0 ? (
+          <span className="text-muted"> ({unreadAlerts})</span>
+        ) : null}
       </Link>
       <Link
         href="/account"

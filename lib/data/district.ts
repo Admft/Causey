@@ -4,6 +4,7 @@ import type {
   OrgMemberRole,
   OrganizationVerificationStatus,
 } from "@/lib/auth/orgs";
+import type { AttentionSourceEvent } from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type DistrictSchoolRollup = {
@@ -151,6 +152,115 @@ export async function getNotifications(
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data ?? []) as NotificationRow[];
+}
+
+export async function getUnreadNotificationCount(
+  profileId: string
+): Promise<number> {
+  const supabase = await createServerSupabaseClient();
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("recipient_id", profileId)
+    .is("read_at", null);
+  if (error) return 0;
+  return count ?? 0;
+}
+
+type CompetitionLite = {
+  id: string;
+  slug: string;
+  name: string;
+  start_date: string;
+  end_date: string | null;
+  reg_deadline: string | null;
+  reg_url: string | null;
+};
+
+/** Raw relations used to build live attention items on /me/notifications. */
+export async function getAttentionSourceEvents(
+  profileId: string
+): Promise<AttentionSourceEvent[]> {
+  const supabase = await createServerSupabaseClient();
+  const [
+    { data: entrantRows },
+    { data: savedRows },
+    { data: registrationRows },
+  ] = await Promise.all([
+    supabase
+      .from("competition_entrants")
+      .select(
+        "competition_id, status, competitions(id, slug, name, start_date, end_date, reg_deadline, reg_url)"
+      )
+      .eq("profile_id", profileId)
+      .in("status", ["invited", "going"]),
+    supabase
+      .from("saved_competitions")
+      .select(
+        "competition_id, competitions(id, slug, name, start_date, end_date, reg_deadline, reg_url)"
+      )
+      .eq("user_id", profileId),
+    supabase
+      .from("external_registrations")
+      .select(
+        "competition_id, status, competitions(id, slug, name, start_date, end_date, reg_deadline, reg_url)"
+      )
+      .eq("user_id", profileId)
+      .in("status", ["opened", "not_registered"]),
+  ]);
+
+  const events: AttentionSourceEvent[] = [];
+
+  for (const row of entrantRows ?? []) {
+    const competition = row.competitions as unknown as CompetitionLite | null;
+    if (!competition) continue;
+    const status = row.status as "invited" | "going";
+    events.push({
+      competitionId: competition.id,
+      slug: competition.slug,
+      name: competition.name,
+      startDate: competition.start_date,
+      endDate: competition.end_date,
+      regDeadline: competition.reg_deadline,
+      regUrl: competition.reg_url,
+      relation: status,
+    });
+  }
+
+  for (const row of savedRows ?? []) {
+    const competition = row.competitions as unknown as CompetitionLite | null;
+    if (!competition) continue;
+    events.push({
+      competitionId: competition.id,
+      slug: competition.slug,
+      name: competition.name,
+      startDate: competition.start_date,
+      endDate: competition.end_date,
+      regDeadline: competition.reg_deadline,
+      regUrl: competition.reg_url,
+      relation: "saved",
+    });
+  }
+
+  for (const row of registrationRows ?? []) {
+    const competition = row.competitions as unknown as CompetitionLite | null;
+    if (!competition) continue;
+    events.push({
+      competitionId: competition.id,
+      slug: competition.slug,
+      name: competition.name,
+      startDate: competition.start_date,
+      endDate: competition.end_date,
+      regDeadline: competition.reg_deadline,
+      regUrl: competition.reg_url,
+      relation:
+        row.status === "opened"
+          ? "registration_opened"
+          : "registration_needed",
+    });
+  }
+
+  return events;
 }
 
 export async function getModerationQueue(): Promise<ModerationQueueRow[]> {

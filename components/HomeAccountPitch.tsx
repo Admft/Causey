@@ -75,8 +75,12 @@ export async function HomeAccountPitch() {
         className="home-band band-join band-join--blue bg-brand-blue-soft/50"
         aria-labelledby="account-heading"
       >
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <div className="max-w-3xl">
+        {/*
+          Same md+ grid as signed-out: copy left, next-actions right so the
+          blue band isn’t a left strip with a dead right plane.
+        */}
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
+          <div className="min-w-0 max-w-xl">
             <h2
               id="account-heading"
               className="font-display text-display font-bold tracking-tight text-foreground"
@@ -85,11 +89,12 @@ export async function HomeAccountPitch() {
             </h2>
             <p className="mt-3 max-w-prose text-base text-muted">{next.blurb}</p>
           </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+
+          <div className="min-w-0 w-full max-w-md space-y-3 md:max-w-none">
             {primary ? (
               <Link
                 href={primary.href}
-                className="cta-enabled inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold"
+                className="cta-enabled inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold"
               >
                 {primary.label}
               </Link>
@@ -98,9 +103,17 @@ export async function HomeAccountPitch() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="inline-flex items-center justify-center rounded-xl border border-brand-blue/45 bg-surface/80 px-5 py-3 text-sm font-semibold text-brand-blue-strong transition-colors hover:bg-brand-blue-soft/40"
+                className="card-lift group flex items-center justify-between gap-4 rounded-2xl border border-line bg-surface px-5 py-4"
               >
-                {action.label}
+                <span className="min-w-0 text-sm font-semibold text-foreground">
+                  {action.label}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="nudge-x shrink-0 text-xl text-brand-red"
+                >
+                  →
+                </span>
               </Link>
             ))}
           </div>

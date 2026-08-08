@@ -42,8 +42,8 @@ export function ForgotPasswordForm() {
         </h2>
         <p className="mt-3 text-sm text-muted">
           If <strong className="text-foreground">{email}</strong> has an
-          account, a reset link is on its way. Open it to choose a new
-          password.
+          account, Supabase sent a reset link. Causey does not deliver that
+          email itself — open the link to choose a new password.
         </p>
       </div>
     );

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { recordAccountInAppAlert } from "@/lib/actions/notifications";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 /**
@@ -71,10 +72,11 @@ export function AccountSecurityForm({
       setNewEmail("");
       setEmailPassword("");
       setEmailMessage(
-        `Confirmation sent. Your sign-in email stays ${email} until the new address is confirmed — check ${next}${
+        `Confirmation requested. Your sign-in email stays ${email} until the new address is confirmed — check ${next} for the Supabase confirmation link${
           emailConfirmed ? " (and possibly your current inbox too)" : ""
         }.`
       );
+      void recordAccountInAppAlert("email_change_pending");
       router.refresh();
     } catch (err) {
       setEmailError(
@@ -119,6 +121,7 @@ export function AccountSecurityForm({
       setPassword("");
       setConfirm("");
       setPasswordMessage("Password updated. Use it the next time you sign in.");
+      void recordAccountInAppAlert("password_updated");
       router.refresh();
     } catch (err) {
       setPasswordError(
@@ -140,8 +143,9 @@ export function AccountSecurityForm({
       });
       if (error) throw error;
       setResetMessage(
-        `If ${email} is correct, a reset link is on its way. Open it to choose a new password.`
+        `If ${email} is correct, Supabase sent a reset link. Causey does not send that email itself — open the link to choose a new password.`
       );
+      void recordAccountInAppAlert("password_reset_requested");
     } catch (err) {
       setResetError(
         err instanceof Error ? err.message : "Could not send the reset email."
@@ -179,7 +183,7 @@ export function AccountSecurityForm({
       <section className="border-t border-line pt-8">
         <h3 className="text-sm font-semibold text-foreground">Change email</h3>
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Enter a new address and your current password. Causey emails a
+          Enter a new address and your current password. Supabase emails a
           confirmation link to the new address before the change takes effect.
         </p>
         <form

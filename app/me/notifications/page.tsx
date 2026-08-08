@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  MarkAllNotificationsReadButton,
+  MarkNotificationReadButton,
+} from "@/components/NotificationInboxActions";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { homePathForRole } from "@/lib/auth/home-path";
-import { getNotifications } from "@/lib/data/district";
+import {
+  getAttentionSourceEvents,
+  getNotificationPreferences,
+  getNotifications,
+} from "@/lib/data/district";
+import { buildAttentionItems } from "@/lib/notifications";
 
 export const metadata: Metadata = {
   title: "Alerts",
@@ -14,10 +23,20 @@ export const metadata: Metadata = {
 export default async function NotificationsPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/me/notifications");
-  const [profile, notifications] = await Promise.all([
-    getCurrentProfile(),
-    getNotifications(user.id),
-  ]);
+  const [profile, notifications, preferences, attentionSources] =
+    await Promise.all([
+      getCurrentProfile(),
+      getNotifications(user.id),
+      getNotificationPreferences(user.id),
+      getAttentionSourceEvents(user.id),
+    ]);
+  const today = new Date().toISOString().slice(0, 10);
+  const attention = buildAttentionItems(
+    attentionSources,
+    preferences,
+    today
+  );
+  const unreadCount = notifications.filter((row) => !row.read_at).length;
   const workspaceHref = homePathForRole(profile?.role);
   const workspaceLabel =
     profile?.role === "parent"
@@ -25,6 +44,7 @@ export default async function NotificationsPage() {
       : profile?.role === "coach"
         ? "Open organizations"
         : "Open my tournaments";
+  const hasAnything = attention.length > 0 || notifications.length > 0;
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
@@ -41,8 +61,9 @@ export default async function NotificationsPage() {
         Updates that need attention
       </h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        In-app updates appear here when Causey creates them. Automated reminders
-        and email delivery are not operating yet. Choose future preferences in{" "}
+        In-app updates for invitations, RSVPs, announcements, account changes,
+        and tournament schedule or cancellation notices. Email delivery is not
+        operating yet — choose preferences in{" "}
         <Link
           href="/account#alerts"
           className="font-semibold text-brand-red hover:underline"
@@ -55,25 +76,68 @@ export default async function NotificationsPage() {
       <div className="mt-8">
         <PortalMission
           title={
-            notifications.length
-              ? `${notifications.length} recent ${
-                  notifications.length === 1 ? "update" : "updates"
-                }`
-              : "No in-app updates yet"
+            hasAnything
+              ? `${attention.length + unreadCount} item${
+                  attention.length + unreadCount === 1 ? "" : "s"
+                } to review`
+              : "No updates need attention"
           }
           description={
-            notifications.length
-              ? "Review the real updates below, then return to your workspace for the next action."
-              : "Keep using your role workspace for invitations and tournament actions. Alert preferences are saved for delivery work that is still being built."
+            hasAnything
+              ? "Handle invitations and upcoming plans first, then clear recent in-app updates."
+              : "Saved and going tournaments, invitations, and schedule changes will show here. Alert preferences control what appears."
           }
           action={
-            notifications.length
-              ? { href: "#recent-updates", label: "Review updates" }
+            hasAnything
+              ? {
+                  href: attention.length
+                    ? "#needs-attention"
+                    : "#recent-updates",
+                  label: attention.length
+                    ? "Review what needs attention"
+                    : "Review updates",
+                }
               : { href: workspaceHref, label: workspaceLabel }
           }
           secondary={{ href: "/account#alerts", label: "Alert preferences" }}
         />
       </div>
+
+      <section
+        id="needs-attention"
+        className="section-rule mt-10 scroll-mt-24 pt-8"
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            Needs attention
+          </h2>
+          <span className="text-xs text-muted">{attention.length} shown</span>
+        </div>
+        {!attention.length ? (
+          <p className="mt-3 max-w-prose text-sm text-muted">
+            No pending invitations or upcoming saved/going tournaments need a
+            response right now.
+          </p>
+        ) : (
+          <ul className="mt-4 divide-y divide-line border-y border-line">
+            {attention.map((item) => (
+              <li key={item.id} className="py-3">
+                <Link href={item.href} className="group block">
+                  <span className="text-sm font-semibold text-foreground group-hover:text-brand-red">
+                    {item.title}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted">
+                    {item.body}
+                  </span>
+                  <span className="mt-2 inline-block text-xs font-semibold text-brand-red">
+                    {item.ctaLabel} →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section
         id="recent-updates"
@@ -83,40 +147,71 @@ export default async function NotificationsPage() {
           <h2 className="text-sm font-semibold text-foreground">
             Recent in-app updates
           </h2>
-          <span className="text-xs text-muted">
-            {notifications.length} shown
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted">
+              {notifications.length} shown
+              {unreadCount ? ` · ${unreadCount} unread` : ""}
+            </span>
+            <MarkAllNotificationsReadButton disabled={!unreadCount} />
+          </div>
         </div>
         {!notifications.length ? (
           <p className="mt-3 max-w-prose text-sm text-muted">
-            Nothing has been generated for your account. Causey does not yet
-            send automated deadline, schedule-change, or cancellation alerts.
+            Nothing has been recorded for your account yet. When coaches invite
+            you, RSVPs change, announcements post, or tracked tournaments change
+            dates or cancel, those updates appear here.
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">
-            {notifications.map((notification) => (
-              <li key={notification.id} className="py-3">
-                {notification.href ? (
-                  <Link href={notification.href} className="group block">
-                    <span className="text-sm font-semibold text-foreground group-hover:text-brand-red">
-                      {notification.title}
-                    </span>
-                    <span className="mt-1 block text-xs text-muted">
-                      {notification.body}
-                    </span>
-                  </Link>
-                ) : (
-                  <>
-                    <p className="text-sm font-semibold text-foreground">
-                      {notification.title}
-                    </p>
-                    <p className="mt-1 text-xs text-muted">
-                      {notification.body}
-                    </p>
-                  </>
-                )}
-              </li>
-            ))}
+            {notifications.map((notification) => {
+              const unread = !notification.read_at;
+              return (
+                <li key={notification.id} className="py-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      {notification.href ? (
+                        <Link href={notification.href} className="group block">
+                          <span
+                            className={
+                              unread
+                                ? "text-sm font-semibold text-foreground group-hover:text-brand-red"
+                                : "text-sm font-medium text-muted-strong group-hover:text-brand-red"
+                            }
+                          >
+                            {unread ? "· " : ""}
+                            {notification.title}
+                          </span>
+                          <span className="mt-1 block text-xs text-muted">
+                            {notification.body}
+                          </span>
+                        </Link>
+                      ) : (
+                        <>
+                          <p
+                            className={
+                              unread
+                                ? "text-sm font-semibold text-foreground"
+                                : "text-sm font-medium text-muted-strong"
+                            }
+                          >
+                            {unread ? "· " : ""}
+                            {notification.title}
+                          </p>
+                          <p className="mt-1 text-xs text-muted">
+                            {notification.body}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    {unread ? (
+                      <MarkNotificationReadButton id={notification.id} />
+                    ) : (
+                      <span className="text-xs text-muted">Read</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

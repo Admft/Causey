@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
+import { createInAppNotifications } from "@/lib/actions/notifications";
 import type { OrgMemberRole } from "@/lib/auth/orgs";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
@@ -573,14 +574,44 @@ export async function publishOrganizationAnnouncement(input: {
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to continue." };
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.from("org_announcements").insert({
-    org_id: parsed.data.orgId,
-    title: parsed.data.title,
-    body: parsed.data.body,
-    created_by: profile.id,
-  });
+  const { data: announcement, error } = await supabase
+    .from("org_announcements")
+    .insert({
+      org_id: parsed.data.orgId,
+      title: parsed.data.title,
+      body: parsed.data.body,
+      created_by: profile.id,
+    })
+    .select("id")
+    .maybeSingle();
   if (error) return { ok: false, error: "Could not publish the announcement." };
+
+  const { data: members } = await supabase
+    .from("org_memberships")
+    .select("profile_id")
+    .eq("org_id", parsed.data.orgId)
+    .eq("status", "active");
+  const recipients = (members ?? [])
+    .map((row) => row.profile_id as string)
+    .filter((id) => id !== profile.id);
+  if (recipients.length) {
+    const announcementId = announcement?.id ?? parsed.data.orgId;
+    await createInAppNotifications(
+      recipients.map((recipientId) => ({
+        recipientId,
+        kind: "announcement" as const,
+        title: parsed.data.title,
+        body: parsed.data.body.slice(0, 240),
+        href: `/orgs/${parsed.data.orgSlug}`,
+        entityType: "org_announcement",
+        entityId: String(announcementId),
+        dedupeKey: `announcement:${announcementId}:${recipientId}`,
+      }))
+    );
+  }
+
   revalidatePath(`/orgs/${parsed.data.orgSlug}`);
+  revalidatePath("/me/notifications");
   return { ok: true };
 }
 
@@ -613,22 +644,7 @@ export async function saveNotificationPreferences(
   return { ok: true };
 }
 
-export async function markNotificationRead(id: string): Promise<ActionResult> {
-  if (!z.string().uuid().safeParse(id).success) {
-    return { ok: false, error: "Invalid notification." };
-  }
-  const user = await currentUserOrError();
-  if (!user.ok) return user;
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("recipient_id", user.id);
-  if (error) return { ok: false, error: "Could not update the notification." };
-  revalidatePath("/me/notifications");
-  return { ok: true };
-}
+export { markNotificationRead } from "@/lib/actions/notifications";
 
 export async function markEntrantAttendance(input: {
   competitionId: string;

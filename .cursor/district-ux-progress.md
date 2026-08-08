@@ -17,6 +17,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Signed-in home account band: md+ two-col with stacked next-actions on the right (no empty blue plane) — 2026-08-07
+- [x] In-app alerts max-out: prefs-aware notification RPC + schedule/cancel dedupe; invite/RSVP/announcement/account producers; `/me/notifications` Needs attention + unread/mark-read; honest email-off copy; Alerts nav unread count — 2026-08-07
 - [x] Home account pitch iPad fix: 2-col from md + capped role cards so signup bubbles don’t stretch full-bleed — 2026-08-07
 - [x] Account Sign-in panel: official change-email + change-password forms (current password required); pending email status; `#signin` deep link — 2026-08-07
 - [x] Calm `/account` UX: segmented Profile/Alerts/Family/Orgs panels (one job at a time), no mission dump; quieter alert prefs list — 2026-08-07

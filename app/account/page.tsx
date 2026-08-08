@@ -178,7 +178,8 @@ export default async function AccountPage() {
         Alerts
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        Saved for later — automated reminders and email are not operating yet.{" "}
+        These preferences control in-app alerts now. Email delivery is not
+        connected yet.{" "}
         <Link
           href="/me/notifications"
           className="font-semibold text-brand-red hover:underline"
