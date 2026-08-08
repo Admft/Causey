@@ -60,6 +60,12 @@ export type DistrictSchoolRow = Pick<
   "id" | "name" | "slug" | "state" | "verification_status"
 >;
 
+export type OrganizationVerificationReview = {
+  status: "pending" | "verified" | "rejected";
+  note: string | null;
+  reviewed_at: string;
+};
+
 export type TournamentDraftRow = {
   id: string;
   org_id: string;
@@ -89,6 +95,18 @@ export type OrgForViewer = {
   schools: DistrictSchoolRow[];
   announcements: OrgAnnouncementRow[];
 };
+
+export async function getOrganizationVerificationReview(
+  orgId: string
+): Promise<OrganizationVerificationReview | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("organization_verification_reviews")
+    .select("status, note, reviewed_at")
+    .eq("org_id", orgId)
+    .maybeSingle();
+  return (data as OrganizationVerificationReview | null) ?? null;
+}
 
 export type EntrantWithEvent = {
   competition_id: string;

@@ -8,7 +8,13 @@ export type AdminOrganizationRow = {
   slug: string;
   type: "school" | "district" | "club" | "team";
   state: string | null;
+  verification_status: "pending" | "verified" | "rejected";
+  verified_at: string | null;
   created_at: string;
+  organization_verification_reviews: {
+    note: string | null;
+    reviewed_at: string;
+  }[];
 };
 
 export type AdminUserDirectoryRow = {
@@ -125,7 +131,9 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from("organizations")
-    .select("id, name, slug, type, state, created_at")
+    .select(
+      "id, name, slug, type, state, verification_status, verified_at, created_at, organization_verification_reviews(note, reviewed_at)"
+    )
     .order("type")
     .order("name");
 

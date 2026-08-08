@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-07 — **Platform organization verification workflow**: migration `0027` prevents organization self-verification, district-created schools start pending, `/admin/organizations` provides a review queue with private correction notes, and organization Settings shows the decision and next step.
 - 2026-08-07 — **Platform user access directory**: `/admin/users` lists and privately searches accounts by name/email, exposes only access-relevant fields, and lets a platform admin change account role or platform-admin status with confirmation, self-change/last-admin guards, serialized revocation, and an audit record.
 - 2026-08-07 — **District-safe organization lifecycle**: coaches cannot create districts; district join codes/student invitations are blocked in UI, actions, and migration `0025`; district roster paths removed; school creation hands off to administrator delegation; org type is locked.
 - 2026-08-07 — **Honest alerts center**: real in-app records lead; empty state names the role workspace; automated/email delivery is explicitly not operating; preferences are framed as future choices; nav says “Alerts & settings.”
@@ -74,5 +75,15 @@ _(none — ready for next audit tick)_
 ### P1 leftover
 - Student-data disclosure/privacy policy and DOB minimization decision (owner/legal)
 - For-profit packaging and school/district buyer journey (pricing/go-to-market)
-- Platform organization verification controls
 - README/product-state truth cleanup
+
+### Tick 16 audit
+- Platform admin · organizations · verification status exists but `/admin/organizations` neither shows nor changes it · operators cannot complete the trust workflow that moderation already references · **P1 · done**
+- Security / org admin · organization updates · broad org-admin UPDATE policy allows direct `verification_status` changes because no column guard reserves them for platform admins · an organization can self-verify outside the UI · **P0 · done in `0027`**
+- District admin · school creation · `createDistrictSchool` writes `verification_status: "verified"` before platform review · child schools bypass the intended trust gate · **P0 · done**
+- Org admin · Settings · the organization’s own verification decision and rejection reason are absent · administrators cannot tell what is blocked or what to correct · **P1 · done**
+- Platform admin · user directory · migration `0026` remains unapplied, so the shipped account search surface will show a schema-gap error in environments missing migrations · **P1 · deployment**
+- Coach/org owner · ownership transfer · creator-derived authority remains effective after owner transfer, so a transfer cannot fully revoke the original creator · **P1 · L**
+- Parent/student · signup/footer · student DOB is collected without a visible data-practices/privacy route · material minor-data trust gap · **P1 · L · owner/legal decision**
+- Buyer · signed-out path · school/district commercial packaging and buyer handoff remain unspecified · for-profit intent has no actionable institutional route yet · **P1 · L · owner decision**
+- Engineering/operator · README · documented product state still contradicts accounts, PII, districts, and platform administration · setup and trust decisions can be made from stale assumptions · **P1 · M**

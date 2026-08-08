@@ -102,9 +102,7 @@ export async function createDistrictSchool(input: {
         parent_org_id: parsed.data.districtId,
         created_by: user.id,
         owner_profile_id: user.id,
-        verification_status: "verified",
-        verified_at: new Date().toISOString(),
-        verified_by: user.id,
+        verification_status: "pending",
       })
       .select("id, slug")
       .single();

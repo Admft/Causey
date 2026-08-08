@@ -5,7 +5,11 @@ import { DistrictSchoolForm } from "@/components/DistrictSchoolForm";
 import { OrganizationSettingsForm } from "@/components/OrganizationSettingsForm";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { getSessionUser } from "@/lib/auth/session";
-import { getOrgBySlugForViewer, getOrgRoster } from "@/lib/data/portal";
+import {
+  getOrganizationVerificationReview,
+  getOrgBySlugForViewer,
+  getOrgRoster,
+} from "@/lib/data/portal";
 
 export const metadata: Metadata = {
   title: "Organization settings",
@@ -23,7 +27,10 @@ export default async function OrganizationSettingsPage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
-  const roster = await getOrgRoster(view.org.id);
+  const [roster, verificationReview] = await Promise.all([
+    getOrgRoster(view.org.id),
+    getOrganizationVerificationReview(view.org.id),
+  ]);
 
   return (
     <>
@@ -44,6 +51,38 @@ export default async function OrganizationSettingsPage({
           deliberately. Coaches manage tournaments; administrators manage the
           organization itself.
         </p>
+        <section
+          aria-labelledby="verification-heading"
+          className="mt-8 rounded-xl border border-line bg-surface p-5"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            Organization verification
+          </p>
+          <h2
+            id="verification-heading"
+            className="mt-2 text-base font-semibold text-foreground"
+          >
+            {view.org.verification_status === "verified"
+              ? "Verified by Causey"
+              : view.org.verification_status === "rejected"
+                ? "Organization details need correction"
+                : "Platform review pending"}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted">
+            {view.org.verification_status === "verified"
+              ? "Causey has reviewed this organization identity. Keep the record below accurate."
+              : view.org.verification_status === "rejected"
+                ? verificationReview?.note ??
+                  "A platform administrator returned this organization for correction."
+                : "You can continue setup while a Causey platform administrator reviews the organization identity."}
+          </p>
+          {view.org.verification_status === "rejected" ? (
+            <p className="mt-2 text-xs font-medium text-muted-strong">
+              Correct the organization details below, then ask a Causey
+              platform administrator to review it again.
+            </p>
+          ) : null}
+        </section>
         <section className="section-rule mt-8 pt-8">
           <OrganizationSettingsForm
             org={view.org}

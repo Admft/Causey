@@ -74,6 +74,23 @@ const AdminUserSearchSchema = z.object({
   page: z.number().int().min(1).max(10_000),
 });
 
+const AdminOrganizationVerificationSchema = z
+  .object({
+    orgId: z.string().uuid(),
+    orgSlug: z.string().min(1).max(120),
+    status: z.enum(["pending", "verified", "rejected"]),
+    note: z.string().trim().max(1000),
+  })
+  .superRefine((value, context) => {
+    if (value.status === "rejected" && !value.note) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["note"],
+        message: "Explain what the organization needs to correct.",
+      });
+    }
+  });
+
 export async function adminSearchUsers(input: {
   query: string;
   page: number;
@@ -154,6 +171,53 @@ export async function adminUpdateUserAccess(input: {
 
   revalidatePath("/admin/users");
   return { ok: true };
+}
+
+export async function adminReviewOrganization(input: {
+  orgId: string;
+  orgSlug: string;
+  status: "pending" | "verified" | "rejected";
+  note: string;
+}): Promise<ActionResult<{ status: "pending" | "verified" | "rejected" }>> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Platform administrator access required.",
+    };
+  }
+  const parsed = AdminOrganizationVerificationSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error:
+        parsed.error.issues[0]?.message ??
+        "Check the organization review.",
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("review_organization_verification", {
+    p_org_id: parsed.data.orgId,
+    p_status: parsed.data.status,
+    p_note: parsed.data.note || null,
+  });
+  if (error) {
+    if (error.message.includes("organization_not_found")) {
+      return { ok: false, error: "That organization no longer exists." };
+    }
+    return {
+      ok: false,
+      error:
+        "Could not save this review. Confirm migration 0027 is applied.",
+    };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/organizations");
+  revalidatePath(`/orgs/${parsed.data.orgSlug}`);
+  revalidatePath(`/orgs/${parsed.data.orgSlug}/settings`);
+  return { ok: true, status: parsed.data.status };
 }
 
 export async function adminCreateOrganization(input: {

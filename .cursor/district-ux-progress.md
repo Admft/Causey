@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Platform organization verification: private review queue + correction notes, pending-by-default schools, org-admin status handoff, and database self-verification guard (`0027`) — 2026-08-07
 - [x] District-safe organization lifecycle: platform-only district creation; no district student join/invite/roster paths; school-admin handoff; immutable org type; migration `0025` — 2026-08-07
 - [x] Honest alerts center: real records first; automated/email delivery explicitly inactive; role-aware empty action; future preferences + truthful nav — 2026-08-07
 - [x] Org admin people mission: join-link vs email-invite guidance; CSV demoted; copyable claim-path success — 2026-08-07
@@ -180,3 +181,4 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Tick 15: alerts surface made honest. For-profit/minor-data follow-up is not merely copy: DOB minimization and public data disclosures need an explicit owner/legal decision.
 - Tick 15 follow-up: audit found P0 district lifecycle leaks. Migration `0025` reserves district creation for platform admins, locks governance fields, blocks district student/school-admin membership and invitations, and excludes districts from join-code flows. App mirrors those boundaries and sends new schools to admin delegation.
 - Platform admin user access (2026-08-07): `/admin/users` now provides paginated account search by display name/email plus confirmed, audited account-role and platform-admin changes. Search terms stay out of URLs, email remains behind an admin-checked RPC, the abuse kill switch is read-only, and self-access/concurrent last-admin removal are blocked.
+- Tick 16: organization verification is now a governed workflow. Migration `0027` blocks direct self-verification and keeps correction notes private; platform admins get a pending-first queue, while organization admins see the decision and next step in Settings.

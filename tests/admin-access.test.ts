@@ -76,6 +76,23 @@ describe("platform admin actions", () => {
       error: "Platform administrator access required.",
     });
   });
+
+  it("rejects organization verification for non-admins", async () => {
+    mocks.getPlatformAdminUser.mockResolvedValue(null);
+    const { adminReviewOrganization } = await import("@/lib/actions/admin");
+
+    await expect(
+      adminReviewOrganization({
+        orgId: "00000000-0000-0000-0000-000000000000",
+        orgSlug: "example-school",
+        status: "verified",
+        note: "",
+      })
+    ).resolves.toEqual({
+      ok: false,
+      error: "Platform administrator access required.",
+    });
+  });
 });
 
 describe("platform admin migration", () => {

@@ -186,7 +186,9 @@ export default async function AdminOverviewPage() {
                     </strong>{" "}
                     {row.target_type === "competitions"
                       ? "tournament"
-                      : "organization"}{" "}
+                      : row.target_type === "profile"
+                        ? "account"
+                        : "organization"}{" "}
                     <span className="font-medium">{name}</span>
                     {status ? ` · ${status}` : ""}
                   </span>

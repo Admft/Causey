@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminOrganizationForm } from "@/components/AdminOrganizationForm";
+import { AdminOrganizationVerificationForm } from "@/components/AdminOrganizationVerificationForm";
+import { PortalMission } from "@/components/PortalPrimitives";
 import { getAdminOrganizations } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
@@ -16,7 +18,47 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default async function AdminOrganizationsPage() {
-  const organizations = await getAdminOrganizations();
+  const organizations = (await getAdminOrganizations()).sort((a, b) => {
+    const order = { pending: 0, rejected: 1, verified: 2 };
+    return (
+      order[a.verification_status] - order[b.verification_status] ||
+      a.name.localeCompare(b.name)
+    );
+  });
+  const pendingCount = organizations.filter(
+    (org) => org.verification_status === "pending"
+  ).length;
+  const mission =
+    pendingCount > 0
+      ? {
+          title:
+            pendingCount === 1
+              ? "1 organization needs verification"
+              : `${pendingCount} organizations need verification`,
+          description:
+            "Review organization identity before Causey treats it as verified in moderation and district workflows.",
+          action: {
+            href: "#verification-queue",
+            label: "Review organizations",
+          },
+          secondary: {
+            href: "/admin/moderation",
+            label: "Open tournament moderation",
+          },
+        }
+      : {
+          title: "Organization review queue is clear",
+          description:
+            "New districts, schools, clubs, and teams remain pending until a platform administrator verifies them.",
+          action: {
+            href: "#provision",
+            label: "Provision an organization",
+          },
+          secondary: {
+            href: "/admin/moderation",
+            label: "Open tournament moderation",
+          },
+        };
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -25,61 +67,123 @@ export default async function AdminOrganizationsPage() {
         Organizations
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Platform admins provision district records here. District admins then
-        create connected school workspaces, delegate school administrators, and
-        provision people from each appropriate workspace.
+        Verify organization identity and provision district records here.
+        District admins then create connected school workspaces and delegate
+        school administrators.
       </p>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-        <section>
-          <h2 className="text-sm font-semibold text-foreground">
-            Create an organization
-          </h2>
-          <div className="mt-4 rounded-xl border border-line bg-surface p-5">
-            <AdminOrganizationForm />
-          </div>
-        </section>
+      <div className="mt-8">
+        <PortalMission
+          title={mission.title}
+          description={mission.description}
+          action={mission.action}
+          secondary={mission.secondary}
+        />
+      </div>
 
-        <section>
+      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+        <section id="verification-queue" className="scroll-mt-24">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-sm font-semibold text-foreground">
-              All organizations
+              Verification queue
             </h2>
-            <span className="text-xs text-muted">{organizations.length} total</span>
+            <span className="text-xs text-muted">
+              {organizations.length} total
+            </span>
           </div>
           {!organizations.length ? (
             <p className="mt-4 text-sm text-muted">
               No organizations are visible to this administrator.
             </p>
           ) : (
-            <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
-              {organizations.map((org) => (
-                <li
-                  key={org.id}
-                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div>
-                    <Link
-                      href={`/orgs/${org.slug}`}
-                      className="font-semibold text-foreground hover:text-brand-red"
-                    >
-                      {org.name}
-                    </Link>
-                    <span className="mt-0.5 block text-xs text-muted">
-                      {TYPE_LABELS[org.type] ?? org.type}
-                      {org.state ? ` · ${org.state}` : ""}
-                    </span>
-                  </div>
-                  <Link
-                    href={`/admin/tournaments/new?org=${org.id}`}
-                    className="text-sm font-semibold text-brand-red hover:underline"
-                  >
-                    Add tournament
-                  </Link>
-                </li>
-              ))}
+            <ul className="mt-4 divide-y divide-line border-y border-line">
+              {organizations.map((org) => {
+                const review =
+                  org.organization_verification_reviews[0] ?? null;
+                return (
+                  <li key={org.id} className="py-4">
+                    <details open={org.verification_status === "pending"}>
+                      <summary className="cursor-pointer list-none">
+                        <span className="flex flex-wrap items-start justify-between gap-3">
+                          <span>
+                            <span className="block text-sm font-semibold text-foreground">
+                              {org.name}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-muted">
+                              {TYPE_LABELS[org.type] ?? org.type}
+                              {org.state ? ` · ${org.state}` : ""}
+                            </span>
+                          </span>
+                          <span className="text-right text-xs font-semibold text-muted-strong">
+                            {org.verification_status === "verified"
+                              ? "Verified"
+                              : org.verification_status === "rejected"
+                                ? "Needs correction"
+                                : "Pending review"}
+                            {review ? (
+                              <time
+                                className="mt-0.5 block font-normal text-muted"
+                                dateTime={review.reviewed_at}
+                              >
+                                Reviewed{" "}
+                                {new Date(
+                                  review.reviewed_at
+                                ).toLocaleDateString("en-US")}
+                              </time>
+                            ) : null}
+                          </span>
+                        </span>
+                      </summary>
+                      <div className="mt-4 grid gap-4 border-l-2 border-line pl-4">
+                        {org.verification_status === "rejected" &&
+                        review?.note ? (
+                          <p className="text-sm text-muted-strong">
+                            <strong className="font-semibold text-foreground">
+                              Correction note:
+                            </strong>{" "}
+                            {review.note}
+                          </p>
+                        ) : null}
+                        <AdminOrganizationVerificationForm
+                          orgId={org.id}
+                          orgSlug={org.slug}
+                          initialStatus={org.verification_status}
+                          initialNote={review?.note ?? null}
+                        />
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
+                          <Link
+                            href={`/orgs/${org.slug}`}
+                            className="font-semibold text-muted-strong hover:text-brand-red"
+                          >
+                            Open workspace
+                          </Link>
+                          <Link
+                            href={`/admin/tournaments/new?org=${org.id}`}
+                            className="font-semibold text-muted-strong hover:text-brand-red"
+                          >
+                            Add tournament draft
+                          </Link>
+                        </div>
+                      </div>
+                    </details>
+                  </li>
+                );
+              })}
             </ul>
           )}
+        </section>
+
+        <section id="provision" className="scroll-mt-24">
+          <h2 className="text-sm font-semibold text-foreground">
+            Provision an organization
+          </h2>
+          <p className="mt-2 text-xs text-muted">
+            New records start pending. Verify only after checking the
+            organization identity.
+          </p>
+          <div className="mt-4 rounded-xl border border-line bg-surface p-5">
+            <AdminOrganizationForm />
+          </div>
         </section>
       </div>
     </main>
