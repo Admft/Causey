@@ -100,16 +100,18 @@ function SourceColumn({
 
 function AffiliatePreviewColumn() {
   return (
-    <div>
+    <div className="rounded-xl border border-line bg-surface-soft p-5 sm:p-6">
       <h3 className="text-xs font-semibold text-muted-strong">Adding soon</h3>
       <p className="mt-2 text-sm text-muted">
         Scrapers are in progress; none of these are indexed yet.
       </p>
-      <ul className="mt-4 divide-y divide-line border-y border-line">
+      <ul className="mt-4 grid grid-cols-1 gap-y-3 border-t border-line pt-4 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-4">
         {PREVIEW_AFFILIATES.map((affiliate) => (
-          <li key={affiliate.region} className="py-3">
-            <p className="font-semibold text-foreground">{affiliate.region}</p>
-            <p className="mt-0.5 text-sm text-muted">
+          <li key={affiliate.region}>
+            <p className="text-sm font-semibold text-foreground">
+              {affiliate.region}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
               {affiliate.org}
               {affiliate.abbreviation ? ` (${affiliate.abbreviation})` : ""}
             </p>
