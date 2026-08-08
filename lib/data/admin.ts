@@ -24,6 +24,8 @@ export type AdminOrganizationRow = {
     note: string | null;
     reviewed_at: string;
   }[];
+  member_count: number;
+  tournament_count: number;
 };
 
 export type AdminUserDirectoryRow = {
@@ -140,17 +142,41 @@ export async function getAdminOverview() {
 
 export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
   const supabase = await createServerSupabaseClient();
-  const { data } = await supabase
-    .from("organizations")
-    .select(
-      "id, name, slug, type, state, parent_org_id, verification_status, verified_at, created_at, parent:organizations!organizations_parent_org_id_fkey(id, name, slug, verification_status), organization_verification_reviews(note, reviewed_at)"
-    )
-    .order("type")
-    .order("name");
+  const [organizations, memberships, orgCompetitions] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select(
+        "id, name, slug, type, state, parent_org_id, verification_status, verified_at, created_at, parent:organizations!organizations_parent_org_id_fkey(id, name, slug, verification_status), organization_verification_reviews(note, reviewed_at)"
+      )
+      .order("type")
+      .order("name"),
+    supabase.from("org_memberships").select("org_id, status"),
+    supabase.from("competitions").select("org_id").not("org_id", "is", null),
+  ]);
 
-  return (data ?? []).map((row) => ({
+  const memberCounts = new Map<string, number>();
+  if (!memberships.error) {
+    for (const row of memberships.data ?? []) {
+      if (row.status === "removed") continue;
+      memberCounts.set(row.org_id, (memberCounts.get(row.org_id) ?? 0) + 1);
+    }
+  }
+  const tournamentCounts = new Map<string, number>();
+  if (!orgCompetitions.error) {
+    for (const row of orgCompetitions.data ?? []) {
+      if (!row.org_id) continue;
+      tournamentCounts.set(
+        row.org_id,
+        (tournamentCounts.get(row.org_id) ?? 0) + 1
+      );
+    }
+  }
+
+  return (organizations.data ?? []).map((row) => ({
     ...row,
     parent: Array.isArray(row.parent) ? (row.parent[0] ?? null) : row.parent,
+    member_count: memberCounts.get(row.id) ?? 0,
+    tournament_count: tournamentCounts.get(row.id) ?? 0,
   })) as unknown as AdminOrganizationRow[];
 }
 

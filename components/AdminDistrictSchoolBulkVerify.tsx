@@ -65,10 +65,11 @@ export function AdminDistrictSchoolBulkVerify({
   }
 
   return (
-    <div className="mt-4 border-l-2 border-line pl-4">
+    <div className="rounded-lg border border-line bg-surface-soft p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-xs font-semibold text-muted-strong">
-          Pending schools in this district
+          {schools.length} pending {schools.length === 1 ? "school" : "schools"}{" "}
+          in this district
         </p>
         <button
           type="button"

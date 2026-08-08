@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Admin organizations overhaul: stat-filter strip, search + type filter, single scannable queue (pending first), on-demand detail panels with member/tournament counts, one-click verify / correction-note actions, district school roster + bulk verify inside the district panel, collapsible Add organization form — 2026-08-08
 - [x] Admin TCA publish honesty: status counts + Published/Draft splits, stronger Published badge, bulk-publish follow-up that chess defaults to upcoming; search empty copy for source + ended listings — 2026-08-08
 - [x] District pilot bootstrap: aggregate readiness model + one-next-action district command center; school create → admin claim → ownership handoff; district-grouped platform verification with guarded bulk verify; assisted-pilot runbook (`0034`) — 2026-08-08
 - [x] Signed-in home account band: mirrors signed-out grid — copy + primary CTA left, descriptive next-step cards right — 2026-08-07
