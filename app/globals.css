@@ -447,6 +447,18 @@ select.field {
   border-color: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
+/* The ONE shared scroll-reveal pattern (anti-vibecode §5.2): 12px rise +
+ * fade, once on entry. `data-pending` is set pre-paint by ScrollReveal only
+ * when motion is allowed; --reveal-delay carries small group staggers. */
+.scroll-reveal {
+  transition: opacity 500ms var(--ease-brand) var(--reveal-delay, 0ms),
+    transform 500ms var(--ease-brand) var(--reveal-delay, 0ms);
+}
+.scroll-reveal[data-pending]:not([data-revealed]) {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cta-enabled,
   .card-lift,
@@ -473,7 +485,8 @@ select.field {
     animation: none;
   }
   .coverage-step--reached::after,
-  .coverage-node {
+  .coverage-node,
+  .scroll-reveal {
     transition: none;
   }
 }
