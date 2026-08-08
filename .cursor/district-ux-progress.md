@@ -17,6 +17,10 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Home “Chess is ready” + signed-in pitch: two-column coverage/roadmap band; signed-in actions sit under copy instead of floating in empty right space — 2026-08-07
+- [x] Admin tournament ready cue: drafts with complete location/details show Ready to publish / Needs details badges, plus a Ready to publish filter checkbox and select-ready bulk action — 2026-08-07
+- [x] Kill empty soft mission bubbles + tablet layout: PortalMission is a compact left-rule; coach orgs use inline CTAs; home hero is two-column from md with overflow-safe header — 2026-08-07
+- [x] Coach `/orgs` landing: dropped generic “mission” eyebrow, named the empty-roster job, and replaced equal org cards with a priority hairline directory — 2026-08-07
 - [x] TCA scrape accuracy + admin bulk accept: detail parser captures venue/dates/ZIP so ready rows auto-publish; tournaments and moderation support select-many and publish-by-source drafts — 2026-08-07
 - [x] Admin tournament source filter: dropdown now includes all live scrape sources (TCA, FIDE, OnlineReg, Chess-Results) from the shared ingestion list — 2026-08-07
 - [x] Home brand handoff: the header starts with centered navigation while the hero Causey mark is visible, then reveals its logo and shifts navigation right after that mark scrolls away — 2026-08-07

@@ -29,6 +29,19 @@ const ORG_TYPE_LABEL: Record<string, string> = {
   district: "District",
 };
 
+function staffRoleLabel(
+  memberRole: string | null,
+  isCoach: boolean
+): string | null {
+  if (memberRole === "district_admin") return "district admin";
+  if (memberRole === "school_admin" || memberRole === "admin") {
+    return "admin";
+  }
+  if (memberRole === "assistant_coach") return "assistant coach";
+  if (memberRole === "coach" || isCoach) return "coach";
+  return null;
+}
+
 export default async function OrgsPage() {
   if (!isSupabaseConfigured()) {
     return (
@@ -74,18 +87,35 @@ export default async function OrgsPage() {
     (row) => row.status === "invited"
   ).length;
   const coachedOrgs = myOrgs.filter(({ isCoach }) => isCoach);
-  const primaryOrg = coachedOrgs[0] ?? myOrgs[0];
-  const primaryNeedsStudents =
-    isStaffWorkspace &&
-    primaryOrg?.isCoach &&
-    primaryOrg.org.type !== "district"
-      ? (
-          await getOrgRoster(primaryOrg.org.id)
-        ).filter(
-          (row) =>
-            row.member_status === "active" && row.member_role === "student"
-        ).length === 0
-      : false;
+  const staffOrgsNeedingStudents = new Set<string>();
+  if (isStaffWorkspace) {
+    await Promise.all(
+      coachedOrgs
+        .filter(({ org }) => org.type !== "district")
+        .map(async ({ org }) => {
+          const students = (await getOrgRoster(org.id)).filter(
+            (row) =>
+              row.member_status === "active" && row.member_role === "student"
+          );
+          if (!students.length) staffOrgsNeedingStudents.add(org.id);
+        })
+    );
+  }
+  const sortedOrgs = [...myOrgs].sort((a, b) => {
+    const aNeeds = staffOrgsNeedingStudents.has(a.org.id) ? 0 : 1;
+    const bNeeds = staffOrgsNeedingStudents.has(b.org.id) ? 0 : 1;
+    if (aNeeds !== bNeeds) return aNeeds - bNeeds;
+    return a.org.name.localeCompare(b.org.name);
+  });
+  const primaryOrg =
+    sortedOrgs.find(({ org, isCoach }) =>
+      Boolean(isCoach && staffOrgsNeedingStudents.has(org.id))
+    ) ??
+    coachedOrgs[0] ??
+    myOrgs[0];
+  const primaryNeedsStudents = Boolean(
+    primaryOrg && staffOrgsNeedingStudents.has(primaryOrg.org.id)
+  );
 
   const invitationsSection = (
     <section id="rsvps" className="mt-10 scroll-mt-24">
@@ -141,87 +171,87 @@ export default async function OrgsPage() {
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
       {isStaffWorkspace ? (
         <>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-            Coach mission
-          </p>
-          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-            What to run next
+          <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
+            Your organizations
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
-            Open the organization that needs work. Your directory stays below.
+            {!myOrgs.length
+              ? canStartOrganization
+                ? "Create a school or club to get a join link, roster, and tournament tools."
+                : "Ask an administrator for a staff invitation, then come back here."
+              : primaryNeedsStudents && primaryOrg
+                ? `${primaryOrg.org.name} has an empty roster. Invite students before you create tournaments.`
+                : "Rosters, invites, and tournaments live inside each workspace."}
           </p>
 
-          <div className="mt-8">
-            <PortalMission
-              title={
-                !myOrgs.length
-                  ? canStartOrganization
+          {/* Empty state only — when orgs exist, the directory rows carry the CTA. */}
+          {!myOrgs.length ? (
+            <div className="mt-8">
+              <PortalMission
+                title={
+                  canStartOrganization
                     ? "Start your first organization"
                     : "No organization access yet"
-                  : primaryNeedsStudents && primaryOrg
-                    ? `Invite students to ${primaryOrg.org.name}`
-                    : primaryOrg
-                      ? `Continue with ${primaryOrg.org.name}`
-                      : "Open an organization"
-              }
-              description={
-                !myOrgs.length
-                  ? canStartOrganization
-                    ? "Create a school or club workspace to get a join code, roster, and tournament tools."
-                    : "Ask an organization administrator to send a new staff invitation."
-                  : primaryNeedsStudents
-                    ? "Your roster is empty. Share a join link so students can join before you create tournaments."
-                    : pendingInviteCount
-                      ? `You also have ${pendingInviteCount} personal ${
-                          pendingInviteCount === 1
-                            ? "invitation"
-                            : "invitations"
-                        } waiting — answer those after org work, or jump to them below.`
-                      : "Rosters, invites, and tournaments live inside each organization workspace."
-              }
-              action={
-                !myOrgs.length
-                  ? canStartOrganization
+                }
+                description={
+                  canStartOrganization
+                    ? "You’ll get a join link for students and a place to publish club tournaments."
+                    : "Staff invitations come from an organization administrator."
+                }
+                action={
+                  canStartOrganization
                     ? { href: "/orgs/new", label: "Start an organization" }
                     : undefined
-                  : primaryNeedsStudents && primaryOrg
-                    ? {
-                        href: `/orgs/${primaryOrg.org.slug}/roster#add-students`,
-                        label: "Open roster",
-                      }
-                    : primaryOrg
-                      ? {
-                          href: `/orgs/${primaryOrg.org.slug}`,
-                          label: "Open workspace",
-                        }
-                      : undefined
-              }
-              secondary={
-                pendingInviteCount
-                  ? { href: "#rsvps", label: "Review my RSVPs" }
-                  : primaryNeedsStudents && primaryOrg
-                    ? {
-                        href: `/orgs/${primaryOrg.org.slug}`,
-                        label: "Open workspace",
-                      }
-                    : myOrgs.length && canStartOrganization
-                      ? { href: "/orgs/new", label: "Start another" }
-                      : undefined
-              }
-            />
-          </div>
+                }
+              />
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              {primaryNeedsStudents && primaryOrg ? (
+                <>
+                  <Link
+                    href={`/orgs/${primaryOrg.org.slug}/roster#add-students`}
+                    className="cta-enabled inline-flex"
+                  >
+                    Invite students
+                  </Link>
+                  <Link
+                    href={`/orgs/${primaryOrg.org.slug}`}
+                    className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                  >
+                    Open workspace
+                  </Link>
+                </>
+              ) : primaryOrg ? (
+                <Link
+                  href={`/orgs/${primaryOrg.org.slug}`}
+                  className="cta-enabled inline-flex"
+                >
+                  Open workspace
+                </Link>
+              ) : null}
+              {pendingInviteCount ? (
+                <Link
+                  href="#rsvps"
+                  className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                >
+                  Review my RSVPs
+                </Link>
+              ) : null}
+            </div>
+          )}
         </>
       ) : (
         <>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-            Clubs
-          </p>
-          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+          <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
             Your clubs
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
             Join with the code your coach shared. Tournament RSVPs live on{" "}
-            <Link href="/me" className="font-semibold text-brand-red hover:underline">
+            <Link
+              href="/me"
+              className="font-semibold text-brand-red hover:underline"
+            >
               My tournaments
             </Link>
             .
@@ -266,49 +296,71 @@ export default async function OrgsPage() {
       )}
 
       <section id="organizations" className="mt-10 scroll-mt-24">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-            {isStaffWorkspace ? "Organizations" : "Where you belong"}
-          </h2>
-          {isStaffWorkspace && myOrgs.length && canStartOrganization ? (
-            <Link
-              href="/orgs/new"
-              className="text-sm font-semibold text-brand-red hover:underline"
-            >
-              Start another
-            </Link>
-          ) : null}
-        </div>
+        <h2 className="text-sm font-semibold text-foreground">
+          {isStaffWorkspace ? "All organizations" : "Where you belong"}
+        </h2>
 
         {!myOrgs.length ? (
-          isStaffWorkspace ? (
-            <p className="mt-3 text-sm text-muted">
-              No organizations yet — use the next step in the mission above.
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-muted">
-              You haven&rsquo;t joined an organization yet.
-            </p>
-          )
+          <p className="mt-3 text-sm text-muted">
+            {isStaffWorkspace
+              ? "None yet — use the next step above."
+              : "You haven’t joined an organization yet."}
+          </p>
         ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {myOrgs.map(({ org, isCoach }) => (
-              <li key={org.id}>
-                <Link
+          <ul className="mt-2">
+            {sortedOrgs.map(({ org, isCoach, memberRole }) => {
+              const role = staffRoleLabel(memberRole, isCoach);
+              const needsStudents = staffOrgsNeedingStudents.has(org.id);
+              const meta = [
+                ORG_TYPE_LABEL[org.type] ?? org.type,
+                org.state,
+                role ? `your role: ${role}` : null,
+                needsStudents ? "empty roster" : null,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+
+              return (
+                <PortalListRow
+                  key={org.id}
                   href={`/orgs/${org.slug}`}
-                  className="card-lift block h-full rounded-xl border border-line bg-surface px-4 py-4 shadow-[var(--shadow-card)]"
-                >
-                  <span className="font-semibold text-foreground">{org.name}</span>
-                  <span className="mt-1 block text-xs text-muted">
-                    {ORG_TYPE_LABEL[org.type] ?? org.type}
-                    {org.state ? ` · ${org.state}` : ""}
-                    {isCoach ? " · you coach here" : ""}
-                  </span>
-                </Link>
-              </li>
-            ))}
+                  title={org.name}
+                  meta={meta}
+                  trailing={
+                    needsStudents ? (
+                      <Link
+                        href={`/orgs/${org.slug}/roster#add-students`}
+                        className="shrink-0 text-sm font-semibold text-brand-red hover:underline"
+                      >
+                        Invite students
+                      </Link>
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className="nudge-x hidden text-muted sm:inline"
+                      >
+                        →
+                      </span>
+                    )
+                  }
+                />
+              );
+            })}
           </ul>
         )}
+
+        {isStaffWorkspace && canStartOrganization ? (
+          <p className="mt-4">
+            <Link
+              href="/orgs/new"
+              className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+            >
+              {myOrgs.length
+                ? "Start another organization"
+                : "Start an organization"}
+            </Link>
+          </p>
+        ) : null}
       </section>
 
       {!isStaffWorkspace ? (

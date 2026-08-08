@@ -68,31 +68,37 @@ export async function HomeAccountPitch() {
 
   if (profile) {
     const next = SIGNED_IN_NEXT[profile.role] ?? SIGNED_IN_NEXT.student;
+    const primary = next.actions.find((action) => action.primary);
+    const secondary = next.actions.filter((action) => !action.primary);
     return (
       <section
         className="section-rule bg-brand-blue-soft/50"
         aria-labelledby="account-heading"
       >
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-14 sm:px-8 sm:py-16 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
-          <div className="max-w-2xl">
+        <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
+          <div className="max-w-3xl">
             <h2
               id="account-heading"
-              className="max-w-[24ch] font-display text-display font-bold tracking-tight text-foreground"
+              className="font-display text-display font-bold tracking-tight text-foreground"
             >
               {next.heading}
             </h2>
-            <p className="mt-4 max-w-prose text-base text-muted">{next.blurb}</p>
+            <p className="mt-3 max-w-prose text-base text-muted">{next.blurb}</p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {next.actions.map((action) => (
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            {primary ? (
+              <Link
+                href={primary.href}
+                className="cta-enabled inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold"
+              >
+                {primary.label}
+              </Link>
+            ) : null}
+            {secondary.map((action) => (
               <Link
                 key={action.href}
                 href={action.href}
-                className={
-                  action.primary
-                    ? "cta-enabled inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold"
-                    : "inline-flex items-center justify-center rounded-xl border border-line bg-surface px-5 py-3 text-sm font-semibold text-foreground hover:border-foreground/30"
-                }
+                className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-5 py-3 text-sm font-semibold text-foreground hover:border-foreground/30"
               >
                 {action.label}
               </Link>

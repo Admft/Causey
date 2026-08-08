@@ -45,7 +45,7 @@ export function HomeHeroSearch() {
   return (
     <form
       onSubmit={onSubmit}
-      className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-card)] lg:max-w-none"
+      className="w-full min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
     >
       <h2 className="font-display text-display-sm font-bold tracking-tight text-foreground">
         Find chess tournaments
@@ -55,8 +55,8 @@ export function HomeHeroSearch() {
         anything.
       </p>
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-        <div className="flex-1">
+      <div className="mt-5 flex flex-col gap-3">
+        <div className="min-w-0">
           <label
             htmlFor="hero-zip"
             className="text-xs font-semibold text-muted-strong"
@@ -77,7 +77,7 @@ export function HomeHeroSearch() {
             aria-describedby={error ? "hero-zip-error" : undefined}
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="hero-radius"
             className="text-xs font-semibold text-muted-strong"
@@ -86,7 +86,7 @@ export function HomeHeroSearch() {
           </label>
           <select
             id="hero-radius"
-            className="field mt-1 sm:w-36"
+            className="field mt-1 w-full"
             value={radius}
             onChange={(event) => setRadius(event.target.value)}
           >

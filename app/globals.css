@@ -267,8 +267,21 @@ select.field {
   .site-header-brand {
     left: 2rem;
   }
+  /* Only nudge links right when spare room exists — negative values on
+   * tight iPad widths caused horizontal page overflow. */
   .site-header-nav--brand-visible {
-    transform: translateX(calc((100cqw - 4rem - 100%) / 2));
+    transform: translateX(max(0px, calc((100cqw - 4rem - 100%) / 2)));
+  }
+}
+
+@media (max-width: 1023px) {
+  /* Tablets: keep nav end-aligned after the logo; skip the center-slide. */
+  .site-header-nav {
+    margin-inline: 0;
+    margin-left: auto;
+  }
+  .site-header-nav--brand-visible {
+    transform: none;
   }
 }
 

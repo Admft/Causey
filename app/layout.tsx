@@ -38,7 +38,7 @@ function ExternalMark() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
-      <body className="flex min-h-screen flex-col">
+      <body className="flex min-h-screen flex-col overflow-x-clip">
         <div className="sticky top-0 z-50">
           <EarlyBuildBanner />
           <SiteHeader />

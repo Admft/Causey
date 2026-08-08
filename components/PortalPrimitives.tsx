@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
- * Shared mission callout for role portals. Each landing still owns its own
- * page chrome — this only standardizes the “one next job” panel.
+ * Shared “one next job” callout for role portals.
+ * Compact left-rule strip — not a full-width soft card that sits mostly empty.
  *
  * On phones the primary CTA pins to the bottom so it stays reachable while
  * scrolling long inboxes; the in-panel buttons remain from sm+.
@@ -28,15 +28,15 @@ export function PortalMission({
 
   return (
     <>
-      <section className="rounded-2xl border border-accent/25 bg-accent-soft/40 p-5 sm:p-6">
+      <section className="max-w-xl border-l-2 border-brand-red pl-4 sm:pl-5">
         <h2 className="font-display text-xl font-bold text-foreground">
           {title}
         </h2>
-        <p className="mt-2 max-w-prose text-sm text-muted">{description}</p>
+        <p className="mt-2 text-sm text-muted">{description}</p>
         {children}
         {action || secondary ? (
           <div
-            className={`mt-5 flex flex-wrap items-center gap-4 ${
+            className={`mt-4 flex flex-wrap items-center gap-4 ${
               pinMobile ? "hidden sm:flex" : ""
             }`}
           >
@@ -119,12 +119,12 @@ export function PortalListRow({
           <span className="mt-1 block text-xs text-muted">{meta}</span>
         ) : null}
       </div>
-      {trailing}
+      {trailing ? <div className="shrink-0 sm:ml-4">{trailing}</div> : null}
     </>
   );
 
   return (
-    <li className="flex flex-col gap-3 border-b border-line py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+    <li className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       {body}
     </li>
   );

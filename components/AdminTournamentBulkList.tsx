@@ -21,10 +21,15 @@ type BulkTournament = {
   name: string;
   city: string;
   state: string;
+  zip: string;
+  lat: number;
+  lng: number;
   start_date: string;
   end_date: string | null;
+  reg_url: string | null;
   source: string;
   status: TournamentStatus;
+  publishReady: boolean;
   organizations: { name: string } | null;
 };
 
@@ -57,12 +62,20 @@ export function AdminTournamentBulkList({
     () => tournaments.slice(0, BULK_CAP).map((row) => row.id),
     [tournaments]
   );
+  const readyDraftIds = useMemo(
+    () =>
+      tournaments
+        .filter((row) => row.status === "draft" && row.publishReady)
+        .slice(0, BULK_CAP)
+        .map((row) => row.id),
+    [tournaments]
+  );
   const allSelected =
     selectableIds.length > 0 &&
     selectableIds.every((id) => selected.has(id));
   const selectedCount = selected.size;
   const canPublishGroup =
-    filterStatus === "draft" && Boolean(filterSource) && tournaments.length > 0;
+    filterStatus === "draft" && Boolean(filterSource) && readyDraftIds.length > 0;
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -88,7 +101,7 @@ export function AdminTournamentBulkList({
     if (!ids.length) return;
     if (
       !window.confirm(
-        `Publish ${ids.length} ${label}? They will appear in chess search when location is complete.`
+        `Publish ${ids.length} ${label}? Complete records will appear in chess search right away.`
       )
     ) {
       return;
@@ -120,34 +133,51 @@ export function AdminTournamentBulkList({
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="inline-flex items-center gap-2 text-sm font-medium text-muted-strong">
-          <input
-            type="checkbox"
-            className="size-4 rounded border-line"
-            checked={allSelected}
-            onChange={toggleAll}
-            disabled={!selectableIds.length || pending}
-          />
-          Select all shown
-          {tournaments.length > BULK_CAP
-            ? ` (first ${BULK_CAP})`
-            : ""}
-        </label>
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-muted-strong">
+            <input
+              type="checkbox"
+              className="size-4 rounded border-line"
+              checked={allSelected}
+              onChange={toggleAll}
+              disabled={!selectableIds.length || pending}
+            />
+            Select all shown
+            {tournaments.length > BULK_CAP
+              ? ` (first ${BULK_CAP})`
+              : ""}
+          </label>
+          {readyDraftIds.length > 0 ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                setSelected(new Set(readyDraftIds));
+                setError(null);
+                setMessage(null);
+              }}
+              className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+            >
+              Select {readyDraftIds.length} ready draft
+              {readyDraftIds.length === 1 ? "" : "s"}
+            </button>
+          ) : null}
+        </div>
         {canPublishGroup ? (
           <button
             type="button"
             disabled={pending}
             onClick={() =>
               publishIds(
-                tournaments.slice(0, BULK_CAP).map((row) => row.id),
-                `draft${tournaments.length === 1 ? "" : "s"} from ${competitionSourceLabel(filterSource!)}`
+                readyDraftIds,
+                `ready draft${readyDraftIds.length === 1 ? "" : "s"} from ${competitionSourceLabel(filterSource!)}`
               )
             }
             className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
           >
             {pending
               ? "Publishing…"
-              : `Publish all ${tournaments.length} matching drafts`}
+              : `Publish ${readyDraftIds.length} ready draft${readyDraftIds.length === 1 ? "" : "s"}`}
           </button>
         ) : null}
       </div>
@@ -234,6 +264,16 @@ export function AdminTournamentBulkList({
                 <span className="rounded-md border border-line px-1.5 py-0.5 text-2xs font-semibold text-muted-strong">
                   {STATUS_LABELS[tournament.status] ?? tournament.status}
                 </span>
+                {tournament.status === "draft" && tournament.publishReady ? (
+                  <span className="rounded-md border border-brand-red/30 bg-accent-soft px-1.5 py-0.5 text-2xs font-semibold text-brand-red">
+                    Ready to publish
+                  </span>
+                ) : null}
+                {tournament.status === "draft" && !tournament.publishReady ? (
+                  <span className="rounded-md border border-line px-1.5 py-0.5 text-2xs font-semibold text-muted">
+                    Needs details
+                  </span>
+                ) : null}
               </div>
               <p className="mt-1 text-xs text-muted">
                 {formatDateRange(tournament.start_date, tournament.end_date)}

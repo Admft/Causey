@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isCompetitionSourceFilter } from "@/lib/ingestion-sources";
+import { isTournamentPublishReady } from "@/lib/tournament-readiness";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type AdminOrganizationRow = {
@@ -39,6 +40,8 @@ export type AdminTournamentRow = {
   city: string;
   state: string;
   zip: string;
+  lat: number;
+  lng: number;
   start_date: string;
   end_date: string | null;
   reg_deadline: string | null;
@@ -186,12 +189,13 @@ export async function getAdminUsers({
 export async function getAdminTournaments(filters?: {
   status?: string;
   source?: string;
+  ready?: boolean;
 }): Promise<AdminTournamentRow[]> {
   const supabase = await createServerSupabaseClient();
   let query = supabase
     .from("competitions")
     .select(
-      "id, slug, name, organizer_name, venue_name, address, city, state, zip, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state)"
+      "id, slug, name, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state)"
     )
     .order("start_date", { ascending: false })
     .limit(250);
@@ -209,7 +213,9 @@ export async function getAdminTournaments(filters?: {
   }
 
   const { data } = await query;
-  return (data ?? []) as unknown as AdminTournamentRow[];
+  const rows = (data ?? []) as unknown as AdminTournamentRow[];
+  if (!filters?.ready) return rows;
+  return rows.filter((row) => isTournamentPublishReady(row));
 }
 
 export async function getAdminTournament(
@@ -219,7 +225,7 @@ export async function getAdminTournament(
   const { data } = await supabase
     .from("competitions")
     .select(
-      "id, slug, name, organizer_name, venue_name, address, city, state, zip, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state)"
+      "id, slug, name, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state)"
     )
     .eq("id", id)
     .maybeSingle();

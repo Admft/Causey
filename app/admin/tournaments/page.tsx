@@ -6,6 +6,7 @@ import {
   COMPETITION_SOURCE_FILTER_OPTIONS,
   competitionSourceLabel,
 } from "@/lib/ingestion-sources";
+import { isTournamentPublishReady } from "@/lib/tournament-readiness";
 
 export const metadata: Metadata = {
   title: "Admin tournaments",
@@ -15,14 +16,23 @@ export const metadata: Metadata = {
 export default async function AdminTournamentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string }>;
+  searchParams: Promise<{ status?: string; source?: string; ready?: string }>;
 }) {
   const filters = await searchParams;
-  const tournaments = await getAdminTournaments(filters);
+  const readyOnly = filters.ready === "1";
+  const tournaments = await getAdminTournaments({
+    status: filters.status,
+    source: filters.source,
+    ready: readyOnly,
+  });
   const draftSourceGroup =
     filters.status === "draft" && filters.source
       ? competitionSourceLabel(filters.source)
       : null;
+  const readyDraftCount = tournaments.filter(
+    (tournament) =>
+      tournament.status === "draft" && isTournamentPublishReady(tournament)
+  ).length;
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -69,10 +79,20 @@ export default async function AdminTournamentsPage({
             ))}
           </select>
         </label>
+        <label className="flex min-h-11 items-center gap-2 pb-0.5 text-sm font-medium text-muted-strong">
+          <input
+            type="checkbox"
+            name="ready"
+            value="1"
+            defaultChecked={readyOnly}
+            className="size-4 rounded border-line"
+          />
+          Ready to publish
+        </label>
         <button type="submit" className="cta-enabled">
           Apply filters
         </button>
-        {filters.status || filters.source ? (
+        {filters.status || filters.source || readyOnly ? (
           <Link
             href="/admin/tournaments"
             className="px-1 py-2 text-sm font-semibold text-muted-strong hover:text-brand-red"
@@ -84,31 +104,37 @@ export default async function AdminTournamentsPage({
 
       {draftSourceGroup ? (
         <p className="mt-4 text-sm text-muted">
-          Showing drafts from {draftSourceGroup}. Use select-all or{" "}
+          Showing drafts from {draftSourceGroup}. Ready records are marked; use
+          select-ready or{" "}
           <span className="font-semibold text-muted-strong">
-            Publish all matching drafts
+            Publish ready drafts
           </span>{" "}
-          to accept the scrape group.
+          to accept the complete ones.
         </p>
       ) : null}
 
       <section className="section-rule mt-8 pt-8">
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="text-sm font-semibold text-foreground">Records</h2>
-          <span className="text-xs text-muted">{tournaments.length} shown</span>
+          <span className="text-xs text-muted">
+            {tournaments.length} shown
+            {readyDraftCount > 0
+              ? ` · ${readyDraftCount} draft${readyDraftCount === 1 ? "" : "s"} ready`
+              : ""}
+          </span>
         </div>
         {!tournaments.length ? (
           <div className="mt-4 text-sm text-muted">
             <p>No tournaments match these filters.</p>
             <Link
               href={
-                filters.status || filters.source
+                filters.status || filters.source || readyOnly
                   ? "/admin/tournaments"
                   : "/admin/tournaments/new"
               }
               className="mt-2 inline-block font-semibold text-brand-red hover:underline"
             >
-              {filters.status || filters.source
+              {filters.status || filters.source || readyOnly
                 ? "Clear filters and show all records"
                 : "Add the first tournament draft"}
             </Link>
@@ -122,10 +148,15 @@ export default async function AdminTournamentsPage({
                 name: tournament.name,
                 city: tournament.city,
                 state: tournament.state,
+                zip: tournament.zip,
+                lat: tournament.lat,
+                lng: tournament.lng,
                 start_date: tournament.start_date,
                 end_date: tournament.end_date,
+                reg_url: tournament.reg_url,
                 source: tournament.source,
                 status: tournament.status,
+                publishReady: isTournamentPublishReady(tournament),
                 organizations: tournament.organizations
                   ? { name: tournament.organizations.name }
                   : null,
