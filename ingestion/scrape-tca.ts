@@ -36,6 +36,9 @@ const STAGING_FILE = "tca-drafts.json";
 const DETAIL_DELAY_MS = 250;
 const MAX_PAGES = Number(process.env.SCRAPE_MAX_PAGES ?? "10");
 const SKIP_DETAIL = process.env.SCRAPE_SKIP_DETAIL === "1";
+const TCA_USER_AGENT =
+  process.env.TCA_USER_AGENT ??
+  "Mozilla/5.0 (compatible; Causey/0.1; +https://causey.dev)";
 
 async function loadListingPages(): Promise<RawTcaEvent[]> {
   const fixture = process.env.SCRAPE_HTML_FILE;
@@ -46,7 +49,7 @@ async function loadListingPages(): Promise<RawTcaEvent[]> {
   let page = 0;
   while (nextUrl && page < MAX_PAGES) {
     console.log(`Fetching TCA listing page ${page + 1}: ${nextUrl}`);
-    const html = await fetchHtml(nextUrl);
+    const html = await fetchHtml(nextUrl, { userAgent: TCA_USER_AGENT });
     const rows = parseTcaListingHtml(html, nextUrl);
     for (const row of rows) byUrl.set(row.detailUrl, row);
     nextUrl = parseTcaNextPageUrl(html, nextUrl);
@@ -87,7 +90,9 @@ async function main() {
         process.stdout.write(
           `\rDetail ${index + 1}/${raw.length}: ${row.name.slice(0, 52).padEnd(52)}`
         );
-        const html = await fetchHtml(row.detailUrl);
+        const html = await fetchHtml(row.detailUrl, {
+          userAgent: TCA_USER_AGENT,
+        });
         detail = parseTcaDetailHtml(html, row.detailUrl);
         await sleep(DETAIL_DELAY_MS);
       } catch (error) {
