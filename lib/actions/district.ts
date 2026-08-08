@@ -675,5 +675,3 @@ export async function markEntrantAttendance(input: {
   revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
   return { ok: true };
 }
-
-export { StaffRoleSchema };
