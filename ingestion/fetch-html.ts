@@ -28,6 +28,51 @@ function normalizeCharset(raw: string | undefined | null): string {
   return c;
 }
 
+/**
+ * Node's TextDecoder has treated windows-1252 like latin1 for 0x80–0x9F on
+ * some runtimes (bullet 0x95 becomes U+0095). Map the real Win-1252 glyphs.
+ * https://github.com/nodejs/node/issues/56542
+ */
+const WINDOWS_1252_EXTRAS: Record<number, string> = {
+  0x80: "\u20ac",
+  0x82: "\u201a",
+  0x83: "\u0192",
+  0x84: "\u201e",
+  0x85: "\u2026",
+  0x86: "\u2020",
+  0x87: "\u2021",
+  0x88: "\u02c6",
+  0x89: "\u2030",
+  0x8a: "\u0160",
+  0x8b: "\u2039",
+  0x8c: "\u0152",
+  0x8e: "\u017d",
+  0x91: "\u2018",
+  0x92: "\u2019",
+  0x93: "\u201c",
+  0x94: "\u201d",
+  0x95: "\u2022",
+  0x96: "\u2013",
+  0x97: "\u2014",
+  0x98: "\u02dc",
+  0x99: "\u2122",
+  0x9a: "\u0161",
+  0x9b: "\u203a",
+  0x9c: "\u0153",
+  0x9e: "\u017e",
+  0x9f: "\u0178",
+};
+
+function decodeWindows1252(buf: Buffer | Uint8Array): string {
+  const bytes = Buffer.from(buf);
+  let out = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    const byte = bytes[i];
+    out += WINDOWS_1252_EXTRAS[byte] ?? String.fromCharCode(byte);
+  }
+  return out;
+}
+
 /** Decode HTML bytes using Content-Type / <meta charset> (Word pages ≠ UTF-8). */
 export function decodeHtmlBuffer(
   buf: Buffer | Uint8Array,
@@ -39,6 +84,9 @@ export function decodeHtmlBuffer(
     headLatin.match(/charset\s*=\s*["']?\s*([^\s"'/>;]+)/i)?.[1] ??
     headLatin.match(/charset=["']([^"']+)["']/i)?.[1];
   const charset = normalizeCharset(headerCharset || metaCharset || "utf-8");
+  if (charset === "windows-1252") {
+    return decodeWindows1252(buf);
+  }
   try {
     return new TextDecoder(charset).decode(buf);
   } catch {
