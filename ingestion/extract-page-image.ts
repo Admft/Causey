@@ -32,6 +32,20 @@ function looksUsable(url: string, alt?: string | null): boolean {
   return true;
 }
 
+function bestSrcsetCandidate(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const candidates = raw
+    .split(",")
+    .map((part) => {
+      const [url, descriptor = ""] = part.trim().split(/\s+/, 2);
+      const score = Number(descriptor.replace(/[^\d.]/g, "")) || 0;
+      return { url, score };
+    })
+    .filter((candidate) => candidate.url)
+    .sort((a, b) => b.score - a.score);
+  return candidates[0]?.url ?? null;
+}
+
 function metaContent($: ReturnType<typeof load>, selectors: string[]): string | null {
   for (const sel of selectors) {
     const content = $(sel).first().attr("content")?.trim();
@@ -70,9 +84,12 @@ export function extractPageImage(html: string, baseUrl: string): string | null {
   for (const el of contentImgs) {
     const img = $(el);
     const src =
-      img.attr("src")?.trim() ||
+      bestSrcsetCandidate(
+        img.attr("srcset") || img.attr("data-srcset") || img.attr("data-lazy-srcset")
+      ) ||
+      img.attr("data-lazy-src")?.trim() ||
       img.attr("data-src")?.trim() ||
-      img.attr("data-lazy-src")?.trim();
+      img.attr("src")?.trim();
     if (!src) continue;
 
     const w = Number(img.attr("width") || 0);

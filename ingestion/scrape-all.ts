@@ -13,6 +13,7 @@ const SCRIPTS = [
   { label: "OnlineReg", script: "ingestion/scrape-onlinereg.ts" },
   { label: "Chess-Results", script: "ingestion/scrape-chess-results.ts" },
   { label: "FIDE", script: "ingestion/scrape-fide.ts" },
+  { label: "Texas Chess Association", script: "ingestion/scrape-tca.ts" },
 ] as const;
 
 function run(script: string): Promise<void> {

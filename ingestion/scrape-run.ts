@@ -9,6 +9,7 @@ export type ScrapeRunSource =
   | "onlinereg_scrape"
   | "chess_results_scrape"
   | "fide_calendar_scrape"
+  | "tca_scrape"
   | "all";
 
 export type ScrapeRunStats = {

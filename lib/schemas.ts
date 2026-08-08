@@ -98,7 +98,7 @@ export const CompetitionSchema = z.object({
    * - tla_scrape: US Chess upcoming-tournaments scraper
    * - cca_scrape: Continental Chess Association (chesstour.com)
    * - organizer: coach-hosted / partner feeds
-   * - onlinereg_scrape | chess_results_scrape | fide_calendar_scrape: hub scrapers
+   * - onlinereg_scrape | chess_results_scrape | fide_calendar_scrape | tca_scrape: hub scrapers
    */
   source: z.enum([
     "manual",
@@ -108,6 +108,7 @@ export const CompetitionSchema = z.object({
     "onlinereg_scrape",
     "chess_results_scrape",
     "fide_calendar_scrape",
+    "tca_scrape",
   ]),
   /** Exact upstream page the scraper read (null for hand-entered rows). */
   source_url: z.string().url().nullable().default(null),
@@ -240,6 +241,7 @@ export const SearchFiltersSchema = z.object({
       "onlinereg_scrape",
       "chess_results_scrape",
       "fide_calendar_scrape",
+      "tca_scrape",
     ])
     .optional(),
   /** Only national / international / named major opens (award-tier). */

@@ -14,7 +14,8 @@ export type IngestionSource = {
     | "cca_scrape"
     | "onlinereg_scrape"
     | "chess_results_scrape"
-    | "fide_calendar_scrape";
+    | "fide_calendar_scrape"
+    | "tca_scrape";
   name: string;
   href: string;
   logoUrl: string;
@@ -68,6 +69,16 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     logoUrl: "/sources/fide.svg",
     blurb:
       "Official international calendar — World events, Circuit, Continental stages.",
+    status: "live",
+  },
+  {
+    id: "tca_scrape",
+    competitionSource: "tca_scrape",
+    name: "Texas Chess Association",
+    href: "https://texaschess.org/tca-and-tca-club-events/",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Texas state-affiliate and club tournament announcements, with organizer pictures.",
     status: "live",
   },
   {

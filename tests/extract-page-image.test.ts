@@ -59,6 +59,19 @@ describe("extractPageImage", () => {
     );
   });
 
+  it("uses the largest responsive image instead of a placeholder src", () => {
+    const html = `
+      <html><body><main>
+        <img src="/placeholder.png"
+             srcset="/cover-480.jpg 480w, /cover-1440.jpg 1440w"
+             width="1440" height="900" alt="Tournament" />
+      </main></body></html>
+    `;
+    expect(extractPageImage(html, base)).toBe(
+      "https://organizer.example.com/cover-1440.jpg"
+    );
+  });
+
   it("returns null when nothing usable exists", () => {
     const html = `<html><body><p>No images here</p></body></html>`;
     expect(extractPageImage(html, base)).toBeNull();

@@ -46,12 +46,14 @@ npm run scrape:cca              # Continental Chess (chesstour.com)
 npm run scrape:onlinereg        # OnlineRegistration.cc index
 npm run scrape:chess-results    # Chess-Results USA search
 npm run scrape:fide             # FIDE Calendar tiles
-npm run scrape:all              # All five in sequence (dedupe-friendly)
+npm run scrape:tca              # Texas Chess Association events + pictures
+npm run scrape:all              # All six in sequence (dedupe-friendly)
 
 SCRAPE_UPSERT_ONLY=1 npm run scrape:tla   # re-upsert staged JSON
 SCRAPE_HTML_FILE=… SCRAPE_SKIP_DETAIL=1 npm run scrape:tla
 SCRAPE_MAX_PAGES=2 npm run scrape:tla
 SCRAPE_HTML_FILE=ingestion/fixtures/fide-calendar-tiles.html npm run scrape:fide
+SCRAPE_HTML_FILE="ingestion/fixtures/incoming/TCA and TCA Club Events _ Texas Chess Association.html" SCRAPE_SKIP_DETAIL=1 npm run scrape:tca
 ```
 
 Standing hints (`details.catalog_standing` / `catalog_class`) come from FIDE tile
@@ -161,6 +163,14 @@ the same DB on the same schedule.
 - Site: https://www.chesstour.com/refs.html
 - `source='cca_scrape'`, `reg_url` → chessaction.com
 - Requires `0003_cca_source.sql` once
+
+## Texas Chess Association (`scrape-tca.ts`)
+
+- Site: https://texaschess.org/tca-and-tca-club-events/
+- `source='tca_scrape'`; migration `0032_tca_scrape_source.sql` is required
+- Follows archive pagination and event detail pages for dates, registration,
+  and location. Every card image is retained; the run fails instead of silently
+  staging image-less TCA rows if their markup changes.
 
 ## Fees / sections
 

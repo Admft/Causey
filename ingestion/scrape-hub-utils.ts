@@ -43,7 +43,8 @@ function asScrapeRunSource(source: Competition["source"]): ScrapeRunSource {
     source === "cca_scrape" ||
     source === "onlinereg_scrape" ||
     source === "chess_results_scrape" ||
-    source === "fide_calendar_scrape"
+    source === "fide_calendar_scrape" ||
+    source === "tca_scrape"
   ) {
     return source;
   }

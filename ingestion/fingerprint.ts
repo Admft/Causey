@@ -39,6 +39,7 @@ export function eventFingerprint(input: {
 /** Prefer US Chess (TLA) as the canonical listing when sources collide. */
 export const SOURCE_PRIORITY: Record<string, number> = {
   tla_scrape: 40,
+  tca_scrape: 38,
   fide_calendar_scrape: 35,
   cca_scrape: 30,
   onlinereg_scrape: 25,

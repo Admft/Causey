@@ -14,6 +14,7 @@
     "scrape:tla": "tsx ingestion/scrape-tla.ts",
     "scrape:cca": "tsx ingestion/scrape-cca.ts",
     "scrape:fide": "tsx ingestion/scrape-fide.ts",
+    "scrape:tca": "tsx ingestion/scrape-tca.ts",
     "scrape:chess-results": "tsx ingestion/scrape-chess-results.ts",
     "scrape:onlinereg": "tsx ingestion/scrape-onlinereg.ts",
     "scrape:all": "tsx ingestion/scrape-all.ts",
