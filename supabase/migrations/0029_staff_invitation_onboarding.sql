@@ -1,4 +1,4 @@
--- Trustworthy staff invitation preview and account-persona handoff.
+-- Trustworthy staff invitation preview and membership handoff.
 -- Run after 0028_effective_organization_authority.sql.
 
 create or replace function public.get_org_invitation_preview(p_token text)
@@ -72,18 +72,6 @@ begin
   values (target.org_id, auth.uid(), target.role, 'active')
   on conflict (org_id, profile_id) do update
     set role = excluded.role, status = 'active';
-
-  -- Account role chooses the landing experience; scoped authority remains in
-  -- org_memberships. Staff invitations should never leave an administrator in
-  -- the student/DOB onboarding persona.
-  if target.role in (
-    'assistant_coach', 'coach', 'school_admin', 'district_admin'
-  ) then
-    update public.profiles
-    set role = 'coach', updated_at = now()
-    where id = auth.uid()
-      and role <> 'coach';
-  end if;
 
   update public.org_invitations
   set status = 'claimed', claimed_by = auth.uid(), claimed_at = now()

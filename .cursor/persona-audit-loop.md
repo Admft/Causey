@@ -50,7 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
-- 2026-08-07 — **Staff invitation onboarding**: migration `0029` adds a privacy-minimized invitation preview, invalid/expired claims fail closed, staff signup is locked to an adult staff persona without DOB, email confirmation preserves the claim, and accepting a staff role moves existing accounts to the organization workspace persona without lifting abuse restrictions.
+- 2026-08-07 — **Staff invitation onboarding**: migrations `0029`–`0030` add a privacy-minimized invitation preview, invalid/expired claims fail closed, staff signup avoids DOB, and organization membership—not a destructive global-role rewrite—drives staff navigation and tournament authority while preserving Family/Student access.
 - 2026-08-07 — **Effective organization authority follow-up**: migration `0028` makes `owner_profile_id` authoritative after transfer, removes creator delete/private-event powers, and gives district admins database-backed child-school controls. Event auth keeps context, public publication confirms, and user-directory outages no longer masquerade as missing migrations.
 - 2026-08-07 — **Platform organization verification workflow**: migration `0027` prevents organization self-verification, district-created schools start pending, `/admin/organizations` provides a review queue with private correction notes, and organization Settings shows the decision and next step.
 - 2026-08-07 — **Platform user access directory**: `/admin/users` lists and privately searches accounts by name/email, exposes only access-relevant fields, and lets a platform admin change account role or platform-admin status with confirmation, self-change/last-admin guards, serialized revocation, and an audit record.
@@ -101,10 +101,10 @@ _(none — ready for next audit tick)_
 
 ### Tick 17 audit
 - Invited coach/admin · `/claim` → signup · claim links do not expose trusted organization/role context before auth and generic signup defaults to Student · staff are asked for student DOB and may abandon · **P1 · done in `0029`**
-- Existing student/parent account · staff claim · membership role is granted but global account persona is unchanged · `/orgs` keeps the student surface after accepting administrator access · **P1 · done in `0029`**
+- Existing student/parent account · staff claim · membership role is granted but global account persona is unchanged · `/orgs` keeps the student surface after accepting administrator access · **P1 · done in `0029`–`0030` with membership-driven workspace**
 - Invited staff · invalid/expired claim · claim page presents auth actions before validating invitation state · people can create an account for a dead invitation · **P1 · done in `0029`**
 - Signed-out student · `/join/[code]` · organization-preview failures still look like valid generic invitations · student account creation can end at an invalid code · **P1 · M**
-- Org staff · tournament create · valid organization staff can manage records after `0028`, but creation still requires the global coach persona/kill switch · role gates remain partly inconsistent · **P1 · M**
+- Org staff · tournament create · valid organization staff can manage records after `0028`, but creation still requires the global coach persona/kill switch · role gates remain partly inconsistent · **P1 · done in `0030`**
 - Parent · first child setup · creating a separate student account while already signed in remains an ambiguous session/credential handoff · **P1 · L**
 - Platform admin · organization roles · global admins can find users but still lack an explicit scoped organization-role assignment path · support handoff remains incomplete · **P1 · M**
 - Parent/student · account trust · DOB collection still has no visible privacy/data-practices route · **P1 · L · owner/legal decision**

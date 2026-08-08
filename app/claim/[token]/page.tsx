@@ -8,6 +8,8 @@ import { getOrganizationInvitationPreview } from "@/lib/data/portal";
 export const metadata: Metadata = {
   title: "Claim organization invitation",
   description: "Join a district, school, club, or team on Causey.",
+  robots: { index: false, follow: false },
+  referrer: "no-referrer",
 };
 
 const ROLE_LABELS: Record<string, string> = {

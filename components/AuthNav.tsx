@@ -26,6 +26,7 @@ export function AuthNav() {
   const [email, setEmail] = useState<string | null | undefined>(undefined);
   const [role, setRole] = useState<AccountRole | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasOrgStaffAccess, setHasOrgStaffAccess] = useState(false);
 
   useEffect(() => {
     if (!configured) {
@@ -38,18 +39,41 @@ export function AuthNav() {
       if (!userId) {
         setRole(null);
         setIsAdmin(false);
+        setHasOrgStaffAccess(false);
         return;
       }
-      const [profileResult, adminResult] = await Promise.all([
+      const [profileResult, adminResult, membershipResult, ownedOrgResult] =
+        await Promise.all([
         supabase
           .from("profiles")
           .select("role")
           .eq("id", userId)
           .maybeSingle(),
         supabase.rpc("is_platform_admin"),
+        supabase
+          .from("org_memberships")
+          .select("org_id")
+          .eq("profile_id", userId)
+          .eq("status", "active")
+          .in("role", [
+            "assistant_coach",
+            "coach",
+            "admin",
+            "school_admin",
+            "district_admin",
+          ])
+          .limit(1),
+        supabase
+          .from("organizations")
+          .select("id")
+          .eq("owner_profile_id", userId)
+          .limit(1),
       ]);
       setRole((profileResult.data?.role as AccountRole) ?? null);
       setIsAdmin(adminResult.error ? false : adminResult.data === true);
+      setHasOrgStaffAccess(
+        Boolean(membershipResult.data?.length || ownedOrgResult.data?.length)
+      );
     }
 
     supabase.auth.getUser().then(({ data }) => {
@@ -93,17 +117,19 @@ export function AuthNav() {
     router.refresh();
   }
 
+  const organizationLink = {
+    href: "/orgs",
+    label: "My organizations",
+    shortLabel: "Orgs",
+  };
   const portalLinks =
     role === "parent"
-      ? [{ href: "/family", label: "Family", shortLabel: "Family" }]
+      ? [
+          { href: "/family", label: "Family", shortLabel: "Family" },
+          ...(hasOrgStaffAccess ? [organizationLink] : []),
+        ]
       : role === "coach"
-        ? [
-            {
-              href: "/orgs",
-              label: "My organizations",
-              shortLabel: "Orgs",
-            },
-          ]
+        ? [organizationLink]
         : role === "student"
           ? [
               {
@@ -111,9 +137,13 @@ export function AuthNav() {
                 label: "My tournaments",
                 shortLabel: "Plan",
               },
-              { href: "/orgs", label: "My clubs", shortLabel: "Clubs" },
+              hasOrgStaffAccess
+                ? organizationLink
+                : { href: "/orgs", label: "My clubs", shortLabel: "Clubs" },
             ]
-          : [];
+          : hasOrgStaffAccess
+            ? [organizationLink]
+            : [];
 
   return (
     <div className="flex shrink-0 items-center gap-3 sm:gap-5">

@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
-import { canCreateOrg } from "@/lib/org-permissions";
 import {
   getTournamentZip,
   insertTournamentRecord,
@@ -85,6 +84,19 @@ export type TournamentDraftSaveInput = {
   coverImagePath?: string;
 };
 
+async function canOperateOrganizationTournament(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  orgId: string,
+  profileId: string
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc("is_org_staff", {
+    p_org_id: orgId,
+    p_profile_id: profileId,
+  });
+  if (!error && data === true) return true;
+  return Boolean(await getPlatformAdminUser());
+}
+
 /**
  * Organizer/admin create path (SEC-06): events start as drafts and stay out of
  * public discovery until publishTournament / PublishTournamentPanel.
@@ -100,11 +112,20 @@ export async function createTournament(
 
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to continue." };
-  if (!canCreateOrg(profile)) {
-    return { ok: false, error: "Only coach / organizer accounts can create tournaments." };
-  }
 
   const supabase = await createServerSupabaseClient();
+  if (
+    !(await canOperateOrganizationTournament(
+      supabase,
+      values.orgId,
+      profile.id
+    ))
+  ) {
+    return {
+      ok: false,
+      error: "Only staff for this organization can create tournaments.",
+    };
+  }
   const { data: org } = await supabase
     .from("organizations")
     .select("id, name, created_by")
@@ -184,12 +205,20 @@ export async function saveTournamentDraft(
   const values = parsed.data;
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to save this draft." };
-  const platformAdmin = await getPlatformAdminUser();
-  if (!canCreateOrg(profile) && !platformAdmin) {
-    return { ok: false, error: "Only coach / organizer accounts can save tournaments." };
-  }
 
   const supabase = await createServerSupabaseClient();
+  if (
+    !(await canOperateOrganizationTournament(
+      supabase,
+      values.orgId,
+      profile.id
+    ))
+  ) {
+    return {
+      ok: false,
+      error: "Only staff for this organization can save tournaments.",
+    };
+  }
   const { data: org } = await supabase
     .from("organizations")
     .select("id")
@@ -310,12 +339,20 @@ export async function publishTournamentDraft(
   const values = parsedInput.data;
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to publish this tournament." };
-  const platformAdmin = await getPlatformAdminUser();
-  if (!canCreateOrg(profile) && !platformAdmin) {
-    return { ok: false, error: "Only coach / organizer accounts can publish tournaments." };
-  }
 
   const supabase = await createServerSupabaseClient();
+  if (
+    !(await canOperateOrganizationTournament(
+      supabase,
+      values.orgId,
+      profile.id
+    ))
+  ) {
+    return {
+      ok: false,
+      error: "Only staff for this organization can publish tournaments.",
+    };
+  }
   const { data: draft, error: draftError } = await supabase
     .from("tournament_drafts")
     .select("data, cover_image_path")

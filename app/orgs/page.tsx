@@ -48,8 +48,6 @@ export default async function OrgsPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/orgs");
   const profile = await getCurrentProfile();
-  if (profile?.role === "parent") redirect("/family");
-  const isCoachRole = profile?.role === "coach";
   const canStartOrganization = canCreateOrg(profile);
 
   const [myOrgs, entrantRows, recommendations] = await Promise.all([
@@ -57,6 +55,10 @@ export default async function OrgsPage() {
     getMyEntrantRows(user.id),
     getMyRecommendations(user.id),
   ]);
+  const hasStaffMembership = myOrgs.some(({ isCoach }) => isCoach);
+  const isStaffWorkspace =
+    profile?.role === "coach" || hasStaffMembership;
+  if (profile?.role === "parent" && !hasStaffMembership) redirect("/family");
   const today = new Date().toISOString().slice(0, 10);
   const upcomingInvites = entrantRows
     .filter((row) => row.competition && isUpcomingEvent(row.competition, today))
@@ -74,7 +76,7 @@ export default async function OrgsPage() {
   const coachedOrgs = myOrgs.filter(({ isCoach }) => isCoach);
   const primaryOrg = coachedOrgs[0] ?? myOrgs[0];
   const primaryNeedsStudents =
-    isCoachRole &&
+    isStaffWorkspace &&
     primaryOrg?.isCoach &&
     primaryOrg.org.type !== "district"
       ? (
@@ -137,7 +139,7 @@ export default async function OrgsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-      {isCoachRole ? (
+      {isStaffWorkspace ? (
         <>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
             Coach mission
@@ -266,9 +268,9 @@ export default async function OrgsPage() {
       <section id="organizations" className="mt-10 scroll-mt-24">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-            {isCoachRole ? "Organizations" : "Where you belong"}
+            {isStaffWorkspace ? "Organizations" : "Where you belong"}
           </h2>
-          {isCoachRole && myOrgs.length && canStartOrganization ? (
+          {isStaffWorkspace && myOrgs.length && canStartOrganization ? (
             <Link
               href="/orgs/new"
               className="text-sm font-semibold text-brand-red hover:underline"
@@ -279,7 +281,7 @@ export default async function OrgsPage() {
         </div>
 
         {!myOrgs.length ? (
-          isCoachRole ? (
+          isStaffWorkspace ? (
             <p className="mt-3 text-sm text-muted">
               No organizations yet — use the next step in the mission above.
             </p>
@@ -309,7 +311,7 @@ export default async function OrgsPage() {
         )}
       </section>
 
-      {!isCoachRole ? (
+      {!isStaffWorkspace ? (
         <section id="join-code" className="mt-10 scroll-mt-24">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
             Join with a code
@@ -320,7 +322,7 @@ export default async function OrgsPage() {
         </section>
       ) : null}
 
-      {upcomingInvites.length || (!isCoachRole && !pendingInviteCount)
+      {upcomingInvites.length || (!isStaffWorkspace && !pendingInviteCount)
         ? invitationsSection
         : null}
 

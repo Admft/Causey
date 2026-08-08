@@ -18,7 +18,7 @@ export function ClaimInvitationButton({ token }: { token: string }) {
         setError(result.error);
         return;
       }
-      router.push(`/orgs/${result.slug}`);
+      router.replace(`/orgs/${result.slug}`);
       router.refresh();
     } finally {
       setPending(false);

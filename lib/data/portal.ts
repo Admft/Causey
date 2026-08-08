@@ -187,6 +187,7 @@ export async function getMyOrgs(userId: string): Promise<MyOrgRow[]> {
         [
           "assistant_coach",
           "coach",
+          "admin",
           "school_admin",
           "district_admin",
         ].includes(memberRole),

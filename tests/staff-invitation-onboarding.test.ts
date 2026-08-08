@@ -9,6 +9,10 @@ const migration = readFileSync(
   ),
   "utf8"
 );
+const scopedAuthorityMigration = readFileSync(
+  resolve(process.cwd(), "supabase/migrations/0030_scoped_staff_authority.sql"),
+  "utf8"
+);
 const claimPage = readFileSync(
   resolve(process.cwd(), "app/claim/[token]/page.tsx"),
   "utf8"
@@ -19,6 +23,22 @@ const signupPage = readFileSync(
 );
 const signupForm = readFileSync(
   resolve(process.cwd(), "components/SignupForm.tsx"),
+  "utf8"
+);
+const orgsPage = readFileSync(
+  resolve(process.cwd(), "app/orgs/page.tsx"),
+  "utf8"
+);
+const authNav = readFileSync(
+  resolve(process.cwd(), "components/AuthNav.tsx"),
+  "utf8"
+);
+const claimButton = readFileSync(
+  resolve(process.cwd(), "components/ClaimInvitationButton.tsx"),
+  "utf8"
+);
+const tournamentActions = readFileSync(
+  resolve(process.cwd(), "lib/actions/tournaments.ts"),
   "utf8"
 );
 
@@ -34,12 +54,18 @@ describe("staff invitation onboarding", () => {
     expect(migration).not.toMatch(/returns table \([\s\S]*?\bemail text\b/);
   });
 
-  it("moves staff claims to the coach workspace without unlocking restrictions", () => {
-    expect(migration).toContain(
-      "'assistant_coach', 'coach', 'school_admin', 'district_admin'"
+  it("preserves the claimant's global student or parent persona", () => {
+    expect(migration).not.toMatch(/update\s+public\.profiles/i);
+    expect(
+      scopedAuthorityMigration.split("-- The first 0029 version")[0]
+    ).not.toMatch(/update\s+public\.profiles/i);
+    expect(scopedAuthorityMigration).toContain(
+      "insert into public.org_memberships"
     );
-    expect(migration).toContain("set role = 'coach', updated_at = now()");
-    expect(migration).not.toMatch(/set[\s\S]*role_unlocked\s*=/i);
+    expect(scopedAuthorityMigration).toContain("affected_claimants");
+    expect(scopedAuthorityMigration).toContain(
+      "e.detail->>'from_role' in ('student', 'parent')"
+    );
   });
 
   it("fails closed before offering account creation", () => {
@@ -53,5 +79,30 @@ describe("staff invitation onboarding", () => {
     expect(signupPage).toContain("getOrganizationInvitationPreview");
     expect(signupForm).toContain("invitation?.accountRole ?? initialRole");
     expect(signupForm).toContain('"Create staff account"');
+  });
+
+  it("derives staff workspace navigation from scoped memberships", () => {
+    expect(orgsPage).toContain("hasStaffMembership");
+    expect(orgsPage).toContain("isStaffWorkspace");
+    expect(authNav).toContain("hasOrgStaffAccess");
+    expect(authNav).toContain('"school_admin"');
+  });
+
+  it("allows scoped staff to create organization tournaments", () => {
+    expect(scopedAuthorityMigration).toContain(
+      "public.is_org_staff(org_id, auth.uid())"
+    );
+    expect(scopedAuthorityMigration).toContain(
+      "org_id is null"
+    );
+    expect(tournamentActions).toContain(
+      'supabase.rpc("is_org_staff"'
+    );
+  });
+
+  it("keeps claim tokens out of history and search indexing", () => {
+    expect(claimPage).toContain("index: false");
+    expect(claimPage).toContain('"no-referrer"');
+    expect(claimButton).toContain("router.replace");
   });
 });

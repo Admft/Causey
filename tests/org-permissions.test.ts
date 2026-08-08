@@ -57,13 +57,20 @@ describe("canCreateOrg", () => {
 });
 
 describe("canCreateTournament", () => {
-  it("requires being an unlocked coach AND a coach of the org", () => {
+  it("uses scoped staff membership without rewriting the account persona", () => {
     expect(canCreateTournament(coachProfile, org, null)).toBe(true);
     expect(
       canCreateTournament(
         { id: "other", role: "coach", role_unlocked: true },
         org,
         { role: "coach", status: "active" }
+      )
+    ).toBe(true);
+    expect(
+      canCreateTournament(
+        { id: "parent-staff", role: "parent", role_unlocked: true },
+        org,
+        { role: "school_admin", status: "active" }
       )
     ).toBe(true);
     expect(

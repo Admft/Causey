@@ -71,7 +71,7 @@ export function canCreateTournament(
   org: Pick<Organization, "owner_profile_id">,
   membership: Pick<OrgMembership, "role" | "status"> | null | undefined
 ): boolean {
-  if (!profile || !canCreateOrg(profile)) return false;
+  if (!profile) return false;
   return isOrgCoach(org, membership, profile.id);
 }
 
