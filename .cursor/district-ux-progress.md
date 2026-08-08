@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Home brand handoff: the header starts with centered navigation while the hero Causey mark is visible, then reveals its logo and shifts navigation right after that mark scrolls away — 2026-08-07
 - [x] Claim-link ops without email: People can reissue+copy pending invites and export bulk CSV claim links; login uses invitation preview for staff vs student handoff — 2026-08-08
 - [x] Staff invitation onboarding: trusted preview, fail-closed dead links, no-DOB signup, preserved parent/student persona, membership-driven staff navigation and tournament authority (`0029`–`0030`) — 2026-08-07
 - [x] Effective organization authority: owner replaces creator as authority after transfer; district admins retain child-school controls; event auth preserves context; moderation publish confirms (`0028`) — 2026-08-07
@@ -51,6 +52,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-07 — Scrape upserts preserve globally matched competition IDs across source collisions, preventing related sections from blocking imports; 42 staged TCA tournaments imported successfully
 - [x] 2026-08-05 — External tournament entry now consistently says “organizer registration,” distinguishes it from Causey RSVPs, and tells families where to finish and how to confirm completion
 - [x] 2026-08-05 — RSVP controls now show which answer is saving, confirm exactly what the organization can see, explain that the answer remains changeable, and recover from unexpected connection failures
 - [x] 2026-08-05 — Platform moderation now shows the event, source, audience, and organizer context needed for a decision; rejected listings require a useful note; every decision confirms what changed and points to the next review or record

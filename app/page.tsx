@@ -36,7 +36,7 @@ export default function CompetitionTypesPage() {
       <section className="access-grid">
         <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_minmax(0,26rem)] lg:gap-16">
           <div className="relative z-10">
-            <div className="animate-rise">
+            <div className="animate-rise" data-home-hero-brand>
               <CauseyLogo size="hero" />
             </div>
             <h1 className="animate-rise animate-rise-delay-1 mt-6 max-w-[18ch] font-display text-display-xl font-bold tracking-tight text-foreground">

@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
-import { AuthNav } from "@/components/AuthNav";
-import { PrimaryNav } from "@/components/PrimaryNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { EarlyBuildBanner } from "@/components/EarlyBuildBanner";
+import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -42,24 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <div className="sticky top-0 z-50">
           <EarlyBuildBanner />
-          <header className="border-b border-line bg-background/90 backdrop-blur-md">
-            <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:h-16 sm:gap-5 sm:px-8">
-              <Link
-                href="/"
-                aria-label="Causey home — browse competition types"
-                className="shrink-0"
-              >
-                <CauseyLogo size="md" />
-              </Link>
-              <nav
-                className="ml-auto flex min-w-0 items-center gap-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
-                aria-label="Primary"
-              >
-                <PrimaryNav />
-                <AuthNav />
-              </nav>
-            </div>
-          </header>
+          <SiteHeader />
         </div>
 
         <main className="flex-1">{children}</main>

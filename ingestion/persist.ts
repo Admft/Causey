@@ -76,6 +76,33 @@ export function preserveExistingImage(
   return incoming || existing || null;
 }
 
+async function loadExistingCompetitionsBySlug(
+  client: SupabaseClient,
+  slugs: string[]
+): Promise<Array<{ id: string; slug: string; image_url: string | null }>> {
+  const uniqueSlugs = [...new Set(slugs)];
+  const rows: Array<{ id: string; slug: string; image_url: string | null }> = [];
+  const BATCH = 200;
+
+  for (let i = 0; i < uniqueSlugs.length; i += BATCH) {
+    const chunk = uniqueSlugs.slice(i, i + BATCH);
+    const { data, error } = await client
+      .from("competitions")
+      .select("id, slug, image_url")
+      .in("slug", chunk);
+    if (error) throw new Error(`lookup existing failed: ${error.message}`);
+    rows.push(
+      ...((data ?? []) as Array<{
+        id: string;
+        slug: string;
+        image_url: string | null;
+      }>)
+    );
+  }
+
+  return rows;
+}
+
 /**
  * Upsert competitions for one source, then run the shared post-pipeline:
  * sections, fingerprints, competition_sources, cross-source dedupe, series matching.
@@ -116,14 +143,14 @@ export async function persistScrapeBatch(
 
     const upserted = await upsertCompetitions(client, withFp, source);
 
-    // Stable ids after upsert (re-read by slug for this source).
-    const { data: existing, error: exErr } = await client
-      .from("competitions")
-      .select("id, slug")
-      .eq("source", source);
-    if (exErr) throw new Error(`post-upsert lookup failed: ${exErr.message}`);
+    // Stable ids after upsert. Slugs are globally unique, so resolve across all
+    // sources in case this source has taken over an already-indexed URL.
+    const existing = await loadExistingCompetitionsBySlug(
+      client,
+      drafts.map((draft) => draft.slug)
+    );
     const idBySlug = new Map(
-      (existing ?? []).map((r) => [r.slug as string, r.id as string])
+      existing.map((row) => [row.slug, row.id])
     );
 
     const resolved = drafts.map((d) => ({
@@ -270,22 +297,6 @@ export async function upsertCompetitions(
   drafts: Competition[],
   source: Competition["source"]
 ): Promise<number> {
-  const { data: existing, error: existingErr } = await client
-    .from("competitions")
-    .select("id, slug, image_url")
-    .eq("source", source);
-  if (existingErr) throw new Error(`lookup existing failed: ${existingErr.message}`);
-
-  const existingBySlug = new Map(
-    (existing ?? []).map((row) => [
-      row.slug as string,
-      {
-        id: row.id as string,
-        imageUrl: row.image_url as string | null,
-      },
-    ])
-  );
-
   const bySlug = new Map<string, Competition>();
   for (const d of drafts) bySlug.set(d.slug, d);
   if (bySlug.size < drafts.length) {
@@ -293,6 +304,20 @@ export async function upsertCompetitions(
       `Deduped ${drafts.length - bySlug.size} in-batch slug collisions before upsert.`
     );
   }
+
+  // `slug` is globally unique. Looking up only the incoming source can miss a
+  // row created by another importer and make the upsert try to replace its id,
+  // which PostgreSQL correctly rejects while related rows reference that id.
+  const existing = await loadExistingCompetitionsBySlug(client, [...bySlug.keys()]);
+  const existingBySlug = new Map(
+    existing.map((row) => [
+      row.slug,
+      {
+        id: row.id,
+        imageUrl: row.image_url,
+      },
+    ])
+  );
 
   const payload = [...bySlug.values()].map((d) => {
     // Pathway fields are owned by enrich-pathways — never wipe on scrape upsert.
