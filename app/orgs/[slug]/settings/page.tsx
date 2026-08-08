@@ -18,10 +18,13 @@ export const metadata: Metadata = {
 
 export default async function OrganizationSettingsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ setup?: string; district?: string }>;
 }) {
   const { slug } = await params;
+  const query = await searchParams;
   const user = await getSessionUser();
   if (!user) redirect(`/login?next=/orgs/${slug}/settings`);
   const view = await getOrgBySlugForViewer(slug, user.id);
@@ -31,6 +34,14 @@ export default async function OrganizationSettingsPage({
     getOrgRoster(view.org.id),
     getOrganizationVerificationReview(view.org.id),
   ]);
+  const districtSlug =
+    query.district && /^[a-z0-9-]+$/.test(query.district)
+      ? query.district
+      : null;
+  const isOwnershipSetup =
+    query.setup === "ownership" &&
+    view.org.type === "school" &&
+    Boolean(view.org.parent_org_id);
 
   return (
     <>
@@ -51,6 +62,26 @@ export default async function OrganizationSettingsPage({
           deliberately. Coaches manage tournaments; administrators manage the
           organization itself.
         </p>
+        {isOwnershipSetup ? (
+          <section className="mt-8 border-l-2 border-brand-red pl-5">
+            <h2 className="text-base font-semibold text-foreground">
+              Hand off this school
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted">
+              Choose the claimed school administrator under Ownership.
+              District administrators keep parent-district authority after the
+              transfer.
+            </p>
+            {districtSlug ? (
+              <Link
+                href={`/orgs/${districtSlug}`}
+                className="mt-3 inline-block text-sm font-semibold text-brand-red hover:underline"
+              >
+                Back to district setup
+              </Link>
+            ) : null}
+          </section>
+        ) : null}
         <section
           aria-labelledby="verification-heading"
           className="mt-8 rounded-xl border border-line bg-surface p-5"

@@ -15,10 +15,13 @@ export const metadata: Metadata = {
 
 export default async function OrganizationPeoplePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ setup?: string; district?: string }>;
 }) {
   const { slug } = await params;
+  const query = await searchParams;
   const user = await getSessionUser();
   if (!user) redirect(`/login?next=/orgs/${slug}/people`);
   const view = await getOrgBySlugForViewer(slug, user.id);
@@ -35,18 +38,29 @@ export default async function OrganizationPeoplePage({
   const activeStudents = roster.filter(
     (row) => row.member_status === "active" && row.member_role === "student"
   ).length;
-  const otherActiveStaff = roster.filter(
+  const activeDelegatedSchoolAdmins = roster.filter(
     (row) =>
       row.profile_id !== user.id &&
       row.member_status === "active" &&
-      row.member_role !== "student"
+      (row.member_role === "school_admin" || row.member_role === "admin")
   ).length;
   const isDistrict = view.org.type === "district";
+  const districtSlug =
+    query.district && /^[a-z0-9-]+$/.test(query.district)
+      ? query.district
+      : null;
+  const isSchoolAdminSetup =
+    query.setup === "school-admin" &&
+    view.org.type === "school" &&
+    Boolean(view.org.parent_org_id);
+  const pendingSchoolAdminInvites = pendingInvites.filter(
+    (row) => row.role === "school_admin"
+  );
   const needsSchoolAdminHandoff =
     view.org.type === "school" &&
     Boolean(view.org.parent_org_id) &&
-    otherActiveStaff === 0 &&
-    !pendingInvites.some((row) => row.role === "school_admin");
+    activeDelegatedSchoolAdmins === 0 &&
+    pendingSchoolAdminInvites.length === 0;
   const rosterHref = `/orgs/${view.org.slug}/roster#add-students`;
   const hasJoinCode = !isDistrict && Boolean(view.org.join_code);
 
@@ -56,16 +70,65 @@ export default async function OrganizationPeoplePage({
     action: { href: string; label: string };
     secondary?: { href: string; label: string };
   };
-  if (needsSchoolAdminHandoff) {
+  if (
+    isSchoolAdminSetup &&
+    activeDelegatedSchoolAdmins > 0 &&
+    view.org.owner_profile_id === user.id
+  ) {
+    mission = {
+      title: "Transfer school ownership",
+      description:
+        "The school administrator has joined. Hand off ownership so they control day-to-day settings; your district authority remains.",
+      action: {
+        href: `/orgs/${view.org.slug}/settings?setup=ownership${
+          districtSlug
+            ? `&district=${encodeURIComponent(districtSlug)}`
+            : ""
+        }#ownership`,
+        label: "Transfer ownership",
+      },
+      secondary: districtSlug
+        ? {
+            href: `/orgs/${districtSlug}`,
+            label: "Back to district setup",
+          }
+        : undefined,
+    };
+  } else if (
+    isSchoolAdminSetup &&
+    activeDelegatedSchoolAdmins === 0 &&
+    pendingSchoolAdminInvites.length > 0
+  ) {
+    mission = {
+      title: "Administrator claim is pending",
+      description:
+        "Causey email delivery is not operating yet. Copy or reissue the claim link below and send it to the school administrator directly.",
+      action: {
+        href: "#invitation-status",
+        label: "Review claim link",
+      },
+      secondary: districtSlug
+        ? {
+            href: `/orgs/${districtSlug}`,
+            label: "Back to district setup",
+          }
+        : undefined,
+    };
+  } else if (needsSchoolAdminHandoff) {
     mission = {
       title: "Delegate this school",
       description:
-        "Invite a school administrator before provisioning students. They can own the roster and day-to-day school setup.",
+        "Invite a school administrator before provisioning students. Create the claim link here, then send it to them directly.",
       action: { href: "#invite-one", label: "Invite school administrator" },
-      secondary: {
-        href: "/orgs",
-        label: "Back to organizations",
-      },
+      secondary: districtSlug
+        ? {
+            href: `/orgs/${districtSlug}`,
+            label: "Back to district setup",
+          }
+        : {
+            href: "/orgs",
+            label: "Back to organizations",
+          },
     };
   } else if (pendingInvites.length) {
     mission = {
@@ -73,7 +136,7 @@ export default async function OrganizationPeoplePage({
         pendingInvites.length === 1 ? "invite is" : "invites are"
       } waiting`,
       description:
-        "Recipients claim their own accounts from the email link. Follow up on anything still pending below.",
+        "Recipients claim their own accounts from a private claim link. Email delivery is not operating yet, so follow up directly.",
       action: { href: "#invitation-status", label: "Review invitations" },
       secondary: hasJoinCode
         ? { href: rosterHref, label: "Share student join link" }
@@ -94,15 +157,15 @@ export default async function OrganizationPeoplePage({
     mission = {
       title: "Students join with a code",
       description:
-        "Share the roster join link for students. Use email invites on this page when you need staff or a one-off claim link.",
+        "Share the roster join link for students. Create a private claim link here when you need staff or a one-off invitation.",
       action: { href: rosterHref, label: "Open roster join link" },
-      secondary: { href: "#invite-one", label: "Email an invite" },
+      secondary: { href: "#invite-one", label: "Create claim link" },
     };
   } else if (!activeStudents) {
     mission = {
       title: "Invite your first people",
       description:
-        "Email invites create an expiring claim link — Causey never shares a password. Students can also join later from a roster code.",
+        "Invites create an expiring claim link — Causey never shares a password. Send staff links directly; students can join from a roster code.",
       action: { href: "#invite-one", label: "Create an invitation" },
       secondary: { href: `/orgs/${view.org.slug}/roster`, label: "Open roster" },
     };
@@ -111,8 +174,8 @@ export default async function OrganizationPeoplePage({
       title: "Add staff or more students",
       description: `${activeStudents} ${
         activeStudents === 1 ? "student is" : "students are"
-      } on the roster. Email invites here for staff; keep using the join link for most students.`,
-      action: { href: "#invite-one", label: "Email an invite" },
+      } on the roster. Create staff claim links here; keep using the join link for most students.`,
+      action: { href: "#invite-one", label: "Create claim link" },
       secondary: hasJoinCode
         ? { href: rosterHref, label: "Share student join link" }
         : undefined,
@@ -138,8 +201,21 @@ export default async function OrganizationPeoplePage({
         <p className="mt-2 max-w-prose text-sm text-muted">
           {isDistrict
             ? "District staff claim their own accounts here. School administrators and students belong in a school workspace."
-            : "Students usually join from a roster link. Use this page for staff and email claim invites — no shared passwords."}
+            : "Students usually join from a roster link. Use this page to create staff claim links — no shared passwords."}
         </p>
+
+        {isSchoolAdminSetup && districtSlug ? (
+          <p className="mt-3 text-sm text-muted">
+            Setting up this school from{" "}
+            <Link
+              href={`/orgs/${districtSlug}`}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              the district workspace
+            </Link>
+            .
+          </p>
+        ) : null}
 
         <div className="mt-8">
           <PortalMission

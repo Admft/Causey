@@ -7,6 +7,7 @@ import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
+import { getDistrictPilotReadiness } from "@/lib/data/district";
 import {
   getMyEntrantRows,
   getOrgAttendedEvents,
@@ -15,6 +16,10 @@ import {
   isSupabaseConfigured,
   isUpcomingEvent,
 } from "@/lib/data/portal";
+import {
+  getDistrictReadinessAction,
+  getDistrictSchoolReadinessStatus,
+} from "@/lib/district-readiness";
 import { formatDateRange, formatFeeCents } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -78,19 +83,23 @@ export default async function OrgPage({
     membership,
     isCoach,
     isAdmin,
+    isDistrictAdmin,
     activeMemberCount,
     events,
     drafts,
-    schools,
     announcements,
   } = view;
 
-  const [entrantRows, attendedEvents, roster] = await Promise.all([
+  const [entrantRows, attendedEvents, roster, districtReadiness] =
+    await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
     getOrgAttendedEvents(org.id),
     isCoach && org.type !== "district"
       ? getOrgRoster(org.id)
       : Promise.resolve([]),
+    isDistrictAdmin
+      ? getDistrictPilotReadiness(org.id)
+      : Promise.resolve(null),
   ]);
   const myRsvpByCompetition = new Map(
     entrantRows.map((row) => [row.competition_id, row])
@@ -235,6 +244,14 @@ export default async function OrgPage({
   const otherUpcoming = priorityUpcoming
     ? upcoming.filter((e) => e.id !== priorityUpcoming.id)
     : upcoming;
+  const districtAction = districtReadiness
+    ? getDistrictReadinessAction(districtReadiness)
+    : null;
+  const readySchoolCount =
+    districtReadiness?.schools.filter(
+      (school) =>
+        getDistrictSchoolReadinessStatus(school, org.slug).ready
+    ).length ?? 0;
 
   return (
     <>
@@ -270,60 +287,84 @@ export default async function OrgPage({
               : ""}
         </p>
 
-        {org.type === "district" && isAdmin ? (
-          <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.6fr)]">
-            <div className="rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-panel)]">
-              <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-                District next step
-              </p>
-              <h2 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
-                {schools.length
-                  ? "Keep every school’s program moving"
-                  : "Add the first school in this district"}
-              </h2>
-              <p className="mt-2 max-w-prose text-sm text-muted">
-                {schools.length
-                  ? `${schools.length} ${
-                      schools.length === 1 ? "school is" : "schools are"
-                    } connected. Open reporting for participation and unresolved invitations.`
-                  : "Create a school workspace, delegate its administrator, then invite staff and students."}
-              </p>
-              <Link
-                href={
-                  schools.length
-                    ? `/orgs/${org.slug}/reports`
-                    : `/orgs/${org.slug}/settings#schools`
-                }
-                className="cta-enabled mt-5 inline-flex"
-              >
-                {schools.length ? "Review district reporting" : "Add a school"}
-              </Link>
-            </div>
-            <div className="rounded-2xl border border-line bg-surface-soft p-5">
-              <p className="text-xs font-semibold text-muted-strong">
-                School workspaces
-              </p>
-              {!schools.length ? (
-                <p className="mt-3 text-sm text-muted">
-                  None yet. Schools you provision will appear here.
+        {org.type === "district" && isAdmin && districtAction ? (
+          <section className="mt-8">
+            <PortalMission
+              title={districtAction.title}
+              description={districtAction.description}
+              action={{
+                href: districtAction.href,
+                label: districtAction.label,
+              }}
+              secondary={{
+                href: `/orgs/${org.slug}/reports`,
+                label: "View aggregate reporting",
+              }}
+            />
+
+            <div className="section-rule mt-8 pt-8">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold text-foreground">
+                    School pilot readiness
+                  </h2>
+                  <p className="mt-1 text-xs text-muted">
+                    {readySchoolCount} of{" "}
+                    {districtReadiness?.schools.length ?? 0} ready
+                  </p>
+                </div>
+                <Link
+                  href={`/orgs/${org.slug}/settings#schools`}
+                  className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+                >
+                  Add another school
+                </Link>
+              </div>
+
+              {!districtReadiness?.schools.length ? (
+                <p className="mt-4 max-w-prose text-sm text-muted">
+                  No school workspaces yet. Create the first school, then
+                  delegate its administrator before provisioning students.
                 </p>
               ) : (
-                <ul className="mt-3 divide-y divide-line">
-                  {schools.slice(0, 5).map((school) => (
-                    <li key={school.id} className="py-2.5">
-                      <Link
-                        href={`/orgs/${school.slug}`}
-                        className="flex items-baseline justify-between gap-3 text-sm font-semibold text-foreground hover:text-brand-red"
+                <ul className="mt-4 divide-y divide-line border-y border-line">
+                  {districtReadiness.schools.map((school) => {
+                    const status = getDistrictSchoolReadinessStatus(
+                      school,
+                      org.slug
+                    );
+                    return (
+                      <li
+                        key={school.id}
+                        className="flex flex-wrap items-center justify-between gap-3 py-3"
                       >
-                        <span>{school.name}</span>
-                        <span className="text-xs font-normal text-muted">
-                          {school.verification_status === "verified"
-                            ? "Verified"
-                            : "Needs review"}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
+                        <div>
+                          <Link
+                            href={`/orgs/${school.slug}`}
+                            className="text-sm font-semibold text-foreground hover:text-brand-red"
+                          >
+                            {school.name}
+                          </Link>
+                          <p className="mt-1 text-xs text-muted">
+                            {status.label}
+                            {school.activeStudents
+                              ? ` · ${school.activeStudents} ${
+                                  school.activeStudents === 1
+                                    ? "student"
+                                    : "students"
+                                }`
+                              : ""}
+                          </p>
+                        </div>
+                        <Link
+                          href={status.href}
+                          className="text-xs font-semibold text-brand-red hover:underline"
+                        >
+                          {status.actionLabel}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

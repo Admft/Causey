@@ -242,7 +242,7 @@ export function OrganizationPeopleManager({
     <div className="flex flex-col gap-10">
       <form id="invite-one" onSubmit={inviteOne} className="scroll-mt-24">
         <h2 className="text-sm font-semibold text-foreground">
-          Email one invitation
+          Create one claim invitation
         </h2>
         <p className="mt-1 text-sm text-muted">
           {orgType === "district" ? (
@@ -380,7 +380,8 @@ export function OrganizationPeopleManager({
           ) : null}
           {!claimPath && !bulkClaims.length ? (
             <p className="mt-1 text-sm text-muted">
-              They&rsquo;ll get an email with an expiring claim link.
+              The invitation is recorded. Reissue it below to copy a fresh
+              claim link.
             </p>
           ) : null}
         </div>
@@ -404,14 +405,14 @@ export function OrganizationPeopleManager({
               "No district staff invitations yet. School administrators and students are invited from their school workspace."
             ) : (
               <>
-                No email invitations yet. Most students should use the{" "}
+                No claim invitations yet. Most students should use the{" "}
                 <Link
                   href={rosterHref ?? `/orgs/${orgSlug}/roster`}
                   className="font-semibold text-brand-red hover:underline"
                 >
                   roster join link
                 </Link>
-                ; use email invites for staff.
+                ; use claim invitations for staff.
               </>
             )}
           </p>

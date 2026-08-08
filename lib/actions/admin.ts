@@ -129,6 +129,15 @@ const AdminOrganizationVerificationSchema = z
     }
   });
 
+const AdminBulkSchoolVerificationSchema = z.object({
+  districtId: z.string().uuid(),
+  districtSlug: z.string().min(1).max(120),
+  schoolIds: z
+    .array(z.string().uuid())
+    .min(1, "Select at least one pending school.")
+    .max(50, "Select at most 50 schools at a time."),
+});
+
 export async function adminSearchUsers(input: {
   query: string;
   page: number;
@@ -256,6 +265,68 @@ export async function adminReviewOrganization(input: {
   revalidatePath(`/orgs/${parsed.data.orgSlug}`);
   revalidatePath(`/orgs/${parsed.data.orgSlug}/settings`);
   return { ok: true, status: parsed.data.status };
+}
+
+export async function adminBulkVerifyDistrictSchools(input: {
+  districtId: string;
+  districtSlug: string;
+  schoolIds: string[];
+}): Promise<ActionResult<{ verified: number }>> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Platform administrator access required.",
+    };
+  }
+  const parsed = AdminBulkSchoolVerificationSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error:
+        parsed.error.issues[0]?.message ??
+        "Check the selected district schools.",
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc(
+    "bulk_verify_district_schools",
+    {
+      p_district_id: parsed.data.districtId,
+      p_school_ids: parsed.data.schoolIds,
+    }
+  );
+  if (error) {
+    if (error.message.includes("verified_parent_district_required")) {
+      return {
+        ok: false,
+        error: "Verify the parent district before verifying its schools.",
+      };
+    }
+    if (
+      error.message.includes(
+        "schools_must_be_pending_children_of_one_district"
+      )
+    ) {
+      return {
+        ok: false,
+        error:
+          "Choose only pending schools connected to this one district.",
+      };
+    }
+    return {
+      ok: false,
+      error:
+        "Could not verify these schools. Confirm migration 0034 is applied.",
+    };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/organizations");
+  revalidatePath(`/orgs/${parsed.data.districtSlug}`);
+  revalidatePath(`/orgs/${parsed.data.districtSlug}/reports`);
+  return { ok: true, verified: Number(data ?? parsed.data.schoolIds.length) };
 }
 
 export async function adminCreateOrganization(input: {

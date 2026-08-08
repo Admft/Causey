@@ -10,9 +10,16 @@ export type AdminOrganizationRow = {
   slug: string;
   type: "school" | "district" | "club" | "team";
   state: string | null;
+  parent_org_id: string | null;
   verification_status: "pending" | "verified" | "rejected";
   verified_at: string | null;
   created_at: string;
+  parent: {
+    id: string;
+    name: string;
+    slug: string;
+    verification_status: "pending" | "verified" | "rejected";
+  } | null;
   organization_verification_reviews: {
     note: string | null;
     reviewed_at: string;
@@ -136,12 +143,15 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
   const { data } = await supabase
     .from("organizations")
     .select(
-      "id, name, slug, type, state, verification_status, verified_at, created_at, organization_verification_reviews(note, reviewed_at)"
+      "id, name, slug, type, state, parent_org_id, verification_status, verified_at, created_at, parent:organizations!organizations_parent_org_id_fkey(id, name, slug, verification_status), organization_verification_reviews(note, reviewed_at)"
     )
     .order("type")
     .order("name");
 
-  return (data ?? []) as AdminOrganizationRow[];
+  return (data ?? []).map((row) => ({
+    ...row,
+    parent: Array.isArray(row.parent) ? (row.parent[0] ?? null) : row.parent,
+  })) as unknown as AdminOrganizationRow[];
 }
 
 export async function getAdminUsers({

@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminDistrictSchoolBulkVerify } from "@/components/AdminDistrictSchoolBulkVerify";
 import { AdminOrganizationForm } from "@/components/AdminOrganizationForm";
 import { AdminOrganizationVerificationForm } from "@/components/AdminOrganizationVerificationForm";
 import { PortalMission } from "@/components/PortalPrimitives";
-import { getAdminOrganizations } from "@/lib/data/admin";
+import {
+  getAdminOrganizations,
+  type AdminOrganizationRow,
+} from "@/lib/data/admin";
 
 export const metadata: Metadata = {
   title: "Admin organizations",
@@ -17,6 +21,76 @@ const TYPE_LABELS: Record<string, string> = {
   team: "Team",
 };
 
+function OrganizationReviewRow({ org }: { org: AdminOrganizationRow }) {
+  const review = org.organization_verification_reviews[0] ?? null;
+  return (
+    <li className="py-4">
+      <details open={org.verification_status === "pending"}>
+        <summary className="cursor-pointer list-none">
+          <span className="flex flex-wrap items-start justify-between gap-3">
+            <span>
+              <span className="block text-sm font-semibold text-foreground">
+                {org.name}
+              </span>
+              <span className="mt-0.5 block text-xs text-muted">
+                {TYPE_LABELS[org.type] ?? org.type}
+                {org.state ? ` · ${org.state}` : ""}
+                {org.parent ? ` · ${org.parent.name}` : ""}
+              </span>
+            </span>
+            <span className="text-right text-xs font-semibold text-muted-strong">
+              {org.verification_status === "verified"
+                ? "Verified"
+                : org.verification_status === "rejected"
+                  ? "Needs correction"
+                  : "Pending review"}
+              {review ? (
+                <time
+                  className="mt-0.5 block font-normal text-muted"
+                  dateTime={review.reviewed_at}
+                >
+                  Reviewed{" "}
+                  {new Date(review.reviewed_at).toLocaleDateString("en-US")}
+                </time>
+              ) : null}
+            </span>
+          </span>
+        </summary>
+        <div className="mt-4 grid gap-4 border-l-2 border-line pl-4">
+          {org.verification_status === "rejected" && review?.note ? (
+            <p className="text-sm text-muted-strong">
+              <strong className="font-semibold text-foreground">
+                Correction note:
+              </strong>{" "}
+              {review.note}
+            </p>
+          ) : null}
+          <AdminOrganizationVerificationForm
+            orgId={org.id}
+            orgSlug={org.slug}
+            initialStatus={org.verification_status}
+            initialNote={review?.note ?? null}
+          />
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
+            <Link
+              href={`/orgs/${org.slug}`}
+              className="font-semibold text-muted-strong hover:text-brand-red"
+            >
+              Open workspace
+            </Link>
+            <Link
+              href={`/admin/tournaments/new?org=${org.id}`}
+              className="font-semibold text-muted-strong hover:text-brand-red"
+            >
+              Add tournament draft
+            </Link>
+          </div>
+        </div>
+      </details>
+    </li>
+  );
+}
+
 export default async function AdminOrganizationsPage() {
   const organizations = (await getAdminOrganizations()).sort((a, b) => {
     const order = { pending: 0, rejected: 1, verified: 2 };
@@ -28,6 +102,13 @@ export default async function AdminOrganizationsPage() {
   const pendingCount = organizations.filter(
     (org) => org.verification_status === "pending"
   ).length;
+  const districts = organizations.filter((org) => org.type === "district");
+  const districtIds = new Set(districts.map((district) => district.id));
+  const ungrouped = organizations.filter(
+    (org) =>
+      org.type !== "district" &&
+      (!org.parent_org_id || !districtIds.has(org.parent_org_id))
+  );
   const mission =
     pendingCount > 0
       ? {
@@ -96,80 +177,80 @@ export default async function AdminOrganizationsPage() {
               No organizations are visible to this administrator.
             </p>
           ) : (
-            <ul className="mt-4 divide-y divide-line border-y border-line">
-              {organizations.map((org) => {
-                const review =
-                  org.organization_verification_reviews[0] ?? null;
+            <div className="mt-4 grid gap-8">
+              {districts.map((district) => {
+                const schools = organizations.filter(
+                  (org) => org.parent_org_id === district.id
+                );
+                const pendingSchools = schools.filter(
+                  (school) => school.verification_status === "pending"
+                );
                 return (
-                  <li key={org.id} className="py-4">
-                    <details open={org.verification_status === "pending"}>
-                      <summary className="cursor-pointer list-none">
-                        <span className="flex flex-wrap items-start justify-between gap-3">
-                          <span>
-                            <span className="block text-sm font-semibold text-foreground">
-                              {org.name}
-                            </span>
-                            <span className="mt-0.5 block text-xs text-muted">
-                              {TYPE_LABELS[org.type] ?? org.type}
-                              {org.state ? ` · ${org.state}` : ""}
-                            </span>
-                          </span>
-                          <span className="text-right text-xs font-semibold text-muted-strong">
-                            {org.verification_status === "verified"
-                              ? "Verified"
-                              : org.verification_status === "rejected"
-                                ? "Needs correction"
-                                : "Pending review"}
-                            {review ? (
-                              <time
-                                className="mt-0.5 block font-normal text-muted"
-                                dateTime={review.reviewed_at}
-                              >
-                                Reviewed{" "}
-                                {new Date(
-                                  review.reviewed_at
-                                ).toLocaleDateString("en-US")}
-                              </time>
-                            ) : null}
-                          </span>
-                        </span>
-                      </summary>
-                      <div className="mt-4 grid gap-4 border-l-2 border-line pl-4">
-                        {org.verification_status === "rejected" &&
-                        review?.note ? (
-                          <p className="text-sm text-muted-strong">
-                            <strong className="font-semibold text-foreground">
-                              Correction note:
-                            </strong>{" "}
-                            {review.note}
-                          </p>
-                        ) : null}
-                        <AdminOrganizationVerificationForm
-                          orgId={org.id}
-                          orgSlug={org.slug}
-                          initialStatus={org.verification_status}
-                          initialNote={review?.note ?? null}
-                        />
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
-                          <Link
-                            href={`/orgs/${org.slug}`}
-                            className="font-semibold text-muted-strong hover:text-brand-red"
-                          >
-                            Open workspace
-                          </Link>
-                          <Link
-                            href={`/admin/tournaments/new?org=${org.id}`}
-                            className="font-semibold text-muted-strong hover:text-brand-red"
-                          >
-                            Add tournament draft
-                          </Link>
-                        </div>
+                  <section key={district.id}>
+                    <div className="flex flex-wrap items-baseline justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground">
+                          {district.name}
+                        </h3>
+                        <p className="mt-1 text-xs text-muted">
+                          District{" "}
+                          {district.verification_status === "verified"
+                            ? "verified"
+                            : "not yet verified"}{" "}
+                          · {schools.length}{" "}
+                          {schools.length === 1 ? "school" : "schools"}
+                        </p>
                       </div>
-                    </details>
-                  </li>
+                      <Link
+                        href={`/orgs/${district.slug}`}
+                        className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+                      >
+                        Open district
+                      </Link>
+                    </div>
+
+                    {district.verification_status === "verified" ? (
+                      <AdminDistrictSchoolBulkVerify
+                        districtId={district.id}
+                        districtSlug={district.slug}
+                        districtName={district.name}
+                        schools={pendingSchools.map((school) => ({
+                          id: school.id,
+                          name: school.name,
+                        }))}
+                      />
+                    ) : pendingSchools.length ? (
+                      <p className="mt-3 text-sm text-muted">
+                        Verify the parent district before verifying its schools.
+                      </p>
+                    ) : null}
+
+                    <ul className="mt-4 divide-y divide-line border-y border-line">
+                      <OrganizationReviewRow org={district} />
+                      {schools.map((school) => (
+                        <OrganizationReviewRow
+                          key={school.id}
+                          org={school}
+                        />
+                      ))}
+                    </ul>
+                  </section>
                 );
               })}
-            </ul>
+
+              {ungrouped.length ? (
+                <section>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Independent organizations
+                  </h3>
+                  <ul className="mt-4 divide-y divide-line border-y border-line">
+                    {ungrouped.map((org) => (
+                      <OrganizationReviewRow key={org.id} org={org} />
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+            </div>
           )}
         </section>
 

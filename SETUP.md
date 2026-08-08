@@ -43,6 +43,13 @@ The following pieces are already implemented in this repository:
 - US Chess, CCA, hub, and Texas Chess Association ingestion with staging,
   fingerprint dedupe, series matching, pictures, and scrape run logs.
 - A twice-weekly GitHub Actions ingest workflow (plus optional Docker runner).
+- Role-aware student, parent, coach, school-admin, district-admin, and platform
+  admin workspaces backed by Supabase Auth/RLS.
+- District → school hierarchy, staff claim-link provisioning, organization
+  verification, audience-scoped tournaments, RSVP/attendance, aggregate
+  district reporting, moderation, and in-app alerts.
+- Platform admin tools for organization verification, tournament moderation,
+  user access, scrape review, and bulk publishing.
 
 ## What is intentionally not built
 
@@ -51,17 +58,19 @@ These are not missing by accident; they are deliberate early constraints:
 - Friends graph between students (orgs + groups cover the social layer)
 - In-app registration/payments for scraped events (external `reg_url` only —
   org-hosted events RSVP on Causey instead)
-- In-app admin dashboard / moderation queue for coach-created public events
+- Product email delivery, push, and SMS (staff claim links are distributed
+  manually; Supabase Auth email is configured separately)
+- Self-serve district creation (platform administrators provision districts)
 
-Accounts are live for all three roles — run migrations `0009`–`0017` and use
-`/signup`. Coaches/organizers create orgs with Khan Academy-style join codes
-(`/orgs`), save tournament drafts with required cover images, publish private
-or public tournaments (and edit or cancel them later),
-mark any public event as "we're attending" and invite their roster to it, and
-track RSVPs; students join with a code and RSVP; parents link to their
-children (`/family`) and can RSVP for them. Anyone can recommend an event to
-a connected account. Registration for scraped events still happens on
-organizer sites — see `ROADMAP.md` for what's next.
+Accounts and district workflows are live — apply migrations through `0034`
+and use `/signup`. Coaches create school/club workspaces with join codes,
+district administrators create connected schools, platform administrators
+verify organizations, and staff use expiring claim links instead of shared
+passwords. Organizers create tournament drafts, publish by audience, invite
+rosters, track RSVPs, and mark attendance. Students join with a code and
+parents act from `/family`. Registration for scraped events still happens on
+organizer sites. See `docs/district-pilot-runbook.md` for the assisted-pilot
+sequence.
 
 ## How to run it right now
 
@@ -100,24 +109,30 @@ Notes:
 The app is functional as a local MVP, but several launch-critical pieces still
 need to be completed or connected.
 
-## 1. Create the Supabase project and run the migration
+## 1. Create the Supabase project and run all migrations
 
 What exists already:
 
-- `supabase/migrations/0001_init.sql`
+- `supabase/migrations/0001_init.sql` through
+  `supabase/migrations/0034_bulk_district_school_verification.sql`
 - `lib/data/supabase.ts`
 - `scripts/seed-supabase.ts`
 
 What still needs to happen:
 
 - Create a real Supabase project.
-- Run `supabase/migrations/0001_init.sql` against it.
+- Link it with the Supabase CLI and inspect `supabase migration list`.
+- Apply all SQL files through `0034`, skipping `PENDING_SCRAPE.sql`. The repo
+  currently has duplicate `0015` and `0016` numeric prefixes, so a fresh
+  project must apply those duplicate-version files in filename order through
+  the SQL editor rather than relying on `db push` to track both.
 
 Why this matters:
 
 - This is the real persistence layer for production.
-- The migration creates tables, indexes, RLS policies, and enables `cube` plus
-  `earthdistance`.
+- The migration stack creates search data, accounts, organization hierarchy,
+  RLS/authority, provisioning, moderation, reporting, and notification
+  infrastructure.
 
 ## 1b. Add scraper provenance column (if not already)
 
@@ -266,7 +281,11 @@ Why this matters:
 
 What exists already:
 
-- Supabase can function as the MVP admin back office.
+- `/admin` provides moderation, organization verification, user access, and
+  tournament operations.
+- The district workspace guides school creation, administrator delegation,
+  ownership handoff, student provisioning, and aggregate reporting.
+- `docs/district-pilot-runbook.md` documents the assisted workflow.
 
 What still needs to happen:
 
@@ -276,11 +295,13 @@ What still needs to happen:
   - attaching events to series,
   - curating qualification rules,
   - publishing records safely.
+- Assign owners for district identity verification, staff claim-link delivery,
+  pilot support, and incident escalation.
 
 Important note:
 
-There is no custom admin UI yet, and that may be fine for the MVP. But the
-human workflow still needs to be owned and documented operationally.
+The custom admin UI is built, but it is intentionally an ops-assisted surface.
+Human verification and claim-link distribution still need named owners.
 
 ## 9. Future work that is not integrated yet
 
@@ -297,19 +318,22 @@ These are present only as planned seams or partial scaffolding:
 If you want the simplest summary:
 
 - Already built: the app UI, APIs, seeded data, qualification engine, tests,
-  Supabase integration seam, and ingestion scaffold.
+  Supabase integration, ingestion, platform moderation, district hierarchy,
+  guided school delegation, aggregate reporting, and in-app alerts.
 - Still needed for launch: real Supabase setup, full zip data, verified rules,
-  reviewed ingestion flow, deployment/domain hookup, and day-to-day ops.
+  reviewed ingestion flow, deployment/domain hookup, legal approval for
+  student data, production observability, product email, and day-to-day ops.
 
 ## Recommended order
 
 If someone is taking this from MVP to launch, do the work in this order:
 
-1. Stand up Supabase
+1. Stand up Supabase and apply migrations through `0034`
 2. Load full zip data (`npm run seed:zips`)
 3. Fill `.env` and switch to `DATA_SOURCE=supabase`
 4. Seed the database (`npm run seed:supabase`)
-5. Verify scraper and ingestion workflow
-6. Replace seeded qualification rules with verified ones
-7. Deploy and connect `app.causey.com`
-8. Formalize the operational review/publishing process
+5. Follow `docs/district-pilot-runbook.md` for one assisted district
+6. Verify scraper and ingestion workflow
+7. Replace seeded qualification rules with verified ones
+8. Deploy and connect `app.causey.com`
+9. Complete legal, observability, email, and operational rollout gates

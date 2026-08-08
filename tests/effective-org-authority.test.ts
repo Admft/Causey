@@ -65,4 +65,15 @@ describe("effective organization authority", () => {
       '.from("organizations").select("*").eq("created_by", userId)'
     );
   });
+
+  it("keeps district authority over child schools after ownership handoff", () => {
+    const administerHelper = migration.match(
+      /create or replace function public\.can_administer_org\([\s\S]*?\$\$;/
+    )?.[0];
+    expect(administerHelper).toBeDefined();
+    expect(administerHelper).toContain("child.parent_org_id is not null");
+    expect(administerHelper).toContain(
+      "public.is_district_admin(child.parent_org_id, p_profile_id)"
+    );
+  });
 });

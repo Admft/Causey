@@ -4,6 +4,10 @@ import type {
   OrgMemberRole,
   OrganizationVerificationStatus,
 } from "@/lib/auth/orgs";
+import type {
+  DistrictPilotReadiness,
+  DistrictSchoolReadiness,
+} from "@/lib/district-readiness";
 import type { AttentionSourceEvent } from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -92,6 +96,142 @@ export async function getDistrictSchoolRollup(
   });
   if (error) return [];
   return (data ?? []) as DistrictSchoolRollup[];
+}
+
+type DistrictReadinessOrgRow = {
+  id: string;
+  name: string;
+  slug: string;
+  parent_org_id: string | null;
+  owner_profile_id: string | null;
+  verification_status: OrganizationVerificationStatus;
+};
+
+type DistrictReadinessMembershipRow = {
+  org_id: string;
+  profile_id: string;
+  role: OrgMemberRole;
+};
+
+export async function getDistrictPilotReadiness(
+  districtId: string
+): Promise<DistrictPilotReadiness | null> {
+  const supabase = await createServerSupabaseClient();
+  const [{ data: district }, { data: schools }] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select(
+        "id, name, slug, parent_org_id, owner_profile_id, verification_status"
+      )
+      .eq("id", districtId)
+      .eq("type", "district")
+      .maybeSingle(),
+    supabase
+      .from("organizations")
+      .select(
+        "id, name, slug, parent_org_id, owner_profile_id, verification_status"
+      )
+      .eq("parent_org_id", districtId)
+      .eq("type", "school")
+      .order("name"),
+  ]);
+
+  const typedDistrict = district as DistrictReadinessOrgRow | null;
+  if (!typedDistrict) return null;
+  const typedSchools = (schools ?? []) as DistrictReadinessOrgRow[];
+  if (!typedSchools.length) {
+    return {
+      districtId: typedDistrict.id,
+      districtSlug: typedDistrict.slug,
+      verificationStatus: typedDistrict.verification_status,
+      schools: [],
+    };
+  }
+
+  const schoolIds = typedSchools.map((school) => school.id);
+  const [
+    { data: districtMemberships },
+    { data: schoolMemberships },
+    { data: pendingInvitations },
+  ] = await Promise.all([
+    supabase
+      .from("org_memberships")
+      .select("org_id, profile_id, role")
+      .eq("org_id", districtId)
+      .eq("status", "active")
+      .in("role", ["district_admin", "admin"]),
+    supabase
+      .from("org_memberships")
+      .select("org_id, profile_id, role")
+      .in("org_id", schoolIds)
+      .eq("status", "active"),
+    supabase
+      .from("org_invitations")
+      .select("org_id")
+      .in("org_id", schoolIds)
+      .eq("role", "school_admin")
+      .eq("status", "pending")
+      .gt("expires_at", new Date().toISOString()),
+  ]);
+
+  const districtOperatorIds = new Set<string>();
+  if (typedDistrict.owner_profile_id) {
+    districtOperatorIds.add(typedDistrict.owner_profile_id);
+  }
+  for (const row of (districtMemberships ??
+    []) as DistrictReadinessMembershipRow[]) {
+    districtOperatorIds.add(row.profile_id);
+  }
+
+  const membersBySchool = new Map<
+    string,
+    DistrictReadinessMembershipRow[]
+  >();
+  for (const row of (schoolMemberships ??
+    []) as DistrictReadinessMembershipRow[]) {
+    const existing = membersBySchool.get(row.org_id) ?? [];
+    existing.push(row);
+    membersBySchool.set(row.org_id, existing);
+  }
+  const pendingBySchool = new Map<string, number>();
+  for (const row of pendingInvitations ?? []) {
+    const orgId = row.org_id as string;
+    pendingBySchool.set(orgId, (pendingBySchool.get(orgId) ?? 0) + 1);
+  }
+
+  const readinessSchools: DistrictSchoolReadiness[] = typedSchools.map(
+    (school) => {
+      const members = membersBySchool.get(school.id) ?? [];
+      const delegatedAdmins = members.filter(
+        (member) =>
+          (member.role === "school_admin" || member.role === "admin") &&
+          !districtOperatorIds.has(member.profile_id)
+      );
+      return {
+        id: school.id,
+        name: school.name,
+        slug: school.slug,
+        verificationStatus: school.verification_status,
+        activeStudents: members.filter((member) => member.role === "student")
+          .length,
+        activeDelegatedAdmins: delegatedAdmins.length,
+        pendingAdminInvites: pendingBySchool.get(school.id) ?? 0,
+        ownershipTransferred: Boolean(
+          school.owner_profile_id &&
+            delegatedAdmins.some(
+              (member) => member.profile_id === school.owner_profile_id
+            )
+        ),
+      };
+    }
+  );
+
+  return {
+    districtId: typedDistrict.id,
+    districtSlug: typedDistrict.slug,
+    verificationStatus: typedDistrict.verification_status,
+    schools: readinessSchools,
+  };
 }
 
 export async function getOrgInvitations(

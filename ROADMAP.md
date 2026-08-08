@@ -19,18 +19,35 @@ tournaments, RSVP, household links, org attendance on public events) shipped
 - [x] **Add to calendar** — .ics download on every event page.
 - [x] **My schedule** — /me lists the events you're going to.
 
-## Next up (designed, not started)
+## District and organization foundation shipped
 
-- [ ] **Org settings** — rename an org, change type/state, transfer ownership.
-- [ ] **Multi-section tournaments** — coaches add rating/grade-limited
+- [x] **District → school hierarchy** — platform-provisioned districts,
+  connected school workspaces, guided school-admin delegation, ownership
+  handoff, and pilot-readiness command center.
+- [x] **Bulk provisioning** — expiring staff claim links, CSV import/export,
+  invite status, and reissue without shared passwords.
+- [x] **Organization verification and moderation** — platform queues,
+  correction notes, public-event review, and district-grouped school
+  verification.
+- [x] **Audience-scoped tournaments** — public, district-only, school-only,
+  and invite-only access enforced by RLS.
+- [x] **District reporting** — aggregate participation, RSVP, going, and
+  attendance counts by school without exposing browsing data.
+- [x] **In-app alerts** — invitation, RSVP, announcement, account, and tracked
+  tournament change updates plus visit-time deadline reminders.
+
+## Next up
+
+- [x] **Org settings** — rename an org, change state, and transfer ownership
+  (organization type is intentionally immutable).
+- [x] **Multi-section tournaments** — coaches add rating/grade-limited
   sections at create time and edit them later (schema already supports it).
-- [ ] **Assistant coaches** — invite a second adult into an org as
-  coach/admin (org_memberships.role supports it; needs an invite path since
-  join codes always grant `student`).
-- [ ] **Coach announcements** — short org-wide notes shown on the org page
+- [x] **Assistant coaches** — invite staff with scoped organization roles and
+  expiring claim links.
+- [x] **Coach announcements** — short org-wide notes shown on the org page
   ("Bring your own boards Saturday").
-- [ ] **Email notifications** — invite received, RSVP received, link request,
-  recommendation received (Supabase auth SMTP or Resend).
+- [ ] **Product email notifications** — product invites and reminders; Auth
+  confirmation/reset email remains Supabase SMTP. In-app alerts work today.
 - [ ] **Results & history** — record placements per entrant after an event;
   student profile shows tournament history; feeds the pathway graph.
 - [ ] **Student ratings on profile** — optional US Chess ID / rating field,
@@ -42,14 +59,16 @@ tournaments, RSVP, household links, org attendance on public events) shipped
 
 ## Later / needs design
 
-- [ ] **Moderation queue** — coach-created *public* events go through review
+- [x] **Moderation queue** — coach-created *public* events go through review
   before listing (status `pending_review`); private events stay instant.
 - [ ] **In-app registration & payments** for org events (fees, Stripe).
-- [ ] **Attendance history / season view** for coaches (who came to what).
+- [x] **Attendance history / season view** for coaches (who came to what).
 - [ ] **Achievements** — badges for first tournament, 5 RSVPs, etc.
 - [ ] **Messaging** — real coach ↔ parent threads (big safety surface; needs
   moderation design before building).
-- [ ] **District rollups** — district-type orgs aggregating member schools.
+- [x] **District rollups** — district workspaces aggregate connected schools.
+- [ ] **Production rollout gates** — account export/delete, student-data legal
+  agreements, observability, product email delivery, and live RLS automation.
 
 ## Deliberately not planned
 

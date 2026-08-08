@@ -34,7 +34,11 @@ export function DistrictSchoolForm({
         setError(result.error);
         return;
       }
-      router.push(`/orgs/${result.slug}/people`);
+      router.push(
+        `/orgs/${result.slug}/people?setup=school-admin&district=${encodeURIComponent(
+          districtSlug
+        )}`
+      );
       router.refresh();
     } finally {
       setPending(false);

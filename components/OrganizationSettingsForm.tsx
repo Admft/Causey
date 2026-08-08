@@ -66,7 +66,7 @@ export function OrganizationSettingsForm({
     if (!nextOwner) return;
     if (
       !window.confirm(
-        "Transfer ownership? You will lose owner access unless you also have an active staff role."
+        "Transfer ownership? You may lose owner-only control. Any separate staff or parent-district authority remains."
       )
     ) {
       return;
@@ -142,7 +142,7 @@ export function OrganizationSettingsForm({
         </div>
       </form>
 
-      <section>
+      <section id="ownership" className="scroll-mt-24">
         <h2 className="font-display text-xl font-bold text-foreground">
           Ownership
         </h2>
