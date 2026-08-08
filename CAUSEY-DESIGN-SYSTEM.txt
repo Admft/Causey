@@ -54,12 +54,11 @@ Meaning before effect
     zip-code / opportunity shouldn't depend on where you live).
   • Decorative blur blobs, purple glows, and generic gradient washes are banned.
 
-Cards are for interaction
-  • Default: no cards.
-  • Cards are allowed when they contain a user interaction (forms, clickable
-    team photos with LinkedIn, etc.).
-  • If removing border/shadow/radius doesn't hurt understanding, it shouldn't
-    be a card.
+Cards
+  • Cards are allowed for interactive elements, repeating units, and discrete
+    chunks that benefit from visual separation.
+  • Long prose still does not go in cards.
+  • If removing border/shadow/radius doesn't hurt understanding, prefer no card.
 
 Clarity over clutter
   • Avoid pill clusters, icon-feature grids, stat strips, emoji, glow stacks.
@@ -411,17 +410,21 @@ Easing (default brand curve)
   cubic-bezier(0.22, 1, 0.36, 1)     entrances / lifts
   cubic-bezier(0.4, 0, 0.2, 1)       path draw / structured motion
 
-Allowed motions (few, intentional)
+Allowed motions (coordinated — one system per page, not a hard count)
   • Hero first-paint rise (animate-rise + short delays)
-  • Path draw / node fill on How it works (ONE job in that section)
+  • Path draw / node fill on progress sections
+  • Scroll-reveal of major sections: ONE shared pattern per page, fired once
+    on entry (e.g. 12px rise + fade, 400–600ms)
+  • Short staggers (40–80ms steps) on small related groups
   • Scroll cue bob + fade-out on scroll/click
   • Subtle nudge-x on arrows / external marks
   • card-lift hover (−4px) only on interactive cards
 
 Banned / limited
-  • Staggered index-based delays on every card (index * 80ms etc.)
-  • Scroll-reveal on every block on the page
-  • Continuous float / glow loops on content
+  • A different entrance pattern per block (one reveal system per page)
+  • Page-wide staggered delays on everything that moves
+  • Continuous float / glow loops on text, nav, buttons, or form controls
+    (subtle ambient motion on hero art / decorative layers is fine)
   • Hero fade on mobile (keep solid)
 
 Always honor prefers-reduced-motion

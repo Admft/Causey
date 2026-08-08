@@ -13,6 +13,10 @@ specific to THIS product. "It's the library default," "it looked modern," or
 "other sites do this" are not reasons. If you cannot justify an element in one
 sentence tied to the product's actual purpose, brand, or content — cut it.
 
+This ruleset guards against generic output, not against ambition. Rich
+visuals, animation, depth, and interactive moments are encouraged when they
+pass the test above. The failure mode to avoid is sameness, not boldness.
+
 Before generating any new UI, ask: does a pattern/style for this already exist
 in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
 
@@ -86,21 +90,24 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
      d. Ban in badges unless paired with a specific date/number/name:
         "New", "Beta", "AI-powered", "Live", "Coming soon", any sparkle emoji.
 4.2  ICONS:
-     a. No icon-per-feature-card as decoration. An icon must clarify something
-        the text does not, or it goes.
+     a. Icons are welcome when each one maps to its specific concept and the
+        set is visually consistent. An icon that clarifies nothing goes.
      b. Never generic-interchangeable mappings: lightning=fast, shield=secure,
         checkmark=easy, rocket=launch, magnifier=find, clock=save-time.
      c. One icon set, one style (all outline OR all filled), one stroke
         weight, one size scale. Never mixed sources.
-     d. No icons in soft rounded pastel squares, one per card, identical
-        treatment. That whole pattern is banned.
+     d. Avoid the default "icon in a soft pastel square" on every card. If
+        icons sit in containers, the treatment needs a product-specific
+        reason and deliberate variation.
      e. Icon size must be proportionate to adjacent text. No giant icon +
         tiny caption.
 4.3  CARDS:
-     a. Cards need a reason to be cards (grouping interactive/repeating
-        units). Prose does not go in cards.
-     b. No bento grids of feature cards unless the content is genuinely
-        grid-shaped data.
+     a. Cards are allowed for interactive elements, repeating units, and
+        discrete chunks that benefit from visual separation. Long prose
+        still does not go in cards.
+     b. Bento and feature grids are allowed when the content is genuinely
+        grid-shaped (comparable items, stats, features). Vary cell sizes
+        with intent; no identical pastel icon cells.
      c. No hover lift + shadow growth as default. If a card is clickable,
         indicate it with one subtle change, with a real easing curve.
 4.4  BUTTONS / CTAs:
@@ -115,20 +122,28 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
 
 5. MOTION
 --------------------------------------------------------------------------------
-5.1  Motion budget: maximum 2-3 intentional moments per page. Each must have a
-     stated job (guide attention, show state change, express the product's
-     core idea). "Presence" or "polish" is not a job.
-5.2  No blanket scroll-reveal fade-ins on every section/card.
-5.3  No staggered index-based delays (delay = i * 80ms) on card grids.
+5.1  Motion is encouraged, not rationed. Animate what benefits: hero
+     entrances, scroll-triggered section reveals, progress/path draws, state
+     changes, hover feedback, product demos. The test is coordination —
+     motion on a page should feel like one choreographed system, not random
+     parts moving. If everything moves equally, nothing means anything.
+5.2  Scroll-reveal is allowed for major sections and key elements. Pick ONE
+     reveal pattern per page (e.g. 12px rise + fade, 400-600ms) and reuse it;
+     do not invent a different entrance per block. Trigger once, on entry.
+5.3  Staggered reveals are allowed for small related groups (cards, list
+     items, logos) when the stagger reads as a sequence: short steps
+     (40-80ms), capped groups, never applied page-wide.
 5.4  Every animation uses a real easing curve (cubic-bezier), never linear or
-     unspecified defaults. Durations 150-400ms for UI state, longer only for
-     deliberate hero/narrative moments.
+     unspecified defaults. Durations 150-400ms for UI state, 400-800ms for
+     entrances and narrative moments.
 5.5  Scroll-linked values are driven by requestAnimationFrame writing directly
      to the DOM/CSS vars. Never a CSS transition on a scroll-linked property
      (causes rubber-banding), never per-frame React state re-renders.
 5.6  prefers-reduced-motion must be respected: animations disabled or replaced
-     with instant final states.
-5.7  No bobbing/floating idle animations on buttons, arrows, or icons.
+     with instant final states. Non-negotiable regardless of motion budget.
+5.7  Subtle ambient motion (slow drift, gentle pulse) is allowed on hero art
+     and decorative layers. Never on body text, nav, buttons, or form
+     controls — anything the user reads or clicks stays still at rest.
 
 6. CONTENT & COPY
 --------------------------------------------------------------------------------
@@ -207,18 +222,21 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
      tell what company this page belongs to? If not, the design has no
      identity — add one element (visual motif, copy angle, layout signature)
      that could only exist for this product.
-9.6  Spend boldness in ONE place. Pick a single signature element per page and
-     keep everything else quiet and disciplined. Then remove one decoration
-     before shipping (Chanel rule).
+9.6  Give every page at least one signature moment (a hero visual, an
+     interactive demo, a progress draw). One or two supporting moments are
+     fine. Keep navigation, forms, and body copy quiet so the moments land.
 
 10. PROCESS RULES FOR THE AGENT
 --------------------------------------------------------------------------------
-10.1 Work in explicit batches. Propose, show a diff, wait for approval. Never
-     "fix everything" in one pass.
+10.1 Own the scoped task end-to-end: ship the complete change in one pass
+     rather than stopping at a partial batch. Propose direction first only
+     when the user is actively steering or the approach is genuinely
+     ambiguous.
 10.2 When auditing, report violations with file + line first; do not fix until
      the human scopes the batch.
 10.3 Never restructure, rename, or "improve" things outside the stated task.
-     Surgical edits over broad rewrites.
+     Surgical edits for fixes; broad rewrites are fine when the task IS a
+     redesign.
 10.4 When told a design element is fixed (a signature feature, a founder
      story, a brand mark), never modify it, even during refactors.
 10.5 If a rule here conflicts with an explicit user instruction, the user
@@ -233,8 +251,8 @@ QUICK PRE-SHIP CHECKLIST (run before calling anything done)
 [ ] All colors/type/spacing/radius from defined tokens and scales
 [ ] No two sections share the same structural recipe
 [ ] One primary CTA wins; labels say what happens
-[ ] Icons: none decorative, one style, or none at all
-[ ] Motion: <=3 moments, each with a job, reduced-motion respected
+[ ] Icons: one consistent set; each icon maps to its specific concept
+[ ] Motion: one coordinated system, shared reveal pattern, reduced-motion respected
 [ ] Zero fabricated data, zero placeholders, zero dead elements
 [ ] Forms: loading, validation, and success states all visible
 [ ] Mobile checked at 360px; contrast passes 4.5:1
