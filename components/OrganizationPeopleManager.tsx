@@ -24,17 +24,21 @@ export function OrganizationPeopleManager({
   orgType,
   invitations,
   rosterHref,
+  defaultRole,
 }: {
   orgId: string;
   orgSlug: string;
   orgType: string;
   invitations: OrgInvitationRow[];
-  rosterHref: string;
+  rosterHref?: string;
+  defaultRole?: OrgMemberRole;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<OrgMemberRole>("student");
+  const [role, setRole] = useState<OrgMemberRole>(
+    defaultRole ?? (orgType === "district" ? "coach" : "student")
+  );
   const [csv, setCsv] = useState("");
   const [filename, setFilename] = useState("");
   const [pending, setPending] = useState<"single" | "bulk" | null>(null);
@@ -127,8 +131,10 @@ export function OrganizationPeopleManager({
     }
   }
 
-  const availableRoles = INVITABLE_ROLES.filter(
-    (candidate) => candidate !== "district_admin" || orgType === "district"
+  const availableRoles = INVITABLE_ROLES.filter((candidate) =>
+    orgType === "district"
+      ? candidate !== "student" && candidate !== "school_admin"
+      : candidate !== "district_admin"
   );
 
   return (
@@ -138,14 +144,20 @@ export function OrganizationPeopleManager({
           Email one invitation
         </h2>
         <p className="mt-1 text-sm text-muted">
-          Best for staff and one-off students. For a whole class,{" "}
-          <Link
-            href={rosterHref}
-            className="font-semibold text-brand-red hover:underline"
-          >
-            share the roster join link
-          </Link>{" "}
-          instead.
+          {orgType === "district" ? (
+            "District invitations are for district staff. Create or open a school workspace for school administrators and students."
+          ) : (
+            <>
+              Best for staff and one-off students. For a whole class,{" "}
+              <Link
+                href={rosterHref ?? `/orgs/${orgSlug}/roster`}
+                className="font-semibold text-brand-red hover:underline"
+              >
+                share the roster join link
+              </Link>{" "}
+              instead.
+            </>
+          )}
         </p>
         <div className="mt-5 grid gap-4 sm:max-w-md">
           <label>
@@ -243,14 +255,20 @@ export function OrganizationPeopleManager({
         </div>
         {!invitations.length ? (
           <p className="mt-3 text-sm text-muted">
-            No email invitations yet. Most students should use the{" "}
-            <Link
-              href={rosterHref}
-              className="font-semibold text-brand-red hover:underline"
-            >
-              roster join link
-            </Link>
-            ; use email invites for staff.
+            {orgType === "district" ? (
+              "No district staff invitations yet. School administrators and students are invited from their school workspace."
+            ) : (
+              <>
+                No email invitations yet. Most students should use the{" "}
+                <Link
+                  href={rosterHref ?? `/orgs/${orgSlug}/roster`}
+                  className="font-semibold text-brand-red hover:underline"
+                >
+                  roster join link
+                </Link>
+                ; use email invites for staff.
+              </>
+            )}
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">
@@ -288,7 +306,16 @@ export function OrganizationPeopleManager({
         <form onSubmit={importCsv} className="mt-4 max-w-md">
           <p className="text-sm text-muted">
             Up to 500 rows with <strong>email</strong>, optional{" "}
-            <strong>name</strong>, and optional <strong>role</strong> columns.
+            <strong>name</strong>, and{" "}
+            {orgType === "district" ? (
+              <>
+                a required <strong>role</strong> column for district staff.
+              </>
+            ) : (
+              <>
+                an optional <strong>role</strong> column.
+              </>
+            )}
           </p>
           <input
             className="field mt-4"

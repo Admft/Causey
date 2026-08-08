@@ -35,8 +35,20 @@ export default async function OrganizationPeoplePage({
   const activeStudents = roster.filter(
     (row) => row.member_status === "active" && row.member_role === "student"
   ).length;
+  const otherActiveStaff = roster.filter(
+    (row) =>
+      row.profile_id !== user.id &&
+      row.member_status === "active" &&
+      row.member_role !== "student"
+  ).length;
+  const isDistrict = view.org.type === "district";
+  const needsSchoolAdminHandoff =
+    view.org.type === "school" &&
+    Boolean(view.org.parent_org_id) &&
+    otherActiveStaff === 0 &&
+    !pendingInvites.some((row) => row.role === "school_admin");
   const rosterHref = `/orgs/${view.org.slug}/roster#add-students`;
-  const hasJoinCode = Boolean(view.org.join_code);
+  const hasJoinCode = !isDistrict && Boolean(view.org.join_code);
 
   let mission: {
     title: string;
@@ -44,7 +56,18 @@ export default async function OrganizationPeoplePage({
     action: { href: string; label: string };
     secondary?: { href: string; label: string };
   };
-  if (pendingInvites.length) {
+  if (needsSchoolAdminHandoff) {
+    mission = {
+      title: "Delegate this school",
+      description:
+        "Invite a school administrator before provisioning students. They can own the roster and day-to-day school setup.",
+      action: { href: "#invite-one", label: "Invite school administrator" },
+      secondary: {
+        href: "/orgs",
+        label: "Back to organizations",
+      },
+    };
+  } else if (pendingInvites.length) {
     mission = {
       title: `${pendingInvites.length} ${
         pendingInvites.length === 1 ? "invite is" : "invites are"
@@ -55,6 +78,17 @@ export default async function OrganizationPeoplePage({
       secondary: hasJoinCode
         ? { href: rosterHref, label: "Share student join link" }
         : { href: "#invite-one", label: "Invite someone else" },
+    };
+  } else if (isDistrict) {
+    mission = {
+      title: "Delegate district staff",
+      description:
+        "Invite district administrators or coaches here. Create or open a school workspace for school administrators and students.",
+      action: { href: "#invite-one", label: "Invite district staff" },
+      secondary: {
+        href: `/orgs/${view.org.slug}/settings#schools`,
+        label: "Manage schools",
+      },
     };
   } else if (!activeStudents && hasJoinCode) {
     mission = {
@@ -91,7 +125,7 @@ export default async function OrganizationPeoplePage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="people"
-        showRoster={view.isCoach}
+        showRoster={view.isCoach && !isDistrict}
         showAdmin={view.isAdmin}
       />
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
@@ -102,8 +136,9 @@ export default async function OrganizationPeoplePage({
           Invites &amp; staff
         </h1>
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Students usually join from a roster link. Use this page for staff and
-          email claim invites — no shared passwords.
+          {isDistrict
+            ? "District staff claim their own accounts here. School administrators and students belong in a school workspace."
+            : "Students usually join from a roster link. Use this page for staff and email claim invites — no shared passwords."}
         </p>
 
         <div className="mt-8">
@@ -133,7 +168,10 @@ export default async function OrganizationPeoplePage({
             orgSlug={view.org.slug}
             orgType={view.org.type}
             invitations={invitations}
-            rosterHref={rosterHref}
+            rosterHref={isDistrict ? undefined : rosterHref}
+            defaultRole={
+              needsSchoolAdminHandoff ? "school_admin" : undefined
+            }
           />
         </section>
       </main>

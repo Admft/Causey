@@ -99,6 +99,15 @@ export default async function OrgPage({
     (row) => row.member_status === "active" && row.member_role === "student"
   ).length;
   const hasStudents = activeStudentCount > 0;
+  const needsSchoolAdminHandoff =
+    org.type === "school" &&
+    Boolean(org.parent_org_id) &&
+    !roster.some(
+      (row) =>
+        row.profile_id !== user.id &&
+        row.member_status === "active" &&
+        row.member_role !== "student"
+    );
 
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = events.filter((e) => isUpcomingEvent(e, today));
@@ -120,6 +129,18 @@ export default async function OrgPage({
 
   const coachMission = (() => {
     if (!isCoach || org.type === "district") return null;
+    if (needsSchoolAdminHandoff) {
+      return {
+        title: "Delegate this school",
+        description:
+          "Invite a school administrator before provisioning students. They can own the roster and day-to-day setup.",
+        action: {
+          href: `/orgs/${org.slug}/people`,
+          label: "Invite school administrator",
+        },
+        secondary: { href: "/orgs", label: "Back to organizations" },
+      };
+    }
     if (freshestDraft) {
       return {
         title: `Resume “${freshestDraft.data.name.trim() || "Untitled tournament"}”`,
@@ -221,7 +242,7 @@ export default async function OrgPage({
         slug={org.slug}
         orgName={org.name}
         tab="overview"
-        showRoster={isCoach}
+        showRoster={isCoach && org.type !== "district"}
         showAdmin={isAdmin}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">

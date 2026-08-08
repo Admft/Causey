@@ -114,7 +114,7 @@ export async function HomeAccountPitch() {
             id="account-heading"
             className="max-w-[20ch] font-display text-display font-bold tracking-tight text-foreground"
           >
-            Searching is free. An account keeps your next tournament straight.
+            Search without an account today. Sign in when you need a plan.
           </h2>
           <p className="mt-4 max-w-prose text-base text-muted">
             You can browse without signing in. Create an account when you want

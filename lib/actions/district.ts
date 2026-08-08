@@ -35,7 +35,6 @@ const OrgSettingsSchema = z.object({
   orgSlug: z.string().min(1),
   name: z.string().trim().min(2).max(80),
   state: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
-  type: z.enum(["school", "club", "team", "district"]),
 });
 
 const AnnouncementSchema = z.object({
@@ -132,7 +131,6 @@ export async function updateOrganizationSettings(input: {
   orgSlug: string;
   name: string;
   state: string;
-  type: string;
 }): Promise<ActionResult> {
   const parsed = OrgSettingsSchema.safeParse(input);
   if (!parsed.success) {
@@ -153,7 +151,6 @@ export async function updateOrganizationSettings(input: {
     .update({
       name: parsed.data.name,
       state: parsed.data.state,
-      type: parsed.data.type,
     })
     .eq("id", parsed.data.orgId);
   if (error) return { ok: false, error: "Could not save organization settings." };
@@ -253,6 +250,26 @@ async function createInvitationRecord(input: {
   };
 }
 
+async function getOrganizationType(orgId: string): Promise<string | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("organizations")
+    .select("type")
+    .eq("id", orgId)
+    .maybeSingle();
+  return data?.type ?? null;
+}
+
+function invitationRoleFitsOrganization(
+  orgType: string,
+  role: OrgMemberRole
+): boolean {
+  if (orgType === "district") {
+    return role !== "student" && role !== "school_admin";
+  }
+  return role !== "district_admin";
+}
+
 export async function inviteOrganizationMember(input: {
   orgId: string;
   orgSlug: string;
@@ -271,6 +288,19 @@ export async function inviteOrganizationMember(input: {
     .safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the invitation." };
+  }
+  const orgType = await getOrganizationType(parsed.data.orgId);
+  if (!orgType) {
+    return { ok: false, error: "Could not identify this organization." };
+  }
+  if (!invitationRoleFitsOrganization(orgType, parsed.data.role)) {
+    return {
+      ok: false,
+      error:
+        orgType === "district"
+          ? "Invite district staff here. Students and school administrators belong in a school workspace."
+          : "District administrators can only be invited to a district workspace.",
+    };
   }
   const result = await createInvitationRecord(parsed.data);
   if (result.ok) {
@@ -325,6 +355,10 @@ export async function bulkInviteOrganizationMembers(input: {
   if (!parsed.success) return { ok: false, error: "Choose a valid CSV file." };
   const user = await currentUserOrError();
   if (!user.ok) return user;
+  const orgType = await getOrganizationType(parsed.data.orgId);
+  if (!orgType) {
+    return { ok: false, error: "Could not identify this organization." };
+  }
 
   const lines = parsed.data.csv
     .split(/\r?\n/)
@@ -345,6 +379,13 @@ export async function bulkInviteOrganizationMembers(input: {
   const roleIndex = headers.indexOf("role");
   if (emailIndex < 0) {
     return { ok: false, error: "Add an email column to the CSV." };
+  }
+  if (orgType === "district" && roleIndex < 0) {
+    return {
+      ok: false,
+      error:
+        "District imports require a role column. Students and school administrators belong in school workspaces.",
+    };
   }
 
   const supabase = await createServerSupabaseClient();
@@ -371,11 +412,20 @@ export async function bulkInviteOrganizationMembers(input: {
     const rawRole = roleIndex >= 0 ? values[roleIndex] : "student";
     const emailParsed = EmailSchema.safeParse(email);
     const roleParsed = InvitationRoleSchema.safeParse(rawRole || "student");
-    if (!emailParsed.success || !roleParsed.success) {
+    if (
+      !emailParsed.success ||
+      !roleParsed.success ||
+      (roleParsed.success &&
+        !invitationRoleFitsOrganization(orgType, roleParsed.data))
+    ) {
       failed.push({
         row: index + 1,
         email,
-        error: !emailParsed.success ? "Invalid email" : "Invalid role",
+        error: !emailParsed.success
+          ? "Invalid email"
+          : orgType === "district"
+            ? "Use a district staff role"
+            : "Invalid role",
       });
       continue;
     }

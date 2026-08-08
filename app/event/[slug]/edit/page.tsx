@@ -52,7 +52,7 @@ export default async function EditEventPage({
           slug={view.org.slug}
           orgName={view.org.name}
           tab={null}
-          showRoster={view.isCoach}
+          showRoster={view.isCoach && view.org.type !== "district"}
           showAdmin={view.isAdmin}
         />
       ) : (

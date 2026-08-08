@@ -45,6 +45,9 @@ export default async function RosterPage({
 
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
+  if (view.org.type === "district") {
+    redirect(`/orgs/${slug}/settings#schools`);
+  }
   if (!view.isCoach) redirect(`/orgs/${slug}`);
   const { org } = view;
 

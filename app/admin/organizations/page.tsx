@@ -25,8 +25,9 @@ export default async function AdminOrganizationsPage() {
         Organizations
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Create the district or school record here. Staff delegation and child-school
-        hierarchy still require the later district provisioning work.
+        Platform admins provision district records here. District admins then
+        create connected school workspaces, delegate school administrators, and
+        provision people from each appropriate workspace.
       </p>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">

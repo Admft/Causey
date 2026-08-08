@@ -6,7 +6,14 @@ import {
   transferOrganizationOwnership,
   updateOrganizationSettings,
 } from "@/lib/actions/district";
-import type { Organization, OrganizationType, RosterRow } from "@/lib/auth/orgs";
+import type { Organization, RosterRow } from "@/lib/auth/orgs";
+
+const TYPE_LABELS = {
+  school: "School",
+  club: "Club",
+  team: "Team",
+  district: "District",
+} as const;
 
 export function OrganizationSettingsForm({
   org,
@@ -20,7 +27,6 @@ export function OrganizationSettingsForm({
   const router = useRouter();
   const [name, setName] = useState(org.name);
   const [state, setState] = useState(org.state ?? "");
-  const [type, setType] = useState<OrganizationType>(org.type);
   const [nextOwner, setNextOwner] = useState("");
   const [pending, setPending] = useState<"settings" | "owner" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -44,7 +50,6 @@ export function OrganizationSettingsForm({
         orgSlug: org.slug,
         name,
         state,
-        type,
       });
       if (!result.ok) {
         setError(result.error);
@@ -96,19 +101,16 @@ export function OrganizationSettingsForm({
               maxLength={80}
             />
           </label>
-          <label>
-            <span className="text-xs font-semibold text-muted-strong">Type</span>
-            <select
-              className="field mt-1"
-              value={type}
-              onChange={(event) => setType(event.target.value as OrganizationType)}
-            >
-              <option value="school">School</option>
-              <option value="district">District</option>
-              <option value="club">Club</option>
-              <option value="team">Team</option>
-            </select>
-          </label>
+          <div>
+            <p className="text-xs font-semibold text-muted-strong">Type</p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {TYPE_LABELS[org.type]}
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              Organization type is fixed after creation because it controls
+              access and district hierarchy.
+            </p>
+          </div>
           <label>
             <span className="text-xs font-semibold text-muted-strong">State</span>
             <input

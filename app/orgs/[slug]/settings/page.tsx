@@ -31,7 +31,7 @@ export default async function OrganizationSettingsPage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="settings"
-        showRoster={view.isCoach}
+        showRoster={view.isCoach && view.org.type !== "district"}
         showAdmin={view.isAdmin}
       />
       <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">

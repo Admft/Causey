@@ -24,8 +24,9 @@ export default async function NewOrgPage() {
         Start an organization
       </h1>
       <p className="mt-2 text-sm text-muted">
-        You&rsquo;ll get a join code to share — students who enter it land on
-        your roster instantly.
+        Start a school, club, or team and get a student join code. District
+        workspaces are provisioned separately by Causey platform
+        administrators.
       </p>
       <div className="section-rule mt-8 pt-8">
         <OrgCreateForm />

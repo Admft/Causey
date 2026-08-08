@@ -52,7 +52,7 @@ export default async function NewTournamentPage({
         slug={org.slug}
         orgName={org.name}
         tab="overview"
-        showRoster
+        showRoster={org.type !== "district"}
         showAdmin={view.isAdmin}
       />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">

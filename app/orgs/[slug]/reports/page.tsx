@@ -43,7 +43,7 @@ export default async function OrganizationReportsPage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="reports"
-        showRoster={view.isCoach}
+        showRoster={view.isCoach && view.org.type !== "district"}
         showAdmin={view.isAdmin}
       />
       <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">

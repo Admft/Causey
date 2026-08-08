@@ -11,6 +11,9 @@ const STATES = [
   "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
   "VA","WA","WV","WI","WY","DC",
 ];
+const COACH_ORG_TYPES = ORG_TYPE_OPTIONS.filter(
+  (option) => option.value !== "district"
+);
 
 export function OrgCreateForm() {
   const router = useRouter();
@@ -57,12 +60,16 @@ export function OrgCreateForm() {
             value={type}
             onChange={(e) => setType(e.target.value)}
           >
-            {ORG_TYPE_OPTIONS.map((opt) => (
+            {COACH_ORG_TYPES.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
           </select>
+          <span className="text-2xs text-muted">
+            District workspaces are provisioned by Causey platform
+            administrators.
+          </span>
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs font-semibold text-muted-strong">State</span>

@@ -121,7 +121,7 @@ export default async function ManageEventPage({
         orgShell = {
           slug: view.org.slug,
           name: view.org.name,
-          showRoster: view.isCoach,
+          showRoster: view.isCoach && view.org.type !== "district",
           showAdmin: view.isAdmin,
         };
       }

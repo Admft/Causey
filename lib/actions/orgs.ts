@@ -11,7 +11,7 @@ import type { ActionResult } from "@/lib/actions/result";
 
 const OrgCreateSchema = z.object({
   name: z.string().trim().min(2, "Name your organization.").max(80),
-  type: z.enum(["school", "club", "team", "district"]),
+  type: z.enum(["school", "club", "team"]),
   state: z
     .string()
     .trim()

@@ -34,7 +34,7 @@ export function DistrictSchoolForm({
         setError(result.error);
         return;
       }
-      router.push(`/orgs/${result.slug}`);
+      router.push(`/orgs/${result.slug}/people`);
       router.refresh();
     } finally {
       setPending(false);
