@@ -33,9 +33,9 @@ begin
   return query
   select
     p.id,
-    coalesce(u.email, ''),
-    p.display_name,
-    p.role,
+    coalesce(u.email, '')::text,
+    p.display_name::text,
+    p.role::text,
     p.role_unlocked,
     (a.profile_id is not null),
     p.created_at,

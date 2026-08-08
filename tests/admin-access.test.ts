@@ -134,6 +134,13 @@ describe("platform user directory migration", () => {
     ),
     "utf8"
   );
+  const typeFixSql = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/0031_platform_user_directory_types.sql"
+    ),
+    "utf8"
+  );
 
   it("keeps email lookup behind an admin-checked RPC", () => {
     expect(sql).toContain("create or replace function public.search_platform_users");
@@ -155,5 +162,11 @@ describe("platform user directory migration", () => {
     expect(sql).not.toMatch(
       /update public\.profiles[\s\S]*?set[\s\S]*?role_unlocked\s*=/i
     );
+  });
+
+  it("matches Supabase auth email to the RPC text return type", () => {
+    expect(sql).toContain("coalesce(u.email, '')::text");
+    expect(typeFixSql).toContain("coalesce(u.email, '')::text");
+    expect(typeFixSql).toContain("p.role::text");
   });
 });

@@ -136,7 +136,9 @@ export function AdminUserDirectory({
           <div className="mt-4" role="alert">
             <p className="text-sm font-semibold text-brand-red">{error}</p>
             <p className="mt-1 text-xs text-muted">
-              Apply the pending database migration, then retry this page.
+              {error.includes("migration")
+                ? "Apply the pending database migration, then retry this page."
+                : "Retry the page. If this continues, check the database function logs."}
             </p>
           </div>
         ) : !users.length ? (

@@ -169,6 +169,8 @@ export async function getAdminUsers({
       total: 0,
       error: missingMigration
         ? "User search is unavailable until migration 0026 is applied."
+        : error.code === "42804"
+          ? "User search needs the corrected database types from migration 0031."
         : "User search could not be loaded. Check the connection and try again.",
     };
   }
