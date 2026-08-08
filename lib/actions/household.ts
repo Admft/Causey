@@ -56,6 +56,7 @@ export async function respondToLink(
   }
 
   revalidatePath("/me");
+  revalidatePath("/account");
   revalidatePath("/family");
   return { ok: true };
 }
@@ -77,5 +78,6 @@ export async function revokeLink(childProfileId: string): Promise<ActionResult> 
   }
 
   revalidatePath("/family");
+  revalidatePath("/account");
   return { ok: true };
 }

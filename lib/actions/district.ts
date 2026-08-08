@@ -609,6 +609,7 @@ export async function saveNotificationPreferences(
   });
   if (error) return { ok: false, error: "Could not save notification preferences." };
   revalidatePath("/me/notifications");
+  revalidatePath("/account");
   return { ok: true };
 }
 

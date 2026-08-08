@@ -182,24 +182,24 @@ export function AuthNav() {
       ))}
       <Link
         href="/me/notifications"
-        aria-label="Alerts and notification settings"
+        aria-label="Alerts"
         aria-current={
           pathname.startsWith("/me/notifications") ? "page" : undefined
         }
         className={navLinkClass(pathname.startsWith("/me/notifications"))}
       >
-        <span className="sm:hidden">Alerts</span>
-        <span className="hidden sm:inline">Alerts &amp; settings</span>
+        Alerts
       </Link>
-      {role !== "student" ? (
-        <Link
-          href="/me"
-          aria-current={pathname === "/me" ? "page" : undefined}
-          className={navLinkClass(pathname === "/me")}
-        >
-          Account
-        </Link>
-      ) : null}
+      <Link
+        href="/account"
+        aria-label="Account settings"
+        aria-current={
+          pathname.startsWith("/account") ? "page" : undefined
+        }
+        className={navLinkClass(pathname.startsWith("/account"))}
+      >
+        Account
+      </Link>
       <button
         type="button"
         onClick={signOut}

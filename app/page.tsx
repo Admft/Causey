@@ -54,8 +54,8 @@ export default function CompetitionTypesPage() {
         </div>
       </section>
 
-      <section className="section-rule">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 py-10 sm:px-8 sm:py-14 md:grid-cols-2 md:gap-12 lg:gap-16">
+      <section className="home-band band-join band-join--surface bg-surface">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 sm:px-8 md:grid-cols-2 md:gap-12 lg:gap-16">
           <div className="min-w-0">
             <h2 className="font-display text-display font-bold tracking-tight text-foreground">
               Chess is ready to search

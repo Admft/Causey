@@ -38,7 +38,7 @@ const SIGNED_IN_NEXT: Record<
     actions: [
       { href: "/me", label: "Open my tournaments", primary: true },
       { href: "/chess", label: "Search tournaments" },
-      { href: "/orgs", label: "My clubs" },
+      { href: "/account", label: "Account settings" },
     ],
   },
   parent: {
@@ -48,7 +48,7 @@ const SIGNED_IN_NEXT: Record<
     actions: [
       { href: "/family", label: "Open family desk", primary: true },
       { href: "/chess", label: "Search tournaments" },
-      { href: "/me", label: "My account" },
+      { href: "/account", label: "Account settings" },
     ],
   },
   coach: {
@@ -58,7 +58,7 @@ const SIGNED_IN_NEXT: Record<
     actions: [
       { href: "/orgs", label: "Open my organizations", primary: true },
       { href: "/chess", label: "Search tournaments" },
-      { href: "/orgs/new", label: "Start a club" },
+      { href: "/account", label: "Account settings" },
     ],
   },
 };
@@ -72,10 +72,10 @@ export async function HomeAccountPitch() {
     const secondary = next.actions.filter((action) => !action.primary);
     return (
       <section
-        className="section-rule bg-brand-blue-soft/50"
+        className="home-band band-join band-join--blue bg-brand-blue-soft/50"
         aria-labelledby="account-heading"
       >
-        <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <div className="max-w-3xl">
             <h2
               id="account-heading"
@@ -98,7 +98,7 @@ export async function HomeAccountPitch() {
               <Link
                 key={action.href}
                 href={action.href}
-                className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-5 py-3 text-sm font-semibold text-foreground hover:border-foreground/30"
+                className="inline-flex items-center justify-center rounded-xl border border-brand-blue/45 bg-surface/80 px-5 py-3 text-sm font-semibold text-brand-blue-strong transition-colors hover:bg-brand-blue-soft/40"
               >
                 {action.label}
               </Link>
@@ -111,10 +111,10 @@ export async function HomeAccountPitch() {
 
   return (
     <section
-      className="section-rule bg-brand-blue-soft/50"
+      className="home-band band-join band-join--blue bg-brand-blue-soft/50"
       aria-labelledby="account-heading"
     >
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1fr_minmax(0,28rem)] lg:gap-16">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_minmax(0,28rem)] lg:gap-16">
         <div>
           <h2
             id="account-heading"
@@ -141,9 +141,7 @@ export async function HomeAccountPitch() {
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-            Or start as
-          </h3>
+          <h3 className="text-sm font-semibold text-foreground">Or start as</h3>
           <ul className="mt-4 space-y-3">
             {ROLE_ROUTES.map((option) => (
               <li key={option.role}>
@@ -169,7 +167,7 @@ export async function HomeAccountPitch() {
               </li>
             ))}
           </ul>
-          <details className="mt-5 rounded-xl border border-line bg-surface-soft/80 px-4 py-3">
+          <details className="mt-5 rounded-xl border border-brand-blue/45 bg-surface/80 px-4 py-3">
             <summary className="cursor-pointer text-sm font-semibold text-muted-strong">
               Coach or organizer?
             </summary>

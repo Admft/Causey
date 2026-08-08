@@ -109,12 +109,24 @@ export function NotificationPreferencesForm({
       label: "Coach announcements",
       description: "Your organization posts an operational update.",
     },
+    {
+      key: "email_enabled",
+      label: "Email when delivery becomes available",
+      description:
+        "Email is not connected yet. This saves whether you want it later.",
+    },
+    {
+      key: "guardian_routing",
+      label: "Route student deadlines to linked guardians",
+      description:
+        "Guardians get the action and event name, never private browsing data.",
+    },
   ];
 
   return (
     <form onSubmit={submit}>
       <fieldset>
-        <legend className="sr-only">Notification types</legend>
+        <legend className="sr-only">Notification preferences</legend>
         <div className="divide-y divide-line border-y border-line">
           {choices.map((choice) => (
             <label
@@ -139,41 +151,6 @@ export function NotificationPreferencesForm({
           ))}
         </div>
       </fieldset>
-
-      <div className="mt-7 grid gap-4 sm:grid-cols-2">
-        <label className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
-          <input
-            type="checkbox"
-            checked={values.email_enabled}
-            onChange={() => toggle("email_enabled")}
-            className="mt-1 size-4 accent-[var(--brand-red)]"
-          />
-          <span>
-            <span className="block text-sm font-semibold text-foreground">
-              Email when delivery becomes available
-            </span>
-            <span className="mt-1 block text-xs text-muted">
-              Email is not connected yet. This saves whether you want it later.
-            </span>
-          </span>
-        </label>
-        <label className="flex items-start gap-3 rounded-xl border border-line bg-surface p-4">
-          <input
-            type="checkbox"
-            checked={values.guardian_routing}
-            onChange={() => toggle("guardian_routing")}
-            className="mt-1 size-4 accent-[var(--brand-red)]"
-          />
-          <span>
-            <span className="block text-sm font-semibold text-foreground">
-              Route student deadlines to linked guardians
-            </span>
-            <span className="mt-1 block text-xs text-muted">
-              Guardians receive the action and event name, never private browsing data.
-            </span>
-          </span>
-        </label>
-      </div>
 
       <label className="mt-5 block max-w-sm">
         <span className="text-xs font-semibold text-muted-strong">Timezone</span>

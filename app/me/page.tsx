@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
-import { ProfileEditor } from "@/components/ProfileEditor";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import type { AccountRole } from "@/lib/auth/types";
@@ -20,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Your plan",
-  description: "Your Causey tournament invitations, registration, and profile.",
+  description: "Your Causey tournament invitations, registration, and saved items.",
 };
 
 type AccountTournament = {
@@ -235,12 +234,6 @@ export default async function MePage() {
           : "Going"
         : "You marked registration complete";
 
-  const roleLabel =
-    profile.role === "coach"
-      ? "Coach / Organizer"
-      : profile.role === "parent"
-        ? "Parent"
-        : "Student";
   const isStudent = profile.role === "student";
   const nextAction = ROLE_NEXT_ACTION[profile.role];
   const studentMission =
@@ -302,29 +295,23 @@ export default async function MePage() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      {isStudent ? (
-        <>
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-            Student plan
-          </p>
-          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-            Your tournaments
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            {profile.display_name || "Your profile"} · {user.email}
-          </p>
-        </>
-      ) : (
-        <>
-          <p className="text-sm font-semibold text-brand-red">Account</p>
-          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-            {profile.display_name || "Your profile"}
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            {user.email} · {roleLabel}
-          </p>
-        </>
-      )}
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+        {isStudent ? "Student plan" : "Tournament plan"}
+      </p>
+      <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+        Your tournaments
+      </h1>
+      <p className="mt-2 text-sm text-muted">
+        {profile.display_name || "Your profile"} · {user.email}. Profile and
+        alert preferences live in{" "}
+        <Link
+          href="/account"
+          className="font-semibold text-brand-red hover:underline"
+        >
+          Account settings
+        </Link>
+        .
+      </p>
 
       <div className="mt-8">
         <PortalMission
@@ -568,16 +555,9 @@ export default async function MePage() {
 
       <details className="mt-12 border-t border-line pt-8">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-muted-strong">
-          Profile &amp; saved items
+          Saved items
         </summary>
         <div className="mt-6 flex flex-col gap-10">
-          <section>
-            <h2 className="text-sm font-semibold text-foreground">Profile</h2>
-            <div className="mt-4">
-              <ProfileEditor profile={profile} />
-            </div>
-          </section>
-
           <section>
             <h2 className="text-sm font-semibold text-foreground">
               Saved tournaments

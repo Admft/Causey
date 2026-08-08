@@ -1,26 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { NotificationPreferencesForm } from "@/components/NotificationPreferencesForm";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { homePathForRole } from "@/lib/auth/home-path";
-import {
-  getNotificationPreferences,
-  getNotifications,
-} from "@/lib/data/district";
+import { getNotifications } from "@/lib/data/district";
 
 export const metadata: Metadata = {
-  title: "Notifications",
-  description: "Choose reminders and review important tournament updates.",
+  title: "Alerts",
+  description: "Review important tournament updates for your Causey account.",
 };
 
 export default async function NotificationsPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/me/notifications");
-  const [profile, preferences, notifications] = await Promise.all([
+  const [profile, notifications] = await Promise.all([
     getCurrentProfile(),
-    getNotificationPreferences(user.id),
     getNotifications(user.id),
   ]);
   const workspaceHref = homePathForRole(profile?.role);
@@ -47,7 +42,14 @@ export default async function NotificationsPage() {
       </h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
         In-app updates appear here when Causey creates them. Automated reminders
-        and email delivery are not operating yet.
+        and email delivery are not operating yet. Choose future preferences in{" "}
+        <Link
+          href="/account#alerts"
+          className="font-semibold text-brand-red hover:underline"
+        >
+          Account settings
+        </Link>
+        .
       </p>
 
       <div className="mt-8">
@@ -62,14 +64,14 @@ export default async function NotificationsPage() {
           description={
             notifications.length
               ? "Review the real updates below, then return to your workspace for the next action."
-              : "Keep using your role workspace for invitations and tournament actions. Saving preferences below prepares your choices for delivery work that is still being built."
+              : "Keep using your role workspace for invitations and tournament actions. Alert preferences are saved for delivery work that is still being built."
           }
           action={
             notifications.length
               ? { href: "#recent-updates", label: "Review updates" }
               : { href: workspaceHref, label: workspaceLabel }
           }
-          secondary={{ href: "#preferences", label: "Set future preferences" }}
+          secondary={{ href: "/account#alerts", label: "Alert preferences" }}
         />
       </div>
 
@@ -118,22 +120,6 @@ export default async function NotificationsPage() {
           </ul>
         )}
       </section>
-
-      <details
-        id="preferences"
-        className="section-rule mt-10 scroll-mt-24 pt-8"
-      >
-        <summary className="cursor-pointer text-sm font-semibold text-muted-strong">
-          Preferences for future delivery
-        </summary>
-        <p className="mt-3 max-w-prose text-sm text-muted">
-          These choices are saved now, but they do not turn on automated alerts
-          or email. Causey will use them when delivery is connected.
-        </p>
-        <div className="mt-6">
-          <NotificationPreferencesForm initial={preferences} />
-        </div>
-      </details>
     </main>
   );
 }

@@ -17,6 +17,9 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Calm `/account` UX: segmented Profile/Alerts/Family/Orgs panels (one job at a time), no mission dump; Sign-in folded into Profile; quieter alert prefs list — 2026-08-07
+- [x] Home section color rhythm: canvas → white → soft grey → soft blue → white with token-based band joins (no flat accidental planes) — 2026-08-07
+- [x] Account settings hub (`/account`): role-aware Profile, Sign-in, Alerts prefs, Search defaults, Family, Organizations; nav Account for everyone; Alerts inbox separate; `/me` plan-only — 2026-08-07
 - [x] Home “Chess is ready” + signed-in pitch: two-column coverage/roadmap band; signed-in actions sit under copy instead of floating in empty right space — 2026-08-07
 - [x] Admin tournament ready cue: drafts with complete location/details show Ready to publish / Needs details badges, plus a Ready to publish filter checkbox and select-ready bulk action — 2026-08-07
 - [x] Kill empty soft mission bubbles + tablet layout: PortalMission is a compact left-rule; coach orgs use inline CTAs; home hero is two-column from md with overflow-safe header — 2026-08-07
@@ -131,9 +134,48 @@ Pick these before polish. One major end-to-end win per tick.
 
 ### Chrome / IA
 - [x] Header chess link for signed-in/out discovery (partial)
-- [ ] Header still thin for signed-in district work — needs real product IA beyond logo + auth + chess
+- [x] Personal Account settings hub at `/account` (profile/alerts/family/orgs); role workspaces stay mission-first
+- [ ] Header still thin for signed-in district work — needs district-scale IA beyond logo + chess + account
 - [ ] No district-scale layout (multi-school); everything stays a narrow single-org column
 - [ ] Roster / manage still feel like admin tables, not school-safe tools
+
+## Account settings backlog (Exists / Wire / Pilot / Legal)
+
+Legend: **Exists** shipped · **Wire** schema/UI partial · **Pilot** district-needed · **Legal** owner/legal gate · **Out** do not build
+
+### Shared (all personal accounts)
+- Display name, state, zip, chess interest, locked role readout — **Exists** (`/account` Profile)
+- Home zip as search default — **Exists** (profile zip + Search section)
+- Password reset from signed-in settings — **Exists** (link to forgot-password)
+- Email view + confirmation status — **Exists**
+- Alert type toggles + timezone + guardian routing + email-later — **Exists** UI / delivery **Wire**
+- Change email · sign out all sessions — **Pilot**
+- Delete account · data export — **Legal**
+- US Chess ID / rating · grade/school year — **Pilot**
+- Quiet hours · digest vs immediate — **Pilot** (after email)
+- Persisted distance/source search prefs — **Pilot**
+- Profile photo · marketing email · billing · themes · API keys — **Out**
+
+### Student
+- DOB → age band + under-13 copy — **Exists**
+- Parent link accept/decline on `/account` + `/me` — **Exists**
+- Leave club — **Pilot**
+- Per-parent revoke from student side — **Pilot** (decline/revoke path exists via HouseholdRequestActions)
+
+### Parent
+- Linked students + unlink + family desk deep link — **Exists**
+- Pending request count — **Exists**
+- Per-child alert type routing / mute — **Pilot**
+- Contact phone for coaches — **Legal** / **Pilot**
+
+### Coach / school admin / district admin (personal thin; org deep links)
+- Org list with Overview / Roster / People / Settings jumps — **Exists**
+- Org rename, ownership, verification, join-code, People invites — **Exists** on org pages
+- Default publish audience · cover defaults · attendance season · announcement defaults — **Pilot**
+- Assistant coach permissions matrix — **Pilot**
+- District school create — **Exists**; default state for new schools — **Pilot**
+- Aggregate reporting scope — **Pilot**
+- Platform admin stays `/admin` (link from `/account` when admin) — **Exists**
 
 ### Mobile
 - [x] Search mobile pass (filter disclosure)

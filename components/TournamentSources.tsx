@@ -7,14 +7,14 @@ import { LIVE_SOURCES, SOON_SOURCES } from "@/lib/tournament-sources";
  */
 export function TournamentSources() {
   return (
-    <section className="section-rule bg-surface" aria-labelledby="sources-heading">
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">
-        <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-          Data sources
-        </p>
+    <section
+      className="home-band band-join band-join--soft bg-surface-soft"
+      aria-labelledby="sources-heading"
+    >
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <h2
           id="sources-heading"
-          className="mt-2 max-w-[22ch] font-display text-display-sm font-bold tracking-tight text-foreground"
+          className="max-w-[22ch] font-display text-display-sm font-bold tracking-tight text-foreground"
         >
           Where these tournaments come from
         </h2>

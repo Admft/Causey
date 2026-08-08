@@ -182,6 +182,45 @@ select.field {
   border-top: 1px solid var(--line);
 }
 
+/* Homepage band rhythm — canvas → white → soft grey → soft blue → white.
+ * `.band-join` is a planned handoff: hairline + short wash of the *incoming*
+ * surface so the eye reads a deliberate change, not an accidental slap. */
+.home-band {
+  padding-block: 3rem;
+}
+@media (min-width: 640px) {
+  .home-band {
+    padding-block: 3.5rem;
+  }
+}
+.band-join {
+  --band-wash: var(--surface);
+  position: relative;
+  border-top: 1px solid var(--line);
+}
+.band-join::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 14px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--band-wash) 55%, transparent),
+    transparent
+  );
+}
+.band-join--surface {
+  --band-wash: var(--surface);
+}
+.band-join--soft {
+  --band-wash: var(--surface-soft);
+}
+.band-join--blue {
+  --band-wash: var(--brand-blue-soft);
+}
+
 /* Soft scrollbar for sticky rails / overflow panels. Thin thumb on tokens so
  * classic OS bars don't sit like a dark slab over filter controls. Pair with
  * an inner right inset — overlay scrollbars ignore padding on the scroller. */
