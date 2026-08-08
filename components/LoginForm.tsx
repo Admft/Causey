@@ -106,7 +106,7 @@ export function LoginForm({
         </p>
       ) : null}
 
-      <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
+      <button type="submit" disabled={pending} className="cta-enabled w-full disabled:opacity-60">
         {pending ? "Signing in…" : "Sign in"}
       </button>
 

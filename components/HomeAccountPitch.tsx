@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { AccountRole } from "@/lib/auth/types";
 import { getCurrentProfile } from "@/lib/auth/session";
+import { RoleRouteCards } from "@/components/RoleRouteCards";
 
 /**
  * Conversion band for signed-out visitors. Searching works without an account,
@@ -8,24 +9,6 @@ import { getCurrentProfile } from "@/lib/auth/session";
  * Discovery-first: student path leads; coach tools are secondary disclosure.
  * When already signed in, swap to role next-actions — never pitch Sign up.
  */
-const ROLE_ROUTES: {
-  role: AccountRole;
-  title: string;
-  description: string;
-}[] = [
-  {
-    role: "student",
-    title: "Student",
-    description:
-      "Save events you are weighing, RSVP when invited, and keep upcoming tournaments in one plan.",
-  },
-  {
-    role: "parent",
-    title: "Parent",
-    description:
-      "Link your child’s account, answer RSVPs, and finish organizer registration from one desk.",
-  },
-];
 
 const SIGNED_IN_NEXT: Record<
   AccountRole,
@@ -194,31 +177,7 @@ export async function HomeAccountPitch() {
 
         <div className="min-w-0 w-full max-w-md md:max-w-none md:row-span-2 md:self-center">
           <h3 className="text-sm font-semibold text-foreground">Or start as</h3>
-          <ul className="mt-4 space-y-3">
-            {ROLE_ROUTES.map((option) => (
-              <li key={option.role}>
-                <Link
-                  href={`/signup?role=${option.role}`}
-                  className="card-lift group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5"
-                >
-                  <div className="min-w-0">
-                    <p className="text-base font-semibold text-foreground">
-                      {option.title}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">
-                      {option.description}
-                    </p>
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className="nudge-x shrink-0 text-xl text-brand-red"
-                  >
-                    →
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <RoleRouteCards />
         </div>
 
         <details className="rounded-xl border border-brand-blue/45 bg-surface/80 px-4 py-3 md:col-start-1 md:max-w-xl">
