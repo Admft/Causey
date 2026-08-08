@@ -16,6 +16,7 @@ import {
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
 import { ChessHeroGraphic } from "@/components/ChessHeroGraphic";
+import { competitionSourceLabel } from "@/lib/ingestion-sources";
 
 /**
  * The whole search experience: zip + radius up top, filter rail, results.
@@ -369,9 +370,11 @@ export function SearchClient() {
                   No tournaments match{zip && ` within ${radius} miles of ${zip}`}.
                 </p>
                 <p className="mt-1 max-w-prose text-sm text-muted">
-                  Try widening the radius, raising the fee ceiling, or clearing a
-                  filter — state championships especially may be further out but
-                  are where qualification pathways start.
+                  {filters.source && filters.timing === "upcoming"
+                    ? `Upcoming ${competitionSourceLabel(
+                        filters.source
+                      )} listings only. Most published records from this source may already have ended — switch Timing to All or Ended. A zip radius can also hide events in other cities.`
+                    : "Try widening the radius, raising the fee ceiling, or clearing a filter — state championships especially may be further out but are where qualification pathways start."}
                 </p>
               </div>
             )}
@@ -386,6 +389,11 @@ export function SearchClient() {
                     </p>
                     <p className="mt-0.5 max-w-prose text-sm text-muted">
                       {keyword.trim() && `Matching “${keyword.trim()}”. `}
+                      {filters.source && filters.timing === "upcoming"
+                        ? `Upcoming ${competitionSourceLabel(
+                            filters.source
+                          )} listings only. `
+                        : ""}
                       {sort === "popular"
                         ? zip
                           ? "Closer 25-mile ranges first, then real save and registration interest."

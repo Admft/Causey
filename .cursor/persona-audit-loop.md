@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-08 — **TCA publish honesty**: Admin tournament list counts published vs draft, highlights Published badges, and points chess search at Timing: All so accepted TCA rows are not mistaken for failed publishes. Incomplete Unknown/00000 drafts stay out of search on purpose.
 - 2026-08-08 — **Claim-link ops without email**: People can reissue and copy fresh claim links for pending invites, CSV imports return copy/download claim lists, and login uses the invitation preview so staff vs student signup CTAs stay correct while email delivery remains offline.
 - 2026-08-07 — **Staff invitation onboarding**: migrations `0029`–`0030` add a privacy-minimized invitation preview, invalid/expired claims fail closed, staff signup avoids DOB, and organization membership—not a destructive global-role rewrite—drives staff navigation and tournament authority while preserving Family/Student access.
 - 2026-08-07 — **Effective organization authority follow-up**: migration `0028` makes `owner_profile_id` authoritative after transfer, removes creator delete/private-event powers, and gives district admins database-backed child-school controls. Event auth keeps context, public publication confirms, and user-directory outages no longer masquerade as missing migrations.

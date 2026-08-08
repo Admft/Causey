@@ -119,10 +119,14 @@ export function AdminTournamentBulkList({
         return;
       }
       setSelected(new Set());
+      const publishedLabel =
+        result.updated === 1 ? "tournament" : "tournaments";
       setMessage(
         result.skipped > 0
           ? `Published ${result.updated}; ${result.skipped} could not be updated.`
-          : `Published ${result.updated} tournament${result.updated === 1 ? "" : "s"}.`
+          : filterStatus === "draft"
+            ? `Published ${result.updated} ${publishedLabel}. They left this Draft list — filter to Published to see them. Chess search only shows upcoming listings; switch Timing to All for events that already ended.`
+            : `Published ${result.updated} ${publishedLabel}. They stay here as Published. Chess search only shows upcoming listings; switch Timing to All for events that already ended.`
       );
       router.refresh();
     } finally {
@@ -261,7 +265,13 @@ export function AdminTournamentBulkList({
                     {tournament.name}
                   </span>
                 )}
-                <span className="rounded-md border border-line px-1.5 py-0.5 text-2xs font-semibold text-muted-strong">
+                <span
+                  className={
+                    tournament.status === "published"
+                      ? "rounded-md border border-brand-red/30 bg-accent-soft px-1.5 py-0.5 text-2xs font-semibold text-brand-red"
+                      : "rounded-md border border-line px-1.5 py-0.5 text-2xs font-semibold text-muted-strong"
+                  }
+                >
                   {STATUS_LABELS[tournament.status] ?? tournament.status}
                 </span>
                 {tournament.status === "draft" && tournament.publishReady ? (

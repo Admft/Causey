@@ -33,6 +33,19 @@ export default async function AdminTournamentsPage({
     (tournament) =>
       tournament.status === "draft" && isTournamentPublishReady(tournament)
   ).length;
+  const statusCounts = tournaments.reduce(
+    (counts, tournament) => {
+      counts[tournament.status] = (counts[tournament.status] ?? 0) + 1;
+      return counts;
+    },
+    {} as Partial<Record<string, number>>
+  );
+  const publishedCount = statusCounts.published ?? 0;
+  const draftCount = statusCounts.draft ?? 0;
+  const incompleteDraftCount = tournaments.filter(
+    (tournament) =>
+      tournament.status === "draft" && !isTournamentPublishReady(tournament)
+  ).length;
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -109,7 +122,42 @@ export default async function AdminTournamentsPage({
           <span className="font-semibold text-muted-strong">
             Publish ready drafts
           </span>{" "}
-          to accept the complete ones.
+          to accept the complete ones. Incomplete location rows stay draft so
+          they do not enter chess search as Unknown / 00000.
+          {incompleteDraftCount > 0
+            ? ` ${incompleteDraftCount} still need a real city and ZIP.`
+            : ""}
+        </p>
+      ) : null}
+      {!filters.status && filters.source && publishedCount > 0 ? (
+        <p className="mt-4 text-sm text-muted">
+          {publishedCount} {competitionSourceLabel(filters.source)} listing
+          {publishedCount === 1 ? " is" : "s are"} already published. Filter to{" "}
+          <Link
+            href={`/admin/tournaments?status=published&source=${encodeURIComponent(
+              filters.source
+            )}`}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Published
+          </Link>{" "}
+          or remaining{" "}
+          <Link
+            href={`/admin/tournaments?status=draft&source=${encodeURIComponent(
+              filters.source
+            )}`}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Drafts
+          </Link>
+          . In chess search, upcoming is the default — open{" "}
+          <Link
+            href={`/chess?source=${encodeURIComponent(filters.source)}&timing=all`}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            all published {competitionSourceLabel(filters.source)} listings
+          </Link>{" "}
+          to include events that already ended.
         </p>
       ) : null}
 
@@ -118,6 +166,12 @@ export default async function AdminTournamentsPage({
           <h2 className="text-sm font-semibold text-foreground">Records</h2>
           <span className="text-xs text-muted">
             {tournaments.length} shown
+            {!filters.status && publishedCount
+              ? ` · ${publishedCount} published`
+              : ""}
+            {!filters.status && draftCount
+              ? ` · ${draftCount} draft`
+              : ""}
             {readyDraftCount > 0
               ? ` · ${readyDraftCount} draft${readyDraftCount === 1 ? "" : "s"} ready`
               : ""}

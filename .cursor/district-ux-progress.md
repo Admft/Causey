@@ -17,6 +17,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Admin TCA publish honesty: status counts + Published/Draft splits, stronger Published badge, bulk-publish follow-up that chess defaults to upcoming; search empty copy for source + ended listings — 2026-08-08
+- [x] District pilot bootstrap: aggregate readiness model + one-next-action district command center; school create → admin claim → ownership handoff; district-grouped platform verification with guarded bulk verify; assisted-pilot runbook (`0034`) — 2026-08-08
 - [x] Signed-in home account band: mirrors signed-out grid — copy + primary CTA left, descriptive next-step cards right — 2026-08-07
 - [x] In-app alerts max-out: prefs-aware notification RPC + schedule/cancel dedupe; invite/RSVP/announcement/account producers; `/me/notifications` Needs attention + unread/mark-read; honest email-off copy; Alerts nav unread count — 2026-08-07
 - [x] Home account pitch iPad fix: 2-col from md + capped role cards so signup bubbles don’t stretch full-bleed — 2026-08-07
@@ -65,6 +67,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Loading/empty states that feel designed — 2026-08-05 (route skeletons for /orgs + /family)
 
 ## Done
+- [x] 2026-08-08 — Admin tournament list and chess search now say when TCA publishes succeeded but stay visible / are past-dated; incomplete Unknown/00000 rows stay draft
 - [x] 2026-08-07 — Scrape upserts preserve globally matched competition IDs across source collisions, preventing related sections from blocking imports; 42 staged TCA tournaments imported successfully
 - [x] 2026-08-05 — External tournament entry now consistently says “organizer registration,” distinguishes it from Causey RSVPs, and tells families where to finish and how to confirm completion
 - [x] 2026-08-05 — RSVP controls now show which answer is saving, confirm exactly what the organization can see, explain that the answer remains changeable, and recover from unexpected connection failures
@@ -104,22 +107,22 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 
 ## Must have for a real district pilot (UX — gpt-5.6-sol-xhigh)
 Pick these before polish. One major end-to-end win per tick.
-- [ ] District → school hierarchy — verified district tenant, create schools under it, delegate school admins (today orgs are mostly flat clubs)
+- [x] District → school hierarchy — verified district tenant, child-school creation, readiness command center, school-admin claim/ownership handoff, and grouped platform verification — 2026-08-08
 - [x] Bulk provisioning — CSV/email invites with claim links, invite status, reissue, and bulk claim export; no shared passwords (email delivery still inactive / owner decision) — 2026-08-08
 - [ ] Real role split — district admin vs school admin vs coach vs student (coach/admin are still collapsed in places)
-- [ ] Audience-scoped events — public / district-only / school-only / invite-only (not just public/private)
-- [ ] Parent action list — “this child needs RSVP / register / reminder” as the landing, not a generic portal
+- [x] Audience-scoped events — public / district-only / school-only / invite-only enforced through tournament creation + RLS — 2026-08-08
+- [x] Parent action list — family landing leads with per-child RSVP and unfinished organizer registration — 2026-08-06
 - [ ] Notifications that matter — invite, deadline, 7-day/1-day reminder, schedule change, cancel (with prefs + guardian routing)
-- [ ] District reporting — aggregate by school (counts, attendance, who’s going) without dumping student-level browsing data
+- [x] District reporting — aggregate school counts for students, upcoming events, pending RSVPs, going, and attendance without browsing data — 2026-08-08
 
 ## Strongly needed for trust / ops (UX — gpt-5.6-sol-xhigh)
-- [ ] Org settings + ownership transfer
-- [ ] Assistant coaches / staff invites
-- [ ] Coach announcements
-- [ ] Attendance history / season view
-- [ ] Multi-section tournaments at create time
-- [ ] Tournament change history → notify trackers
-- [ ] Platform moderation for public org events
+- [x] Org settings + ownership transfer
+- [x] Assistant coaches / staff invites
+- [x] Coach announcements
+- [x] Attendance history / season view
+- [x] Multi-section tournaments at create time
+- [x] Tournament change history → notify trackers
+- [x] Platform moderation for public org events
 - [ ] Consistent empty/error/success “what’s next” + nav terms
 
 ## Already looks intentional (do not re-polish unless regressing)
