@@ -162,9 +162,11 @@ export async function HomeAccountPitch() {
     >
       {/*
         Two-col from md so iPad doesn't leave a dead right column + stretched
-        role cards. Cards stay capped (design-system tablet rule).
+        role cards. The coach disclosure sits under the copy column on desktop
+        (row-spanning role cards center against it) so the band has no dead
+        zone under the primary CTA; mobile order stays copy → roles → coach.
       */}
-      <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
         <div className="min-w-0 max-w-xl">
           <h2
             id="account-heading"
@@ -190,7 +192,7 @@ export async function HomeAccountPitch() {
           </div>
         </div>
 
-        <div className="min-w-0 w-full max-w-md md:max-w-none">
+        <div className="min-w-0 w-full max-w-md md:max-w-none md:row-span-2 md:self-center">
           <h3 className="text-sm font-semibold text-foreground">Or start as</h3>
           <ul className="mt-4 space-y-3">
             {ROLE_ROUTES.map((option) => (
@@ -217,22 +219,23 @@ export async function HomeAccountPitch() {
               </li>
             ))}
           </ul>
-          <details className="mt-5 rounded-xl border border-brand-blue/45 bg-surface/80 px-4 py-3">
-            <summary className="cursor-pointer text-sm font-semibold text-muted-strong">
-              Coach or organizer?
-            </summary>
-            <p className="mt-2 text-sm text-muted">
-              Start a club, invite students with a join code, and publish your
-              own tournaments next to the feeds Causey indexes.
-            </p>
-            <Link
-              href="/signup?role=coach"
-              className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
-            >
-              Create a coach account
-            </Link>
-          </details>
         </div>
+
+        <details className="rounded-xl border border-brand-blue/45 bg-surface/80 px-4 py-3 md:col-start-1 md:max-w-xl">
+          <summary className="cursor-pointer text-sm font-semibold text-muted-strong">
+            Coach or organizer?
+          </summary>
+          <p className="mt-2 text-sm text-muted">
+            Start a club, invite students with a join code, and publish your
+            own tournaments next to the feeds Causey indexes.
+          </p>
+          <Link
+            href="/signup?role=coach"
+            className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
+          >
+            Create a coach account
+          </Link>
+        </details>
       </div>
     </section>
   );
