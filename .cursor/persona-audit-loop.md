@@ -50,16 +50,21 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-07 — **Honest alerts center**: real in-app records lead; empty state names the role workspace; automated/email delivery is explicitly not operating; preferences are framed as future choices; nav says “Alerts & settings.”
 - 2026-08-07 — **Org admin people mission**: `/people` leads with join-link vs email-invite guidance; CSV demoted; claim-path success is copyable (not a raw dump); empty state no longer says “invite staff first.”
 - 2026-08-07 — **Coach empty-org join before create**: overview + `/orgs` lead with invite-students when roster has no students; create demoted; coach meta shows student count (not coach-as-member).
 - 2026-08-06 — **School-safe tournament manage**: `/event/[slug]/manage` leads with invite/reply/attendance mission; invite-first when empty; hairline reply rows; `#rsvps` fixed; OrgSubnav no longer fakes Overview on manage/edit.
 - 2026-08-06 — **Student/parent activation** + roster school-safe + portal sticky CTA.
 
 ## Backlog candidates (tick 14)
-
-### Done this tick
-- Org admin `/people` mission
-- Coach empty-org join before create (tick 13)
+### Tick 15 audit
+- All signed-in roles · alerts center + nav · automation status, real records, role-aware empty action, and future preferences are now explicit · **done**
+- Parent/student · signup/footer · Causey stores student birth dates but has no visible data-practices/privacy route · material trust/legal gap for minors · **L · owner/legal decision required**
+- Engineering/operator · README · still claims no accounts, auth, student PII, or admin UI, contradicting the product · operational trust gap · **M · documentation batch**
+- Buyer · signed-out home · “Searching is free” is the only pricing statement; no school/district commercial path · for-profit model is underspecified · **L · pricing/go-to-market decision required**
+- District admin · org landing · a distinct district panel, schools, and reporting already exist; backlog still labels the entire landing schema-gated · roadmap truth needs refresh · **S · documentation**
 
 ### P1 leftover
-- District admin distinct landing (schema-gated)
+- Student-data disclosure/privacy policy and DOB minimization decision (owner/legal)
+- For-profit packaging and school/district buyer journey (pricing/go-to-market)
+- README/product-state truth cleanup

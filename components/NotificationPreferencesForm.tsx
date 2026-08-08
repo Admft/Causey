@@ -58,7 +58,7 @@ export function NotificationPreferencesForm({
         setError(result.error);
         return;
       }
-      setMessage("Notification preferences saved.");
+      setMessage("Preferences saved for future delivery.");
     } finally {
       setPending(false);
     }
@@ -150,10 +150,10 @@ export function NotificationPreferencesForm({
           />
           <span>
             <span className="block text-sm font-semibold text-foreground">
-              Email enabled
+              Email when delivery becomes available
             </span>
             <span className="mt-1 block text-xs text-muted">
-              Email delivery starts after the district’s Resend connection is active.
+              Email is not connected yet. This saves whether you want it later.
             </span>
           </span>
         </label>
@@ -198,7 +198,7 @@ export function NotificationPreferencesForm({
         disabled={pending}
         className="cta-enabled mt-6 disabled:opacity-60"
       >
-        {pending ? "Saving…" : "Save preferences"}
+        {pending ? "Saving…" : "Save future preferences"}
       </button>
       {message ? (
         <p className="mt-3 text-sm font-medium text-foreground">{message}</p>

@@ -8,6 +8,7 @@ export type OrgMemberRole =
   | "student"
   | "assistant_coach"
   | "coach"
+  | "admin"
   | "school_admin"
   | "district_admin";
 export type OrgMemberStatus = "active" | "invited" | "removed";
@@ -111,6 +112,7 @@ export const ORG_ROLE_LABELS: Record<OrgMemberRole, string> = {
   student: "Student",
   assistant_coach: "Assistant coach",
   coach: "Coach",
+  admin: "Administrator",
   school_admin: "School administrator",
   district_admin: "District administrator",
 };

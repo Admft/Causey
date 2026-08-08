@@ -152,14 +152,14 @@ export function AuthNav() {
       ))}
       <Link
         href="/me/notifications"
-        aria-label="Notifications"
+        aria-label="Alerts and notification settings"
         aria-current={
           pathname.startsWith("/me/notifications") ? "page" : undefined
         }
         className={navLinkClass(pathname.startsWith("/me/notifications"))}
       >
         <span className="sm:hidden">Alerts</span>
-        <span className="hidden sm:inline">Notifications</span>
+        <span className="hidden sm:inline">Alerts &amp; settings</span>
       </Link>
       {role !== "student" ? (
         <Link

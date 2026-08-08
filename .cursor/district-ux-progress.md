@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Honest alerts center: real records first; automated/email delivery explicitly inactive; role-aware empty action; future preferences + truthful nav — 2026-08-07
 - [x] Org admin people mission: join-link vs email-invite guidance; CSV demoted; copyable claim-path success — 2026-08-07
 - [x] Coach empty-org join before create: overview + `/orgs` invite-students first when roster empty; student count meta — 2026-08-07
 - [x] School-safe tournament manage: invite/reply/attendance mission, invite-first empty state, hairline replies, `#rsvps` + OrgSubnav fix — 2026-08-06
@@ -174,3 +175,5 @@ Evidence from schema audit, event-ops map, and role-workspace map. Prefer this o
 - Next polish: sequence item 13–15 — portal primitives + role workspace differentiation.
 - Last persona batch (2026-08-06): portal mobile sticky next-action + Alerts in AuthNav. Next: roster school-safe or district landing (schema-gated).
 - Tick 13 audit (2026-08-07): empty-roster→join on `/orgs/[slug]` still P1; Active batch locked as coach empty-org join-before-create (overview ± `/orgs` hint). People/settings deferred.
+- Business direction confirmed 2026-08-07: Causey is intended to be for-profit. Do not invent pricing; packaging and the school/district buyer journey still need owner decisions.
+- Tick 15: alerts surface made honest. For-profit/minor-data follow-up is not merely copy: DOB minimization and public data disclosures need an explicit owner/legal decision.
