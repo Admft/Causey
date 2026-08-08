@@ -37,7 +37,7 @@ export function SiteHeader() {
   return (
     <header className="border-b border-line bg-background/90 backdrop-blur-md">
       <div
-        className={`site-header-inner mx-auto flex h-14 max-w-6xl items-center gap-3 px-5 sm:h-16 sm:gap-6 sm:px-8 ${
+        className={`site-header-inner mx-auto flex h-14 max-w-6xl items-center px-5 sm:h-16 sm:px-8 ${
           showHeaderBrand ? "site-header-inner--brand-visible" : ""
         }`}
       >
@@ -53,14 +53,14 @@ export function SiteHeader() {
           <CauseyLogo size="md" />
         </Link>
         <nav
-          className="site-header-nav flex min-w-0 items-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className={`site-header-nav flex min-w-0 items-center gap-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden ${
+            showHeaderBrand ? "site-header-nav--brand-visible" : ""
+          }`}
           aria-label="Primary"
         >
           <PrimaryNav />
-        </nav>
-        <div className="site-header-auth flex min-w-0 items-center">
           <AuthNav />
-        </div>
+        </nav>
       </div>
     </header>
   );

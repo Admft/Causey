@@ -272,11 +272,14 @@ select.field {
   transform: translateX(0.25rem);
 }
 
-/* The home hero owns the brand until its logo leaves the viewport; the
- * header brand then fades in. Brand and auth pin to the same content edges
- * as the chess subnav (px-5 / sm:px-8) so the two bars line up laterally. */
+/* The home hero owns the brand until its logo leaves the viewport: the nav
+ * (links + auth, one group) starts centered over the hero, then the brand
+ * fades in and the group shifts right. Both end states share the chess
+ * subnav's content edges (px-5 / sm:px-8): brand at the left edge, and the
+ * shifted group's right edge landing exactly on the right content edge. */
 .site-header-inner {
   position: relative;
+  container-type: inline-size;
   transition: padding-left 300ms var(--ease-brand);
 }
 .site-header-brand {
@@ -309,6 +312,12 @@ select.field {
   .site-header-brand {
     left: 2rem;
   }
+  /* Shift the centered group right until its right edge hits the right
+   * content edge (100cqw - 2rem padding) — the same edge the chess subnav
+   * uses. Clamped at 0 so tight widths never overflow the page. */
+  .site-header-nav--brand-visible {
+    transform: translateX(max(0px, calc((100cqw - 4rem - 100%) / 2)));
+  }
 }
 
 @media (max-width: 1023px) {
@@ -317,17 +326,8 @@ select.field {
     margin-inline: 0;
     margin-left: auto;
   }
-}
-
-/* Desktop: auth controls pin to the right content edge (mirroring the brand
- * on the left) so Sign up always lands exactly above the subnav's right
- * edge; the primary link stays centered and never collides with either. */
-@media (min-width: 1024px) {
-  .site-header-auth {
-    position: absolute;
-    right: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
+  .site-header-nav--brand-visible {
+    transform: none;
   }
 }
 
