@@ -59,6 +59,62 @@ const AdminReviewSchema = z
     }
   });
 
+const AdminUserAccessSchema = z.object({
+  profileId: z.string().uuid(),
+  accountRole: z.enum(["student", "parent", "coach"]),
+  roleUnlocked: z.boolean(),
+  platformAdmin: z.boolean(),
+});
+
+export async function adminUpdateUserAccess(input: {
+  profileId: string;
+  accountRole: string;
+  roleUnlocked: boolean;
+  platformAdmin: boolean;
+}): Promise<ActionResult> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Platform administrator access required.",
+    };
+  }
+  const parsed = AdminUserAccessSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Choose valid account access." };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("update_platform_user_access", {
+    p_profile_id: parsed.data.profileId,
+    p_account_role: parsed.data.accountRole,
+    p_role_unlocked:
+      parsed.data.accountRole === "coach" && parsed.data.roleUnlocked,
+    p_platform_admin: parsed.data.platformAdmin,
+  });
+  if (error) {
+    if (error.message.includes("cannot_change_own_access")) {
+      return {
+        ok: false,
+        error: "Use another platform administrator to change your own access.",
+      };
+    }
+    if (error.message.includes("cannot_remove_last_platform_admin")) {
+      return {
+        ok: false,
+        error: "Causey must keep at least one platform administrator.",
+      };
+    }
+    if (error.message.includes("profile_not_found")) {
+      return { ok: false, error: "That account no longer exists." };
+    }
+    return { ok: false, error: "Could not update this account’s access." };
+  }
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
 export async function adminCreateOrganization(input: {
   name: string;
   type: string;

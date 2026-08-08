@@ -11,6 +11,17 @@ export type AdminOrganizationRow = {
   created_at: string;
 };
 
+export type AdminUserDirectoryRow = {
+  profile_id: string;
+  email: string;
+  display_name: string;
+  account_role: "student" | "parent" | "coach";
+  role_unlocked: boolean;
+  platform_admin: boolean;
+  created_at: string;
+  total_count: number;
+};
+
 export type AdminTournamentRow = {
   id: string;
   slug: string;
@@ -119,6 +130,41 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
     .order("name");
 
   return (data ?? []) as AdminOrganizationRow[];
+}
+
+export async function getAdminUsers({
+  query = "",
+  limit = 50,
+  offset = 0,
+}: {
+  query?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{
+  users: AdminUserDirectoryRow[];
+  total: number;
+  error: string | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("search_platform_users", {
+    p_query: query,
+    p_limit: limit,
+    p_offset: offset,
+  });
+  if (error) {
+    return {
+      users: [],
+      total: 0,
+      error:
+        "User search is unavailable until migration 0026 is applied.",
+    };
+  }
+  const users = (data ?? []) as AdminUserDirectoryRow[];
+  return {
+    users,
+    total: Number(users[0]?.total_count ?? 0),
+    error: null,
+  };
 }
 
 export async function getAdminTournaments(filters?: {

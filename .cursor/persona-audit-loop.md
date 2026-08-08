@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-07 — **Platform user access directory**: `/admin/users` lists and searches accounts by name/email, exposes only access-relevant fields, and lets a platform admin change account role, coach-tool access, or platform-admin status with confirmation, self-change/last-admin guards, and an audit record.
 - 2026-08-07 — **District-safe organization lifecycle**: coaches cannot create districts; district join codes/student invitations are blocked in UI, actions, and migration `0025`; district roster paths removed; school creation hands off to administrator delegation; org type is locked.
 - 2026-08-07 — **Honest alerts center**: real in-app records lead; empty state names the role workspace; automated/email delivery is explicitly not operating; preferences are framed as future choices; nav says “Alerts & settings.”
 - 2026-08-07 — **Org admin people mission**: `/people` leads with join-link vs email-invite guidance; CSV demoted; claim-path success is copyable (not a raw dump); empty state no longer says “invite staff first.”
@@ -68,6 +69,7 @@ _(none — ready for next audit tick)_
 - Engineering/operator · README · still claims no accounts, auth, student PII, or admin UI, contradicting the product · operational trust gap · **M · documentation batch**
 - Buyer · signed-out home · unsupported “Searching is free” commitment removed; school/district commercial path remains underspecified · **L · pricing/go-to-market decision required**
 - District admin · org landing · a distinct district panel, schools, and reporting already exist; backlog still labels the entire landing schema-gated · roadmap truth needs refresh · **S · documentation**
+- Platform admin · user access · no global account lookup by name/email and no governed privilege assignment surface · account support and access correction required direct database work · **P1 · done in `0026` + `/admin/users`**
 
 ### P1 leftover
 - Student-data disclosure/privacy policy and DOB minimization decision (owner/legal)

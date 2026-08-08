@@ -48,6 +48,23 @@ describe("platform admin actions", () => {
       error: "Platform administrator access required.",
     });
   });
+
+  it("rejects user access changes for non-admins", async () => {
+    mocks.getPlatformAdminUser.mockResolvedValue(null);
+    const { adminUpdateUserAccess } = await import("@/lib/actions/admin");
+
+    await expect(
+      adminUpdateUserAccess({
+        profileId: "00000000-0000-0000-0000-000000000000",
+        accountRole: "coach",
+        roleUnlocked: true,
+        platformAdmin: true,
+      })
+    ).resolves.toEqual({
+      ok: false,
+      error: "Platform administrator access required.",
+    });
+  });
 });
 
 describe("platform admin migration", () => {
@@ -78,5 +95,33 @@ describe("platform admin migration", () => {
     );
     expect(sql).toContain("grant select on public.admin_audit_log to authenticated");
     expect(sql).not.toMatch(/grant (update|delete)[^;]*admin_audit_log/i);
+  });
+});
+
+describe("platform user directory migration", () => {
+  const sql = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/0026_platform_user_directory.sql"
+    ),
+    "utf8"
+  );
+
+  it("keeps email lookup behind an admin-checked RPC", () => {
+    expect(sql).toContain("create or replace function public.search_platform_users");
+    expect(sql).toContain("join auth.users u on u.id = p.id");
+    expect(sql).toContain("not public.is_platform_admin()");
+    expect(sql).toContain(
+      "revoke execute on function public.search_platform_users"
+    );
+    expect(sql).not.toMatch(/grant select[^;]*auth\.users/i);
+  });
+
+  it("guards privilege changes and records them", () => {
+    expect(sql).toContain("cannot_change_own_access");
+    expect(sql).toContain("cannot_remove_last_platform_admin");
+    expect(sql).toContain("invalid_account_role");
+    expect(sql).toContain("insert into public.admin_audit_log");
+    expect(sql).toContain("'update_access'");
   });
 });
