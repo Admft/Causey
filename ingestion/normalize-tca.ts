@@ -24,6 +24,7 @@ export function normalizeRawTca(
   opts: NormalizeTcaOptions
 ): Competition | null {
   const detail = opts.detail ?? null;
+  if (detail?.onlineOnly) return null;
   const listingDates = parseTcaDateRange(raw.excerpt);
   const startDate = detail?.startDate ?? listingDates?.start ?? null;
   if (!startDate) {

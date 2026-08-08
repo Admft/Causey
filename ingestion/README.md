@@ -53,7 +53,7 @@ SCRAPE_UPSERT_ONLY=1 npm run scrape:tla   # re-upsert staged JSON
 SCRAPE_HTML_FILE=… SCRAPE_SKIP_DETAIL=1 npm run scrape:tla
 SCRAPE_MAX_PAGES=2 npm run scrape:tla
 SCRAPE_HTML_FILE=ingestion/fixtures/fide-calendar-tiles.html npm run scrape:fide
-SCRAPE_HTML_FILE="ingestion/fixtures/incoming/TCA and TCA Club Events _ Texas Chess Association.html" SCRAPE_SKIP_DETAIL=1 npm run scrape:tca
+SCRAPE_HTML_FILE="ingestion/fixtures/incoming/TCA and TCA Club Events _ Texas Chess Association.html" npm run scrape:tca
 ```
 
 Standing hints (`details.catalog_standing` / `catalog_class`) come from FIDE tile

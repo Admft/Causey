@@ -68,6 +68,14 @@ export type PersistResult = {
   pathwaysEnriched: number;
 };
 
+/** A temporary fetch failure must not erase a cover captured on an earlier run. */
+export function preserveExistingImage(
+  incoming: string | null | undefined,
+  existing: string | null | undefined
+): string | null {
+  return incoming || existing || null;
+}
+
 /**
  * Upsert competitions for one source, then run the shared post-pipeline:
  * sections, fingerprints, competition_sources, cross-source dedupe, series matching.
@@ -264,12 +272,18 @@ export async function upsertCompetitions(
 ): Promise<number> {
   const { data: existing, error: existingErr } = await client
     .from("competitions")
-    .select("id, slug")
+    .select("id, slug, image_url")
     .eq("source", source);
   if (existingErr) throw new Error(`lookup existing failed: ${existingErr.message}`);
 
-  const idBySlug = new Map(
-    (existing ?? []).map((r) => [r.slug as string, r.id as string])
+  const existingBySlug = new Map(
+    (existing ?? []).map((row) => [
+      row.slug as string,
+      {
+        id: row.id as string,
+        imageUrl: row.image_url as string | null,
+      },
+    ])
   );
 
   const bySlug = new Map<string, Competition>();
@@ -298,7 +312,11 @@ export async function upsertCompetitions(
     } = d;
     const row: Record<string, unknown> = {
       ...rest,
-      id: idBySlug.get(d.slug) ?? d.id,
+      id: existingBySlug.get(d.slug)?.id ?? d.id,
+      image_url: preserveExistingImage(
+        d.image_url,
+        existingBySlug.get(d.slug)?.imageUrl
+      ),
     };
     if (series_id) row.series_id = series_id;
     return row;

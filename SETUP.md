@@ -40,8 +40,8 @@ The following pieces are already implemented in this repository:
   - `DATA_SOURCE=mock` uses in-repo JSON.
   - `DATA_SOURCE=supabase` uses the database-backed implementation.
 - Supabase migration and seed scripts.
-- A US Chess TLA + CCA ingestion pipeline with staging, fingerprint dedupe,
-  series matching, and scrape run logs.
+- US Chess, CCA, hub, and Texas Chess Association ingestion with staging,
+  fingerprint dedupe, series matching, pictures, and scrape run logs.
 - A twice-weekly GitHub Actions ingest workflow (plus optional Docker runner).
 
 ## What is intentionally not built
@@ -91,6 +91,7 @@ Notes:
 - `npm run seed:generate` — regenerate seed files
 - `npm run seed:supabase` — load seed data into Supabase
 - `npm run scrape:tla` — scrape US Chess upcoming-tournaments into Supabase
+- `npm run scrape:tca` — scrape Texas Chess Association events and pictures
 - `SCRAPE_HTML_FILE=... npm run scrape:tla` — parse a local HTML fixture
 - `SCRAPE_MAX_PAGES=2 npm run scrape:tla` — limit pagination while testing
 

@@ -13,6 +13,7 @@ const SOURCE_LABELS: Record<string, string> = {
   organizer: "Organizer submission",
   tla_scrape: "US Chess TLA",
   cca_scrape: "Continental Chess Association",
+  tca_scrape: "Texas Chess Association",
   manual: "Platform admin",
 };
 

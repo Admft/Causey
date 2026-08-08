@@ -1,7 +1,7 @@
-# Twice-weekly tournament ingestion (US Chess TLA + CCA).
+# Twice-weekly tournament ingestion (US Chess, CCA, hubs, and TCA).
 #
 # Prerequisites:
-#   1. Run supabase migrations through 0007_pathway_enrichment.sql.
+#   1. Run Supabase migrations through 0032_tca_scrape_source.sql.
 #   2. Repo secrets (Settings → Secrets → Actions):
 #        NEXT_PUBLIC_SUPABASE_URL
 #        SUPABASE_SERVICE_ROLE_KEY
@@ -41,7 +41,7 @@ jobs:
             exit 1
           fi
           echo "Supabase secrets present."
-      - name: Scrape US Chess + CCA (+ pathway enrich)
+      - name: Scrape tournament sources (+ pathway enrich)
         run: npm run scrape:all
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

@@ -3,7 +3,7 @@
  *
  *   npm run scrape:tca
  *   SCRAPE_HTML_FILE="ingestion/fixtures/incoming/TCA and TCA Club Events _ Texas Chess Association.html" \
- *     SCRAPE_SKIP_DETAIL=1 npm run scrape:tca
+ *     npm run scrape:tca
  */
 import { pathToFileURL } from "node:url";
 import { fetchHtml } from "./fetch-html";
@@ -18,6 +18,7 @@ import {
   parseTcaListingHtml,
   parseTcaNextPageUrl,
   type RawTcaEvent,
+  type TcaDetail,
 } from "./parse-tca";
 import { parseEventTextExtras } from "./parse-sections";
 import {
@@ -66,7 +67,7 @@ async function main() {
   if (!raw.length) {
     throw new Error("0 TCA tournament cards parsed — check the saved fixture and selectors.");
   }
-  const withoutPictures = raw.filter((row) => !row.imageUrl);
+  const withoutPictures = raw.filter((row) => !row.imageReference);
   if (withoutPictures.length) {
     throw new Error(
       `TCA image coverage regressed: ${withoutPictures.length}/${raw.length} cards have no picture.`
@@ -80,7 +81,7 @@ async function main() {
   const drafts: StagedCompetition[] = [];
   for (let index = 0; index < raw.length; index += 1) {
     const row = raw[index]!;
-    let detail = null;
+    let detail: TcaDetail | null = null;
     if (!SKIP_DETAIL) {
       try {
         process.stdout.write(

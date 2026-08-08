@@ -21,6 +21,7 @@ const SOURCE_LABELS: Record<string, string> = {
   organizer: "Organizer",
   tla_scrape: "US Chess TLA",
   cca_scrape: "CCA",
+  tca_scrape: "Texas Chess Association",
   manual: "Manual",
 };
 

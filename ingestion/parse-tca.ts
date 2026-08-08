@@ -10,6 +10,9 @@ export type RawTcaEvent = {
   name: string;
   detailUrl: string;
   excerpt: string;
+  /** Raw card image reference, including browser-saved fixture paths. */
+  imageReference: string | null;
+  /** Persistable web URL only; local `_files/` fixture rewrites become null. */
   imageUrl: string | null;
 };
 
@@ -25,6 +28,7 @@ export type TcaDetail = {
   registrationUrl: string | null;
   imageUrl: string | null;
   bodyText: string;
+  onlineOnly: boolean;
 };
 
 function cleanText(value: string): string {
@@ -64,18 +68,28 @@ export function parseTcaListingHtml(
         .pop();
       const externalKey = articleId || pathKey || detailUrl;
       const image = article.find(".featured-image img, .header img").first();
-      const imageUrl = absoluteUrl(
+      const imageReference =
         image.attr("src") ||
-          image.attr("data-src") ||
-          image.attr("data-lazy-src"),
-        baseUrl
-      );
+        image.attr("data-src") ||
+        image.attr("data-lazy-src") ||
+        null;
+      const imageUrl =
+        imageReference && !/_files[\\/]/i.test(imageReference)
+          ? absoluteUrl(imageReference, baseUrl)
+          : null;
       const excerpt = cleanText(
         article.find(".excerpt p, .entry-summary p").first().text()
       );
 
       seen.add(detailUrl);
-      rows.push({ externalKey, name, detailUrl, excerpt, imageUrl });
+      rows.push({
+        externalKey,
+        name,
+        detailUrl,
+        excerpt,
+        imageReference,
+        imageUrl,
+      });
     }
   );
 
@@ -174,5 +188,9 @@ export function parseTcaDetailHtml(
     registrationUrl,
     imageUrl: extractPageImage(html, pageUrl),
     bodyText,
+    onlineOnly:
+      /\b(?:online[- ]only|online chess tournament|played online)\b/i.test(
+        bodyText
+      ) && !addressMatch,
   };
 }

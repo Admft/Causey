@@ -8,6 +8,7 @@ import {
   parseTcaListingHtml,
   parseTcaNextPageUrl,
 } from "@/ingestion/parse-tca";
+import { preserveExistingImage } from "@/ingestion/persist";
 
 const fixture = readFileSync(
   join(
@@ -24,9 +25,12 @@ const migration = readFileSync(
 describe("Texas Chess Association scraper", () => {
   it("parses every tournament card with its picture", () => {
     const rows = parseTcaListingHtml(fixture);
-    expect(rows.length).toBeGreaterThanOrEqual(20);
-    expect(rows.every((row) => row.imageUrl)).toBe(true);
-    expect(rows.find((row) => row.name === "92nd Southwest Open")?.imageUrl).toContain(
+    expect(rows).toHaveLength(21);
+    expect(rows.every((row) => row.imageReference)).toBe(true);
+    expect(rows.every((row) => row.imageUrl === null)).toBe(true);
+    expect(
+      rows.find((row) => row.name === "92nd Southwest Open")?.imageReference
+    ).toContain(
       "92SWO-627x376.png"
     );
   });
@@ -73,12 +77,24 @@ describe("Texas Chess Association scraper", () => {
     const raw = parseTcaListingHtml(fixture).find(
       (row) => row.name === "92nd Southwest Open"
     )!;
-    const row = normalizeRawTca(raw, {
-      id: "00000000-0000-4000-8000-000000000321",
-    });
+    const liveImage = "https://texaschess.org/wp-content/uploads/92SWO.png";
+    const row = normalizeRawTca(
+      { ...raw, imageUrl: liveImage },
+      {
+        id: "00000000-0000-4000-8000-000000000321",
+      }
+    );
     expect(row?.source).toBe("tca_scrape");
-    expect(row?.image_url).toBe(raw.imageUrl);
+    expect(row?.image_url).toBe(liveImage);
     expect(row?.status).toBe("draft");
+  });
+
+  it("preserves an existing cover when a later scrape misses the image", () => {
+    const existing = "https://organizer.example.com/cover.jpg";
+    expect(preserveExistingImage(null, existing)).toBe(existing);
+    expect(
+      preserveExistingImage("https://organizer.example.com/new.jpg", existing)
+    ).toBe("https://organizer.example.com/new.jpg");
   });
 
   it("registers the source across ingestion tables", () => {
