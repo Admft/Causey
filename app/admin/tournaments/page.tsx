@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminTournamentStatusActions } from "@/components/AdminTournamentStatusActions";
+import { AdminTournamentBulkList } from "@/components/AdminTournamentBulkList";
 import { getAdminTournaments } from "@/lib/data/admin";
-import { formatDateRange } from "@/lib/format";
 import {
   COMPETITION_SOURCE_FILTER_OPTIONS,
   competitionSourceLabel,
@@ -13,14 +12,6 @@ export const metadata: Metadata = {
   description: "Create, review, publish, archive, and restore tournament records.",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  pending_review: "Awaiting review",
-  published: "Published",
-  rejected: "Rejected",
-  archived: "Archived",
-};
-
 export default async function AdminTournamentsPage({
   searchParams,
 }: {
@@ -28,6 +19,10 @@ export default async function AdminTournamentsPage({
 }) {
   const filters = await searchParams;
   const tournaments = await getAdminTournaments(filters);
+  const draftSourceGroup =
+    filters.status === "draft" && filters.source
+      ? competitionSourceLabel(filters.source)
+      : null;
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -39,8 +34,8 @@ export default async function AdminTournamentsPage({
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">
             Drafts and rejected records are not public. Organizer submissions
-            awaiting a decision belong in Moderation. Archiving removes a
-            tournament from discovery without deleting its history.
+            awaiting a decision belong in Moderation. Select many records, or
+            filter by scrape source and publish the whole draft group.
           </p>
         </div>
         <Link href="/admin/tournaments/new" className="cta-enabled">
@@ -87,6 +82,16 @@ export default async function AdminTournamentsPage({
         ) : null}
       </form>
 
+      {draftSourceGroup ? (
+        <p className="mt-4 text-sm text-muted">
+          Showing drafts from {draftSourceGroup}. Use select-all or{" "}
+          <span className="font-semibold text-muted-strong">
+            Publish all matching drafts
+          </span>{" "}
+          to accept the scrape group.
+        </p>
+      ) : null}
+
       <section className="section-rule mt-8 pt-8">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-sm font-semibold text-foreground">Records</h2>
@@ -109,55 +114,26 @@ export default async function AdminTournamentsPage({
             </Link>
           </div>
         ) : (
-          <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
-            {tournaments.map((tournament) => (
-              <li
-                key={tournament.id}
-                className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto]"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {tournament.status === "published" ? (
-                      <Link
-                        href={`/event/${tournament.slug}`}
-                        className="font-semibold text-foreground hover:text-brand-red"
-                      >
-                        {tournament.name}
-                      </Link>
-                    ) : (
-                      <span className="font-semibold text-foreground">
-                        {tournament.name}
-                      </span>
-                    )}
-                    <span className="rounded-md border border-line px-1.5 py-0.5 text-2xs font-semibold text-muted-strong">
-                      {STATUS_LABELS[tournament.status] ?? tournament.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted">
-                    {formatDateRange(tournament.start_date, tournament.end_date)}
-                    {` · ${tournament.city}, ${tournament.state}`}
-                    {` · ${competitionSourceLabel(tournament.source)}`}
-                    {tournament.organizations
-                      ? ` · ${tournament.organizations.name}`
-                      : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-4 lg:justify-end">
-                  <Link
-                    href={`/admin/tournaments/${tournament.id}/edit`}
-                    className="text-sm font-semibold text-foreground hover:text-brand-red"
-                  >
-                    Edit
-                  </Link>
-                  <AdminTournamentStatusActions
-                    competitionId={tournament.id}
-                    eventSlug={tournament.slug}
-                    status={tournament.status}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-4">
+            <AdminTournamentBulkList
+              tournaments={tournaments.map((tournament) => ({
+                id: tournament.id,
+                slug: tournament.slug,
+                name: tournament.name,
+                city: tournament.city,
+                state: tournament.state,
+                start_date: tournament.start_date,
+                end_date: tournament.end_date,
+                source: tournament.source,
+                status: tournament.status,
+                organizations: tournament.organizations
+                  ? { name: tournament.organizations.name }
+                  : null,
+              }))}
+              filterStatus={filters.status}
+              filterSource={filters.source}
+            />
+          </div>
         )}
       </section>
     </main>
