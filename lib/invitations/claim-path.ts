@@ -17,7 +17,7 @@ export function isStaffOrgInvitationRole(role: string): boolean {
 /** Map organization membership role → Causey account role for claim signup. */
 export function accountRoleForOrgInvitationRole(
   role: OrgMemberRole | string
-): AccountRole {
+): Extract<AccountRole, "student" | "coach"> {
   return isStaffOrgInvitationRole(role) ? "coach" : "student";
 }
 
