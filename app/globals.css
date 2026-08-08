@@ -182,9 +182,12 @@ select.field {
   border-top: 1px solid var(--line);
 }
 
-/* Homepage band rhythm — canvas → white → soft grey → soft blue → white.
- * `.band-join` is a planned handoff: hairline + short wash of the *incoming*
- * surface so the eye reads a deliberate change, not an accidental slap. */
+/* Homepage band rhythm — hero canvas → white bands separated by hairlines →
+ * one soft-blue conversion band (account pitch) → white footer. A single
+ * accent, not zebra striping: tint means "act here," everything else stays
+ * quiet. `.band-join` is a planned handoff: hairline + short wash of the
+ * *incoming* surface so the eye reads a deliberate change, not an accidental
+ * slap. */
 .home-band {
   padding-block: 3rem;
 }

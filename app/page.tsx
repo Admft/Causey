@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { HomeAccountPitch } from "@/components/HomeAccountPitch";
 import { HomeDistrictPitch } from "@/components/HomeDistrictPitch";
@@ -55,65 +54,33 @@ export default function CompetitionTypesPage() {
         </div>
       </section>
 
-      <section className="home-band band-join band-join--surface bg-surface">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 sm:px-8 md:grid-cols-2 md:gap-12 lg:gap-16">
-          <div className="min-w-0">
-            <h2 className="font-display text-display font-bold tracking-tight text-foreground">
-              Chess is ready to search
-            </h2>
-            <p className="mt-2 max-w-prose text-base text-muted">
-              Only chess has real listings behind it today — and those listings
-              are still being filled in.
-            </p>
-            <Link
-              href="/chess"
-              className="card-lift group mt-6 flex items-start justify-between gap-4 rounded-2xl border border-brand-red/30 bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
-            >
-              <div className="min-w-0">
-                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-                  Chess
-                </p>
-                <h3 className="mt-2 font-display text-display-sm font-bold tracking-tight text-foreground">
-                  Chess tournaments
-                </h3>
-                <p className="mt-3 text-base text-muted">
-                  Find indexed scholastic events near a zip code, with fees and
-                  section eligibility up front.
-                </p>
-                <span className="mt-5 inline-flex text-sm font-semibold text-brand-red">
-                  Search chess tournaments
-                </span>
-              </div>
-              <span
-                aria-hidden="true"
-                className="nudge-x shrink-0 text-xl text-brand-red"
-              >
-                →
-              </span>
-            </Link>
-          </div>
+      <TournamentSources />
 
-          <div className="min-w-0 md:border-l md:border-line md:pl-12 lg:pl-16">
-            <h3 className="text-sm font-semibold text-foreground">
-              Also on the roadmap
-            </h3>
-            <p className="mt-2 text-sm text-muted">
-              These competition types are planned. None have searchable listings
-              yet.
-            </p>
-            <ul className="mt-5 divide-y divide-line border-y border-line">
-              {upcomingCompetitionTypes.map((type) => (
-                <li key={type.name} className="py-3">
-                  <p className="font-semibold text-foreground">{type.name}</p>
-                  <p className="mt-1 text-sm text-muted">{type.description}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+      <section
+        className="home-band band-join band-join--surface bg-surface"
+        aria-labelledby="roadmap-heading"
+      >
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <h2
+            id="roadmap-heading"
+            className="max-w-[22ch] font-display text-display-sm font-bold tracking-tight text-foreground"
+          >
+            Four more competition types are in progress
+          </h2>
+          <p className="mt-3 max-w-2xl text-base text-muted">
+            None have searchable listings yet; chess is the only type with real
+            data behind it today.
+          </p>
+          <ul className="mt-8 grid grid-cols-1 gap-x-10 border-b border-line sm:grid-cols-2">
+            {upcomingCompetitionTypes.map((type) => (
+              <li key={type.name} className="border-t border-line py-3">
+                <p className="font-semibold text-foreground">{type.name}</p>
+                <p className="mt-1 text-sm text-muted">{type.description}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
-
-      <TournamentSources />
 
       <HomeDistrictPitch />
 

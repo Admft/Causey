@@ -15,6 +15,7 @@ Before new UI: reuse an existing pattern in this repo. If none fits, follow toke
 
 ## Layout & components
 - One job per section; one dominant CTA per view.
+- Filled panels, not bubbles with air: any card/panel/band must be composed so its content fills it — no large dead blank areas, and no lopsided two-column layouts where one side runs long while the other sits empty. Rebalance (move or trim content, cap the long column, stack earlier) or cut the container.
 - Cards only when they hold interaction or repeating units. Default: no cards. No icon-per-feature bento grids.
 - No `rounded-full` status pills above heroes. Badges must be functional (real filter/status/category) or deleted.
 - Results layout toggle: desktop (`lg+`) only — mobile stays single column.
