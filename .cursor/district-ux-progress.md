@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Early-build banner shortened: one line on phones (“Chess search works; listings are incomplete.”) and a slightly fuller line from `sm` up; same red strip, no fake Beta pill — 2026-08-09
 - [x] District pitch wording (copy only, layout untouched): home band now has a direct ready-now / planned-next split. The existing inset names the district foundation already in place (school structure, role-based access, school-level participation), while the existing four-point strip names future work (guided setup, family follow-through, reporting over time, more competition types) — 2026-08-09
 - [x] Founder conversation CTAs: home “Talk with the founding team” and `/districts` “Book a district pilot conversation” open the Google Calendar booking page (`lib/founding-team.ts`) — 2026-08-09
 - [x] Pilot-safe discovery/setup repair: home district preview now shows private approval gates with no example school directory; mobile chess filters move above the search controls and open into a compact two-column layout; valid team links distinguish lookup outages from stale codes, with anon preview permission restored in `0040` — 2026-08-09

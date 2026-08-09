@@ -10,9 +10,13 @@ export function EarlyBuildBanner() {
     >
       <p className="mx-auto max-w-6xl px-5 py-2.5 text-xs leading-snug text-foreground sm:px-8 sm:text-sm">
         <span className="font-semibold text-brand-red">Early build.</span>{" "}
-        This is unfinished software, not a polished product. Chess search is
-        usable today; expect incomplete listings, rough edges, and things that
-        change as we ship.
+        <span className="sm:hidden">
+          Chess search works; listings are incomplete.
+        </span>
+        <span className="hidden sm:inline">
+          Chess search is usable; listings are incomplete and things still
+          change.
+        </span>
       </p>
     </div>
   );
