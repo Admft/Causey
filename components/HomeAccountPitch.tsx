@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { AccountRole } from "@/lib/auth/types";
 import { getCurrentProfile } from "@/lib/auth/session";
-import { RoleRouteCards } from "@/components/RoleRouteCards";
 
 /**
  * Conversion band for signed-out visitors. Searching works without an account,
@@ -176,10 +175,57 @@ export async function HomeAccountPitch() {
         </div>
 
         <div className="min-w-0 w-full max-w-md md:max-w-none md:self-center">
-          <h3 className="text-sm font-semibold text-foreground">
-            Or start as
-          </h3>
-          <RoleRouteCards exclude={["student"]} includeCoach />
+          <div className="rounded-2xl border border-line bg-surface p-5">
+            <p className="text-sm font-semibold text-foreground">
+              Also create an account as
+            </p>
+            <ul className="mt-4 space-y-3">
+              <li>
+                <Link
+                  href="/signup?role=parent"
+                  className="card-lift group flex items-start justify-between gap-4 rounded-xl border border-line bg-surface p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold text-foreground">
+                      Parent
+                    </p>
+                    <p className="mt-1 text-sm text-muted">
+                      Link your child’s account, answer RSVPs, and finish
+                      organizer registration from one desk.
+                    </p>
+                  </div>
+                  <span
+                    aria-hidden="true"
+                    className="nudge-x shrink-0 text-xl text-brand-red"
+                  >
+                    →
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/signup?role=coach"
+                  className="card-lift group flex items-start justify-between gap-4 rounded-xl border border-line bg-surface p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold text-foreground">
+                      Coach or organizer
+                    </p>
+                    <p className="mt-1 text-sm text-muted">
+                      Start a club, invite students with a join code, and publish
+                      your own tournaments next to the indexed feeds.
+                    </p>
+                  </div>
+                  <span
+                    aria-hidden="true"
+                    className="nudge-x shrink-0 text-xl text-brand-red"
+                  >
+                    →
+                  </span>
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
