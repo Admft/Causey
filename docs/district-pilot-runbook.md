@@ -36,6 +36,8 @@ verified `mail.causey.dev` Resend integration.
    integration separately sends claims, reminders, and app notifications.
 7. Confirm `mail.causey.dev` is verified in Resend and run the protected
    `/api/cron/product-email` route once before onboarding participants.
+   On Hobby the Vercel cron runs once a day (~14:00 UTC); invite/reminder
+   mail can wait until that run unless you trigger the route by hand.
 
 ## 2. Provision and verify the district
 
