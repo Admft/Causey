@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
 
 /**
  * District pitch as a product moment, not a brochure. The right column names
@@ -73,10 +74,10 @@ export function HomeDistrictPitch() {
                 Review the district pilot
               </Link>
               <a
-                href="https://causey.dev"
+                href={FOUNDING_TEAM_MEETING_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Talk with the Causey founding team on causey.dev in a new tab"
+                aria-label="Book a conversation with the Causey founding team in a new tab"
                 className="text-sm font-semibold text-muted-strong hover:text-brand-red"
               >
                 Talk with the founding team{" "}

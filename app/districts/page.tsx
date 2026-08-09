@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
+import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
 
 export const metadata: Metadata = {
   title: "Schools and districts",
@@ -50,7 +51,7 @@ export default function DistrictsPage() {
           </p>
           <div className="animate-rise animate-rise-delay-2 mt-7 flex flex-wrap items-center gap-4">
             <a
-              href="https://causey.dev"
+              href={FOUNDING_TEAM_MEETING_URL}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Book a district pilot conversation with Causey in a new tab"

@@ -21,6 +21,18 @@ const joinPreviewGrant = readFileSync(
   ),
   "utf8"
 );
+const foundingTeam = readFileSync(
+  resolve(process.cwd(), "lib/founding-team.ts"),
+  "utf8"
+);
+const homeDistrictPitch = readFileSync(
+  resolve(process.cwd(), "components/HomeDistrictPitch.tsx"),
+  "utf8"
+);
+const districtsPage = readFileSync(
+  resolve(process.cwd(), "app/districts/page.tsx"),
+  "utf8"
+);
 
 describe("district readiness follow-ups", () => {
   it("fails closed before offering account creation for a join code", () => {
@@ -43,6 +55,14 @@ describe("district readiness follow-ups", () => {
   it("uses a separate-device student account handoff", () => {
     expect(familyPage).toContain("<StudentAccountHandoff");
     expect(familyPage).not.toContain('href: "/signup?role=student"');
+  });
+
+  it("sends founder conversation CTAs to the booking calendar", () => {
+    expect(foundingTeam).toContain("calendar.app.google/AX1fCWGdukco55z47");
+    expect(homeDistrictPitch).toContain("FOUNDING_TEAM_MEETING_URL");
+    expect(homeDistrictPitch).toContain("Talk with the founding team");
+    expect(districtsPage).toContain("FOUNDING_TEAM_MEETING_URL");
+    expect(districtsPage).toContain("Book a district pilot conversation");
   });
 
   it("authorizes district CSV exports and keeps them private", () => {

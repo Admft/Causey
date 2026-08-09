@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Founder conversation CTAs: home “Talk with the founding team” and `/districts` “Book a district pilot conversation” open the Google Calendar booking page (`lib/founding-team.ts`) — 2026-08-09
 - [x] Pilot-safe discovery/setup repair: home district preview now shows private approval gates with no example school directory; mobile chess filters move above the search controls and open into a compact two-column layout; valid team links distinguish lookup outages from stale codes, with anon preview permission restored in `0040` — 2026-08-09
 - [x] Header handoff: every viewport stays centered over the hero then FLIP-slides to the right (no justify snap); logo still fades in when the mark tucks under sticky chrome — 2026-08-08
 - [x] iMessage/link preview card: `opengraph-image` + `twitter-image` render the Causey mark and wordmark on the canvas (1200×630 PNG); `apple-icon` uses the same mark; `metadataBase` is `https://app.causey.dev` — 2026-08-08
