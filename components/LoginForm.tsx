@@ -40,7 +40,7 @@ export function LoginForm({
     setPending(true);
     try {
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        throw new Error("Supabase is not configured in .env.");
+        throw new Error("Account sign-in is unavailable in this build.");
       }
       const supabase = createBrowserSupabaseClient();
       const { error: signError } = await supabase.auth.signInWithPassword({
@@ -69,7 +69,17 @@ export function LoginForm({
       router.push(destination);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed.");
+      const message = err instanceof Error ? err.message : "";
+      if (message === "Account sign-in is unavailable in this build.") {
+        setError(message);
+      } else if (message.toLowerCase().includes("invalid login credentials")) {
+        setError("Email or password is incorrect.");
+      } else if (message.toLowerCase().includes("email not confirmed")) {
+        setError("Confirm your email before signing in.");
+      } else {
+        console.error("Sign-in failed:", err);
+        setError("Could not sign in. Check your connection and try again.");
+      }
     } finally {
       setPending(false);
     }

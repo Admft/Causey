@@ -16,7 +16,7 @@ export function ForgotPasswordForm() {
     setPending(true);
     try {
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        throw new Error("Supabase is not configured in .env.");
+        throw new Error("Account recovery is unavailable in this build.");
       }
       const supabase = createBrowserSupabaseClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
@@ -28,7 +28,13 @@ export function ForgotPasswordForm() {
       if (resetError) throw resetError;
       setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send the email.");
+      console.error("Password reset request failed:", err);
+      setError(
+        err instanceof Error &&
+          err.message === "Account recovery is unavailable in this build."
+          ? err.message
+          : "Could not send the reset link. Check your connection and try again."
+      );
     } finally {
       setPending(false);
     }
@@ -42,8 +48,8 @@ export function ForgotPasswordForm() {
         </h2>
         <p className="mt-3 text-sm text-muted">
           If <strong className="text-foreground">{email}</strong> has an
-          account, Supabase sent a reset link. Causey does not deliver that
-          email itself — open the link to choose a new password.
+          account, you&rsquo;ll receive a reset link. Open it to choose a new
+          password.
         </p>
       </div>
     );

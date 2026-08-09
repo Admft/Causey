@@ -211,6 +211,10 @@ export async function getAdminUsers({
     p_offset: offset,
   });
   if (error) {
+    console.error("Platform user search failed:", {
+      code: error.code,
+      message: error.message,
+    });
     const missingMigration =
       error.code === "PGRST202" ||
       (error.message.includes("search_platform_users") &&
@@ -219,9 +223,9 @@ export async function getAdminUsers({
       users: [],
       total: 0,
       error: missingMigration
-        ? "User search is unavailable until migration 0026 is applied."
+        ? "User search is unavailable on this deployment."
         : error.code === "42804"
-          ? "User search needs the corrected database types from migration 0031."
+          ? "User search is unavailable on this deployment."
         : "User search could not be loaded. Check the connection and try again.",
     };
   }
@@ -302,6 +306,10 @@ export async function getAdminModerationQueue(): Promise<{
     .order("submitted_for_review_at", { ascending: true, nullsFirst: false });
 
   if (error) {
+    console.error("Admin moderation queue failed:", {
+      code: error.code,
+      message: error.message,
+    });
     const detail = error.message?.toLowerCase() ?? "";
     const schemaGap =
       detail.includes("submitted_for_review_at") ||
@@ -311,10 +319,8 @@ export async function getAdminModerationQueue(): Promise<{
     return {
       queue: [],
       error: schemaGap
-        ? "Moderation columns aren’t set up yet. Apply migration 0024_moderation_queue_columns.sql, then reload."
-        : `The moderation queue could not be loaded${
-            error.code ? ` (${error.code})` : ""
-          }. Try loading it again.`,
+        ? "Tournament moderation is unavailable on this deployment."
+        : "The moderation queue could not be loaded. Try loading it again.",
     };
   }
 

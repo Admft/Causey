@@ -13,7 +13,12 @@ import {
   getNotificationPreferences,
   getNotifications,
 } from "@/lib/data/district";
-import { buildAttentionItems } from "@/lib/notifications";
+import { getChildrenWithEvents } from "@/lib/data/portal";
+import {
+  buildAttentionItems,
+  buildLinkedChildAttentionItems,
+  sortAttentionItems,
+} from "@/lib/notifications";
 
 export const metadata: Metadata = {
   title: "Alerts",
@@ -23,19 +28,21 @@ export const metadata: Metadata = {
 export default async function NotificationsPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/me/notifications");
-  const [profile, notifications, preferences, attentionSources] =
+  const profile = await getCurrentProfile();
+  const [notifications, preferences, ownAttentionSources, children] =
     await Promise.all([
-      getCurrentProfile(),
       getNotifications(user.id),
       getNotificationPreferences(user.id),
       getAttentionSourceEvents(user.id),
+      profile?.role === "parent"
+        ? getChildrenWithEvents(user.id)
+        : Promise.resolve([]),
     ]);
   const today = new Date().toISOString().slice(0, 10);
-  const attention = buildAttentionItems(
-    attentionSources,
-    preferences,
-    today
-  );
+  const attention = sortAttentionItems([
+    ...buildLinkedChildAttentionItems(children, preferences, today),
+    ...buildAttentionItems(ownAttentionSources, preferences, today),
+  ]);
   const unreadCount = notifications.filter((row) => !row.read_at).length;
   const workspaceHref = homePathForRole(profile?.role);
   const workspaceLabel =
@@ -62,8 +69,11 @@ export default async function NotificationsPage() {
       </h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
         In-app updates for invitations, RSVPs, announcements, account changes,
-        and tournament schedule or cancellation notices. Product email follows
-        the choices in{" "}
+        and tournament schedule or cancellation notices.
+        {profile?.role === "parent"
+          ? " Linked-student actions appear here and open in the family desk."
+          : ""}{" "}
+        Product email follows the choices in{" "}
         <Link
           href="/account#alerts"
           className="font-semibold text-brand-red hover:underline"
@@ -84,7 +94,9 @@ export default async function NotificationsPage() {
           }
           description={
             hasAnything
-              ? "Handle invitations and upcoming plans first, then clear recent in-app updates."
+              ? profile?.role === "parent"
+                ? "Handle linked-student invitations and registration first, then clear recent in-app updates."
+                : "Handle invitations and upcoming plans first, then clear recent in-app updates."
               : "Saved and going tournaments, invitations, and schedule changes will show here. Alert preferences control what appears."
           }
           action={
@@ -115,8 +127,9 @@ export default async function NotificationsPage() {
         </div>
         {!attention.length ? (
           <p className="mt-3 max-w-prose text-sm text-muted">
-            No pending invitations or upcoming saved/going tournaments need a
-            response right now.
+            {profile?.role === "parent"
+              ? "No invitations, organizer registrations, or upcoming plans need action for you or a linked student right now."
+              : "No pending invitations or upcoming saved/going tournaments need a response right now."}
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">

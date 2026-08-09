@@ -53,10 +53,14 @@ export async function adminDeleteTournaments(input: {
     p_delete_all: false,
   });
   if (error) {
+    console.error("Admin tournament deletion failed:", {
+      code: error.code,
+      message: error.message,
+    });
     return {
       ok: false,
       error: error.message.includes("admin_delete_competitions")
-        ? "Tournament deletion needs database migration 0039."
+        ? "Tournament deletion is unavailable on this deployment."
         : "Could not delete the selected tournaments.",
     };
   }
@@ -88,10 +92,14 @@ export async function adminDeleteAllTournaments(input: {
     p_delete_all: true,
   });
   if (error) {
+    console.error("Admin bulk tournament deletion failed:", {
+      code: error.code,
+      message: error.message,
+    });
     return {
       ok: false,
       error: error.message.includes("admin_delete_competitions")
-        ? "Tournament deletion needs database migration 0039."
+        ? "Tournament deletion is unavailable on this deployment."
         : "Could not delete all tournaments.",
     };
   }
@@ -121,7 +129,7 @@ export async function adminRunScraper(input: {
     return {
       ok: false,
       error:
-        "Scraper dispatch is not configured. Add GITHUB_ACTIONS_TOKEN and GITHUB_REPOSITORY to the app environment.",
+        "Scraper runs are unavailable on this deployment. Ask the deployment owner to review ingestion access.",
     };
   }
 

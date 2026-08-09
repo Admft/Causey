@@ -25,6 +25,11 @@ import {
 } from "@/lib/validation/tournament";
 
 export type { TournamentCreateInput, TournamentUpdateInput };
+export type TournamentPublicationStatus = "published" | "pending_review";
+type TournamentPublicationResult = {
+  slug: string;
+  status: TournamentPublicationStatus;
+};
 
 const DateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a real date.");
 
@@ -157,7 +162,7 @@ export async function createTournament(
 export async function publishTournament(input: {
   competitionId: string;
   eventSlug: string;
-}): Promise<ActionResult> {
+}): Promise<ActionResult<{ status: TournamentPublicationStatus }>> {
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to continue." };
 
@@ -168,22 +173,26 @@ export async function publishTournament(input: {
     .eq("id", input.competitionId)
     .maybeSingle();
 
-  const { count, error } = await supabase
+  const { data: updated, error } = await supabase
     .from("competitions")
-    .update({ status: "published" }, { count: "exact" })
+    .update({ status: "published" })
     .eq("id", input.competitionId)
-    .eq("status", "draft");
+    .eq("status", "draft")
+    .select("status")
+    .maybeSingle();
 
-  if (error || !count) {
+  if (error || !updated) {
     return { ok: false, error: "Could not publish this tournament." };
   }
+  const status: TournamentPublicationStatus =
+    updated.status === "pending_review" ? "pending_review" : "published";
 
   const orgSlug = (existing?.organizations as { slug?: string } | null)?.slug;
   revalidatePath("/chess");
   revalidatePath(`/event/${input.eventSlug}`);
   revalidatePath(`/event/${input.eventSlug}/manage`);
   if (orgSlug) revalidatePath(`/orgs/${orgSlug}`);
-  return { ok: true };
+  return { ok: true, status };
 }
 
 /**
@@ -234,13 +243,13 @@ export async function saveTournamentDraft(
     .eq("org_id", values.orgId)
     .maybeSingle();
   if (readError) {
+    console.error("Tournament draft read failed:", {
+      code: readError.code,
+      message: readError.message,
+    });
     return {
       ok: false,
-      error:
-        readError.message?.includes("tournament_drafts") ||
-        readError.code === "42P01"
-          ? "Tournament drafts aren’t set up in the database yet. Apply migration 0017 and try again."
-          : "Could not save the draft. Try again.",
+      error: "Could not save the draft. Try again later.",
     };
   }
 
@@ -315,24 +324,33 @@ function draftFeeToCents(raw: string): ActionResult<{ cents: number | null }> {
   return { ok: true, cents: Math.round(dollars * 100) };
 }
 
-async function findPublishedDraftSlug(
+async function findDraftPublication(
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
   draftId: string,
   orgId: string
-): Promise<string | null> {
+): Promise<TournamentPublicationResult | null> {
   const { data } = await supabase
     .from("competitions")
-    .select("slug")
+    .select("slug, status")
     .eq("source_draft_id", draftId)
     .eq("org_id", orgId)
     .maybeSingle();
-  return (data?.slug as string | undefined) ?? null;
+  if (
+    !data?.slug ||
+    (data.status !== "published" && data.status !== "pending_review")
+  ) {
+    return null;
+  }
+  return {
+    slug: data.slug as string,
+    status: data.status as TournamentPublicationStatus,
+  };
 }
 
 /** Validate the saved draft as a whole, publish it, then remove the draft row. */
 export async function publishTournamentDraft(
   input: z.input<typeof TournamentDraftPublishSchema>
-): Promise<ActionResult<{ slug: string }>> {
+): Promise<ActionResult<TournamentPublicationResult>> {
   const parsedInput = TournamentDraftPublishSchema.safeParse(input);
   if (!parsedInput.success) {
     return { ok: false, error: "Could not identify the tournament draft." };
@@ -361,12 +379,12 @@ export async function publishTournamentDraft(
     .eq("org_id", values.orgId)
     .maybeSingle();
   if (draftError || !draft) {
-    const publishedSlug = await findPublishedDraftSlug(
+    const publication = await findDraftPublication(
       supabase,
       values.draftId,
       values.orgId
     );
-    if (publishedSlug) return { ok: true, slug: publishedSlug };
+    if (publication) return { ok: true, ...publication };
     return { ok: false, error: "Draft not found. Return to the organization and resume it." };
   }
   const coverImagePath = draft.cover_image_path as string | null;
@@ -470,7 +488,7 @@ async function insertWithSlugRetry(
   zipRow: { lat: number; lng: number },
   imageUrl: string,
   sourceDraftId: string
-): Promise<ActionResult<{ slug: string }>> {
+): Promise<ActionResult<TournamentPublicationResult>> {
   const base = slugify(values.name, values.startDate);
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     const slug = attempt === 1 ? base : withSlugSuffix(base, attempt);
@@ -506,17 +524,17 @@ async function insertWithSlugRetry(
         created_by: profileId,
         source_draft_id: sourceDraftId,
       })
-      .select("id, slug")
+      .select("id, slug, status")
       .single();
 
     if (error) {
       if (error.code === "23505") {
-        const publishedSlug = await findPublishedDraftSlug(
+        const publication = await findDraftPublication(
           supabase,
           sourceDraftId,
           values.orgId
         );
-        if (publishedSlug) return { ok: true, slug: publishedSlug };
+        if (publication) return { ok: true, ...publication };
         continue; // Slug taken by another tournament — retry with a suffix.
       }
       return { ok: false, error: "Could not create the tournament. Try again." };
@@ -550,7 +568,12 @@ async function insertWithSlugRetry(
       revalidatePath("/chess");
     }
     revalidatePath(`/orgs/${values.orgSlug}`);
-    return { ok: true, slug: created.slug };
+    return {
+      ok: true,
+      slug: created.slug,
+      status:
+        created.status === "pending_review" ? "pending_review" : "published",
+    };
   }
   return { ok: false, error: "A tournament with that name and date already exists." };
 }
@@ -558,7 +581,9 @@ async function insertWithSlugRetry(
 /** Edit a hosted tournament. The slug never changes — shared links stay live. */
 export async function updateTournament(
   input: TournamentUpdateInput
-): Promise<ActionResult<{ slug: string }>> {
+): Promise<
+  ActionResult<{ slug: string; status?: TournamentPublicationStatus }>
+> {
   const parsed = ValidatedTournamentUpdateSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the form." };
@@ -566,6 +591,11 @@ export async function updateTournament(
   const values = parsed.data;
 
   const supabase = await createServerSupabaseClient();
+  const { data: existing } = await supabase
+    .from("competitions")
+    .select("status")
+    .eq("id", values.competitionId)
+    .maybeSingle();
   const zipResult = await getTournamentZip(supabase, values.zip);
   if (!zipResult.ok) return zipResult;
   const result = await updateTournamentRecord({
@@ -575,11 +605,38 @@ export async function updateTournament(
   });
   if (!result.ok) return result;
 
+  let status: TournamentPublicationStatus | undefined;
+  if (existing?.status === "rejected") {
+    const { data: resubmitted, error } = await supabase
+      .from("competitions")
+      .update({
+        status: "published",
+        submitted_for_review_at: new Date().toISOString(),
+        reviewed_at: null,
+        reviewed_by: null,
+      })
+      .eq("id", values.competitionId)
+      .eq("status", "rejected")
+      .select("status")
+      .maybeSingle();
+    if (error || !resubmitted) {
+      return {
+        ok: false,
+        error:
+          "Changes were saved, but the tournament could not be resubmitted. Try again.",
+      };
+    }
+    status =
+      resubmitted.status === "pending_review"
+        ? "pending_review"
+        : "published";
+  }
+
   revalidatePath("/chess");
   revalidatePath(`/event/${values.eventSlug}`);
   revalidatePath(`/event/${values.eventSlug}/manage`);
   revalidatePath(`/orgs/${values.orgSlug}`);
-  return result;
+  return { ...result, ...(status ? { status } : {}) };
 }
 
 /** Cancel = archive. The event disappears for everyone, including the coach. */

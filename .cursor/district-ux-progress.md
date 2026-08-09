@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Closed the highest-priority workflow feedback gaps: returned public tournaments now show the platform note and resubmit after correction; parent Alerts includes named linked-student actions routed to Family; create/publish language and results distinguish platform review from immediate member/admin publication; public/account/admin failures no longer expose provider, migration, environment, or dev-server instructions — 2026-08-09
 - [x] Early-build banner: centered on every viewport; compact `text-xs` on phone and iPad with the short line; larger `text-base` strip from `lg` with the fuller line — 2026-08-09
 - [x] District pitch wording (copy only, layout untouched): home band now has a direct ready-now / planned-next split. The existing inset names the district foundation already in place (school structure, role-based access, school-level participation), while the existing four-point strip names future work (guided setup, family follow-through, reporting over time, more competition types) — 2026-08-09
 - [x] Founder conversation CTAs: home “Talk with the founding team” and `/districts` “Book a district pilot conversation” open the Google Calendar booking page (`lib/founding-team.ts`) — 2026-08-09

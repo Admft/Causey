@@ -36,11 +36,18 @@ export default async function EditEventPage({
   if (!canManage || !competition.org_id) redirect(`/event/${slug}`);
 
   const supabase = await createServerSupabaseClient();
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("id, slug, state, name")
-    .eq("id", competition.org_id)
-    .maybeSingle();
+  const [{ data: org }, { data: moderation }] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select("id, slug, state, name")
+      .eq("id", competition.org_id)
+      .maybeSingle(),
+    supabase
+      .from("competitions")
+      .select("status, moderation_note")
+      .eq("id", competition.id)
+      .maybeSingle(),
+  ]);
   if (!org) redirect(`/event/${slug}`);
 
   const view = await getOrgBySlugForViewer(org.slug, user.id);
@@ -90,6 +97,20 @@ export default async function EditEventPage({
           The event link stays the same — everyone you&rsquo;ve invited keeps
           seeing the updated details.
         </p>
+        {moderation?.status === "rejected" ? (
+          <section className="mt-6 rounded-2xl border border-brand-red/30 bg-accent-soft p-5">
+            <h2 className="text-base font-semibold text-foreground">
+              Changes requested before this can be public
+            </h2>
+            <p className="mt-2 max-w-prose text-sm text-muted-strong">
+              {moderation.moderation_note ||
+                "Review the tournament details, correct the listing, and resubmit it."}
+            </p>
+            <p className="mt-2 text-xs text-muted">
+              Saving this returned listing will send it back to platform review.
+            </p>
+          </section>
+        ) : null}
         <div className="section-rule mt-8 pt-8">
           <TournamentCreateForm
             orgId={org.id}
@@ -111,7 +132,11 @@ export default async function EditEventPage({
               audience: competition.audience,
               rated: competition.rated,
             }}
-            edit={{ competitionId: competition.id, eventSlug: competition.slug }}
+            edit={{
+              competitionId: competition.id,
+              eventSlug: competition.slug,
+              status: competition.status,
+            }}
           />
         </div>
         <div className="section-rule mt-10 pt-8">

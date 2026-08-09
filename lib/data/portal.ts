@@ -44,6 +44,7 @@ export type OrgEventRow = {
   audience: CompetitionAudience;
   entry_fee_cents: number | null;
   status: "draft" | "pending_review" | "published" | "rejected" | "archived";
+  moderation_note: string | null;
 };
 
 export type OrgAnnouncementRow = {
@@ -238,7 +239,7 @@ export async function getOrgBySlugForViewer(
     supabase
       .from("competitions")
       .select(
-        "id, slug, name, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status"
+        "id, slug, name, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status, moderation_note"
       )
       .eq("org_id", org.id)
       // Drafts are included so an organizer can find and publish them. RLS

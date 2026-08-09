@@ -51,6 +51,7 @@ describe("personal RSVP account refresh", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/me");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/orgs");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/family");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/me/notifications");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/event/spring-open");
   });
 });

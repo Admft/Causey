@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   createServerSupabaseClient: vi.fn(),
   getTournamentZip: vi.fn(),
   insertTournamentRecord: vi.fn(),
+  updateTournamentRecord: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
@@ -19,7 +20,7 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/data/tournament-mutations", () => ({
   getTournamentZip: mocks.getTournamentZip,
   insertTournamentRecord: mocks.insertTournamentRecord,
-  updateTournamentRecord: vi.fn(),
+  updateTournamentRecord: mocks.updateTournamentRecord,
 }));
 
 const coach = { id: "coach-1", role: "coach", role_unlocked: true };
@@ -90,7 +91,9 @@ describe("publishTournament", () => {
     mocks.getCurrentProfile.mockResolvedValue(coach);
   });
 
-  function supabaseReturning(count: number | null) {
+  function supabaseReturning(
+    updatedStatus: "published" | "pending_review" | null
+  ) {
     const statusFilter = vi.fn();
     return {
       statusFilter,
@@ -105,7 +108,14 @@ describe("publishTournament", () => {
             eq: () => ({
               eq: (column: string, value: string) => {
                 statusFilter(column, value);
-                return Promise.resolve({ count, error: null });
+                return {
+                  select: () => ({
+                    maybeSingle: async () => ({
+                      data: updatedStatus ? { status: updatedStatus } : null,
+                      error: null,
+                    }),
+                  }),
+                };
               },
             }),
           }),
@@ -115,7 +125,7 @@ describe("publishTournament", () => {
   }
 
   it("only publishes rows still in draft", async () => {
-    const { statusFilter, client } = supabaseReturning(1);
+    const { statusFilter, client } = supabaseReturning("published");
     mocks.createServerSupabaseClient.mockResolvedValue(client);
 
     const { publishTournament } = await import("@/lib/actions/tournaments");
@@ -124,13 +134,26 @@ describe("publishTournament", () => {
       eventSlug: "spring-open",
     });
 
-    expect(result.ok).toBe(true);
+    expect(result).toEqual({ ok: true, status: "published" });
     expect(statusFilter).toHaveBeenCalledWith("status", "draft");
     expect(mocks.revalidatePath.mock.calls.map((c) => c[0])).toContain("/chess");
   });
 
+  it("reports when a public organizer listing entered review", async () => {
+    const { client } = supabaseReturning("pending_review");
+    mocks.createServerSupabaseClient.mockResolvedValue(client);
+
+    const { publishTournament } = await import("@/lib/actions/tournaments");
+    await expect(
+      publishTournament({
+        competitionId: "22222222-2222-2222-2222-222222222222",
+        eventSlug: "spring-open",
+      })
+    ).resolves.toEqual({ ok: true, status: "pending_review" });
+  });
+
   it("reports failure when nothing was published", async () => {
-    const { client } = supabaseReturning(0);
+    const { client } = supabaseReturning(null);
     mocks.createServerSupabaseClient.mockResolvedValue(client);
 
     const { publishTournament } = await import("@/lib/actions/tournaments");
@@ -149,6 +172,70 @@ describe("publishTournament", () => {
     await expect(
       publishTournament({ competitionId: "x", eventSlug: "y" })
     ).resolves.toEqual({ ok: false, error: "Sign in to continue." });
+  });
+});
+
+describe("returned tournament resubmission", () => {
+  it("saves corrections and reports the new review status", async () => {
+    vi.clearAllMocks();
+    mocks.getTournamentZip.mockResolvedValue({
+      ok: true,
+      lat: 32.77,
+      lng: -96.79,
+    });
+    mocks.updateTournamentRecord.mockResolvedValue({
+      ok: true,
+      slug: "spring-open",
+    });
+    const resubmissionPayload = vi.fn();
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: { status: "rejected" },
+              error: null,
+            }),
+          }),
+        }),
+        update: (payload: unknown) => {
+          resubmissionPayload(payload);
+          return {
+            eq: () => ({
+              eq: () => ({
+                select: () => ({
+                  maybeSingle: async () => ({
+                    data: { status: "pending_review" },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        },
+      }),
+    });
+
+    const { updateTournament } = await import("@/lib/actions/tournaments");
+    const result = await updateTournament({
+      ...validTournament,
+      competitionId: "22222222-2222-2222-2222-222222222222",
+      eventSlug: "spring-open",
+      orgSlug: "probe-school",
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      slug: "spring-open",
+      status: "pending_review",
+    });
+    expect(resubmissionPayload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "published",
+        reviewed_at: null,
+        reviewed_by: null,
+      })
+    );
   });
 });
 

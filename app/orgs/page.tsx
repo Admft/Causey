@@ -50,10 +50,12 @@ export default async function OrgsPage() {
           Organizations
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Connect Supabase (set NEXT_PUBLIC_SUPABASE_URL and
-          NEXT_PUBLIC_SUPABASE_ANON_KEY in .env) to use accounts and
-          organizations.
+          Organization workspaces are unavailable in this build. You can still
+          search public chess tournaments while account access is restored.
         </p>
+        <Link href="/chess" className="cta-enabled mt-6 inline-flex">
+          Search tournaments
+        </Link>
       </div>
     );
   }

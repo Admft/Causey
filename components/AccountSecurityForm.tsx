@@ -5,6 +5,17 @@ import { useRouter } from "next/navigation";
 import { recordAccountInAppAlert } from "@/lib/actions/notifications";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
+function accountErrorMessage(error: unknown, fallback: string): string {
+  if (
+    error instanceof Error &&
+    error.message === "Current password is incorrect."
+  ) {
+    return error.message;
+  }
+  console.error("Account security request failed:", error);
+  return fallback;
+}
+
 /**
  * Official sign-in controls for /account: change email and change password.
  * Email changes and in-place password changes require the current password;
@@ -72,7 +83,7 @@ export function AccountSecurityForm({
       setNewEmail("");
       setEmailPassword("");
       setEmailMessage(
-        `Confirmation requested. Your sign-in email stays ${email} until the new address is confirmed — check ${next} for the Supabase confirmation link${
+        `Confirmation requested. Your sign-in email stays ${email} until the new address is confirmed — check ${next} for the confirmation link${
           emailConfirmed ? " (and possibly your current inbox too)" : ""
         }.`
       );
@@ -80,7 +91,10 @@ export function AccountSecurityForm({
       router.refresh();
     } catch (err) {
       setEmailError(
-        err instanceof Error ? err.message : "Could not start the email change."
+        accountErrorMessage(
+          err,
+          "Could not start the email change. Check your connection and try again."
+        )
       );
     } finally {
       setEmailPending(false);
@@ -125,7 +139,10 @@ export function AccountSecurityForm({
       router.refresh();
     } catch (err) {
       setPasswordError(
-        err instanceof Error ? err.message : "Could not update the password."
+        accountErrorMessage(
+          err,
+          "Could not update the password. Check your connection and try again."
+        )
       );
     } finally {
       setPasswordPending(false);
@@ -143,13 +160,12 @@ export function AccountSecurityForm({
       });
       if (error) throw error;
       setResetMessage(
-        `If ${email} is correct, Supabase sent a reset link. Causey does not send that email itself — open the link to choose a new password.`
+        `If ${email} is correct, you’ll receive a reset link. Open it to choose a new password.`
       );
       void recordAccountInAppAlert("password_reset_requested");
     } catch (err) {
-      setResetError(
-        err instanceof Error ? err.message : "Could not send the reset email."
-      );
+      console.error("Password reset request failed:", err);
+      setResetError("Could not send the reset email. Try again.");
     } finally {
       setResetPending(false);
     }
@@ -183,7 +199,7 @@ export function AccountSecurityForm({
       <section className="border-t border-line pt-8">
         <h3 className="text-sm font-semibold text-foreground">Change email</h3>
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Enter a new address and your current password. Supabase emails a
+          Enter a new address and your current password. We&rsquo;ll email a
           confirmation link to the new address before the change takes effect.
         </p>
         <form

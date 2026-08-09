@@ -42,6 +42,15 @@ const ROLE_SIGNUP_COPY: Record<
   },
 };
 
+const SAFE_SIGNUP_ERRORS = new Set([
+  "Account creation is unavailable in this build.",
+  "Password must be at least 8 characters.",
+  "Enter your date of birth.",
+  "Enter a valid date of birth.",
+  "Date of birth can’t be in the future.",
+  "Zip must be 5 digits.",
+]);
+
 export function SignupForm({
   initialRole = "student",
   next,
@@ -96,7 +105,7 @@ export function SignupForm({
 
     try {
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        throw new Error("Supabase is not configured in .env.");
+        throw new Error("Account creation is unavailable in this build.");
       }
       if (password.length < 8) {
         throw new Error("Password must be at least 8 characters.");
@@ -146,7 +155,18 @@ export function SignupForm({
       router.push(next ?? homePathForRole(role));
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign up failed.");
+      const message = err instanceof Error ? err.message : "";
+      if (SAFE_SIGNUP_ERRORS.has(message)) {
+        setError(message);
+      } else if (
+        message.toLowerCase().includes("already registered") ||
+        message.toLowerCase().includes("already been registered")
+      ) {
+        setError("An account may already use this email. Try signing in.");
+      } else {
+        console.error("Sign-up failed:", err);
+        setError("Could not create the account. Check your connection and try again.");
+      }
     } finally {
       setPending(false);
     }

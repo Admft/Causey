@@ -90,7 +90,11 @@ export function TournamentCreateForm({
   draftId?: string;
   initialDraft?: TournamentDraftRow;
   initial?: TournamentFormInitial;
-  edit?: { competitionId: string; eventSlug: string };
+  edit?: {
+    competitionId: string;
+    eventSlug: string;
+    status?: "draft" | "pending_review" | "published" | "rejected" | "archived";
+  };
   admin?: boolean;
   returnTo?: string;
 }) {
@@ -326,7 +330,7 @@ export function TournamentCreateForm({
         const detail = uploadError.message?.toLowerCase() ?? "";
         setError(
           detail.includes("bucket") || detail.includes("not found")
-            ? "Cover storage isn’t set up yet. Ask an admin to apply the tournament-covers migration, then try again."
+            ? "Cover uploads are temporarily unavailable. Save the draft and try again later."
             : detail.includes("row-level security") || detail.includes("policy")
               ? "You don’t have permission to upload a cover for this organization."
               : "Could not upload the cover image. Try a smaller JPG, PNG, or WebP and try again."
@@ -410,6 +414,17 @@ export function TournamentCreateForm({
           setError(result.error);
           return;
         }
+        if (
+          !admin &&
+          "status" in result &&
+          result.status === "pending_review"
+        ) {
+          router.push(
+            `/orgs/${orgSlug}?submitted=${encodeURIComponent(result.slug)}`
+          );
+          router.refresh();
+          return;
+        }
         router.push(returnTo ?? `/event/${result.slug}`);
         router.refresh();
         return;
@@ -444,7 +459,12 @@ export function TournamentCreateForm({
         return;
       }
       published.current = true;
-      router.push(returnTo ?? `/event/${result.slug}`);
+      router.push(
+        returnTo ??
+          (result.status === "pending_review"
+            ? `/orgs/${orgSlug}?submitted=${encodeURIComponent(result.slug)}`
+            : `/event/${result.slug}`)
+      );
       router.refresh();
     } finally {
       setPending(false);
@@ -452,6 +472,17 @@ export function TournamentCreateForm({
   }
 
   const reviewing = !edit && step === "review";
+  const publicReview = !admin && audience === "public";
+  const publishLabel = admin
+    ? "Publish tournament"
+    : publicReview
+      ? "Submit for platform review"
+      : audience === "district"
+        ? "Publish to district"
+        : audience === "school"
+          ? "Publish to school"
+          : "Publish invite-only tournament";
+  const publishingLabel = publicReview ? "Submitting…" : "Publishing…";
   const fee = feeToCents(entryFee);
   const feeSummary =
     "error" in fee
@@ -550,7 +581,9 @@ export function TournamentCreateForm({
           </h2>
           <p className="mt-2 max-w-prose text-sm text-muted">
             {reviewing
-              ? "Check the event page preview, decide who can find it, then publish."
+              ? publicReview
+                ? "Check the preview and audience, then submit the public listing for platform review."
+                : "Check the event page preview, decide who can find it, then publish."
               : "Add the cover, schedule, location, and registration information."}
           </p>
         </div>
@@ -998,7 +1031,11 @@ export function TournamentCreateForm({
           {audienceChooser}
 
           <p className="text-sm text-muted">
-            Publishing creates the event page immediately. You can edit or cancel it later.
+            {publicReview
+              ? "Submitting creates a private review page for your staff. The tournament will not appear in public search until a platform administrator approves it."
+              : admin && audience === "public"
+                ? "Publishing makes the tournament visible in public search immediately."
+                : "Publishing makes the event available to the selected audience immediately. You can edit or cancel it later."}
           </p>
         </>
       )}
@@ -1026,7 +1063,7 @@ export function TournamentCreateForm({
             disabled={pending || uploading}
             className="cta-enabled disabled:opacity-60"
           >
-            {pending ? "Publishing…" : "Publish tournament"}
+            {pending ? publishingLabel : publishLabel}
           </button>
         </div>
       ) : (
@@ -1037,10 +1074,14 @@ export function TournamentCreateForm({
         >
           {pending
             ? edit
-              ? "Saving changes…"
+              ? edit.status === "rejected" && !admin
+                ? "Resubmitting…"
+                : "Saving changes…"
               : "Saving draft…"
             : edit
-              ? "Save changes"
+              ? edit.status === "rejected" && !admin
+                ? "Save changes and resubmit"
+                : "Save changes"
               : "Preview tournament"}
         </button>
       )}

@@ -104,17 +104,29 @@ export default async function ManageEventPage({
     showRoster: boolean;
     showAdmin: boolean;
   } | null = null;
+  let moderationNote: string | null = null;
   const preferredOrgId =
     canManage && competition.org_id
       ? competition.org_id
       : (attendingOrgs[0]?.org.id ?? null);
   if (preferredOrgId) {
     const supabase = await createServerSupabaseClient();
-    const { data: orgRow } = await supabase
-      .from("organizations")
-      .select("slug")
-      .eq("id", preferredOrgId)
-      .maybeSingle();
+    const [{ data: orgRow }, { data: moderation }] = await Promise.all([
+      supabase
+        .from("organizations")
+        .select("slug")
+        .eq("id", preferredOrgId)
+        .maybeSingle(),
+      canManage && competition.status === "rejected"
+        ? supabase
+            .from("competitions")
+            .select("moderation_note")
+            .eq("id", competition.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    moderationNote =
+      (moderation?.moderation_note as string | null | undefined) ?? null;
     if (orgRow?.slug) {
       const view = await getOrgBySlugForViewer(orgRow.slug, user.id);
       if (view) {
@@ -139,11 +151,18 @@ export default async function ManageEventPage({
     secondary?: { href: string; label: string };
   };
   if (isDraft) {
+    const needsPublicReview = competition.audience === "public";
     mission = {
-      title: "Publish before inviting",
-      description:
-        "Students only see invitations after this tournament is published. Finish audience and publish below.",
-      action: { href: "#publish", label: "Review and publish" },
+      title: needsPublicReview
+        ? "Submit for review before inviting"
+        : "Publish before inviting",
+      description: needsPublicReview
+        ? "Students only see invitations after submission. Review the audience and send this public listing to platform review below."
+        : "Students only see invitations after this member event is published. Review the audience and publish below.",
+      action: {
+        href: "#publish",
+        label: needsPublicReview ? "Review and submit" : "Review and publish",
+      },
       secondary: { href: workspaceHref, label: "Back to workspace" },
     };
   } else if (isPast) {
@@ -315,9 +334,13 @@ export default async function ManageEventPage({
         </h1>
         <p className="mt-2 text-sm text-muted">
           {formatDateRange(competition.start_date, competition.end_date)}
-          {competition.visibility === "private"
-            ? " · private to your organization"
-            : " · listed publicly"}
+          {competition.status === "pending_review"
+            ? " · awaiting platform review"
+            : competition.status === "rejected"
+              ? " · returned for changes"
+              : competition.visibility === "private"
+                ? " · private to your organization"
+                : " · listed publicly"}
           {canManage ? (
             <>
               {" · "}
@@ -336,11 +359,28 @@ export default async function ManageEventPage({
             <PublishTournamentPanel
               competitionId={competition.id}
               eventSlug={competition.slug}
-              visibility={
-                competition.visibility === "private" ? "private" : "public"
-              }
+              audience={competition.audience}
+              orgSlug={orgShell?.slug}
             />
           </div>
+        ) : null}
+
+        {canManage && competition.status === "rejected" ? (
+          <section className="mt-8 rounded-2xl border border-brand-red/30 bg-accent-soft p-5">
+            <h2 className="text-base font-semibold text-foreground">
+              Changes requested before this can be public
+            </h2>
+            <p className="mt-2 max-w-prose text-sm text-muted-strong">
+              {moderationNote ||
+                "Review the tournament details, correct the listing, and resubmit it."}
+            </p>
+            <Link
+              href={`/event/${competition.slug}/edit`}
+              className="mt-3 inline-block text-sm font-semibold text-brand-red hover:underline"
+            >
+              Fix and resubmit
+            </Link>
+          </section>
         ) : null}
 
         <div className="mt-8">

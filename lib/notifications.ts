@@ -1,5 +1,7 @@
 /** Shared in-app and product-email notification preferences. */
 
+import type { ChildSummary } from "@/lib/data/portal";
+
 export const NOTIFICATION_KINDS = [
   "invitation",
   "registration_deadline",
@@ -107,6 +109,27 @@ export type AttentionItem = {
   href: string;
   ctaLabel: string;
 };
+
+const ATTENTION_ORDER: Record<NotificationKind, number> = {
+  invitation: 0,
+  registration_deadline: 1,
+  reminder_1_day: 2,
+  reminder_7_day: 3,
+  cancellation: 4,
+  schedule_change: 5,
+  rsvp_update: 6,
+  announcement: 7,
+  account: 8,
+};
+
+export function sortAttentionItems(items: AttentionItem[]): AttentionItem[] {
+  return items.sort(
+    (a, b) =>
+      (ATTENTION_ORDER[a.kind] ?? 99) -
+        (ATTENTION_ORDER[b.kind] ?? 99) ||
+      a.title.localeCompare(b.title)
+  );
+}
 
 function daysUntil(isoDate: string, todayIso: string): number {
   const start = Date.parse(`${todayIso}T12:00:00Z`);
@@ -229,18 +252,57 @@ export function buildAttentionItems(
     }
   }
 
-  const order: Record<NotificationKind, number> = {
-    invitation: 0,
-    registration_deadline: 1,
-    reminder_1_day: 2,
-    reminder_7_day: 3,
-    cancellation: 4,
-    schedule_change: 5,
-    rsvp_update: 6,
-    announcement: 7,
-    account: 8,
-  };
-  return items.sort(
-    (a, b) => (order[a.kind] ?? 99) - (order[b.kind] ?? 99) || a.title.localeCompare(b.title)
-  );
+  return sortAttentionItems(items);
+}
+
+/**
+ * Parent attention mirrors the Family desk: every upcoming invitation and
+ * unfinished organizer registration is actionable, even without a deadline.
+ */
+export function buildLinkedChildAttentionItems(
+  children: ChildSummary[],
+  prefs: NotificationPrefsLike | null | undefined,
+  todayIso: string
+): AttentionItem[] {
+  const items: AttentionItem[] = [];
+
+  for (const child of children) {
+    for (const row of child.entrants) {
+      const event = row.competition;
+      if (!event || (event.end_date ?? event.start_date) < todayIso) continue;
+
+      if (
+        row.status === "invited" &&
+        prefersInAppKind(prefs, "invitation")
+      ) {
+        items.push({
+          id: `child-invite:${child.profile_id}:${row.competition_id}`,
+          kind: "invitation",
+          title: `${child.display_name} · Respond: ${event.name}`,
+          body: `${child.display_name} was invited. Open the family desk to answer for them.`,
+          href: "/family#needs-response",
+          ctaLabel: "Open family desk",
+        });
+      }
+
+      if (
+        row.status === "going" &&
+        event.reg_url &&
+        row.registration_status !== "registered" &&
+        prefersInAppKind(prefs, "registration_deadline")
+      ) {
+        items.push({
+          id: `child-registration:${child.profile_id}:${row.competition_id}`,
+          kind: "registration_deadline",
+          title: `${child.display_name} · Finish organizer registration: ${event.name}`,
+          body:
+            "Causey has the RSVP. Finish on the organizer site, then mark it complete in Family.",
+          href: "/family#needs-response",
+          ctaLabel: "Open family desk",
+        });
+      }
+    }
+  }
+
+  return sortAttentionItems(items);
 }

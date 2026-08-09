@@ -86,7 +86,7 @@ export default async function AdminNewTournamentPage({
             orgState={selected.state}
             draftId={draftId}
             admin
-            returnTo="/admin/tournaments?status=draft"
+            returnTo="/admin/tournaments?status=published"
           />
         </div>
       )}

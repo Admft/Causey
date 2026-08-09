@@ -253,10 +253,13 @@ export async function adminReviewOrganization(input: {
     if (error.message.includes("organization_not_found")) {
       return { ok: false, error: "That organization no longer exists." };
     }
+    console.error("Organization verification review failed:", {
+      code: error.code,
+      message: error.message,
+    });
     return {
       ok: false,
-      error:
-        "Could not save this review. Confirm migration 0027 is applied.",
+      error: "Could not save this review. Try again.",
     };
   }
 
@@ -315,10 +318,13 @@ export async function adminBulkVerifyDistrictSchools(input: {
           "Choose only pending schools connected to this one district.",
       };
     }
+    console.error("Bulk school verification failed:", {
+      code: error.code,
+      message: error.message,
+    });
     return {
       ok: false,
-      error:
-        "Could not verify these schools. Confirm migration 0034 is applied.",
+      error: "Could not verify these schools. Try again.",
     };
   }
 

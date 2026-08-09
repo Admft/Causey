@@ -43,9 +43,12 @@ export default async function FamilyPage() {
           Family desk
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Connect Supabase (set NEXT_PUBLIC_SUPABASE_URL and
-          NEXT_PUBLIC_SUPABASE_ANON_KEY in .env) to use family accounts.
+          Family accounts are unavailable in this build. You can still search
+          public chess tournaments while account access is restored.
         </p>
+        <Link href="/chess" className="cta-enabled mt-6 inline-flex">
+          Search tournaments
+        </Link>
       </div>
     );
   }

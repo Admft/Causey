@@ -67,10 +67,9 @@ export default async function AccountPage() {
           Profile not ready
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Your login works, but the profiles table is missing or the signup
-          trigger didn&rsquo;t run. Apply{" "}
-          <code className="text-foreground">supabase/migrations/0009_accounts.sql</code>{" "}
-          in the Supabase SQL editor, then sign out and back in.
+          You&rsquo;re signed in, but Causey could not finish loading your
+          profile. Sign out and back in once. If this continues, ask the person
+          who manages your Causey access for help.
         </p>
       </div>
     );

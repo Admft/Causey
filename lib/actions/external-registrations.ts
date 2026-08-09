@@ -83,5 +83,6 @@ export async function setExternalRegistrationStatus(input: {
   revalidatePath(`/event/${input.eventSlug}`);
   revalidatePath("/me");
   revalidatePath("/family");
+  revalidatePath("/me/notifications");
   return { ok: true };
 }

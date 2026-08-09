@@ -111,8 +111,8 @@ export function AdminScraperControls({
         </p>
         {!configured ? (
           <p className="mt-3 text-sm font-medium text-brand-red" role="alert">
-            Dispatch is unavailable until GITHUB_ACTIONS_TOKEN and
-            GITHUB_REPOSITORY are configured for the app.
+            Scraper runs are unavailable on this deployment. Ask the deployment
+            owner to review ingestion access.
           </p>
         ) : null}
         {error ? (
@@ -155,8 +155,8 @@ export function AdminScraperControls({
         </div>
         {!runs.length ? (
           <p className="mt-4 text-sm text-muted">
-            No scraper runs are visible yet. Apply migration 0039, then run a
-            source to start the log.
+            No scraper runs are recorded yet. Run one source above to start the
+            activity log.
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">

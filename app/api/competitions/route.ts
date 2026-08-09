@@ -36,14 +36,13 @@ export async function GET(request: NextRequest) {
     offset: parsed.data.offset ?? 0,
   };
 
-  // A zip the lookup table doesn't know is a user-fixable problem — report
-  // it specifically instead of silently searching the whole country.
+  // An unknown zip is user-fixable; do not silently search the whole country.
   if (filters.zip) {
     const zipRow = await data.getZip(filters.zip);
     if (!zipRow) {
       return NextResponse.json(
         {
-          error: `Zip ${filters.zip} isn't in our lookup table. If you're on mock data, only the sample zips work — run DATA_SOURCE=supabase after npm run seed:zips for full US coverage.`,
+          error: `We don't recognize zip ${filters.zip} yet. Try a nearby zip or search by state.`,
           code: "zip_not_found",
         },
         { status: 422 }
@@ -61,14 +60,10 @@ export async function GET(request: NextRequest) {
       count: page.results.length,
     });
   } catch (err) {
-    const detail = err instanceof Error ? err.message : "Search failed.";
     console.error("GET /api/competitions", err);
     return NextResponse.json(
       {
-        error:
-          process.env.NODE_ENV === "development"
-            ? detail
-            : "We couldn’t run that search. Try again in a moment.",
+        error: "We couldn’t run that search. Try again in a moment.",
       },
       { status: 500 }
     );

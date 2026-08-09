@@ -97,12 +97,12 @@ export async function recordAccountInAppAlert(
     },
     email_change_pending: {
       title: "Confirm your new email",
-      body: "Check the confirmation link Supabase sent before the new address becomes your sign-in.",
+      body: "Check the confirmation link we sent before the new address becomes your sign-in.",
       dedupe: `account:email-change:${new Date().toISOString().slice(0, 13)}`,
     },
     password_reset_requested: {
       title: "Password reset email requested",
-      body: "If your account email is correct, Supabase sent a reset link. Causey does not send that message itself.",
+      body: "If your account email is correct, we sent a reset link to that address.",
       dedupe: `account:password-reset:${new Date().toISOString().slice(0, 13)}`,
     },
   }[parsed.data];

@@ -10,7 +10,7 @@ function revalidateEventSurfaces(eventSlug?: string) {
   revalidatePath("/me");
   revalidatePath("/orgs");
   revalidatePath("/family");
-  revalidatePath("/me");
+  revalidatePath("/me/notifications");
   if (eventSlug) {
     revalidatePath(`/event/${eventSlug}`);
     revalidatePath(`/event/${eventSlug}/manage`);

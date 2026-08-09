@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { publishTournament } from "@/lib/actions/tournaments";
+import type { CompetitionAudience } from "@/lib/schemas";
 
 /**
  * Organizer events are created as drafts (SEC-06), so this is the one place a
@@ -13,15 +14,19 @@ import { publishTournament } from "@/lib/actions/tournaments";
 export function PublishTournamentPanel({
   competitionId,
   eventSlug,
-  visibility,
+  audience,
+  orgSlug,
 }: {
   competitionId: string;
   eventSlug: string;
-  visibility: "public" | "private";
+  audience: CompetitionAudience;
+  orgSlug?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const publicReview = audience === "public";
 
   async function onPublish() {
     setPending(true);
@@ -30,6 +35,17 @@ export function PublishTournamentPanel({
       const result = await publishTournament({ competitionId, eventSlug });
       if (!result.ok) {
         setError(result.error);
+        return;
+      }
+      if (result.status === "pending_review") {
+        if (orgSlug) {
+          router.push(
+            `/orgs/${orgSlug}?submitted=${encodeURIComponent(eventSlug)}`
+          );
+          router.refresh();
+          return;
+        }
+        setSubmitted(true);
         return;
       }
       router.refresh();
@@ -41,31 +57,45 @@ export function PublishTournamentPanel({
   return (
     <div className="rounded-2xl border border-brand-red/30 bg-accent-soft p-5">
       <h2 className="text-base font-semibold text-foreground">
-        This tournament is a draft
+        {submitted
+          ? "Submitted for platform review"
+          : "This tournament is a draft"}
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted-strong">
-        {visibility === "public"
-          ? "Only you and your organization's coaches can see it. Publishing adds it to chess search, where anyone can find it."
-          : "Only you and your organization's coaches can see it. Publishing makes it visible to your members, not to the public."}
+        {submitted
+          ? "It is not in public search yet. You can prepare invitations while Causey reviews the listing."
+          : publicReview
+            ? "Only your organization’s staff can see it. Submit it for platform review before it can appear in public search."
+            : "Only your organization’s staff can see it. Publishing makes it visible to the selected members, not to the public."}
       </p>
-      <p className="mt-2 max-w-prose text-sm text-muted">
-        Check the date, venue, entry fee, and registration link before you
-        publish.{" "}
-        <Link
-          href={`/event/${eventSlug}/edit`}
-          className="font-semibold text-brand-red hover:underline"
-        >
-          Edit details
-        </Link>
-      </p>
-      <button
-        type="button"
-        onClick={onPublish}
-        disabled={pending}
-        className="cta-enabled mt-4 disabled:opacity-60"
-      >
-        {pending ? "Publishing…" : "Publish tournament"}
-      </button>
+      {!submitted ? (
+        <>
+          <p className="mt-2 max-w-prose text-sm text-muted">
+            Check the date, venue, entry fee, and registration link before you{" "}
+            {publicReview ? "submit" : "publish"}.{" "}
+            <Link
+              href={`/event/${eventSlug}/edit`}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Edit details
+            </Link>
+          </p>
+          <button
+            type="button"
+            onClick={onPublish}
+            disabled={pending}
+            className="cta-enabled mt-4 disabled:opacity-60"
+          >
+            {pending
+              ? publicReview
+                ? "Submitting…"
+                : "Publishing…"
+              : publicReview
+                ? "Submit for platform review"
+                : "Publish to members"}
+          </button>
+        </>
+      ) : null}
       {error ? (
         <p className="mt-2 text-xs font-medium text-brand-red" role="alert">
           {error}

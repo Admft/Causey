@@ -62,7 +62,8 @@ export default async function NewTournamentPage({
         </h1>
         <p className="mt-2 text-sm text-muted">
           Add a cover and the details families need. Causey saves this draft so
-          you can leave, return, preview the event page, and publish when ready.
+          you can leave and return. Member-only events publish immediately;
+          public listings go to platform review before appearing in search.
         </p>
         <div className="section-rule mt-8 pt-8">
           <TournamentCreateForm

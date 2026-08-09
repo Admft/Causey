@@ -58,7 +58,7 @@ function coachEventAction(event: {
   if (event.status === "draft") {
     return {
       href: `/event/${event.slug}/manage`,
-      label: "Review and publish",
+      label: "Review audience and continue",
     };
   }
   if (event.status === "pending_review") {
@@ -72,10 +72,13 @@ function coachEventAction(event: {
 
 export default async function OrgPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ submitted?: string }>;
 }) {
   const { slug } = await params;
+  const { submitted } = await searchParams;
   if (!isSupabaseConfigured()) redirect("/orgs");
   const user = await getSessionUser();
   if (!user) redirect(`/login?next=/orgs/${slug}`);
@@ -146,6 +149,9 @@ export default async function OrgPage({
     upcoming.find((e) => e.status === "pending_review") ??
     upcoming[0] ??
     null;
+  const submittedEvent = submitted
+    ? events.find((event) => event.slug === submitted)
+    : null;
 
   const coachMission = (() => {
     if (!isCoach || org.type === "district") return null;
@@ -208,13 +214,13 @@ export default async function OrgPage({
         },
       };
     }
-    if (freshestDraft) {
+    if (freshestDraft && priorityUpcoming?.status !== "rejected") {
       return {
         title: `Resume “${freshestDraft.data.name.trim() || "Untitled tournament"}”`,
         description: `Draft saved ${formatSavedAt(freshestDraft.updated_at)}${
           freshestDraft.cover_image_url
-            ? ". Cover is ready — finish details and publish when you’re set."
-            : ". Add a cover and finish details before you publish."
+            ? ". Cover is ready — finish details and choose who can see it."
+            : ". Add a cover, finish details, and choose who can see it."
         }`,
         action: {
           href: `/orgs/${org.slug}/tournaments/new?draft=${freshestDraft.id}`,
@@ -244,25 +250,31 @@ export default async function OrgPage({
             : ""
         }. ${
           priorityUpcoming.status === "rejected"
-            ? "Platform review returned this listing — update it and resubmit."
+            ? `Platform review returned this listing. ${
+                priorityUpcoming.moderation_note
+                  ? `Review note: “${priorityUpcoming.moderation_note}”`
+                  : "Open the listing to review the requested changes."
+              }`
             : priorityUpcoming.status === "pending_review"
               ? "You can still prep invites while the listing is in review."
               : hasStudents
                 ? "Invite your roster and track RSVPs from manage."
                 : "Add students to the roster before invites will have anyone to reach."
         }`,
-        action: hasStudents
-          ? { href: action.href, label: action.label }
-          : {
-              href: `/orgs/${org.slug}/roster#add-students`,
-              label: "Invite students",
-            },
-        secondary: hasStudents
-          ? {
-              href: `/orgs/${org.slug}/tournaments/new`,
-              label: "Create another tournament",
-            }
-          : { href: action.href, label: action.label },
+        action:
+          priorityUpcoming.status === "rejected" || hasStudents
+            ? { href: action.href, label: action.label }
+            : {
+                href: `/orgs/${org.slug}/roster#add-students`,
+                label: "Invite students",
+              },
+        secondary:
+          priorityUpcoming.status === "rejected" || hasStudents
+            ? {
+                href: `/orgs/${org.slug}/tournaments/new`,
+                label: "Create another tournament",
+              }
+            : { href: action.href, label: action.label },
       };
     }
     if (!hasStudents) {
@@ -284,7 +296,7 @@ export default async function OrgPage({
     return {
       title: "Create your first tournament",
       description:
-        "Publish an event page, invite your roster with one click, and track who can attend.",
+        "Create an event page, choose its audience, invite your roster, and track who can attend.",
       action: {
         href: `/orgs/${org.slug}/tournaments/new`,
         label: "Create tournament",
@@ -347,6 +359,22 @@ export default async function OrgPage({
                 ? " · assistant workspace"
               : ""}
         </p>
+
+        {submittedEvent?.status === "pending_review" ? (
+          <section
+            className="mt-8 rounded-2xl border border-brand-red/30 bg-accent-soft p-5"
+            role="status"
+          >
+            <h2 className="text-base font-semibold text-foreground">
+              Submitted for platform review
+            </h2>
+            <p className="mt-2 max-w-prose text-sm text-muted-strong">
+              “{submittedEvent.name}” is not in public search yet. You can
+              prepare invitations while Causey reviews the listing; its status
+              will update here.
+            </p>
+          </section>
+        ) : null}
 
         {org.type === "district" && isAdmin && districtAction ? (
           <section className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
@@ -467,7 +495,7 @@ export default async function OrgPage({
                   Hosted tournaments
                 </h2>
                 <p className="mt-1 max-w-lg text-xs text-muted">
-                  Create and publish an event page, then invite your roster.
+                  Create an event page, choose its audience, then invite your roster.
                 </p>
               </div>
               <Link
@@ -577,7 +605,7 @@ export default async function OrgPage({
               <div className="mt-6">
                 <h3 className="text-sm font-semibold text-foreground">
                   {freshestDraft && priorityUpcoming
-                    ? "Published & in review"
+                    ? "Hosted & in review"
                     : "Also upcoming"}
                 </h3>
                 <ul className="mt-1">

@@ -185,12 +185,13 @@ export function SearchClient() {
           results: body.results ?? [],
           total: body.total ?? body.results?.length ?? 0,
         });
-      } catch {
+      } catch (error) {
         if (controller.signal.aborted) return;
+        console.error("Tournament search request failed:", error);
         setStatus({
           kind: "error",
           message:
-            "Couldn't reach the search API. Check that the dev server is still running, then retry.",
+            "Couldn't reach tournament search. Check your connection, then retry.",
         });
       }
     }, 250);
