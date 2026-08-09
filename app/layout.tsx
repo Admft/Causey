@@ -19,12 +19,21 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://app.causey.dev"),
   title: {
     default: "Causey — Find student competitions",
     template: "%s · Causey",
   },
   description:
     "Search a growing, incomplete index of scholastic chess tournaments, then coordinate invitations and attendance with your organization.",
+  openGraph: {
+    type: "website",
+    siteName: "Causey",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 function ExternalMark() {
