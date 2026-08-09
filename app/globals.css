@@ -273,9 +273,8 @@ select.field {
 }
 
 /* The home hero owns the brand until its logo tucks under the sticky chrome.
- * Desktop: nav starts centered, then pins to the right content edge the
- * chess/org subnav uses. Phones/tablets stay end-aligned so the cluster
- * never slides — only the header mark fades in. */
+ * Wide desktop: nav starts centered, then slides to the right content edge.
+ * Phones through iPad Pro landscape stay end-aligned — only the mark fades. */
 .site-header-inner {
   position: relative;
   transition: padding-left 300ms var(--ease-brand);
@@ -314,7 +313,7 @@ select.field {
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1366px) {
   .site-header-inner,
   .site-header-inner:not(.site-header-inner--brand-visible),
   .site-header-inner--brand-visible {

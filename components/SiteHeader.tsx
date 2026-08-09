@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AuthNav } from "@/components/AuthNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { PrimaryNav } from "@/components/PrimaryNav";
+
+/** Match globals.css: phones → iPad Pro landscape stay end-aligned. */
+const END_ALIGNED_NAV = "(max-width: 1366px)";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [homeHeroBrandIsPast, setHomeHeroBrandIsPast] = useState(false);
   const showHeaderBrand = !isHome || homeHeroBrandIsPast;
+  const navRef = useRef<HTMLElement>(null);
+  const flipFromLeft = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isHome) {
@@ -32,7 +37,21 @@ export function SiteHeader() {
       const chrome = document.querySelector("[data-site-chrome]");
       const topInset = Math.ceil(chrome?.getBoundingClientRect().height ?? 56);
       observer = new IntersectionObserver(
-        ([entry]) => setHomeHeroBrandIsPast(!entry.isIntersecting),
+        ([entry]) => {
+          const past = !entry.isIntersecting;
+          setHomeHeroBrandIsPast((current) => {
+            if (current === past) return current;
+            const nav = navRef.current;
+            if (
+              nav &&
+              !window.matchMedia(END_ALIGNED_NAV).matches &&
+              !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ) {
+              flipFromLeft.current = nav.getBoundingClientRect().left;
+            }
+            return past;
+          });
+        },
         { threshold: 0, rootMargin: `-${topInset}px 0px 0px 0px` }
       );
       observer.observe(heroBrand);
@@ -45,6 +64,32 @@ export function SiteHeader() {
       window.removeEventListener("resize", observe);
     };
   }, [isHome]);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const from = flipFromLeft.current;
+    flipFromLeft.current = null;
+    if (!nav || from == null) return;
+
+    const dx = from - nav.getBoundingClientRect().left;
+    if (Math.abs(dx) < 1) return;
+
+    nav.style.transition = "none";
+    nav.style.transform = `translateX(${dx}px)`;
+    void nav.offsetWidth;
+    nav.style.transition = "transform 300ms var(--ease-brand)";
+    nav.style.transform = "translateX(0)";
+
+    const clear = () => {
+      nav.style.transition = "";
+      nav.style.transform = "";
+    };
+    nav.addEventListener("transitionend", clear, { once: true });
+    return () => {
+      nav.removeEventListener("transitionend", clear);
+      clear();
+    };
+  }, [showHeaderBrand]);
 
   return (
     <header className="border-b border-line bg-background/90 backdrop-blur-md">
@@ -65,6 +110,7 @@ export function SiteHeader() {
           <CauseyLogo size="md" />
         </Link>
         <nav
+          ref={navRef}
           className={`site-header-nav flex min-w-0 items-center gap-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:min-w-max sm:overflow-visible sm:gap-6 [&::-webkit-scrollbar]:hidden ${
             showHeaderBrand ? "sm:pr-2.5" : ""
           }`}

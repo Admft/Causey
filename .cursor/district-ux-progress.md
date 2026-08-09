@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Header handoff: end-aligned through iPad Pro landscape (1366px) so the cluster never jumps; wider desktops still center over the hero then FLIP-slide to the right edge — 2026-08-08
 - [x] Mobile header handoff: phones/tablets keep the nav end-aligned (no center→right slide); logo fades in when the hero mark tucks under sticky chrome instead of after it leaves the viewport — 2026-08-08
 - [x] iMessage/link preview card: `opengraph-image` + `twitter-image` render the Causey mark and wordmark on the canvas (1200×630 PNG); `apple-icon` uses the same mark; `metadataBase` is `https://app.causey.dev` — 2026-08-08
 - [x] Hobby-safe product-email cron: Vercel Hobby only allows one cron/day, so `vercel.json` is `0 14 * * *` (14:00 UTC, ± ~1h) instead of `*/5`; login/auth mail is unchanged (Supabase SMTP). Restore `*/5` after Pro — 2026-08-08
