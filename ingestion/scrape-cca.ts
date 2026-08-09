@@ -22,6 +22,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
+import { extractPageImage } from "./extract-page-image";
 import { decodeHtmlBuffer, fetchHtml } from "./fetch-html";
 import {
   CCA_LISTING_URL,
@@ -103,6 +104,9 @@ async function main() {
     console.log(`Fetching ${CCA_LISTING_URL}`);
     html = await fetchHtml(CCA_LISTING_URL);
   }
+  const fallbackImage = extractPageImage(html, CCA_LISTING_URL, {
+    allowSiteChrome: true,
+  });
 
   let raws = mergeListing(html);
   // Main events before blitz so location inheritance works.
@@ -258,8 +262,13 @@ async function main() {
       continue;
     }
     if (row.sections.length > 0) sectionsParsed += 1;
-    if (row.competition.image_url) withImage += 1;
-    drafts.push({ ...row.competition, sections: row.sections });
+    const imageUrl = row.competition.image_url || fallbackImage;
+    if (imageUrl) withImage += 1;
+    drafts.push({
+      ...row.competition,
+      image_url: imageUrl,
+      sections: row.sections,
+    });
   }
 
   console.log(

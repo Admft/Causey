@@ -29,6 +29,17 @@ describe("extractPageImage", () => {
     expect(extractPageImage(html, base)).toBeNull();
   });
 
+  it("allows a site image when explicitly used as the final fallback", () => {
+    const html = `
+      <html><head>
+        <meta property="og:image" content="https://example.com/site-logo.png" />
+      </head><body></body></html>
+    `;
+    expect(
+      extractPageImage(html, base, { allowSiteChrome: true })
+    ).toBe("https://example.com/site-logo.png");
+  });
+
   it("rejects US Chess sales banner ads so organizer fallback can run", () => {
     const html = `
       <html><body>

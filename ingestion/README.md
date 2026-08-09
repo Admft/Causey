@@ -24,6 +24,7 @@ Run these in the Supabase SQL editor if not already applied:
 3. **`0006_competition_image_url.sql`** — optional `image_url` cover from scrape
 4. **`0007_pathway_enrichment.sql`** — `ingestion_sources` logos, `pathway_*` columns, `enrichment_runs`
 5. **`0019_hub_scrape_sources.sql`** — OnlineReg / Chess-Results / FIDE source enums + live `ingestion_sources`
+6. **`0039_admin_tournament_operations.sql`** — admin deletion RPC, scrape-run visibility, and dispatch audit
 
 ## Provenance
 
@@ -59,6 +60,11 @@ SCRAPE_HTML_FILE="ingestion/fixtures/incoming/TCA and TCA Club Events _ Texas Ch
 Standing hints (`details.catalog_standing` / `catalog_class`) come from FIDE tile
 classes, Chess-Results player counts, and OnlineReg entry counts — used by
 `lib/event-standing.ts` for honest labels (not a prestige score).
+
+**Image fallback:** prefer an event-page cover. If none is available, use an
+organizer homepage image (TLA) or an available source-hub image (CCA /
+OnlineReg / Chess-Results / FIDE) rather than leaving the card empty. Image
+fallback never changes the registration destination.
 
 **Location / publish gate:** same as TLA — real ZIP + coords from `zips`.
 Hubs resolve ZIP via listing parse (Chess-Results), or city+state → GeoNames
@@ -135,12 +141,25 @@ the fingerprint inputs.
 
 - Cron: Mondays + Thursdays **11:00 UTC**
 - Runs `npm run scrape:all`
-- Manual: Actions → **Ingest tournaments** → Run workflow
+- Manual: Actions → **Ingest tournaments** → choose one source or all
 
 Secrets required:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
+
+Platform admins can also dispatch this workflow from `/admin/scrapers`. The app
+environment needs:
+
+- `GITHUB_ACTIONS_TOKEN` — fine-grained token for this repository with Actions
+  write access
+- `GITHUB_REPOSITORY` — `owner/repository`
+- `GITHUB_ACTIONS_REF` — optional workflow ref; defaults to `dev`
+
+The token stays server-side. The admin page sends only the selected source to
+GitHub and reads completed/running results from `scrape_runs`. Workflow
+concurrency queues overlapping manual or scheduled requests so two ingestion
+runs do not write at the same time.
 
 **Optional Docker** (VPS / local, when you do not want GitHub runners):
 

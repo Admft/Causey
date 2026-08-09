@@ -23,10 +23,14 @@ function absolutize(href: string, baseUrl: string): string | null {
   }
 }
 
-function looksUsable(url: string, alt?: string | null): boolean {
+function looksUsable(
+  url: string,
+  alt?: string | null,
+  allowSiteChrome = false
+): boolean {
   if (!url || url.startsWith("data:")) return false;
-  if (REJECT_URL_RE.test(url)) return false;
-  if (alt && REJECT_ALT_RE.test(alt)) return false;
+  if (!allowSiteChrome && REJECT_URL_RE.test(url)) return false;
+  if (!allowSiteChrome && alt && REJECT_ALT_RE.test(alt)) return false;
   // Tiny SVGs are almost always icons; raster covers are what we want.
   if (/\.svg(\?|#|$)/i.test(url)) return false;
   return true;
@@ -58,8 +62,13 @@ function metaContent($: ReturnType<typeof load>, selectors: string[]): string | 
  * @param html  Page HTML
  * @param baseUrl  Page URL used to resolve relative image paths
  */
-export function extractPageImage(html: string, baseUrl: string): string | null {
+export function extractPageImage(
+  html: string,
+  baseUrl: string,
+  opts: { allowSiteChrome?: boolean } = {}
+): string | null {
   const $ = load(html);
+  const allowSiteChrome = opts.allowSiteChrome === true;
 
   const metaCandidates = [
     metaContent($, [
@@ -73,12 +82,15 @@ export function extractPageImage(html: string, baseUrl: string): string | null {
 
   for (const raw of metaCandidates) {
     const abs = absolutize(raw, baseUrl);
-    if (abs && looksUsable(abs)) return abs;
+    if (abs && looksUsable(abs, null, allowSiteChrome)) return abs;
   }
 
-  // Drupal / event body images — skip nav/header chrome.
+  // Event pages stay content-only. The explicit final fallback may inspect the
+  // whole site page because the user prefers a source/organizer visual to none.
   const contentImgs = $(
-    "article img, .field--name-body img, .field-name-body img, main img, .content img"
+    allowSiteChrome
+      ? "img"
+      : "article img, .field--name-body img, .field-name-body img, main img, .content img"
   ).toArray();
 
   for (const el of contentImgs) {
@@ -98,7 +110,7 @@ export function extractPageImage(html: string, baseUrl: string): string | null {
 
     const alt = img.attr("alt") ?? null;
     const abs = absolutize(src, baseUrl);
-    if (abs && looksUsable(abs, alt)) return abs;
+    if (abs && looksUsable(abs, alt, allowSiteChrome)) return abs;
   }
 
   return null;

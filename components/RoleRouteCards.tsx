@@ -25,10 +25,27 @@ const ROLE_ROUTES: {
   },
 ];
 
-export function RoleRouteCards() {
+const COACH_ROUTE = {
+  role: "coach" as AccountRole,
+  title: "Coach or organizer",
+  description:
+    "Start a club, invite students with a join code, and publish your own tournaments next to the indexed feeds.",
+};
+
+export function RoleRouteCards({
+  exclude = [],
+  includeCoach = false,
+}: {
+  exclude?: AccountRole[];
+  includeCoach?: boolean;
+}) {
+  const routes = [
+    ...ROLE_ROUTES.filter((option) => !exclude.includes(option.role)),
+    ...(includeCoach ? [COACH_ROUTE] : []),
+  ];
   return (
     <ul className="mt-4 space-y-3">
-      {ROLE_ROUTES.map((option) => (
+      {routes.map((option) => (
         <li key={option.role}>
           <Link
             href={`/signup?role=${option.role}`}

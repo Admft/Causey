@@ -27,6 +27,7 @@ import {
 import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
+import { extractPageImage } from "./extract-page-image";
 
 const STAGING_FILE = "fide-drafts.json";
 
@@ -39,6 +40,9 @@ async function main() {
   }
 
   const html = await loadListingHtml({ url: FIDE_LISTING_URL });
+  const fallbackImage = extractPageImage(html, FIDE_LISTING_URL, {
+    allowSiteChrome: true,
+  });
   let raw = parseFideCalendarHtml(html);
   console.log(`Parsed ${raw.length} FIDE calendar tiles.`);
   raw = capRows(raw);
@@ -61,6 +65,7 @@ async function main() {
     if (!competition) continue;
     drafts.push({
       ...competition,
+      image_url: competition.image_url || fallbackImage,
       sections: [openSection("Open")],
     });
   }

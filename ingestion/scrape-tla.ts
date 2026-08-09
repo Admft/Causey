@@ -106,7 +106,9 @@ async function enrichFromOrganizerSite(
 
   // A relevant organizer image is still preferable to an empty card when the
   // event page has no cover. This fallback never changes the registration URL.
-  detail.imageUrl ??= extractPageImage(homepageHtml, detail.organizerWebsite);
+  detail.imageUrl ??= extractPageImage(homepageHtml, detail.organizerWebsite, {
+    allowSiteChrome: true,
+  });
 }
 
 async function loadListingPages(): Promise<RawTla[]> {

@@ -5,6 +5,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminTournamentStatusActions } from "@/components/AdminTournamentStatusActions";
 import { adminBulkSetTournamentStatus } from "@/lib/actions/admin";
+import {
+  adminDeleteAllTournaments,
+  adminDeleteTournaments,
+} from "@/lib/actions/admin-operations";
 import { formatDateRange } from "@/lib/format";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
 
@@ -47,16 +51,24 @@ export function AdminTournamentBulkList({
   tournaments,
   filterStatus,
   filterSource,
+  totalTournamentCount,
 }: {
   tournaments: BulkTournament[];
   filterStatus?: string;
   filterSource?: string;
+  totalTournamentCount: number;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "publish" | "delete" | "delete-all" | null
+  >(null);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false);
+  const [deleteAllConfirmation, setDeleteAllConfirmation] = useState("");
 
   const selectableIds = useMemo(
     () => tournaments.slice(0, BULK_CAP).map((row) => row.id),
@@ -107,6 +119,7 @@ export function AdminTournamentBulkList({
       return;
     }
     setPending(true);
+    setPendingAction("publish");
     setError(null);
     setMessage(null);
     try {
@@ -131,6 +144,68 @@ export function AdminTournamentBulkList({
       router.refresh();
     } finally {
       setPending(false);
+      setPendingAction(null);
+    }
+  }
+
+  async function deleteIds(ids: string[], label: string) {
+    if (!ids.length) return;
+    if (
+      !window.confirm(
+        `Permanently delete ${label}? This also removes related saved plans, RSVPs, attendance, sections, and change history. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setPending(true);
+    setPendingAction("delete");
+    setDeletingIds(new Set(ids));
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await adminDeleteTournaments({ competitionIds: ids });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setSelected(new Set());
+      setMessage(
+        result.skipped > 0
+          ? `Deleted ${result.deleted}; ${result.skipped} were already gone.`
+          : `Deleted ${result.deleted} tournament${result.deleted === 1 ? "" : "s"}.`
+      );
+      router.refresh();
+    } finally {
+      setPending(false);
+      setPendingAction(null);
+      setDeletingIds(new Set());
+    }
+  }
+
+  async function deleteEveryTournament() {
+    setPending(true);
+    setPendingAction("delete-all");
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await adminDeleteAllTournaments({
+        confirmation: deleteAllConfirmation,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setSelected(new Set());
+      setDeleteAllConfirmation("");
+      setConfirmingDeleteAll(false);
+      setMessage(
+        `Deleted ${result.deleted} tournament${result.deleted === 1 ? "" : "s"}. Scrapers can add source listings again on their next run.`
+      );
+      router.refresh();
+    } finally {
+      setPending(false);
+      setPendingAction(null);
     }
   }
 
@@ -179,7 +254,7 @@ export function AdminTournamentBulkList({
             }
             className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
           >
-            {pending
+            {pendingAction === "publish"
               ? "Publishing…"
               : `Publish ${readyDraftIds.length} ready draft${readyDraftIds.length === 1 ? "" : "s"}`}
           </button>
@@ -204,7 +279,26 @@ export function AdminTournamentBulkList({
                   }
                   className="cta-enabled disabled:opacity-60"
                 >
-                  {pending ? "Publishing…" : "Publish selected"}
+                  {pendingAction === "publish"
+                    ? "Publishing…"
+                    : "Publish selected"}
+                </button>
+              ) : null}
+              {selectedCount > 0 ? (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    deleteIds(
+                      [...selected],
+                      `${selectedCount} selected tournament${selectedCount === 1 ? "" : "s"}`
+                    )
+                  }
+                  className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                >
+                  {pendingAction === "delete"
+                    ? "Deleting…"
+                    : "Delete selected"}
                 </button>
               ) : null}
               {selectedCount > 0 ? (
@@ -306,10 +400,84 @@ export function AdminTournamentBulkList({
                 eventSlug={tournament.slug}
                 status={tournament.status}
               />
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => deleteIds([tournament.id], `"${tournament.name}"`)}
+                className="text-sm font-medium text-muted-strong hover:text-brand-red disabled:opacity-60"
+              >
+                {deletingIds.has(tournament.id) ? "Deleting…" : "Delete"}
+              </button>
             </div>
           </li>
         ))}
       </ul>
+
+      <section className="mt-8 border-t border-line pt-6">
+        <h3 className="text-sm font-semibold text-foreground">
+          Delete every tournament
+        </h3>
+        <p className="mt-1 max-w-2xl text-sm text-muted">
+          Permanently remove all {totalTournamentCount} tournament records and
+          their related plans, RSVPs, attendance, sections, and history.
+          Scheduled or manual scrapers can add source listings again.
+        </p>
+        {!confirmingDeleteAll ? (
+          <button
+            type="button"
+            disabled={pending || totalTournamentCount === 0}
+            onClick={() => {
+              setConfirmingDeleteAll(true);
+              setError(null);
+              setMessage(null);
+            }}
+            className="mt-3 text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+          >
+            Delete all {totalTournamentCount} tournaments
+          </button>
+        ) : (
+          <div className="mt-4 max-w-xl rounded-xl border border-line bg-surface-soft p-4">
+            <label className="block text-sm font-medium text-foreground">
+              Type DELETE ALL TOURNAMENTS to confirm
+              <input
+                className="field mt-2 w-full"
+                value={deleteAllConfirmation}
+                onChange={(event) =>
+                  setDeleteAllConfirmation(event.target.value)
+                }
+                disabled={pending}
+                autoComplete="off"
+              />
+            </label>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                disabled={
+                  pending ||
+                  deleteAllConfirmation !== "DELETE ALL TOURNAMENTS"
+                }
+                onClick={deleteEveryTournament}
+                className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+              >
+                {pendingAction === "delete-all"
+                  ? "Deleting every tournament…"
+                  : "Permanently delete every tournament"}
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setConfirmingDeleteAll(false);
+                  setDeleteAllConfirmation("");
+                }}
+                className="text-sm font-semibold text-muted-strong hover:text-foreground disabled:opacity-60"
+              >
+                Keep tournaments
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

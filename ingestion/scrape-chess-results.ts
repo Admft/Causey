@@ -23,6 +23,7 @@ import {
 import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
+import { extractPageImage } from "./extract-page-image";
 
 const STAGING_FILE = "chess-results-drafts.json";
 
@@ -37,6 +38,9 @@ async function main() {
   }
 
   const html = await loadListingHtml({ url: CHESS_RESULTS_LISTING_URL });
+  const fallbackImage = extractPageImage(html, CHESS_RESULTS_LISTING_URL, {
+    allowSiteChrome: true,
+  });
   let raw = parseChessResultsSearchHtml(html).filter(
     (r) => !r.federation || r.federation === "USA"
   );
@@ -62,6 +66,7 @@ async function main() {
     if (!competition) continue;
     drafts.push({
       ...competition,
+      image_url: competition.image_url || fallbackImage,
       sections: [openSection("Open")],
     });
   }

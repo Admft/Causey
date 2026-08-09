@@ -96,7 +96,13 @@ export function decodeHtmlBuffer(
 
 export async function fetchHtml(
   url: string,
-  opts: { timeoutMs?: number; userAgent?: string } = {}
+  opts: {
+    timeoutMs?: number;
+    userAgent?: string;
+    method?: "GET" | "POST";
+    body?: string | URLSearchParams;
+    headers?: Record<string, string>;
+  } = {}
 ): Promise<string> {
   const timeoutMs = opts.timeoutMs ?? FETCH_TIMEOUT_MS;
   let res: Response;
@@ -108,7 +114,10 @@ export async function fetchHtml(
         // HTML-only Accept header for XML even though the same fetcher handles
         // both safely as decoded text.
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        ...opts.headers,
       },
+      method: opts.method ?? "GET",
+      body: opts.body,
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (err) {

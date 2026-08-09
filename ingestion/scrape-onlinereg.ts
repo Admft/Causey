@@ -31,6 +31,8 @@ import {
 import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
+import { extractPageImage } from "./extract-page-image";
+import { fetchHtml } from "./fetch-html";
 
 const STAGING_FILE = "onlinereg-drafts.json";
 
@@ -42,7 +44,24 @@ async function main() {
     return;
   }
 
-  const html = await loadListingHtml({ url: ONLINEREG_LISTING_URL });
+  const listingShell = await loadListingHtml({ url: ONLINEREG_LISTING_URL });
+  const html = process.env.SCRAPE_HTML_FILE
+    ? listingShell
+    : await fetchHtml(
+        "https://onlineregistration.cc/tournaments/ajaxFrontGetTourListNew.php",
+        {
+          method: "POST",
+          body: new URLSearchParams({ vendor_search: "0", length: "-1" }),
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            Referer: ONLINEREG_LISTING_URL,
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        }
+      );
+  const fallbackImage = extractPageImage(listingShell, ONLINEREG_LISTING_URL, {
+    allowSiteChrome: true,
+  });
   let raw = parseOnlineRegIndexHtml(html);
   console.log(`Parsed ${raw.length} OnlineRegistration events.`);
   raw = capRows(raw);
@@ -71,6 +90,7 @@ async function main() {
     if (!competition) continue;
     drafts.push({
       ...competition,
+      image_url: competition.image_url || fallbackImage,
       sections: [openSection("Open")],
     });
   }

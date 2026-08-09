@@ -16,7 +16,25 @@ name: Ingest tournaments
 on:
   schedule:
     - cron: "0 11 * * 1,4"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Tournament source to ingest
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - tla_scrape
+          - cca_scrape
+          - onlinereg_scrape
+          - chess_results_scrape
+          - fide_calendar_scrape
+          - tca_scrape
+
+concurrency:
+  group: causey-tournament-ingestion
+  cancel-in-progress: false
 
 jobs:
   scrape:
@@ -41,9 +59,9 @@ jobs:
             exit 1
           fi
           echo "Supabase secrets present."
-      - name: Scrape tournament sources (+ pathway enrich)
-        run: npm run scrape:all
+      - name: Scrape selected tournament source
         env:
+          SCRAPER_SOURCE: ${{ inputs.source || 'all' }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -51,7 +69,19 @@ jobs:
           ENRICH_BATCH_SIZE: "20"
           # Fail instead of silently staging-only when secrets are wrong.
           REQUIRE_SUPABASE: "1"
+        run: |
+          case "$SCRAPER_SOURCE" in
+            all) npm run scrape:all ;;
+            tla_scrape) npm run scrape:tla ;;
+            cca_scrape) npm run scrape:cca ;;
+            onlinereg_scrape) npm run scrape:onlinereg ;;
+            chess_results_scrape) npm run scrape:chess-results ;;
+            fide_calendar_scrape) npm run scrape:fide ;;
+            tca_scrape) npm run scrape:tca ;;
+            *) echo "::error::Unknown scraper source: $SCRAPER_SOURCE"; exit 1 ;;
+          esac
       - name: Purge competitions ended over a year ago
+        if: github.event_name == 'schedule' || inputs.source == 'all'
         run: npm run purge:stale
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminTournamentBulkList } from "@/components/AdminTournamentBulkList";
-import { getAdminTournaments } from "@/lib/data/admin";
+import {
+  getAdminTournamentCount,
+  getAdminTournaments,
+} from "@/lib/data/admin";
 import {
   COMPETITION_SOURCE_FILTER_OPTIONS,
   competitionSourceLabel,
@@ -20,11 +23,14 @@ export default async function AdminTournamentsPage({
 }) {
   const filters = await searchParams;
   const readyOnly = filters.ready === "1";
-  const tournaments = await getAdminTournaments({
-    status: filters.status,
-    source: filters.source,
-    ready: readyOnly,
-  });
+  const [tournaments, totalTournamentCount] = await Promise.all([
+    getAdminTournaments({
+      status: filters.status,
+      source: filters.source,
+      ready: readyOnly,
+    }),
+    getAdminTournamentCount(),
+  ]);
   const draftSourceGroup =
     filters.status === "draft" && filters.source
       ? competitionSourceLabel(filters.source)
@@ -217,6 +223,7 @@ export default async function AdminTournamentsPage({
               }))}
               filterStatus={filters.status}
               filterSource={filters.source}
+              totalTournamentCount={totalTournamentCount}
             />
           </div>
         )}

@@ -82,6 +82,17 @@ export type AdminAuditRow = {
   created_at: string;
 };
 
+export type AdminScrapeRunRow = {
+  id: string;
+  source: string;
+  started_at: string;
+  finished_at: string | null;
+  status: "running" | "succeeded" | "failed";
+  rows_staged: number | null;
+  rows_upserted: number | null;
+  error: string | null;
+};
+
 export type AdminModerationQueueRow = {
   id: string;
   slug: string;
@@ -254,6 +265,14 @@ export async function getAdminTournaments(filters?: {
   return rows.filter((row) => isTournamentPublishReady(row));
 }
 
+export async function getAdminTournamentCount(): Promise<number> {
+  const supabase = await createServerSupabaseClient();
+  const { count } = await supabase
+    .from("competitions")
+    .select("*", { count: "exact", head: true });
+  return count ?? 0;
+}
+
 export async function getAdminTournament(
   id: string
 ): Promise<AdminTournamentRow | null> {
@@ -314,4 +333,19 @@ export async function getAdminAuditLog(limit = 20): Promise<AdminAuditRow[]> {
     .limit(limit);
 
   return (data ?? []) as AdminAuditRow[];
+}
+
+export async function getAdminScrapeRuns(
+  limit = 20
+): Promise<AdminScrapeRunRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("scrape_runs")
+    .select(
+      "id, source, started_at, finished_at, status, rows_staged, rows_upserted, error"
+    )
+    .order("started_at", { ascending: false })
+    .limit(limit);
+
+  return (data ?? []) as AdminScrapeRunRow[];
 }
