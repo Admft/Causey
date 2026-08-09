@@ -9,41 +9,42 @@ import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
  */
 const PILOT_STEPS = [
   {
-    title: "We set up your schools",
+    title: "Guided district setup",
     description:
-      "Causey creates the district, checks each school is real, and hands it to the administrator you name.",
+      "Turn today’s assisted setup into a guided onboarding flow after the pilot requirements are proven.",
   },
   {
-    title: "Staff invite their own people",
+    title: "Stronger family follow-through",
     description:
-      "Coaches share join links with students and families. No shared passwords, no district-wide student access.",
+      "Expand reminders and action tracking so schools can see what families still need to complete.",
   },
   {
-    title: "Coaches run the events",
+    title: "Reporting over time",
     description:
-      "Post a tournament to the team, see who can go, and mark who showed up.",
+      "Add district-ready trends and exports for participation across schools and seasons.",
   },
   {
-    title: "The district sees the totals",
+    title: "More competition types",
     description:
-      "How many students competed at each school, without reading individual student records.",
+      "Extend the same school workflows beyond chess as each new competition directory becomes usable.",
   },
 ];
 
 const PRIVATE_SETUP_GATES = [
   {
-    title: "You sign the pilot terms",
+    title: "District and school structure",
     description:
-      "Privacy, how long data is kept, support, and how far the rollout goes are agreed first.",
+      "A district can oversee participating schools without running each team’s daily work.",
   },
   {
-    title: "You name the schools",
-    description: "Causey never adds or lists a school on its own.",
+    title: "Access based on each role",
+    description:
+      "District staff, school staff, coaches, parents, and students each see the work meant for them.",
   },
   {
-    title: "Your administrators claim access",
+    title: "Participation across schools",
     description:
-      "We confirm who runs each school before any invitation goes out.",
+      "District staff can review school-level totals without opening individual student records.",
   },
 ];
 
@@ -63,14 +64,14 @@ export function HomeDistrictPitch() {
               id="district-pitch-heading"
               className="mt-2 max-w-[18ch] font-display text-display font-bold tracking-tight text-foreground"
             >
-              Finding the tournament is the easy part.
+              Built to work with a school district.
             </h2>
             <p className="mt-4 max-w-prose text-base text-muted">
-              Once a school runs a chess program, someone still has to tell
-              families about each event, collect the permission, take
-              attendance, and answer the district at the end of the season.
-              That is what a pilot puts in place. There is no district signup
-              button yet; we set it up with you.
+              Causey already has the foundation for an assisted district pilot:
+              connected schools, separate access for each role, tournament
+              coordination, and school-level participation totals. The panel
+              shows what is ready now; the four points below are what we plan to
+              build next for districts.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <Link href="/districts" className="cta-enabled inline-flex">
@@ -94,14 +95,14 @@ export function HomeDistrictPitch() {
           <ScrollReveal className="min-w-0">
             <div className="rounded-2xl border border-line bg-surface-soft p-5 sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-red">
-                Private setup first
+                Ready for an assisted pilot
               </p>
               <h3 className="mt-3 font-display text-xl font-bold text-foreground">
-                No school appears on Causey before you sign.
+                The district foundation is in place.
               </h3>
               <p className="mt-2 text-sm text-muted">
-                Talking to us starts a private review. It does not create a
-                public school page or a student roster.
+                Causey already supports the structure and permissions needed to
+                connect a district with its participating schools.
               </p>
 
               <ol className="mt-5 divide-y divide-line border-y border-line">

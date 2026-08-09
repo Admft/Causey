@@ -11,14 +11,19 @@ const searchFilters = read("components/SearchFilters.tsx");
 
 describe("mobile discovery and private district setup", () => {
   it("does not put example schools in the public district pitch", () => {
-    expect(districtPitch).toContain("Private setup first");
-    expect(districtPitch).toContain("never adds or lists a school on its own");
+    expect(districtPitch).toContain("Ready for an assisted pilot");
+    expect(districtPitch).toContain("participating schools");
     expect(districtPitch).not.toContain("Washington Elementary");
     expect(districtPitch).not.toContain("Jefferson Middle School");
     expect(districtPitch).not.toContain("Lincoln High School");
   });
 
-  it("keeps the district pitch in plain language", () => {
+  it("separates current district readiness from future plans", () => {
+    expect(districtPitch).toContain("The district foundation is in place");
+    expect(districtPitch).toContain("what is ready now");
+    expect(districtPitch).toContain("what we plan to");
+    expect(districtPitch).toContain("Guided district setup");
+    expect(districtPitch).toContain("More competition types");
     expect(districtPitch).not.toContain("aggregate reporting");
     expect(districtPitch).not.toContain("staff handoff");
     expect(districtPitch).not.toContain("Provision and verify");
