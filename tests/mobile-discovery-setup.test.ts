@@ -11,19 +11,17 @@ const searchFilters = read("components/SearchFilters.tsx");
 
 describe("mobile discovery and private district setup", () => {
   it("does not put example schools in the public district pitch", () => {
-    expect(districtPitch).toContain(
-      "does not list a school, a coach, or a student before that"
-    );
+    expect(districtPitch).toContain("Private setup first");
+    expect(districtPitch).toContain("never adds or lists a school on its own");
     expect(districtPitch).not.toContain("Washington Elementary");
     expect(districtPitch).not.toContain("Jefferson Middle School");
     expect(districtPitch).not.toContain("Lincoln High School");
   });
 
-  it("explains the district band in plain roles before any jargon", () => {
-    expect(districtPitch).toContain("How a district starts");
-    expect(districtPitch).toContain("Parents and students");
+  it("keeps the district pitch in plain language", () => {
     expect(districtPitch).not.toContain("aggregate reporting");
     expect(districtPitch).not.toContain("staff handoff");
+    expect(districtPitch).not.toContain("Provision and verify");
   });
 
   it("puts compact filters before the mobile tournament search controls", () => {

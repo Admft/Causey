@@ -40,19 +40,16 @@ export default function DistrictsPage() {
           <div className="animate-rise">
             <CauseyLogo size="hero" />
           </div>
-          <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[20ch] font-display text-display-xl font-bold tracking-tight text-foreground sm:mt-6">
+          <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[18ch] font-display text-display-xl font-bold tracking-tight text-foreground sm:mt-6">
             Chess for a whole district, set up with you.
           </h1>
           <p className="animate-rise animate-rise-delay-1 mt-4 max-w-2xl text-md text-muted">
             Anyone can search tournaments on Causey for free. A district pilot
-            adds the work a school program actually runs on: getting students
-            and staff onto the right teams, telling families about each event,
+            adds what a school program actually runs on: getting students and
+            staff onto the right teams, telling families about each event,
             recording who attended, and giving the district participation
-            numbers it can report.
-          </p>
-          <p className="animate-rise animate-rise-delay-1 mt-3 max-w-2xl text-base text-muted">
-            Setup is hands-on today. Live email verification and a legal review
-            still come before any student rollout.
+            numbers. Setup is hands-on today, and live email verification and
+            legal review come before any student rollout.
           </p>
           <div className="animate-rise animate-rise-delay-2 mt-7 flex flex-wrap items-center gap-4">
             <a
