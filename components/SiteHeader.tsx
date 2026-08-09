@@ -7,9 +7,6 @@ import { AuthNav } from "@/components/AuthNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { PrimaryNav } from "@/components/PrimaryNav";
 
-/** Match globals.css: phones → iPad Pro landscape stay end-aligned. */
-const END_ALIGNED_NAV = "(max-width: 1366px)";
-
 export function SiteHeader() {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -44,7 +41,6 @@ export function SiteHeader() {
             const nav = navRef.current;
             if (
               nav &&
-              !window.matchMedia(END_ALIGNED_NAV).matches &&
               !window.matchMedia("(prefers-reduced-motion: reduce)").matches
             ) {
               flipFromLeft.current = nav.getBoundingClientRect().left;

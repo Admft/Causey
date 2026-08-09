@@ -273,11 +273,10 @@ select.field {
 }
 
 /* The home hero owns the brand until its logo tucks under the sticky chrome.
- * Wide desktop: nav starts centered, then slides to the right content edge.
- * Phones through iPad Pro landscape stay end-aligned — only the mark fades. */
+ * Every viewport: nav starts centered, then SiteHeader FLIP-slides it to the
+ * right content edge. Padding/justify swap instantly; the slide is the motion. */
 .site-header-inner {
   position: relative;
-  transition: padding-left 300ms var(--ease-brand);
 }
 .site-header-inner:not(.site-header-inner--brand-visible) {
   justify-content: center;
@@ -310,15 +309,6 @@ select.field {
   }
   .site-header-brand {
     left: 2rem;
-  }
-}
-
-@media (max-width: 1366px) {
-  .site-header-inner,
-  .site-header-inner:not(.site-header-inner--brand-visible),
-  .site-header-inner--brand-visible {
-    justify-content: flex-end;
-    transition: none;
   }
 }
 
