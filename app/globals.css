@@ -272,10 +272,10 @@ select.field {
   transform: translateX(0.25rem);
 }
 
-/* The home hero owns the brand until its logo leaves the viewport: the nav
- * starts centered over the hero, then pins to the same right content edge
- * the chess/org subnav uses (px-5 / sm:px-8). Flex-end — not a cqw
- * transform — is what actually shares that edge signed-in or out. */
+/* The home hero owns the brand until its logo tucks under the sticky chrome.
+ * Desktop: nav starts centered, then pins to the right content edge the
+ * chess/org subnav uses. Phones/tablets stay end-aligned so the cluster
+ * never slides — only the header mark fades in. */
 .site-header-inner {
   position: relative;
   transition: padding-left 300ms var(--ease-brand);
@@ -315,9 +315,11 @@ select.field {
 }
 
 @media (max-width: 1023px) {
-  /* Tablets and phones: keep the whole nav group end-aligned after the logo. */
-  .site-header-inner {
+  .site-header-inner,
+  .site-header-inner:not(.site-header-inner--brand-visible),
+  .site-header-inner--brand-visible {
     justify-content: flex-end;
+    transition: none;
   }
 }
 

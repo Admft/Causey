@@ -25,22 +25,32 @@ export function SiteHeader() {
     }
 
     setHomeHeroBrandIsPast(false);
-    const observer = new IntersectionObserver(
-      ([entry]) => setHomeHeroBrandIsPast(!entry.isIntersecting),
-      { threshold: 0 }
-    );
 
-    observer.observe(heroBrand);
-    return () => observer.disconnect();
+    let observer: IntersectionObserver | null = null;
+    const observe = () => {
+      observer?.disconnect();
+      const chrome = document.querySelector("[data-site-chrome]");
+      const topInset = Math.ceil(chrome?.getBoundingClientRect().height ?? 56);
+      observer = new IntersectionObserver(
+        ([entry]) => setHomeHeroBrandIsPast(!entry.isIntersecting),
+        { threshold: 0, rootMargin: `-${topInset}px 0px 0px 0px` }
+      );
+      observer.observe(heroBrand);
+    };
+
+    observe();
+    window.addEventListener("resize", observe);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", observe);
+    };
   }, [isHome]);
 
   return (
     <header className="border-b border-line bg-background/90 backdrop-blur-md">
       <div
         className={`site-header-inner mx-auto flex h-14 max-w-6xl items-center px-5 sm:h-16 sm:px-8 ${
-          showHeaderBrand
-            ? "site-header-inner--brand-visible justify-end"
-            : "justify-center max-lg:justify-end"
+          showHeaderBrand ? "site-header-inner--brand-visible" : ""
         }`}
       >
         <Link
