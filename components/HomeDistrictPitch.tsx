@@ -55,7 +55,7 @@ export function HomeDistrictPitch() {
       aria-labelledby="district-pitch-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:gap-12 lg:gap-16">
           <div className="min-w-0 max-w-2xl">
             <p className="text-sm font-semibold text-brand-red">
               Schools and districts
