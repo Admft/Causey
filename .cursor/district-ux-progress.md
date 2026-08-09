@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] District pitch legibility: home band now reads as “Finding the tournament is the easy part” → what coaches, families, and the district office each get → one plain paragraph on how a district starts (no signup button, nothing listed before signing). Dropped the competing 01–03 gate card and 01–04 stage strip that duplicated the coverage path above it; `/districts` steps and section heads rewritten out of provisioning jargon — 2026-08-09
 - [x] Founder conversation CTAs: home “Talk with the founding team” and `/districts` “Book a district pilot conversation” open the Google Calendar booking page (`lib/founding-team.ts`) — 2026-08-09
 - [x] Pilot-safe discovery/setup repair: home district preview now shows private approval gates with no example school directory; mobile chess filters move above the search controls and open into a compact two-column layout; valid team links distinguish lookup outages from stale codes, with anon preview permission restored in `0040` — 2026-08-09
 - [x] Header handoff: every viewport stays centered over the hero then FLIP-slides to the right (no justify snap); logo still fades in when the mark tucks under sticky chrome — 2026-08-08

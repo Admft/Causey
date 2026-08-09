@@ -11,24 +11,24 @@ export const metadata: Metadata = {
 
 const pilotSteps = [
   {
-    title: "Provision and verify",
+    title: "We set up your schools",
     description:
-      "Causey creates the district, verifies participating schools, and hands each school to its authorized administrator.",
+      "Causey creates the district, checks that each school is real, and gives control of each one to the administrator you name.",
   },
   {
-    title: "Invite the right people",
+    title: "Staff invite their own people",
     description:
-      "School staff distribute student and staff claim links without shared passwords or district-wide student access.",
+      "Coaches and school administrators share join links with students, families, and other staff. No shared passwords, and no one gets district-wide access to student accounts.",
   },
   {
-    title: "Coordinate tournaments",
+    title: "Coaches run the events",
     description:
-      "Coaches publish scoped events, collect RSVPs, track organizer registration, and record attendance.",
+      "Post a tournament to a team, see who can go, track who still needs to register with the organizer, and mark attendance on the day.",
   },
   {
-    title: "Review participation",
+    title: "The district sees the totals",
     description:
-      "District administrators see school-level counts and attendance rollups without browsing individual student records.",
+      "Participation and attendance counts by school, so the district office can answer questions without reading individual student records.",
   },
 ];
 
@@ -40,14 +40,19 @@ export default function DistrictsPage() {
           <div className="animate-rise">
             <CauseyLogo size="hero" />
           </div>
-          <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[18ch] font-display text-display-xl font-bold tracking-tight text-foreground sm:mt-6">
-            A district pilot for scholastic chess participation.
+          <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[20ch] font-display text-display-xl font-bold tracking-tight text-foreground sm:mt-6">
+            Chess for a whole district, set up with you.
           </h1>
           <p className="animate-rise animate-rise-delay-1 mt-4 max-w-2xl text-md text-muted">
-            Causey connects discovery with the school work that follows:
-            provisioning, invitations, family action, attendance, and aggregate
-            reporting. Today this is an assisted pilot, with live email
-            verification and legal review required before student rollout.
+            Anyone can search tournaments on Causey for free. A district pilot
+            adds the work a school program actually runs on: getting students
+            and staff onto the right teams, telling families about each event,
+            recording who attended, and giving the district participation
+            numbers it can report.
+          </p>
+          <p className="animate-rise animate-rise-delay-1 mt-3 max-w-2xl text-base text-muted">
+            Setup is hands-on today. Live email verification and a legal review
+            still come before any student rollout.
           </p>
           <div className="animate-rise animate-rise-delay-2 mt-7 flex flex-wrap items-center gap-4">
             <a
@@ -77,11 +82,12 @@ export default function DistrictsPage() {
           <div className="grid gap-10 md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-14 lg:gap-20">
             <div>
               <h2 className="font-display text-display font-bold tracking-tight text-foreground">
-                What the assisted pilot covers
+                What setup looks like
               </h2>
               <p className="mt-3 text-base text-muted">
-                Causey and the district complete each setup stage together.
-                There is no instant district signup or public price promise.
+                We work through these four stages with you. There is no instant
+                district signup, and Causey does not list a school, a coach, or
+                a student before the district signs.
               </p>
             </div>
             <ol className="divide-y divide-line border-y border-line">
@@ -110,24 +116,24 @@ export default function DistrictsPage() {
         <div className="mx-auto grid max-w-6xl gap-10 px-5 sm:px-8 md:grid-cols-2 md:gap-14">
           <div>
             <h2 className="font-display text-display font-bold tracking-tight text-foreground">
-              Built for scoped responsibility
+              Everyone sees only their own part
             </h2>
             <p className="mt-3 max-w-prose text-base text-muted">
-              District administrators manage schools and aggregate reporting.
-              School administrators manage staffing and settings. Coaches
-              manage tournaments and rosters. Parents and students see the
-              actions that belong to them.
+              District administrators manage schools and see totals. School
+              administrators manage staff and settings. Coaches manage their
+              own teams and events. Parents and students see only what belongs
+              to them.
             </p>
           </div>
           <div className="md:border-l md:border-line md:pl-12">
             <h2 className="font-display text-display font-bold tracking-tight text-foreground">
-              What still needs review
+              What we have not finished
             </h2>
             <p className="mt-3 max-w-prose text-base text-muted">
-              Before a paid student rollout, Causey and the district must agree
-              on commercial terms, support, privacy, retention, security, and
-              product-email readiness. Causey does not present the current
-              pilot as a completed procurement package.
+              Before a paid student rollout, Causey and the district still have
+              to settle price, support, privacy, how long data is kept, and
+              security, and Causey has to prove its email delivery at school
+              volume. This is a pilot, not a finished procurement package.
             </p>
           </div>
         </div>
