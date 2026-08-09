@@ -190,7 +190,9 @@ export function normalizeRawTla(
   const city = detail?.city?.trim() || raw.city;
   const state = (detail?.state && stateToCode(detail.state)) || raw.state;
   const regUrl =
-    detail?.registrationUrl ||
+    (isEventSpecificUrl(detail?.registrationUrl)
+      ? detail?.registrationUrl
+      : null) ||
     (isEventSpecificUrl(detail?.organizerWebsite)
       ? detail?.organizerWebsite
       : null) ||

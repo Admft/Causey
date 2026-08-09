@@ -84,6 +84,16 @@ describe("US Chess detail parser", () => {
       coords: { lat: 32.9, lng: -96.9 },
     });
     expect(normalized?.competition.reg_url).toBe(raw.detailUrl);
+
+    const genericRegistration = normalizeRawTla(raw, {
+      id: "00000000-0000-4000-8000-000000000003",
+      detail: {
+        ...detail,
+        registrationUrl: "https://onlineregistration.cc/",
+      },
+      coords: { lat: 32.9, lng: -96.9 },
+    });
+    expect(genericRegistration?.competition.reg_url).toBe(raw.detailUrl);
   });
 
   it("prefers a labeled event registration link from the detail body", () => {

@@ -28,8 +28,10 @@ import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import { extractPageImage } from "./extract-page-image";
+import { fetchHtml } from "./fetch-html";
 
 const STAGING_FILE = "fide-drafts.json";
+const MAX_PAGES = Number(process.env.SCRAPE_MAX_PAGES ?? "40");
 
 async function main() {
   console.log(`Scraper: ${FIDE_LISTING_URL} → source='${FIDE_SCRAPER_ID}'`);
@@ -39,12 +41,52 @@ async function main() {
     return;
   }
 
-  const html = await loadListingHtml({ url: FIDE_LISTING_URL });
-  const fallbackImage = extractPageImage(html, FIDE_LISTING_URL, {
+  const listingShell = await loadListingHtml({ url: FIDE_LISTING_URL });
+  const fallbackImage = extractPageImage(listingShell, FIDE_LISTING_URL, {
     allowSiteChrome: true,
   });
-  let raw = parseFideCalendarHtml(html);
+  let raw;
+  if (process.env.SCRAPE_HTML_FILE) {
+    raw = parseFideCalendarHtml(listingShell);
+  } else {
+    const byKey = new Map<
+      string,
+      ReturnType<typeof parseFideCalendarHtml>[number]
+    >();
+    const year = new Date().getUTCFullYear();
+    for (let page = 1; page <= MAX_PAGES; page += 1) {
+      const html = await fetchHtml(
+        "https://calendar.fide.com/calendar_server.php",
+        {
+          method: "POST",
+          body: new URLSearchParams({
+            show: "tiles",
+            page: String(page),
+            country: "all",
+            event_type: "all",
+            time_control: "all",
+            from_date: new Date().toISOString().slice(0, 10),
+            to_date: `${year}-12-31`,
+          }),
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            Referer: FIDE_LISTING_URL,
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        }
+      );
+      const pageRows = parseFideCalendarHtml(html);
+      for (const row of pageRows) byKey.set(row.externalKey, row);
+      if (pageRows.length === 0 || pageRows.length < 15) break;
+    }
+    raw = [...byKey.values()];
+  }
   console.log(`Parsed ${raw.length} FIDE calendar tiles.`);
+  if (raw.length === 0) {
+    throw new Error(
+      "FIDE returned zero events; refusing to stage an empty scrape."
+    );
+  }
   raw = capRows(raw);
 
   const client = getServiceRoleClient();

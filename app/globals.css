@@ -273,14 +273,15 @@ select.field {
 }
 
 /* The home hero owns the brand until its logo leaves the viewport: the nav
- * (links + auth, one group) starts centered over the hero, then the brand
- * fades in and the group shifts right. Both end states share the chess
- * subnav's content edges (px-5 / sm:px-8): brand at the left edge, and the
- * shifted group's right edge landing exactly on the right content edge. */
+ * starts centered over the hero, then pins to the same right content edge
+ * the chess/org subnav uses (px-5 / sm:px-8). Flex-end — not a cqw
+ * transform — is what actually shares that edge signed-in or out. */
 .site-header-inner {
   position: relative;
-  container-type: inline-size;
   transition: padding-left 300ms var(--ease-brand);
+}
+.site-header-inner:not(.site-header-inner--brand-visible) {
+  justify-content: center;
 }
 .site-header-brand {
   position: absolute;
@@ -298,11 +299,10 @@ select.field {
 .site-header-nav {
   width: max-content;
   max-width: 100%;
-  margin-inline: auto;
-  transition: transform 300ms var(--ease-brand);
 }
 .site-header-inner--brand-visible {
   padding-left: 7.5rem;
+  justify-content: flex-end;
 }
 
 @media (min-width: 640px) {
@@ -312,22 +312,12 @@ select.field {
   .site-header-brand {
     left: 2rem;
   }
-  /* Shift the centered group right until its right edge hits the right
-   * content edge (100cqw - 2rem padding) — the same edge the chess subnav
-   * uses. Clamped at 0 so tight widths never overflow the page. */
-  .site-header-nav--brand-visible {
-    transform: translateX(max(0px, calc((100cqw - 4rem - 100%) / 2)));
-  }
 }
 
 @media (max-width: 1023px) {
   /* Tablets and phones: keep the whole nav group end-aligned after the logo. */
-  .site-header-nav {
-    margin-inline: 0;
-    margin-left: auto;
-  }
-  .site-header-nav--brand-visible {
-    transform: none;
+  .site-header-inner {
+    justify-content: flex-end;
   }
 }
 

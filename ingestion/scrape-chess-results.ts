@@ -4,6 +4,7 @@
  *   npm run scrape:chess-results
  *   SCRAPE_HTML_FILE=ingestion/fixtures/chess-results-usa-search.html npm run scrape:chess-results
  */
+import { load } from "cheerio";
 import { pathToFileURL } from "node:url";
 import {
   CHESS_RESULTS_LISTING_URL,
@@ -24,8 +25,79 @@ import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import { extractPageImage } from "./extract-page-image";
+import { decodeHtmlBuffer } from "./fetch-html";
 
 const STAGING_FILE = "chess-results-drafts.json";
+const USER_AGENT =
+  "CauseyBot/0.1 (+https://causey.dev; tournament discovery indexing)";
+
+async function fetchLiveUsaSearch(): Promise<{
+  listingShell: string;
+  resultsHtml: string;
+}> {
+  const initial = await fetch(CHESS_RESULTS_LISTING_URL, {
+    headers: { "User-Agent": USER_AGENT },
+    signal: AbortSignal.timeout(12_000),
+  });
+  if (!initial.ok) {
+    throw new Error(
+      `Chess-Results search fetch failed: HTTP ${initial.status}`
+    );
+  }
+  const listingShell = decodeHtmlBuffer(
+    Buffer.from(await initial.arrayBuffer()),
+    initial.headers.get("content-type")
+  );
+  const $ = load(listingShell);
+  const action = new URL(
+    $("form").first().attr("action") || initial.url,
+    initial.url
+  ).toString();
+  const body = new URLSearchParams();
+  $("form input[type='hidden']").each((_, input) => {
+    const name = $(input).attr("name");
+    if (name) body.set(name, $(input).attr("value") ?? "");
+  });
+  $("form input[type='text']").each((_, input) => {
+    const name = $(input).attr("name");
+    if (name) body.set(name, "");
+  });
+  const year = new Date().getUTCFullYear();
+  body.set("ctl00$P1$combo_art", "5");
+  body.set("ctl00$P1$combo_sort", "3");
+  body.set("ctl00$P1$combo_land", "USA");
+  body.set("ctl00$P1$combo_bedenkzeit", "0");
+  body.set("ctl00$P1$combo_anzahl_zeilen", "5");
+  body.set("ctl00$P1$txt_von_tag", new Date().toISOString().slice(0, 10));
+  body.set("ctl00$P1$txt_bis_tag", `${year + 1}-12-31`);
+  body.set("ctl00$P1$cb_suchen", "Search");
+
+  const cookie = initial.headers.get("set-cookie")?.split(";")[0] ?? "";
+  const results = await fetch(action, {
+    method: "POST",
+    headers: {
+      "User-Agent": USER_AGENT,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: cookie,
+      Referer: initial.url,
+    },
+    body,
+    redirect: "follow",
+    signal: AbortSignal.timeout(12_000),
+  });
+  if (!results.ok) {
+    throw new Error(
+      `Chess-Results search submit failed: HTTP ${results.status}`
+    );
+  }
+  return {
+    listingShell,
+    resultsHtml: decodeHtmlBuffer(
+      Buffer.from(await results.arrayBuffer()),
+      results.headers.get("content-type")
+    ),
+  };
+}
 
 async function main() {
   console.log(
@@ -37,14 +109,27 @@ async function main() {
     return;
   }
 
-  const html = await loadListingHtml({ url: CHESS_RESULTS_LISTING_URL });
-  const fallbackImage = extractPageImage(html, CHESS_RESULTS_LISTING_URL, {
+  const { listingShell, resultsHtml } = process.env.SCRAPE_HTML_FILE
+    ? {
+        listingShell: await loadListingHtml({
+          url: CHESS_RESULTS_LISTING_URL,
+        }),
+        resultsHtml: "",
+      }
+    : await fetchLiveUsaSearch();
+  const html = resultsHtml || listingShell;
+  const fallbackImage = extractPageImage(listingShell, CHESS_RESULTS_LISTING_URL, {
     allowSiteChrome: true,
   });
   let raw = parseChessResultsSearchHtml(html).filter(
     (r) => !r.federation || r.federation === "USA"
   );
   console.log(`Parsed ${raw.length} USA Chess-Results rows.`);
+  if (raw.length === 0) {
+    throw new Error(
+      "Chess-Results returned zero USA events; refusing to stage an empty scrape."
+    );
+  }
   raw = capRows(raw);
 
   const client = getServiceRoleClient();

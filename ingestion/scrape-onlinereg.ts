@@ -48,13 +48,13 @@ async function main() {
   const html = process.env.SCRAPE_HTML_FILE
     ? listingShell
     : await fetchHtml(
-        "https://onlineregistration.cc/tournaments/ajaxFrontGetTourListNew.php",
+        "https://onlineregistration.cc/ajaxFrontGetTourListNew.php",
         {
           method: "POST",
           body: new URLSearchParams({ vendor_search: "0", length: "-1" }),
           headers: {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            Referer: ONLINEREG_LISTING_URL,
+            Referer: "https://onlineregistration.cc/index.php",
             "X-Requested-With": "XMLHttpRequest",
           },
         }
@@ -64,6 +64,11 @@ async function main() {
   });
   let raw = parseOnlineRegIndexHtml(html);
   console.log(`Parsed ${raw.length} OnlineRegistration events.`);
+  if (raw.length === 0) {
+    throw new Error(
+      "OnlineRegistration returned zero events; refusing to stage an empty scrape."
+    );
+  }
   raw = capRows(raw);
 
   const client = getServiceRoleClient();
