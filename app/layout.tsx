@@ -60,9 +60,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex flex-col gap-2">
               <CauseyLogo size="sm" />
               <p className="max-w-sm text-xs text-muted">
-                Causey is an early build. Listings and pathways may be
-                incomplete, wrong, or out of date. Always confirm details and
-                register on the organizer&rsquo;s own site.
+                Causey is an early build. Chess search covers indexed US
+                tournaments; fees, venues, dates, and pathways can be missing
+                or wrong. Confirm details and register on the organizer&rsquo;s
+                site.
               </p>
             </div>
             <div className="flex flex-col gap-2 text-xs">

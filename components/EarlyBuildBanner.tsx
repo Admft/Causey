@@ -11,11 +11,12 @@ export function EarlyBuildBanner() {
       <p className="mx-auto max-w-6xl px-5 py-2 text-center text-xs leading-snug text-foreground sm:px-8 lg:py-3 lg:text-base">
         <span className="font-semibold text-brand-red">Early build.</span>{" "}
         <span className="lg:hidden">
-          Chess search works; listings are incomplete.
+          Chess search works. Fees, venues, and some events are missing.
         </span>
         <span className="hidden lg:inline">
-          Chess search is usable; listings are incomplete and things still
-          change.
+          Chess search works for indexed US chess tournaments. Fees, venues,
+          and coverage are incomplete. Other competition types aren&rsquo;t
+          ready, and rosters, family, and district tools still change.
         </span>
       </p>
     </div>
