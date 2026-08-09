@@ -24,6 +24,7 @@ describe("isValidJoinCode", () => {
     expect(isValidJoinCode("BCDFGHJK")).toBe(true);
     expect(isValidJoinCode("bcdf-ghjk")).toBe(true);
     expect(isValidJoinCode("W2X3Y4Z5")).toBe(true);
+    expect(isValidJoinCode("2P85-8DZ6")).toBe(true);
   });
 
   it("rejects wrong lengths", () => {

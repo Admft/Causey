@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import { joinOrgWithCode } from "@/lib/actions/orgs";
 import { isValidJoinCode } from "@/lib/org-codes";
 
-/** Class-code entry: "bcdf-ghjk" in any case/spacing joins the org. */
+/** Class-code entry: "2p85-8dz6" in any case/spacing joins the org. */
 export function JoinOrgForm() {
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -43,7 +43,7 @@ export function JoinOrgForm() {
           className="field font-mono uppercase tracking-[0.12em]"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="BCDF-GHJK"
+          placeholder="2P85-8DZ6"
           autoComplete="off"
           spellCheck={false}
         />

@@ -2,11 +2,9 @@ import Link from "next/link";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 /**
- * District pitch as a product moment, not a brochure: the right column shows
- * an illustrative district pilot preview that mirrors the real command center
- * (next step, school readiness, hairline roster), and the pilot's four stages
- * run as a numbered strip below. Preview data is labeled illustrative — the
- * statuses are the product's real readiness states.
+ * District pitch as a product moment, not a brochure. The right column names
+ * the private setup gates that come before any school is added to Causey; the
+ * pilot's four operational stages run as a numbered strip below.
  */
 const PILOT_STEPS = [
   {
@@ -31,17 +29,18 @@ const PILOT_STEPS = [
   },
 ];
 
-const PREVIEW_SCHOOLS = [
-  { name: "Washington Elementary", status: "Ready", ready: true },
+const PRIVATE_SETUP_GATES = [
   {
-    name: "Jefferson Middle School",
-    status: "Awaiting administrator claim",
-    ready: false,
+    title: "Pilot terms are signed",
+    description: "Privacy, retention, support, and rollout scope are agreed first.",
   },
   {
-    name: "Lincoln High School",
-    status: "Needs platform verification",
-    ready: false,
+    title: "The district names participating schools",
+    description: "Causey does not publish a speculative school list.",
+  },
+  {
+    title: "Authorized administrators claim access",
+    description: "Staff handoff is verified before invitations or roster work begin.",
   },
 ];
 
@@ -89,59 +88,38 @@ export function HomeDistrictPitch() {
           </div>
 
           <ScrollReveal className="min-w-0">
-            <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-xs font-semibold text-muted-strong">
-                  District pilot preview
-                </p>
-                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-muted">
-                  Illustrative
-                </p>
-              </div>
-              <p className="mt-3 text-base font-semibold text-foreground">
-                Example Unified School District
+            <div className="rounded-2xl border border-line bg-surface-soft p-5 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-red">
+                Private setup first
               </p>
-              <p className="mt-1 text-sm text-muted">
-                Next step: finish verification for Lincoln High School.
+              <h3 className="mt-3 font-display text-xl font-bold text-foreground">
+                No school is added before approval.
+              </h3>
+              <p className="mt-2 text-sm text-muted">
+                A district conversation starts the review. It does not create
+                a public school profile or student roster.
               </p>
 
-              <div className="mt-5">
-                <div className="flex items-baseline justify-between gap-3 text-xs">
-                  <span className="font-semibold text-muted-strong">
-                    School pilot readiness
-                  </span>
-                  <span className="text-muted">1 of 3 ready</span>
-                </div>
-                <div className="mt-2 h-1.5 rounded-lg bg-surface-soft">
-                  <div className="h-full w-1/3 rounded-lg bg-brand-red" />
-                </div>
-              </div>
-
-              <ul className="mt-4 divide-y divide-line border-y border-line">
-                {PREVIEW_SCHOOLS.map((school) => (
+              <ol className="mt-5 divide-y divide-line border-y border-line">
+                {PRIVATE_SETUP_GATES.map((gate, index) => (
                   <li
-                    key={school.name}
-                    className="flex items-center justify-between gap-3 py-2.5"
+                    key={gate.title}
+                    className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 py-3"
                   >
-                    <span className="text-sm font-semibold text-foreground">
-                      {school.name}
+                    <span className="text-xs font-semibold tabular-nums text-brand-red">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                    <span
-                      className={
-                        school.ready
-                          ? "text-xs font-semibold text-brand-red"
-                          : "text-xs text-muted"
-                      }
-                    >
-                      {school.status}
-                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {gate.title}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {gate.description}
+                      </p>
+                    </div>
                   </li>
                 ))}
-              </ul>
-              <p className="mt-3 text-xs text-muted">
-                Participation rollups by school. No district-wide student
-                roster.
-              </p>
+              </ol>
             </div>
           </ScrollReveal>
         </div>

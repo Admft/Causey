@@ -254,10 +254,17 @@ export function SearchClient() {
             and still incomplete. Enter a zip to see what&rsquo;s in reach, with
             entry fee and who can play shown before you commit.
           </p>
+          <div className="mt-6 max-w-lg lg:hidden">
+            <SearchFilters
+              filters={filters}
+              onChange={setFilters}
+              idPrefix="mobile-filter"
+            />
+          </div>
           {/* One search cluster: name it, or place it. Keyword applies as you
               type; zip + radius apply on submit/blur. All three controls share
               one label treatment so the band reads as a single tool. */}
-          <div className="mt-6 max-w-lg">
+          <div className="mt-5 max-w-lg lg:mt-6">
             <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
               Tournament name
             </label>
@@ -331,9 +338,13 @@ export function SearchClient() {
               long results column; short viewports scroll the rail internally.
               Overlay scrollbars paint over the scrollport edge, so the inset
               lives on an inner wrapper — not padding on the overflowing aside. */}
-          <aside className="soft-scroll lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
+          <aside className="soft-scroll hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
             <div className="lg:pr-4">
-              <SearchFilters filters={filters} onChange={setFilters} />
+              <SearchFilters
+                filters={filters}
+                onChange={setFilters}
+                idPrefix="desktop-filter"
+              />
             </div>
           </aside>
 

@@ -14,12 +14,30 @@ const exportRoute = readFileSync(
   resolve(process.cwd(), "app/orgs/[slug]/reports/export/route.ts"),
   "utf8"
 );
+const joinPreviewGrant = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/0040_restore_anon_org_join_preview.sql"
+  ),
+  "utf8"
+);
 
 describe("district readiness follow-ups", () => {
   it("fails closed before offering account creation for a join code", () => {
     expect(joinPage).toContain("if (!org) return <NoMatch");
+    expect(joinPage).toContain("if (!preview.ok) return <PreviewUnavailable");
+    expect(joinPage).toContain("like 2P85-8DZ6");
     expect(joinPage).not.toContain("Join your school or club");
     expect(joinPage).not.toContain("Your coach shared this join link.");
+  });
+
+  it("allows unsigned visitors to resolve a current join code", () => {
+    expect(joinPreviewGrant).toContain(
+      "grant execute on function public.get_org_preview_by_code(text)"
+    );
+    expect(joinPreviewGrant).toContain("to anon, authenticated");
+    expect(joinPreviewGrant).toContain("and o.type <> 'district'");
+    expect(joinPreviewGrant).not.toContain("not_authenticated");
   });
 
   it("uses a separate-device student account handoff", () => {

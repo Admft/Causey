@@ -27,6 +27,10 @@ type OrgPreview = {
   state: string | null;
 };
 
+type OrgPreviewResult =
+  | { ok: true; org: OrgPreview | null }
+  | { ok: false };
+
 function NoMatch({ code }: { code?: string }) {
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
@@ -37,7 +41,7 @@ function NoMatch({ code }: { code?: string }) {
         That code didn&rsquo;t match
       </h1>
       <p className="mt-3 text-sm text-muted">
-        Codes look like BCDF-GHJK and come from your coach. Double-check the
+        Codes are eight characters, like 2P85-8DZ6, and come from your coach. Double-check the
         link, or ask your coach to share it again — they may have rotated the
         code.
         {code ? (
@@ -58,14 +62,41 @@ function NoMatch({ code }: { code?: string }) {
   );
 }
 
-async function loadOrgPreview(code: string): Promise<OrgPreview | null> {
+function PreviewUnavailable({ code }: { code: string }) {
+  return (
+    <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
+      <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+        Join
+      </p>
+      <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+        We couldn&rsquo;t check that team code
+      </h1>
+      <p className="mt-3 text-sm text-muted">
+        The code format is valid, but Causey could not reach the team lookup
+        right now. Your coach does not need to create a new code.
+      </p>
+      <p className="mt-4 text-sm text-muted">
+        Try <span className="font-semibold text-foreground">{formatJoinCode(code)}</span>{" "}
+        again in a few minutes.
+      </p>
+    </div>
+  );
+}
+
+async function loadOrgPreview(code: string): Promise<OrgPreviewResult> {
   const supabase = await createServerSupabaseClient();
   const { data: previews, error } = await supabase.rpc(
     "get_org_preview_by_code",
     { p_code: code }
   );
-  if (error) return null;
-  return (previews?.[0] as OrgPreview | undefined) ?? null;
+  if (error) {
+    console.error("Could not load organization join preview:", error.code);
+    return { ok: false };
+  }
+  return {
+    ok: true,
+    org: (previews?.[0] as OrgPreview | undefined) ?? null,
+  };
 }
 
 export default async function JoinPage({
@@ -92,7 +123,9 @@ export default async function JoinPage({
   if (!isValidJoinCode(code)) return <NoMatch code={code || undefined} />;
 
   const user = await getSessionUser();
-  const org = await loadOrgPreview(code);
+  const preview = await loadOrgPreview(code);
+  if (!preview.ok) return <PreviewUnavailable code={code} />;
+  const org = preview.org;
   // Fail closed for everyone. Never ask a visitor to create an account unless
   // the anonymous preview resolved a real, current organization.
   if (!org) return <NoMatch code={code} />;
