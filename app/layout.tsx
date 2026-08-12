@@ -62,8 +62,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="max-w-sm text-xs text-muted">
                 Causey is an early build. Chess search covers indexed US
                 tournaments; fees, venues, dates, and pathways can be missing
-                or wrong. Confirm details and register on the organizer&rsquo;s
-                site.
+                or wrong. Organizations can host other competition types, but
+                those public directories are not ready. Confirm public details
+                on the organizer&rsquo;s site.
               </p>
             </div>
             <div className="flex flex-col gap-2 text-xs">

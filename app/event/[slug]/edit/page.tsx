@@ -16,8 +16,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Edit tournament",
-  description: "Change details or cancel a tournament you host.",
+  title: "Edit competition",
+  description: "Change details or cancel a competition you host.",
 };
 
 export default async function EditEventPage({
@@ -61,6 +61,7 @@ export default async function EditEventPage({
           tab={null}
           showRoster={view.isCoach && view.org.type !== "district"}
           showAdmin={view.isAdmin}
+          orgType={view.org.type}
         />
       ) : (
         <div className="border-b border-line bg-surface">
@@ -104,7 +105,7 @@ export default async function EditEventPage({
             </h2>
             <p className="mt-2 max-w-prose text-sm text-muted-strong">
               {moderation.moderation_note ||
-                "Review the tournament details, correct the listing, and resubmit it."}
+                "Review the competition details, correct the listing, and resubmit it."}
             </p>
             <p className="mt-2 text-xs text-muted">
               Saving this returned listing will send it back to platform review.
@@ -117,6 +118,9 @@ export default async function EditEventPage({
             orgSlug={org.slug}
             orgState={org.state}
             initial={{
+              category: competition.category,
+              custom_category_name: competition.custom_category_name,
+              participation_mode: competition.participation_mode,
               name: competition.name,
               start_date: competition.start_date,
               end_date: competition.end_date,
@@ -131,6 +135,14 @@ export default async function EditEventPage({
               visibility: competition.visibility,
               audience: competition.audience,
               rated: competition.rated,
+              sections: competition.sections.map((section) => ({
+                name: section.name,
+                minRating: section.min_rating,
+                maxRating: section.max_rating,
+                minGrade: section.min_grade,
+                maxGrade: section.max_grade,
+                entryFeeCents: section.entry_fee_cents,
+              })),
             }}
             edit={{
               competitionId: competition.id,

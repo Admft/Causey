@@ -96,6 +96,7 @@ export function buildCompetitionResult(input: {
 }): CompetitionResult | null {
   const { competition: c, sections: compSections, series: rawSeries, distance_miles, filters } =
     input;
+  if (filters.category && c.category !== filters.category) return null;
   if (!competitionInDateWindow(c, filters)) return null;
 
   const matching = matchingSectionIds(c, compSections, filters);
@@ -107,6 +108,7 @@ export function buildCompetitionResult(input: {
     ...c,
     sections: compSections,
     series: rawSeries ? SeriesSchema.parse(rawSeries) : null,
+    viewer_org_match: false,
     distance_miles,
     matching_section_ids: matching,
   };

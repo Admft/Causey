@@ -41,7 +41,7 @@ export function StudentAccountHandoff() {
         <li>Copy and send the student signup link.</li>
         <li>The student creates and confirms their account on their device.</li>
         <li>Use “Link a student” below with the student&rsquo;s account email.</li>
-        <li>The student accepts the Family request from My tournaments.</li>
+        <li>The student accepts the Family request from Plan.</li>
       </ol>
       <button
         type="button"

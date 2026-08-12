@@ -27,6 +27,7 @@ export type DistrictReadinessAction = {
     | "await_admin_claim"
     | "transfer_ownership"
     | "provision_students"
+    | "await_platform_verification"
     | "review_reporting";
   title: string;
   description: string;
@@ -42,22 +43,11 @@ export type DistrictSchoolReadinessStatus = {
   ready: boolean;
 };
 
-export function getDistrictSchoolReadinessStatus(
+function schoolSetupStatus(
   school: DistrictSchoolReadiness,
   districtSlug: string
-): DistrictSchoolReadinessStatus {
+): DistrictSchoolReadinessStatus | null {
   const returnQuery = `district=${encodeURIComponent(districtSlug)}`;
-  if (school.verificationStatus !== "verified") {
-    return {
-      label:
-        school.verificationStatus === "rejected"
-          ? "Verification needs correction"
-          : "Needs platform verification",
-      href: `/orgs/${school.slug}/settings`,
-      actionLabel: "Review status",
-      ready: false,
-    };
-  }
   if (school.activeDelegatedAdmins === 0 && school.pendingAdminInvites > 0) {
     return {
       label: "Awaiting administrator claim",
@@ -90,6 +80,43 @@ export function getDistrictSchoolReadinessStatus(
       ready: false,
     };
   }
+  return null;
+}
+
+export function getDistrictSchoolReadinessStatus(
+  school: DistrictSchoolReadiness,
+  districtSlug: string
+): DistrictSchoolReadinessStatus {
+  // Rejected verification is the only verification state staff can act on.
+  if (school.verificationStatus === "rejected") {
+    return {
+      label: "Verification needs correction",
+      href: `/orgs/${school.slug}/settings#verification`,
+      actionLabel: "Correct school details",
+      ready: false,
+    };
+  }
+
+  const setup = schoolSetupStatus(school, districtSlug);
+  if (setup) {
+    if (school.verificationStatus === "pending") {
+      return {
+        ...setup,
+        label: `${setup.label} · platform review pending`,
+      };
+    }
+    return setup;
+  }
+
+  if (school.verificationStatus === "pending") {
+    return {
+      label: "Setup ready · platform review pending",
+      href: `/orgs/${school.slug}`,
+      actionLabel: "Open school",
+      ready: false,
+    };
+  }
+
   return {
     label: "Ready for pilot",
     href: `/orgs/${school.slug}`,
@@ -103,19 +130,15 @@ export function getDistrictReadinessAction(
 ): DistrictReadinessAction {
   const settingsHref = `/orgs/${readiness.districtSlug}/settings`;
 
-  if (readiness.verificationStatus !== "verified") {
+  // Only rejected verification blocks setup. Pending review is Causey-side work.
+  if (readiness.verificationStatus === "rejected") {
     return {
       stage: "district_verification",
-      title:
-        readiness.verificationStatus === "rejected"
-          ? "Correct the district record"
-          : "District verification is pending",
+      title: "Correct the district record",
       description:
-        readiness.verificationStatus === "rejected"
-          ? "Review the platform correction note before adding more schools."
-          : "You can prepare school setup while Causey verifies the district identity.",
-      href: settingsHref,
-      label: "Review district status",
+        "Review the platform correction note before adding more schools.",
+      href: `${settingsHref}#verification`,
+      label: "Correct district details",
       schoolId: null,
     };
   }
@@ -125,7 +148,9 @@ export function getDistrictReadinessAction(
       stage: "create_school",
       title: "Add the first school",
       description:
-        "Create a school workspace, then delegate its administrator before provisioning students.",
+        readiness.verificationStatus === "pending"
+          ? "Create a school workspace while Causey reviews the district identity. Then delegate its administrator before provisioning students."
+          : "Create a school workspace, then delegate its administrator before provisioning students.",
       href: `${settingsHref}#schools`,
       label: "Create school",
       schoolId: null,
@@ -133,14 +158,14 @@ export function getDistrictReadinessAction(
   }
 
   for (const school of readiness.schools) {
-    if (school.verificationStatus !== "verified") {
+    if (school.verificationStatus === "rejected") {
       return {
         stage: "school_verification",
-        title: `${school.name} needs platform verification`,
+        title: `Correct ${school.name}`,
         description:
-          "School setup can continue, but Causey must verify the organization before the pilot is ready.",
-        href: `/orgs/${school.slug}/settings`,
-        label: "Review school status",
+          "Platform review returned this school. Fix the record, then continue staffing.",
+        href: `/orgs/${school.slug}/settings#verification`,
+        label: "Correct school details",
         schoolId: school.id,
       };
     }
@@ -155,7 +180,9 @@ export function getDistrictReadinessAction(
         stage: "invite_admin",
         title: `Delegate ${school.name}`,
         description:
-          "Invite a school administrator. Causey emails the claim link and keeps a copyable fallback for district staff.",
+          school.verificationStatus === "pending"
+            ? "Invite a school administrator while Causey reviews the school identity. Causey emails the claim link and keeps a copyable fallback for district staff."
+            : "Invite a school administrator. Causey emails the claim link and keeps a copyable fallback for district staff.",
         href: `/orgs/${school.slug}/people?setup=school-admin&district=${encodeURIComponent(
           readiness.districtSlug
         )}`,
@@ -214,6 +241,25 @@ export function getDistrictReadinessAction(
         schoolId: school.id,
       };
     }
+  }
+
+  const pendingSchool = readiness.schools.find(
+    (school) => school.verificationStatus === "pending"
+  );
+  if (readiness.verificationStatus === "pending" || pendingSchool) {
+    return {
+      stage: "await_platform_verification",
+      title: pendingSchool
+        ? `${pendingSchool.name} is awaiting Causey verification`
+        : "District verification is pending",
+      description:
+        "Staffing and competitions can continue. Organization identity review happens in the Causey admin queue — there is nothing to submit from this workspace.",
+      href: pendingSchool
+        ? `/orgs/${pendingSchool.slug}`
+        : `/orgs/${readiness.districtSlug}/settings#verification`,
+      label: pendingSchool ? "Open school" : "View verification status",
+      schoolId: pendingSchool?.id ?? null,
+    };
   }
 
   return {

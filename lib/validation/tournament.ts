@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  CompetitionCategorySchema,
+  ParticipationModeSchema,
+} from "@/lib/schemas";
 
 const DateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a real date.");
 const SectionInputSchema = z
@@ -27,15 +31,23 @@ const SectionInputSchema = z
 
 const TournamentFieldsSchema = z
   .object({
+    category: CompetitionCategorySchema.default("chess"),
+    customCategoryName: z
+      .string()
+      .trim()
+      .max(80, "Keep the custom competition type under 80 characters.")
+      .default("")
+      .transform((value) => value || null),
+    participationMode: ParticipationModeSchema.default("in_person"),
     name: z.string().trim().min(3, "Name the tournament.").max(120),
     startDate: DateString,
     endDate: DateString.nullable(),
     regDeadline: DateString.nullable(),
     venueName: z.string().trim().max(120).transform((value) => value || null),
     address: z.string().trim().max(160).transform((value) => value || null),
-    city: z.string().trim().min(2, "Enter the city.").max(80),
-    state: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, "Pick a state."),
-    zip: z.string().trim().regex(/^\d{5}$/, "Zip must be 5 digits."),
+    city: z.string().trim().max(80),
+    state: z.string().trim().toUpperCase().max(2),
+    zip: z.string().trim().max(5),
     entryFeeCents: z.number().int().nonnegative().nullable(),
     regUrl: z
       .string()
@@ -53,6 +65,44 @@ const TournamentFieldsSchema = z
   .refine((value) => !value.endDate || value.endDate >= value.startDate, {
     message: "End date can’t be before the start date.",
     path: ["endDate"],
+  })
+  .refine(
+    (value) =>
+      value.category !== "other" || Boolean(value.customCategoryName?.trim()),
+    {
+      message: "Name the competition type.",
+      path: ["customCategoryName"],
+    }
+  )
+  .refine(
+    (value) =>
+      value.category === "other" || value.customCategoryName === null,
+    {
+      message: "Use the custom type field only when Other is selected.",
+      path: ["customCategoryName"],
+    }
+  )
+  .refine(
+    (value) =>
+      value.participationMode === "online" ||
+      (value.city.length >= 2 &&
+        /^[A-Z]{2}$/.test(value.state) &&
+        /^\d{5}$/.test(value.zip)),
+    {
+      message: "Enter the city, state, and 5-digit zip for this location.",
+      path: ["city"],
+    }
+  )
+  .refine(
+    (value) => value.category === "chess" || value.rated === false,
+    {
+      message: "US Chess rating applies only to chess competitions.",
+      path: ["rated"],
+    }
+  )
+  .refine((value) => !value.regDeadline || value.regDeadline <= value.startDate, {
+    message: "Registration deadline can’t be after the start date.",
+    path: ["regDeadline"],
   });
 
 export const TournamentCreateSchema = z.intersection(

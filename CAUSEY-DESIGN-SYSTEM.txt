@@ -126,6 +126,11 @@ Copy these CSS variables into the product app unchanged.
   --brand-blue-soft: #d4e8f4;
   --brand-blue-strong: #3a7aa3;
 
+  /* Organization-hosted competition provenance (SEMANTIC, not decorative) */
+  --org-gold: #b07a16;            /* organization-hosted border */
+  --org-gold-strong: #75500d;     /* provenance label text */
+  --org-gold-soft: #fff6dd;       /* compact provenance label background */
+
   /* Fields */
   --field: #ffffff;
 }
@@ -142,6 +147,13 @@ Do NOT introduce
   • Warm cream (#F4F1EA-ish) + terracotta defaults
   • Dark mode as the default product look (unless explicitly designed later)
   • Neon / glow accents
+
+Organization gold rule
+  • Gold always means the competition record is hosted by a Causey
+    organization.
+  • Use the gold border with a functional "Organization hosted" or
+    "Your organization" label.
+  • Never use gold as a decorative category color or generic premium badge.
 
 ================================================================================
 4. TYPOGRAPHY
@@ -556,6 +568,9 @@ Paste into globals.css of the product app as a starting kit:
   --brand-blue: #4a8eb8;
   --brand-blue-soft: #d4e8f4;
   --brand-blue-strong: #3a7aa3;
+  --org-gold: #b07a16;
+  --org-gold-strong: #75500d;
+  --org-gold-soft: #fff6dd;
   --accent: #c23b32;
   --accent-hover: #a8322a;
   --accent-soft: #f8e8e6;

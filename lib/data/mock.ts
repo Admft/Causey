@@ -61,6 +61,7 @@ export class MockDataSource implements DataSource {
     const results: CompetitionResult[] = [];
     for (const c of competitions) {
       if (c.status !== "published") continue;
+      if (filters.category && c.category !== filters.category) continue;
       if (filters.q && !c.name.toLowerCase().includes(filters.q.trim().toLowerCase())) continue;
       if (filters.state && c.state !== filters.state) continue;
       if (filters.source && c.source !== filters.source) continue;
@@ -80,8 +81,12 @@ export class MockDataSource implements DataSource {
 
       let distance_miles: number | null = null;
       if (origin) {
-        distance_miles = haversineMiles(origin.lat, origin.lng, c.lat, c.lng);
-        if (distance_miles > radius) continue;
+        if (c.lat !== null && c.lng !== null) {
+          distance_miles = haversineMiles(origin.lat, origin.lng, c.lat, c.lng);
+          if (distance_miles > radius) continue;
+        } else if (c.participation_mode !== "online") {
+          continue;
+        }
       }
 
       const hit = buildCompetitionResult({
@@ -110,7 +115,7 @@ export class MockDataSource implements DataSource {
 
   async listCompetitionRefs(): Promise<CompetitionRef[]> {
     return competitions
-      .filter((c) => c.status === "published")
+      .filter((c) => c.status === "published" && c.category === "chess")
       .map(({ id, slug, name, series_id, state, start_date }) => ({
         id,
         slug,

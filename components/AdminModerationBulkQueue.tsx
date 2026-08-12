@@ -5,17 +5,22 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModerationReviewForm } from "@/components/ModerationReviewForm";
 import { adminBulkReviewTournaments } from "@/lib/actions/admin";
+import { competitionTypeLabel } from "@/lib/competition-types";
 import { formatDateRange, formatFeeCents } from "@/lib/format";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
+import type { CompetitionCategory, ParticipationMode } from "@/lib/schemas";
 
 type QueueRow = {
   id: string;
   slug: string;
   name: string;
+  category: CompetitionCategory;
+  custom_category_name: string | null;
+  participation_mode: ParticipationMode;
   organizer_name: string | null;
   venue_name: string | null;
-  city: string;
-  state: string;
+  city: string | null;
+  state: string | null;
   start_date: string;
   end_date: string | null;
   reg_deadline: string | null;
@@ -85,7 +90,7 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
     if (
       decision === "approve" &&
       !window.confirm(
-        `Publish ${selectedCount} tournament${selectedCount === 1 ? "" : "s"}? Families will be able to find these listings immediately.`
+        `Publish ${selectedCount} competition${selectedCount === 1 ? "" : "s"}? Their public links become available immediately; only searchable types enter a directory.`
       )
     ) {
       return;
@@ -109,7 +114,7 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
       setMessage(
         result.skipped > 0
           ? `${decision === "approve" ? "Published" : "Rejected"} ${result.updated}; ${result.skipped} were no longer awaiting review.`
-          : `${decision === "approve" ? "Published" : "Rejected"} ${result.updated} tournament${result.updated === 1 ? "" : "s"}.`
+          : `${decision === "approve" ? "Published" : "Rejected"} ${result.updated} competition${result.updated === 1 ? "" : "s"}.`
       );
       router.refresh();
     } finally {
@@ -243,6 +248,23 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
                       ).toLocaleDateString("en-US")}`
                     : ""}
                 </p>
+                <p className="mt-1 text-xs font-semibold text-muted-strong">
+                  {competitionTypeLabel({
+                    category: tournament.category,
+                    customCategoryName: tournament.custom_category_name,
+                  })}
+                  {" · "}
+                  {tournament.participation_mode === "in_person"
+                    ? "In person"
+                    : tournament.participation_mode === "online"
+                      ? "Online"
+                      : "Hybrid"}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {tournament.category === "chess"
+                    ? "Discovery after approval: chess search"
+                    : "Discovery after approval: public link only; not searchable"}
+                </p>
               </div>
             </div>
 
@@ -256,10 +278,16 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
               <div>
                 <dt className="text-xs font-semibold text-muted">Place</dt>
                 <dd className="mt-0.5 text-foreground">
-                  {tournament.venue_name
-                    ? `${tournament.venue_name} · `
-                    : ""}
-                  {tournament.city}, {tournament.state}
+                  {tournament.participation_mode === "online"
+                    ? "Online"
+                    : [
+                        tournament.venue_name,
+                        [tournament.city, tournament.state]
+                          .filter(Boolean)
+                          .join(", "),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Location not listed"}
                 </dd>
               </div>
               <div>
@@ -280,7 +308,11 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
                 <dt className="text-xs font-semibold text-muted">Entry</dt>
                 <dd className="mt-0.5 text-foreground">
                   {formatFeeCents(tournament.entry_fee_cents)}
-                  {tournament.rated ? " · US Chess rated" : " · Unrated"}
+                  {tournament.category === "chess"
+                    ? tournament.rated
+                      ? " · US Chess rated"
+                      : " · Unrated"
+                    : ""}
                 </dd>
               </div>
               <div>

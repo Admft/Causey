@@ -8,22 +8,26 @@ const NEEDS_REVIEW_ZIP = "00000";
 export type TournamentReadinessInput = {
   name: string;
   start_date: string;
-  city: string;
-  state: string;
-  zip: string;
-  lat: number;
-  lng: number;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  lat: number | null;
+  lng: number | null;
   reg_url: string | null;
+  participation_mode?: "in_person" | "online" | "hybrid";
 };
 
 export function isLocationPublishReady(row: {
-  city: string;
-  state: string;
-  zip: string;
-  lat: number;
-  lng: number;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  lat: number | null;
+  lng: number | null;
 }): boolean {
-  if (!/^\d{5}$/.test(row.zip) || row.zip === NEEDS_REVIEW_ZIP) return false;
+  if (!row.zip || !/^\d{5}$/.test(row.zip) || row.zip === NEEDS_REVIEW_ZIP) {
+    return false;
+  }
+  if (row.lat === null || row.lng === null) return false;
   if (row.lat === 0 && row.lng === 0) return false;
   if (!row.state || row.state.length !== 2 || row.state.toUpperCase() === "XX") {
     return false;
@@ -40,5 +44,6 @@ export function isTournamentPublishReady(
   if (!row.name?.trim()) return false;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(row.start_date)) return false;
   if (!row.reg_url) return false;
+  if (row.participation_mode === "online") return true;
   return isLocationPublishReady(row);
 }

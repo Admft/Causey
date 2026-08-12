@@ -96,15 +96,22 @@ export function PortalListRow({
   title,
   meta,
   trailing,
+  organizationHosted = false,
 }: {
   href?: string;
   title: string;
   meta?: string;
   trailing?: ReactNode;
+  organizationHosted?: boolean;
 }) {
   const body = (
     <>
       <div className="min-w-0">
+        {organizationHosted ? (
+          <span className="mb-1 block text-2xs font-semibold uppercase tracking-wide text-org-gold-strong">
+            Your organization
+          </span>
+        ) : null}
         {href ? (
           <Link
             href={href}
@@ -124,7 +131,13 @@ export function PortalListRow({
   );
 
   return (
-    <li className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+    <li
+      className={`flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
+        organizationHosted
+          ? "mb-2 rounded-xl border border-org-gold bg-surface px-4"
+          : "border-b border-line last:border-b-0"
+      }`}
+    >
       {body}
     </li>
   );

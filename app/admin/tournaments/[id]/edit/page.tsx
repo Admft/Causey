@@ -55,6 +55,9 @@ export default async function AdminEditTournamentPage({
           orgSlug={tournament.organizations?.slug ?? "platform-admin"}
           orgState={tournament.organizations?.state ?? tournament.state}
           initial={{
+            category: tournament.category,
+            custom_category_name: tournament.custom_category_name,
+            participation_mode: tournament.participation_mode,
             name: tournament.name,
             start_date: tournament.start_date,
             end_date: tournament.end_date,
@@ -69,6 +72,14 @@ export default async function AdminEditTournamentPage({
             visibility: tournament.visibility,
             audience: tournament.audience,
             rated: tournament.rated,
+            sections: tournament.sections?.map((section) => ({
+              name: section.name,
+              minRating: section.min_rating,
+              maxRating: section.max_rating,
+              minGrade: section.min_grade,
+              maxGrade: section.max_grade,
+              entryFeeCents: section.entry_fee_cents,
+            })),
           }}
           edit={{
             competitionId: tournament.id,

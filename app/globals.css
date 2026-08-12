@@ -19,6 +19,10 @@
   --brand-blue: #4a8eb8;
   --brand-blue-soft: #d4e8f4;
   --brand-blue-strong: #3a7aa3;
+  /* Organization-hosted competition provenance, never decorative category color. */
+  --org-gold: #b07a16;
+  --org-gold-strong: #75500d;
+  --org-gold-soft: #fff6dd;
   --accent: #c23b32;
   --accent-hover: #a8322a;
   --accent-soft: #f8e8e6;
@@ -40,6 +44,9 @@
   --color-brand-blue: #4a8eb8;
   --color-brand-blue-soft: #d4e8f4;
   --color-brand-blue-strong: #3a7aa3;
+  --color-org-gold: #b07a16;
+  --color-org-gold-strong: #75500d;
+  --color-org-gold-soft: #fff6dd;
   --color-accent: #c23b32;
   --color-accent-hover: #a8322a;
   --color-accent-soft: #f8e8e6;

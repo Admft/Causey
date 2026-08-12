@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
-import { SEARCH_LOAD_ALL_LIMIT, type SearchSort } from "@/lib/schemas";
+import {
+  SEARCH_LOAD_ALL_LIMIT,
+  type CompetitionCategory,
+  type SearchSort,
+} from "@/lib/schemas";
 import { CompetitionCard } from "@/components/CompetitionCard";
 import {
   ActiveFilterChips,
@@ -82,7 +86,11 @@ function parseTiming(raw: string | null): FilterState["timing"] {
   return "upcoming";
 }
 
-export function SearchClient() {
+export function SearchClient({
+  category = "chess",
+}: {
+  category?: CompetitionCategory;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -119,6 +127,7 @@ export function SearchClient() {
   // One place builds the query — URL bar and API always agree.
   const query = useMemo(() => {
     const p = new URLSearchParams();
+    p.set("category", category);
     if (keyword.trim()) p.set("q", keyword.trim());
     if (zip) {
       p.set("zip", zip);
@@ -135,7 +144,7 @@ export function SearchClient() {
     if (filters.date_to) p.set("date_to", filters.date_to);
     if (sort !== "popular") p.set("sort", sort);
     return p;
-  }, [keyword, zip, radius, filters, sort]);
+  }, [category, keyword, zip, radius, filters, sort]);
 
   const buildApiParams = useCallback(
     (limit: number, offset: number) => {

@@ -11,7 +11,6 @@ import {
 } from "@/lib/data/tournament-mutations";
 import {
   TournamentDraftDataSchema,
-  TournamentSectionDraftSchema,
   type TournamentDraftData,
 } from "@/lib/schemas";
 import { slugify, withSlugSuffix } from "@/lib/slug";
@@ -31,43 +30,7 @@ type TournamentPublicationResult = {
   status: TournamentPublicationStatus;
 };
 
-const DateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a real date.");
-
-const TournamentCreateSchema = z
-  .object({
-    orgId: z.string().uuid(),
-    orgSlug: z.string().min(1),
-    name: z.string().trim().min(3, "Name the tournament.").max(120),
-    startDate: DateString,
-    endDate: DateString.nullable(),
-    regDeadline: DateString.nullable(),
-    venueName: z.string().trim().max(120).transform((v) => v || null),
-    address: z.string().trim().max(160).transform((v) => v || null),
-    city: z.string().trim().min(2, "Enter the city.").max(80),
-    state: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, "Pick a state."),
-    zip: z.string().trim().regex(/^\d{5}$/, "Zip must be 5 digits."),
-    entryFeeCents: z.number().int().nonnegative().nullable(),
-    regUrl: z
-      .string()
-      .trim()
-      .url("Registration link must be a full URL.")
-      .nullable()
-      .or(z.literal("").transform(() => null)),
-    visibility: z.enum(["public", "private"]),
-    audience: z
-      .enum(["public", "district", "school", "invite_only"])
-      .optional(),
-    sections: z.array(TournamentSectionDraftSchema).min(1).max(20).optional(),
-    rated: z.boolean(),
-  })
-  .refine((v) => !v.endDate || v.endDate >= v.startDate, {
-    message: "End date can’t be before the start date.",
-    path: ["endDate"],
-  })
-  .refine((v) => !v.regDeadline || v.regDeadline <= v.startDate, {
-    message: "Registration deadline can’t be after the start date.",
-    path: ["regDeadline"],
-  });
+const TournamentCreateSchema = ValidatedTournamentCreateSchema;
 
 const TournamentDraftSaveSchema = z.object({
   draftId: z.string().uuid(),
@@ -94,7 +57,7 @@ async function canOperateOrganizationTournament(
   orgId: string,
   profileId: string
 ): Promise<boolean> {
-  const { data, error } = await supabase.rpc("is_org_coach", {
+  const { data, error } = await supabase.rpc("can_operate_org_competitions", {
     p_org_id: orgId,
     p_profile_id: profileId,
   });
@@ -129,7 +92,7 @@ export async function createTournament(
     return {
       ok: false,
       error:
-        "Only a coach or organization administrator can create tournaments.",
+        "Only a coach or organization administrator can create competitions.",
     };
   }
   const { data: org } = await supabase
@@ -139,7 +102,10 @@ export async function createTournament(
     .maybeSingle();
   if (!org) return { ok: false, error: "Organization not found." };
 
-  const zipResult = await getTournamentZip(supabase, values.zip);
+  const zipResult =
+    values.participationMode === "online"
+      ? ({ ok: true, lat: null, lng: null } as const)
+      : await getTournamentZip(supabase, values.zip);
   if (!zipResult.ok) return zipResult;
 
   const result = await insertTournamentRecord({
@@ -182,7 +148,7 @@ export async function publishTournament(input: {
     .maybeSingle();
 
   if (error || !updated) {
-    return { ok: false, error: "Could not publish this tournament." };
+    return { ok: false, error: "Could not publish this competition." };
   }
   const status: TournamentPublicationStatus =
     updated.status === "pending_review" ? "pending_review" : "published";
@@ -226,7 +192,7 @@ export async function saveTournamentDraft(
   ) {
     return {
       ok: false,
-      error: "Only staff for this organization can save tournaments.",
+      error: "Only staff for this organization can save competitions.",
     };
   }
   const { data: org } = await supabase
@@ -234,7 +200,7 @@ export async function saveTournamentDraft(
     .select("id")
     .eq("id", values.orgId)
     .maybeSingle();
-  if (!org) return { ok: false, error: "You can’t save tournaments for this organization." };
+  if (!org) return { ok: false, error: "You can’t save competitions for this organization." };
 
   const { data: existing, error: readError } = await supabase
     .from("tournament_drafts")
@@ -314,6 +280,58 @@ export async function saveTournamentDraft(
   };
 }
 
+export async function deleteTournamentDraft(input: {
+  draftId: string;
+  orgId: string;
+  orgSlug: string;
+}): Promise<ActionResult> {
+  const parsed = TournamentDraftPublishSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Could not identify the competition draft." };
+  }
+  const values = parsed.data;
+  const profile = await getCurrentProfile();
+  if (!profile) return { ok: false, error: "Sign in to discard this draft." };
+
+  const supabase = await createServerSupabaseClient();
+  if (
+    !(await canOperateOrganizationTournament(
+      supabase,
+      values.orgId,
+      profile.id
+    ))
+  ) {
+    return {
+      ok: false,
+      error: "Only staff for this organization can discard competition drafts.",
+    };
+  }
+
+  const { data: draft } = await supabase
+    .from("tournament_drafts")
+    .select("cover_image_path")
+    .eq("id", values.draftId)
+    .eq("org_id", values.orgId)
+    .maybeSingle();
+  const { count, error } = await supabase
+    .from("tournament_drafts")
+    .delete({ count: "exact" })
+    .eq("id", values.draftId)
+    .eq("org_id", values.orgId);
+  if (error || !count) {
+    return { ok: false, error: "Could not discard this draft. Try again." };
+  }
+
+  if (draft?.cover_image_path) {
+    await supabase.storage
+      .from("tournament-covers")
+      .remove([draft.cover_image_path]);
+  }
+  revalidatePath(`/orgs/${values.orgSlug}`);
+  revalidatePath(`/orgs/${values.orgSlug}/competitions`);
+  return { ok: true };
+}
+
 function draftFeeToCents(raw: string): ActionResult<{ cents: number | null }> {
   const trimmed = raw.trim();
   if (!trimmed) return { ok: true, cents: null };
@@ -353,11 +371,11 @@ export async function publishTournamentDraft(
 ): Promise<ActionResult<TournamentPublicationResult>> {
   const parsedInput = TournamentDraftPublishSchema.safeParse(input);
   if (!parsedInput.success) {
-    return { ok: false, error: "Could not identify the tournament draft." };
+    return { ok: false, error: "Could not identify the competition draft." };
   }
   const values = parsedInput.data;
   const profile = await getCurrentProfile();
-  if (!profile) return { ok: false, error: "Sign in to publish this tournament." };
+  if (!profile) return { ok: false, error: "Sign in to publish this competition." };
 
   const supabase = await createServerSupabaseClient();
   if (
@@ -369,7 +387,7 @@ export async function publishTournamentDraft(
   ) {
     return {
       ok: false,
-      error: "Only staff for this organization can publish tournaments.",
+      error: "Only staff for this organization can publish competitions.",
     };
   }
   const { data: draft, error: draftError } = await supabase
@@ -418,6 +436,9 @@ export async function publishTournamentDraft(
   const tournament = TournamentCreateSchema.safeParse({
     orgId: values.orgId,
     orgSlug: values.orgSlug,
+    category: draftData.data.category,
+    customCategoryName: draftData.data.customCategoryName,
+    participationMode: draftData.data.participationMode,
     name: draftData.data.name,
     startDate: draftData.data.startDate,
     endDate: draftData.data.endDate || null,
@@ -439,24 +460,25 @@ export async function publishTournamentDraft(
   if (!tournament.success) {
     return {
       ok: false,
-      error: tournament.error.issues[0]?.message ?? "Review the tournament details.",
+      error: tournament.error.issues[0]?.message ?? "Review the competition details.",
     };
   }
 
-  const [{ data: org }, { data: zipRow }] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select("id, name")
-      .eq("id", values.orgId)
-      .maybeSingle(),
-    supabase
-      .from("zips")
-      .select("lat, lng")
-      .eq("zip", tournament.data.zip)
-      .maybeSingle(),
-  ]);
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id, name")
+    .eq("id", values.orgId)
+    .maybeSingle();
   if (!org) return { ok: false, error: "Organization not found." };
-  if (!zipRow) {
+  const { data: zipRow } =
+    tournament.data.participationMode === "online"
+      ? { data: { lat: null, lng: null } }
+      : await supabase
+          .from("zips")
+          .select("lat, lng")
+          .eq("zip", tournament.data.zip)
+          .maybeSingle();
+  if (!zipRow && tournament.data.participationMode !== "online") {
     return { ok: false, error: "We don’t recognize that zip code — double-check it." };
   }
 
@@ -465,7 +487,7 @@ export async function publishTournamentDraft(
     tournament.data,
     org.name,
     profile.id,
-    zipRow,
+    zipRow ?? { lat: null, lng: null },
     coverImageUrl,
     values.draftId
   );
@@ -485,7 +507,7 @@ async function insertWithSlugRetry(
   values: z.output<typeof TournamentCreateSchema>,
   orgName: string,
   profileId: string,
-  zipRow: { lat: number; lng: number },
+  zipRow: { lat: number | null; lng: number | null },
   imageUrl: string,
   sourceDraftId: string
 ): Promise<ActionResult<TournamentPublicationResult>> {
@@ -497,13 +519,15 @@ async function insertWithSlugRetry(
       .insert({
         slug,
         name: values.name,
-        category: "chess",
+        category: values.category,
+        custom_category_name: values.customCategoryName,
+        participation_mode: values.participationMode,
         organizer_name: orgName,
         venue_name: values.venueName,
         address: values.address,
-        city: values.city,
-        state: values.state,
-        zip: values.zip,
+        city: values.city || null,
+        state: values.state || null,
+        zip: values.zip || null,
         lat: zipRow.lat,
         lng: zipRow.lng,
         start_date: values.startDate,
@@ -511,8 +535,8 @@ async function insertWithSlugRetry(
         reg_deadline: values.regDeadline,
         reg_url: values.regUrl,
         entry_fee_cents: values.entryFeeCents,
-        rated: values.rated,
-        rating_system: "uschess",
+        rated: values.category === "chess" && values.rated,
+        rating_system: values.category === "chess" ? "uschess" : null,
         source: "organizer",
         image_url: imageUrl,
         status: "published",
@@ -537,7 +561,7 @@ async function insertWithSlugRetry(
         if (publication) return { ok: true, ...publication };
         continue; // Slug taken by another tournament — retry with a suffix.
       }
-      return { ok: false, error: "Could not create the tournament. Try again." };
+      return { ok: false, error: "Could not create the competition. Try again." };
     }
 
     const sections = values.sections?.length
@@ -552,19 +576,33 @@ async function insertWithSlugRetry(
             entryFeeCents: null,
           },
         ];
-    await supabase.from("sections").insert(
+    const { error: sectionError } = await supabase.from("sections").insert(
       sections.map((section) => ({
         competition_id: created.id,
         name: section.name,
-        min_rating: section.minRating,
-        max_rating: section.maxRating,
+        min_rating: values.category === "chess" ? section.minRating : null,
+        max_rating: values.category === "chess" ? section.maxRating : null,
         min_grade: section.minGrade,
         max_grade: section.maxGrade,
         entry_fee_cents: section.entryFeeCents,
       }))
     );
+    if (sectionError) {
+      await supabase
+        .from("competitions")
+        .update({ status: "archived" })
+        .eq("id", created.id);
+      return {
+        ok: false,
+        error:
+          "The competition draft was preserved because its divisions could not be published. Try again.",
+      };
+    }
 
-    if (values.audience === "public" || values.visibility === "public") {
+    if (
+      values.category === "chess" &&
+      (values.audience === "public" || values.visibility === "public")
+    ) {
       revalidatePath("/chess");
     }
     revalidatePath(`/orgs/${values.orgSlug}`);
@@ -575,7 +613,7 @@ async function insertWithSlugRetry(
         created.status === "pending_review" ? "pending_review" : "published",
     };
   }
-  return { ok: false, error: "A tournament with that name and date already exists." };
+  return { ok: false, error: "A competition with that name and date already exists." };
 }
 
 /** Edit a hosted tournament. The slug never changes — shared links stay live. */
@@ -593,10 +631,13 @@ export async function updateTournament(
   const supabase = await createServerSupabaseClient();
   const { data: existing } = await supabase
     .from("competitions")
-    .select("status")
+    .select("status, category")
     .eq("id", values.competitionId)
     .maybeSingle();
-  const zipResult = await getTournamentZip(supabase, values.zip);
+  const zipResult =
+    values.participationMode === "online"
+      ? ({ ok: true, lat: null, lng: null } as const)
+      : await getTournamentZip(supabase, values.zip);
   if (!zipResult.ok) return zipResult;
   const result = await updateTournamentRecord({
     supabase,
@@ -623,7 +664,7 @@ export async function updateTournament(
       return {
         ok: false,
         error:
-          "Changes were saved, but the tournament could not be resubmitted. Try again.",
+          "Changes were saved, but the competition could not be resubmitted. Try again.",
       };
     }
     status =
@@ -632,7 +673,9 @@ export async function updateTournament(
         : "published";
   }
 
-  revalidatePath("/chess");
+  if (existing?.category === "chess" || values.category === "chess") {
+    revalidatePath("/chess");
+  }
   revalidatePath(`/event/${values.eventSlug}`);
   revalidatePath(`/event/${values.eventSlug}/manage`);
   revalidatePath(`/orgs/${values.orgSlug}`);
@@ -653,7 +696,7 @@ export async function cancelTournament(input: {
     .update({ status: "archived" }, { count: "exact" })
     .eq("id", input.competitionId);
   if (error || !count) {
-    return { ok: false, error: "Could not cancel the tournament." };
+    return { ok: false, error: "Could not cancel the competition." };
   }
 
   revalidatePath("/chess");

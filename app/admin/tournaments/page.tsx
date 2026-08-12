@@ -206,6 +206,8 @@ export default async function AdminTournamentsPage({
                 id: tournament.id,
                 slug: tournament.slug,
                 name: tournament.name,
+                category: tournament.category,
+                custom_category_name: tournament.custom_category_name,
                 city: tournament.city,
                 state: tournament.state,
                 zip: tournament.zip,

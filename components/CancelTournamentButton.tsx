@@ -48,7 +48,7 @@ export function CancelTournamentButton({
             disabled={pending}
             className="font-semibold text-brand-red hover:underline disabled:opacity-60"
           >
-            {pending ? "Cancelling…" : "Yes, cancel this tournament"}
+            {pending ? "Cancelling…" : "Yes, cancel this competition"}
           </button>
           <button
             type="button"
@@ -73,7 +73,7 @@ export function CancelTournamentButton({
       onClick={() => setConfirming(true)}
       className="self-start text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
     >
-      Cancel this tournament…
+      Cancel this competition…
     </button>
   );
 }

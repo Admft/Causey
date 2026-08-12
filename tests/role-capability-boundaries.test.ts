@@ -29,14 +29,16 @@ describe("organization role capability boundaries", () => {
     expect(helper).toContain("'school_admin'");
   });
 
-  it("uses the narrow helper for tournament writes", () => {
+  it("uses scoped helpers for tournament writes", () => {
     expect(migration).toContain(
       "public.is_org_coach(org_id, auth.uid())"
     );
     expect(migration).toContain(
       "public.is_org_coach(c.org_id, p_profile_id)"
     );
-    expect(portal).toContain('supabase.rpc("is_org_coach"');
+    expect(portal).toContain(
+      'supabase.rpc("can_operate_org_competitions"'
+    );
   });
 
   it("renders assistant roster access as read-only", () => {

@@ -28,7 +28,7 @@ export function ModerationReviewForm({
     if (
       nextDecision === "approve" &&
       !window.confirm(
-        `Publish ${tournamentName}? Families will be able to find this listing immediately.`
+        `Publish ${tournamentName}? Its public link becomes available immediately; it enters discovery only if that competition type is searchable.`
       )
     ) {
       return;
@@ -68,8 +68,8 @@ export function ModerationReviewForm({
         </p>
         <p className="mt-1 text-sm text-muted">
           {decision === "approve"
-            ? "Families can now find the public listing."
-            : "The review note is saved with the tournament record."}
+            ? "The public link is available. Searchable competition types also enter discovery."
+            : "The review note is saved with the competition record."}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm font-semibold">
           <button
@@ -77,7 +77,7 @@ export function ModerationReviewForm({
             onClick={() => router.refresh()}
             className="text-brand-red hover:underline"
           >
-            Review next tournament
+            Review next competition
           </button>
           {decision === "approve" ? (
             <Link

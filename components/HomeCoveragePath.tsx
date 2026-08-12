@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { STATE_AFFILIATES } from "@/lib/state-affiliates";
 import { LIVE_SOURCES } from "@/lib/tournament-sources";
+import { COMPETITION_TYPES } from "@/lib/competition-types";
 
 /**
  * Homepage coverage story as one progress path (design system §8.11): what is
@@ -17,24 +18,9 @@ import { LIVE_SOURCES } from "@/lib/tournament-sources";
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-const UPCOMING_COMPETITION_TYPES = [
-  {
-    name: "STEM",
-    description: "Science, technology, engineering, and mathematics competitions.",
-  },
-  {
-    name: "Debate",
-    description: "Speech, debate, and public-speaking competitions.",
-  },
-  {
-    name: "Arts",
-    description: "Visual, performing, and creative arts competitions.",
-  },
-  {
-    name: "Writing",
-    description: "Essay, journalism, poetry, and creative writing competitions.",
-  },
-];
+const UPCOMING_COMPETITION_TYPES = COMPETITION_TYPES.filter(
+  (type) => type.id !== "chess" && type.id !== "other"
+);
 
 // Tier-ordered preview of the affiliate work queue. Texas is skipped because
 // TCA is already a live feed in step one.
@@ -76,12 +62,13 @@ export function HomeCoveragePath() {
           id="coverage-heading"
           className="max-w-[24ch] font-display text-display-sm font-bold tracking-tight text-foreground"
         >
-          What Causey indexes today, and what gets added next
+          What Causey indexes today, and which public directories come next
         </h2>
         <p className="mt-3 max-w-2xl text-base text-muted">
           There is no public API for scholastic tournament calendars, so Causey
-          indexes the hubs organizers already publish to. Chess comes first;
-          the rest of the work has a public order.
+          indexes the hubs organizers already publish to. Chess is the only
+          public search today. Organizations can coordinate the other listed
+          types now, but their public directories remain planned.
         </p>
 
         <ol ref={pathRef} className="coverage-path mt-10">
@@ -168,13 +155,13 @@ export function HomeCoveragePath() {
             />
             <p className="text-xs font-semibold text-muted">Planned</p>
             <h3 className="mt-1 text-base font-semibold text-foreground">
-              Four more competition types
+              Public directories for four more competition types
             </h3>
             <ul className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               {UPCOMING_COMPETITION_TYPES.map((type) => (
-                <li key={type.name}>
+                <li key={type.id}>
                   <p className="text-sm font-semibold text-foreground">
-                    {type.name}
+                    {type.label}
                   </p>
                   <p className="mt-0.5 text-xs text-muted">{type.description}</p>
                 </li>

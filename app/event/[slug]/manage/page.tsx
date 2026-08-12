@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Manage entrants",
-  description: "Invite your roster and track RSVPs for this tournament.",
+  description: "Invite your roster and track RSVPs for this competition.",
 };
 
 export default async function ManageEventPage({
@@ -261,7 +261,7 @@ export default async function ManageEventPage({
           {attendance.map((row) => (
             <li
               key={row.profile_id}
-              className={`flex flex-wrap items-center justify-between gap-3 py-3 ${
+              className={`flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
                 row.member_status !== "active" ? "opacity-60" : ""
               }`}
             >
@@ -276,21 +276,23 @@ export default async function ManageEventPage({
                     : ""}
                 </p>
               </div>
-              {isPast ? (
-                <AttendanceButtons
-                  competitionId={competition.id}
-                  eventSlug={competition.slug}
-                  profileId={row.profile_id}
-                  status={row.status}
-                />
-              ) : (
-                <RemoveEntrantButton
-                  competitionId={competition.id}
-                  eventSlug={competition.slug}
-                  profileId={row.profile_id}
-                  displayName={row.display_name || "this student"}
-                />
-              )}
+              <div className="sm:shrink-0">
+                {isPast ? (
+                  <AttendanceButtons
+                    competitionId={competition.id}
+                    eventSlug={competition.slug}
+                    profileId={row.profile_id}
+                    status={row.status}
+                  />
+                ) : (
+                  <RemoveEntrantButton
+                    competitionId={competition.id}
+                    eventSlug={competition.slug}
+                    profileId={row.profile_id}
+                    displayName={row.display_name || "this student"}
+                  />
+                )}
+              </div>
             </li>
           ))}
         </ul>
@@ -327,7 +329,7 @@ export default async function ManageEventPage({
           </Link>
         </div>
         <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
-          Tournament
+          Competition
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           {competition.name}
@@ -372,7 +374,7 @@ export default async function ManageEventPage({
             </h2>
             <p className="mt-2 max-w-prose text-sm text-muted-strong">
               {moderationNote ||
-                "Review the tournament details, correct the listing, and resubmit it."}
+                "Review the competition details, correct the listing, and resubmit it."}
             </p>
             <Link
               href={`/event/${competition.slug}/edit`}

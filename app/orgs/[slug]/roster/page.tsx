@@ -171,7 +171,7 @@ export default async function RosterPage({
               {students.map((row) => (
                 <li
                   key={row.profile_id}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">
@@ -185,12 +185,14 @@ export default async function RosterPage({
                     </p>
                   </div>
                   {canOperate ? (
-                    <RemoveMemberButton
-                      orgId={org.id}
-                      orgSlug={org.slug}
-                      profileId={row.profile_id}
-                      displayName={row.display_name || "this student"}
-                    />
+                    <div className="sm:shrink-0">
+                      <RemoveMemberButton
+                        orgId={org.id}
+                        orgSlug={org.slug}
+                        profileId={row.profile_id}
+                        displayName={row.display_name || "this student"}
+                      />
+                    </div>
                   ) : null}
                 </li>
               ))}
@@ -250,7 +252,7 @@ export default async function RosterPage({
               {staff.map((row) => (
                 <li
                   key={row.profile_id}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">
@@ -262,16 +264,18 @@ export default async function RosterPage({
                     </p>
                   </div>
                   {canOperate && row.profile_id !== user.id ? (
-                    <RemoveMemberButton
-                      orgId={org.id}
-                      orgSlug={org.slug}
-                      profileId={row.profile_id}
-                      displayName={row.display_name || "this member"}
-                    />
+                    <div className="sm:shrink-0">
+                      <RemoveMemberButton
+                        orgId={org.id}
+                        orgSlug={org.slug}
+                        profileId={row.profile_id}
+                        displayName={row.display_name || "this member"}
+                      />
+                    </div>
                   ) : (
                     <Link
                       href={`/orgs/${org.slug}`}
-                      className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                      className="text-sm font-semibold text-muted-strong hover:text-brand-red sm:shrink-0"
                     >
                       Workspace
                     </Link>

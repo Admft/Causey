@@ -1342,7 +1342,7 @@ Causey is not ready for:
 - In-app payment collection.
 - Student-to-student messaging.
 - Automatic SIS/roster synchronization.
-- Non-chess category launch.
+- Non-chess public-directory launch.
 
 ---
 
@@ -1965,11 +1965,16 @@ Exit criteria:
 - Cost and support scale are understood.
 - Expansion is driven by customer evidence, not feature theater.
 
-## Phase 6: Additional competition categories
+## Phase 6: Additional public competition directories
 
 **Earliest sensible window: after chess quality and district operations are stable**
 
 Possible categories already named in product direction include STEM, debate, arts, and writing.
+
+Current foundation as of August 11, 2026: authorized organizations can create,
+edit, publish, and coordinate these types plus a named custom type. District
+administrators can host district-wide or for a connected school. This is an
+internal coordination capability, not evidence of a usable public directory.
 
 Do not expand only by adding category buttons.
 

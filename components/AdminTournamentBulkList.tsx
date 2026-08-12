@@ -11,6 +11,8 @@ import {
 } from "@/lib/actions/admin-operations";
 import { formatDateRange } from "@/lib/format";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
+import { competitionTypeLabel } from "@/lib/competition-types";
+import type { CompetitionCategory } from "@/lib/schemas";
 
 type TournamentStatus =
   | "draft"
@@ -23,11 +25,13 @@ type BulkTournament = {
   id: string;
   slug: string;
   name: string;
-  city: string;
-  state: string;
-  zip: string;
-  lat: number;
-  lng: number;
+  category: CompetitionCategory;
+  custom_category_name: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  lat: number | null;
+  lng: number | null;
   start_date: string;
   end_date: string | null;
   reg_url: string | null;
@@ -113,7 +117,7 @@ export function AdminTournamentBulkList({
     if (!ids.length) return;
     if (
       !window.confirm(
-        `Publish ${ids.length} ${label}? Complete records will appear in chess search right away.`
+        `Publish ${ids.length} ${label}? Chess records will appear in chess search; other types remain available by direct link until their public directories open.`
       )
     ) {
       return;
@@ -138,8 +142,8 @@ export function AdminTournamentBulkList({
         result.skipped > 0
           ? `Published ${result.updated}; ${result.skipped} could not be updated.`
           : filterStatus === "draft"
-            ? `Published ${result.updated} ${publishedLabel}. They left this Draft list — filter to Published to see them. Chess search only shows upcoming listings; switch Timing to All for events that already ended.`
-            : `Published ${result.updated} ${publishedLabel}. They stay here as Published. Chess search only shows upcoming listings; switch Timing to All for events that already ended.`
+            ? `Published ${result.updated} ${publishedLabel}. They left this Draft list — filter to Published to see them. Chess search shows upcoming chess listings; non-chess directories remain closed.`
+            : `Published ${result.updated} ${publishedLabel}. They stay here as Published. Chess search shows upcoming chess listings; non-chess directories remain closed.`
       );
       router.refresh();
     } finally {
@@ -380,8 +384,15 @@ export function AdminTournamentBulkList({
                 ) : null}
               </div>
               <p className="mt-1 text-xs text-muted">
+                {competitionTypeLabel({
+                  category: tournament.category,
+                  customCategoryName: tournament.custom_category_name,
+                })}
+                {" · "}
                 {formatDateRange(tournament.start_date, tournament.end_date)}
-                {` · ${tournament.city}, ${tournament.state}`}
+                {tournament.city && tournament.state
+                  ? ` · ${tournament.city}, ${tournament.state}`
+                  : ""}
                 {` · ${competitionSourceLabel(tournament.source)}`}
                 {tournament.organizations
                   ? ` · ${tournament.organizations.name}`

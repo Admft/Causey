@@ -2,7 +2,10 @@
 
 Causey is an early-build product for discovering scholastic competitions and
 coordinating school and club participation. Chess is the only usable discovery
-surface today, and its coverage is still incomplete.
+surface today, and its coverage is still incomplete. Schools, districts,
+clubs, and teams can host chess, STEM, debate, arts, writing, or custom
+competitions inside their organization workspaces; that coordination support
+does not mean Causey has public directories for those non-chess types.
 
 The app supports student, parent, and coach accounts; organization memberships
 for staff, school administrators, and district administrators; and a separate
@@ -36,8 +39,9 @@ and [`docs/district-pilot-runbook.md`](docs/district-pilot-runbook.md).
   birth, derived age band, organization membership, RSVPs, and attendance.
   Public disclosures live at `/privacy` and `/terms`; district pilots still
   require owner/legal review and an approved agreement.
-- **Chess first** — STEM, debate, arts, and writing are roadmap categories, not
-  searchable products.
+- **Chess-first discovery** — STEM, debate, arts, writing, and custom
+  competition types can be coordinated by organizations, but they are not
+  searchable public products.
 
 ## Architecture
 

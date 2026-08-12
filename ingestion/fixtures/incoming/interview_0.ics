@@ -1,0 +1,65 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:icalendar-ruby
+CALSCALE:GREGORIAN
+BEGIN:VTIMEZONE
+TZID:America/Chicago
+BEGIN:DAYLIGHT
+DTSTART:20260308T030000
+TZOFFSETFROM:-0600
+TZOFFSETTO:-0500
+RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=3
+TZNAME:CDT
+END:DAYLIGHT
+BEGIN:STANDARD
+DTSTART:20261101T010000
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0600
+RRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=11
+TZNAME:CST
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20260805T134255Z
+UID:5ca1f41a-ad8e-4ac7-b214-75c0970533a4
+DTSTART;TZID=America/Chicago:20260810T150000
+DTEND;TZID=America/Chicago:20260810T153000
+DESCRIPTION:Hi Adam\,\n\nYou’re confirmed for your interview for Sales En
+ gineer\, Mid Market - TOLA! Simply click on the Zoom link below to join th
+ e call. Please take a moment to review the interview details below and rep
+ ly-all to confirm receipt.\n\nSchedule:\n\nDate/Time: Aug 10\, 2026 3:00pm
+ -3:30pm (GMT-05:00) Central Time (US & Canada)\nInterviewers: Adam Viet\n\
+ nPlease be sure to log into Zoom at least 5 minutes prior to your intervie
+ w(s) to allow for a smooth start and to troubleshoot any technical issues.
+ \n\nLet me know if you have any questions before the interview and feel fr
+ ee to check out the resources below to learn more about Samsara:\n\n* How 
+ Samsara Increases Safety\, Efficiency\, and Sustainability for our Custome
+ rs ( https://www.youtube.com/watch?v=Ys4NXQgI3js&ab_channel=Samsara )\n* H
+ ow Samsara Engineers are Building the Future of Physical Operations ( http
+ s://www.samsara.com/blog/samsara-engineering-culture/ )\n* The Samsara Cul
+ ture Playbook ( https://samsara.com/blog/the-samsara-culture-playbook )\n*
+  Belonging at Samsara ( https://www.samsara.com/company/belonging )\n\nUpo
+ n completion of our process\, you will receive an anonymous survey to shar
+ e feedback on your experience. Please take a moment to fill this out as we
+  are continuously finding ways to improve our candidate experience.\n\nSam
+ sara is an inclusive work environment\, and we are committed to ensuring e
+ qual opportunity in employment for qualified persons with disabilities. Pl
+ ease email accessibleinterviewing@samsara.com or click here ( https://form
+ s.gle/N2B9HNmKTeAiXdCt7 ) if you require any reasonable accommodations thr
+ oughout the recruiting process.\n\nSamsara uses BrightHire to record their
+  interviews\, allowing your interviewer to focus more on the conversation 
+ and less on taking perfect notes. It also helps ensure a more fair and con
+ sistent hiring process for the best possible interview experience. Learn m
+ ore about BrightHire here ( https://help.brighthire.ai/en/articles/4484370
+ -brighthire-for-candidates-faq ).\n\nYour privacy is very important to us 
+ and our interviews are confidential\; for more information about how Samsa
+ ra treats your data\, please visit our Candidate Privacy Notice ( https://
+ www.samsara.com/legal/candidate-privacy-notice ). You can ask the intervie
+ wer to stop the recording at any time. If you do not want BrightHire to re
+ cord any of your interviews\, click here ( https://app.brighthire.ai/candi
+ date-opt-out/XSUsRdtKQfGdSICiK-Wk5A ).\n\nCheers\,\n\nAdam & the Samsara R
+ ecruiting Team
+LOCATION:null
+SUMMARY:Interview with Samsara
+END:VEVENT
+END:VCALENDAR

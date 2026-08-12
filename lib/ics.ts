@@ -30,14 +30,20 @@ export function buildEventIcs(
     end_date: string | null;
     venue_name: string | null;
     address: string | null;
-    city: string;
-    state: string;
-    zip: string;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
   },
   now: Date = new Date()
 ): string {
   const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const location = [event.venue_name, event.address, `${event.city}, ${event.state} ${event.zip}`]
+  const locality = [
+    event.city,
+    [event.state, event.zip].filter(Boolean).join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const location = [event.venue_name, event.address, locality]
     .filter(Boolean)
     .join(", ");
   const lines = [
@@ -50,7 +56,7 @@ export function buildEventIcs(
     `DTSTART;VALUE=DATE:${dateDigits(event.start_date)}`,
     `DTEND;VALUE=DATE:${dateDigits(nextDay(event.end_date ?? event.start_date))}`,
     `SUMMARY:${escapeText(event.name)}`,
-    `LOCATION:${escapeText(location)}`,
+    ...(location ? [`LOCATION:${escapeText(location)}`] : []),
     "END:VEVENT",
     "END:VCALENDAR",
   ];

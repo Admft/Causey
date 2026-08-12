@@ -11,11 +11,13 @@ import {
 } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
+import { competitionTypeLabel } from "@/lib/competition-types";
 import { getDistrictPilotReadiness } from "@/lib/data/district";
 import {
   getMyEntrantRows,
   getOrgAttendedEvents,
   getOrgBySlugForViewer,
+  getOrgCompetitionWorkspace,
   getOrgRoster,
   isSupabaseConfigured,
   isUpcomingEvent,
@@ -30,7 +32,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Organization",
-  description: "Roster, join code, and tournaments for this organization.",
+  description: "Roster, join code, and competitions for this organization.",
 };
 
 const ORG_TYPE_LABEL: Record<string, string> = {
@@ -93,12 +95,18 @@ export default async function OrgPage({
     isAdmin,
     isDistrictAdmin,
     activeMemberCount,
-    events,
-    drafts,
+    events: directEvents,
+    drafts: directDrafts,
     announcements,
   } = view;
 
-  const [entrantRows, attendedEvents, roster, districtReadiness] =
+  const [
+    entrantRows,
+    attendedEvents,
+    roster,
+    districtReadiness,
+    competitionWorkspace,
+  ] =
     await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
     getOrgAttendedEvents(org.id),
@@ -108,7 +116,12 @@ export default async function OrgPage({
     isDistrictAdmin
       ? getDistrictPilotReadiness(org.id)
       : Promise.resolve(null),
+    org.type === "district"
+      ? getOrgCompetitionWorkspace(org)
+      : Promise.resolve(null),
   ]);
+  const events = competitionWorkspace?.events ?? directEvents;
+  const drafts = competitionWorkspace?.drafts ?? directDrafts;
   const myRsvpByCompetition = new Map(
     entrantRows.map((row) => [row.competition_id, row])
   );
@@ -133,8 +146,9 @@ export default async function OrgPage({
       membership?.role === "school_admin");
 
   const today = new Date().toISOString().slice(0, 10);
-  const upcoming = events.filter((e) => isUpcomingEvent(e, today));
-  const past = events.filter((e) => !isUpcomingEvent(e, today));
+  const activeEvents = events.filter((event) => event.status !== "archived");
+  const upcoming = activeEvents.filter((e) => isUpcomingEvent(e, today));
+  const past = activeEvents.filter((e) => !isUpcomingEvent(e, today));
   const attendingUpcoming = attendedEvents.filter((e) =>
     isUpcomingEvent(e, today)
   );
@@ -159,12 +173,15 @@ export default async function OrgPage({
       return {
         title: "Review the roster and groups",
         description:
-          "Your assistant-coach access is read-only. A coach or administrator handles invitations, roster changes, announcements, and tournament operations.",
+          "Your assistant-coach access is read-only. A coach or administrator handles invitations, roster changes, announcements, and competition operations.",
         action: {
           href: `/orgs/${org.slug}/roster`,
           label: "Review roster",
         },
-        secondary: { href: "/orgs", label: "Back to organizations" },
+        secondary: {
+          href: `/orgs/${org.slug}/competitions`,
+          label: "View competitions",
+        },
       };
     }
     if (needsSchoolAdminHandoff) {
@@ -180,19 +197,15 @@ export default async function OrgPage({
       };
     }
     if (isDirectSchoolAdmin) {
-      if (org.verification_status !== "verified") {
+      // Pending verification is Causey-side work — don't block the mission on it.
+      if (org.verification_status === "rejected") {
         return {
-          title:
-            org.verification_status === "rejected"
-              ? "Correct the school record"
-              : "School verification is pending",
+          title: "Correct the school record",
           description:
-            org.verification_status === "rejected"
-              ? "Review the platform note and correct the school details before asking for another verification review."
-              : "You can continue staffing the school while Causey verifies its identity.",
+            "Review the platform note and correct the school details before asking for another verification review.",
           action: {
-            href: `/orgs/${org.slug}/settings`,
-            label: "Review school settings",
+            href: `/orgs/${org.slug}/settings#verification`,
+            label: "Correct school details",
           },
           secondary: {
             href: `/orgs/${org.slug}/people`,
@@ -203,7 +216,7 @@ export default async function OrgPage({
       return {
         title: "Review school staffing",
         description:
-          "Keep administrator and coach access current before working on roster or tournament tasks.",
+          "Keep administrator and coach access current before working on roster or competition tasks.",
         action: {
           href: `/orgs/${org.slug}/people`,
           label: "Manage people",
@@ -216,19 +229,19 @@ export default async function OrgPage({
     }
     if (freshestDraft && priorityUpcoming?.status !== "rejected") {
       return {
-        title: `Resume “${freshestDraft.data.name.trim() || "Untitled tournament"}”`,
+        title: `Resume “${freshestDraft.data.name.trim() || "Untitled competition"}”`,
         description: `Draft saved ${formatSavedAt(freshestDraft.updated_at)}${
           freshestDraft.cover_image_url
             ? ". Cover is ready — finish details and choose who can see it."
             : ". Add a cover, finish details, and choose who can see it."
         }`,
         action: {
-          href: `/orgs/${org.slug}/tournaments/new?draft=${freshestDraft.id}`,
+          href: `/orgs/${org.slug}/competitions/new?draft=${freshestDraft.id}&host=${freshestDraft.org_id}`,
           label: "Resume draft",
         },
         secondary: {
-          href: `/orgs/${org.slug}/tournaments/new`,
-          label: "Create another tournament",
+          href: `/orgs/${org.slug}/competitions/new`,
+          label: "Create another competition",
         },
       };
     }
@@ -271,8 +284,8 @@ export default async function OrgPage({
         secondary:
           priorityUpcoming.status === "rejected" || hasStudents
             ? {
-                href: `/orgs/${org.slug}/tournaments/new`,
-                label: "Create another tournament",
+                href: `/orgs/${org.slug}/competitions/new`,
+                label: "Create another competition",
               }
             : { href: action.href, label: action.label },
       };
@@ -281,25 +294,25 @@ export default async function OrgPage({
       return {
         title: "Invite your first students",
         description: org.join_code
-          ? "Share the join link from the roster so students can join. Create a tournament once you have people to invite."
-          : "Open the roster to add students. Create a tournament once you have people to invite.",
+          ? "Share the join link from the roster so students can join. Create a competition once you have people to invite."
+          : "Open the roster to add students. Create a competition once you have people to invite.",
         action: {
           href: `/orgs/${org.slug}/roster#add-students`,
           label: "Open roster",
         },
         secondary: {
-          href: `/orgs/${org.slug}/tournaments/new`,
-          label: "Create tournament anyway",
+          href: `/orgs/${org.slug}/competitions/new`,
+          label: "Create competition anyway",
         },
       };
     }
     return {
-      title: "Create your first tournament",
+      title: "Create your first competition",
       description:
         "Create an event page, choose its audience, invite your roster, and track who can attend.",
       action: {
-        href: `/orgs/${org.slug}/tournaments/new`,
-        label: "Create tournament",
+        href: `/orgs/${org.slug}/competitions/new`,
+        label: "Create competition",
       },
       secondary: {
         href: `/orgs/${org.slug}/roster`,
@@ -360,6 +373,32 @@ export default async function OrgPage({
               : ""}
         </p>
 
+        {isAdmin && org.verification_status === "pending" ? (
+          <p
+            className="mt-4 max-w-2xl border-l-2 border-line pl-4 text-sm text-muted"
+            role="status"
+          >
+            Platform review pending. Causey verifies organization identity in
+            the admin queue — there is nothing to submit here. Continue staffing
+            and competitions while that review finishes.
+          </p>
+        ) : null}
+        {isAdmin && org.verification_status === "rejected" ? (
+          <p
+            className="mt-4 max-w-2xl border-l-2 border-brand-red pl-4 text-sm text-muted-strong"
+            role="status"
+          >
+            Platform review returned this organization.{" "}
+            <Link
+              href={`/orgs/${org.slug}/settings#verification`}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Correct the record in settings
+            </Link>
+            .
+          </p>
+        ) : null}
+
         {submittedEvent?.status === "pending_review" ? (
           <section
             className="mt-8 rounded-2xl border border-brand-red/30 bg-accent-soft p-5"
@@ -369,9 +408,11 @@ export default async function OrgPage({
               Submitted for platform review
             </h2>
             <p className="mt-2 max-w-prose text-sm text-muted-strong">
-              “{submittedEvent.name}” is not in public search yet. You can
-              prepare invitations while Causey reviews the listing; its status
-              will update here.
+              {submittedEvent.category === "chess"
+                ? `“${submittedEvent.name}” is not in chess search yet.`
+                : `“${submittedEvent.name}” does not have a public link until review, and this competition type is not searchable yet.`}{" "}
+              You can prepare invitations while Causey reviews the listing; its
+              status will update here.
             </p>
           </section>
         ) : null}
@@ -492,17 +533,17 @@ export default async function OrgPage({
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div>
                 <h2 className="text-sm font-semibold text-foreground">
-                  Hosted tournaments
+                  Hosted competitions
                 </h2>
                 <p className="mt-1 max-w-lg text-xs text-muted">
                   Create an event page, choose its audience, then invite your roster.
                 </p>
               </div>
               <Link
-                href={`/orgs/${org.slug}/tournaments/new`}
+                href={`/orgs/${org.slug}/competitions/new`}
                 className="cta-enabled inline-flex shrink-0"
               >
-                Create tournament
+                Create competition
               </Link>
             </div>
           </section>
@@ -511,14 +552,14 @@ export default async function OrgPage({
         {!canManageTournaments ? (
           <section className="mt-8">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-              Upcoming tournaments
+              Upcoming competitions
             </h2>
             {!upcoming.length ? (
               <PortalEmptyState
-                title="No tournaments are scheduled"
+                title="No competitions are scheduled"
                 description={
                   isCoach
-                    ? "A coach or administrator publishes tournaments. You can review the roster while you wait."
+                    ? "A coach or administrator publishes competitions. You can review the roster while you wait."
                     : "Search public chess listings, or check back after your coach publishes an event."
                 }
                 action={
@@ -537,9 +578,13 @@ export default async function OrgPage({
                   return (
                     <PortalListRow
                       key={event.id}
+                      organizationHosted
                       href={`/event/${event.slug}`}
                       title={event.name}
-                      meta={`${formatDateRange(
+                      meta={`${competitionTypeLabel({
+                        category: event.category,
+                        customCategoryName: event.custom_category_name,
+                      })} · ${formatDateRange(
                         event.start_date,
                         event.end_date
                       )}${
@@ -571,7 +616,7 @@ export default async function OrgPage({
           Boolean(freshestDraft && priorityUpcoming)) ? (
           <section className="mt-10">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-              Hosted tournaments
+              Hosted competitions
             </h2>
             {otherDrafts.length ? (
               <div className="mt-4">
@@ -582,15 +627,19 @@ export default async function OrgPage({
                   {otherDrafts.map((draft) => (
                     <PortalListRow
                       key={draft.id}
-                      title={draft.data.name.trim() || "Untitled tournament"}
-                      meta={`Saved ${formatSavedAt(draft.updated_at)}${
+                      organizationHosted
+                      title={draft.data.name.trim() || "Untitled competition"}
+                      meta={`${competitionTypeLabel({
+                        category: draft.data.category,
+                        customCategoryName: draft.data.customCategoryName,
+                      })} · saved ${formatSavedAt(draft.updated_at)}${
                         draft.cover_image_url
                           ? " · cover added"
                           : " · cover still needed"
                       }`}
                       trailing={
                         <Link
-                          href={`/orgs/${org.slug}/tournaments/new?draft=${draft.id}`}
+                          href={`/orgs/${org.slug}/competitions/new?draft=${draft.id}&host=${draft.org_id}`}
                           className="text-sm font-semibold text-brand-red hover:underline"
                         >
                           Resume
@@ -617,9 +666,13 @@ export default async function OrgPage({
                     return (
                       <PortalListRow
                         key={event.id}
+                        organizationHosted
                         href={`/event/${event.slug}`}
                         title={event.name}
-                        meta={`${formatDateRange(
+                        meta={`${competitionTypeLabel({
+                          category: event.category,
+                          customCategoryName: event.custom_category_name,
+                        })} · ${formatDateRange(
                           event.start_date,
                           event.end_date
                         )}${
@@ -662,7 +715,7 @@ export default async function OrgPage({
               We&rsquo;re attending
             </h2>
             <p className="mt-1 text-xs text-muted">
-              Public tournaments this organization is going to.
+              Public competitions this organization is going to.
             </p>
             <ul className="mt-2">
               {attendingUpcoming.map((event) => {
@@ -705,15 +758,19 @@ export default async function OrgPage({
         {past.length ? (
           <section className="mt-10 border-t border-line pt-8">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-              {canManageTournaments ? "Past hosted" : "Past tournaments"}
+              {canManageTournaments ? "Past hosted" : "Past competitions"}
             </h2>
             <ul className="mt-2">
               {past.map((event) => (
                 <PortalListRow
                   key={event.id}
+                  organizationHosted
                   href={`/event/${event.slug}`}
                   title={event.name}
-                  meta={formatDateRange(event.start_date, event.end_date)}
+                  meta={`${competitionTypeLabel({
+                    category: event.category,
+                    customCategoryName: event.custom_category_name,
+                  })} · ${formatDateRange(event.start_date, event.end_date)}`}
                 />
               ))}
             </ul>

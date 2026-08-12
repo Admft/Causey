@@ -51,7 +51,7 @@ describe("SEC-06: organizer events are created as drafts", () => {
     mocks.insertTournamentRecord.mockResolvedValue({ ok: true, slug: "spring-open" });
     mocks.createServerSupabaseClient.mockResolvedValue({
       rpc: async (name: string) => ({
-        data: name === "is_org_coach",
+        data: name === "can_operate_org_competitions",
         error: null,
       }),
       from: () => ({
@@ -162,7 +162,7 @@ describe("publishTournament", () => {
         competitionId: "22222222-2222-2222-2222-222222222222",
         eventSlug: "spring-open",
       })
-    ).resolves.toEqual({ ok: false, error: "Could not publish this tournament." });
+    ).resolves.toEqual({ ok: false, error: "Could not publish this competition." });
   });
 
   it("requires a signed-in account", async () => {

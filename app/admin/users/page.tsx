@@ -27,7 +27,8 @@ export default async function AdminUsersPage() {
       <p className="mt-2 max-w-prose text-sm text-muted">
         Search every Causey account by display name or email. Platform access
         changes are confirmed, audited, and cannot be applied to your own
-        account from this page.
+        account from this page. Organization membership can also be granted or
+        repaired here when a claim link is blocked.
       </p>
 
       <AdminUserDirectory
@@ -38,15 +39,15 @@ export default async function AdminUsersPage() {
       />
 
       <p className="mt-8 text-xs text-muted">
-        Organization-specific coach, school-admin, and district-admin roles are
-        managed from the organization’s{" "}
+        Prefer organization People invites for day-to-day staffing. Use the
+        membership form above for support repairs, or open{" "}
         <Link
           href="/admin/organizations"
           className="font-semibold text-muted-strong hover:text-brand-red"
         >
-          workspace
-        </Link>
-        .
+          Organizations
+        </Link>{" "}
+        to find a slug.
       </p>
     </main>
   );

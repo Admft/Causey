@@ -81,10 +81,29 @@ export class SupabaseDataSource implements DataSource {
       client.from("organizations").select("id").eq("created_by", user.id),
     ]);
 
-    return new Set([
+    const directIds = new Set([
       ...(memberships.data ?? []).map((membership) => membership.org_id as string),
       ...(ownedOrgs.data ?? []).map((org) => org.id as string),
     ]);
+    if (!directIds.size) return directIds;
+
+    const [directOrgs, childOrgs] = await Promise.all([
+      client
+        .from("organizations")
+        .select("id, parent_org_id")
+        .in("id", [...directIds]),
+      client
+        .from("organizations")
+        .select("id")
+        .in("parent_org_id", [...directIds]),
+    ]);
+    for (const org of directOrgs.data ?? []) {
+      if (org.parent_org_id) directIds.add(org.parent_org_id as string);
+    }
+    for (const org of childOrgs.data ?? []) {
+      directIds.add(org.id as string);
+    }
+    return directIds;
   }
 
   async searchCompetitions(filters: SearchFilters): Promise<CompetitionSearchPage> {
@@ -111,6 +130,7 @@ export class SupabaseDataSource implements DataSource {
       .select("*, sections(*), series(*)", canPageInSql ? { count: "exact" } : undefined)
       .eq("status", "published");
 
+    if (filters.category) query = query.eq("category", filters.category);
     if (filters.q) query = query.ilike("name", `%${filters.q}%`);
     if (filters.state) query = query.eq("state", filters.state);
     if (filters.source) query = query.eq("source", filters.source);
@@ -159,6 +179,9 @@ export class SupabaseDataSource implements DataSource {
           .eq("status", "published")
           .in("org_id", [...preferredOrgIds])
       : null;
+    if (preferredQuery && filters.category) {
+      preferredQuery = preferredQuery.eq("category", filters.category);
+    }
     if (preferredQuery && filters.state) {
       preferredQuery = preferredQuery.eq("state", filters.state);
     }
@@ -217,13 +240,20 @@ export class SupabaseDataSource implements DataSource {
 
       let distance_miles: number | null = null;
       if (origin) {
-        distance_miles = haversineMiles(
-          origin.lat,
-          origin.lng,
-          parsed.competition.lat,
-          parsed.competition.lng
-        );
-        if (distance_miles > radius) continue;
+        if (
+          parsed.competition.lat !== null &&
+          parsed.competition.lng !== null
+        ) {
+          distance_miles = haversineMiles(
+            origin.lat,
+            origin.lng,
+            parsed.competition.lat,
+            parsed.competition.lng
+          );
+          if (distance_miles > radius) continue;
+        } else if (parsed.competition.participation_mode !== "online") {
+          continue;
+        }
       }
 
       const hit = buildCompetitionResult({
@@ -233,7 +263,12 @@ export class SupabaseDataSource implements DataSource {
         distance_miles,
         filters,
       });
-      if (hit) results.push(hit);
+      if (hit) {
+        hit.viewer_org_match = Boolean(
+          hit.org_id && preferredOrgIds.has(hit.org_id)
+        );
+        results.push(hit);
+      }
     }
 
     if (canPageInSql) {
@@ -285,6 +320,7 @@ export class SupabaseDataSource implements DataSource {
       .from("competitions")
       .select("id, slug, name, series_id, state, start_date, canonical_id")
       .eq("status", "published")
+      .eq("category", "chess")
       .order("name");
     if (error) {
       // Pre-0005 DBs lack canonical_id — fall back.
@@ -293,6 +329,7 @@ export class SupabaseDataSource implements DataSource {
           .from("competitions")
           .select("id, slug, name, series_id, state, start_date")
           .eq("status", "published")
+          .eq("category", "chess")
           .order("name");
         if (retry.error) throw new Error(`Supabase list failed: ${retry.error.message}`);
         return (retry.data ?? []) as CompetitionRef[];

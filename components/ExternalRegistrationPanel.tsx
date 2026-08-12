@@ -15,6 +15,10 @@ export function ExternalRegistrationPanel({
   initialStatus,
   signedIn,
   embedded = false,
+  /** Defaults to the signed-in user; parents pass a linked child. */
+  profileId,
+  /** Shown when acting for someone other than "you". */
+  forLabel,
 }: {
   competitionId: string;
   eventSlug: string;
@@ -23,12 +27,18 @@ export function ExternalRegistrationPanel({
   signedIn: boolean;
   /** When true, drop outer section chrome — parent already titled the next step. */
   embedded?: boolean;
+  profileId?: string;
+  forLabel?: string;
 }) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const registrationHref = `/event/${eventSlug}/register`;
+  const registrationHref = profileId
+    ? `/event/${eventSlug}/register?for=${encodeURIComponent(profileId)}`
+    : `/event/${eventSlug}/register`;
+  const subject = forLabel ?? "you";
+  const whose = forLabel ? `for ${forLabel}` : null;
 
   async function respond(next: "registered" | "not_registered") {
     if (pending) return;
@@ -41,6 +51,7 @@ export function ExternalRegistrationPanel({
         competitionId,
         eventSlug,
         status: next,
+        profileId,
       });
       if (!result.ok) {
         setStatus(previous);
@@ -74,17 +85,19 @@ export function ExternalRegistrationPanel({
               className="text-base font-semibold text-foreground"
             >
               Organizer registration complete
+              {forLabel ? ` for ${forLabel}` : ""}
             </h2>
             <p className="mt-1 max-w-prose text-sm text-muted-strong">
-              You marked this complete, so Causey will keep the tournament in My
-              tournaments. The organizer remains the source of truth for your entry
-              and payment.
+              You marked this complete, so Causey will keep the competition on
+              the Plan{whose ? ` ${whose}` : ""}. Causey RSVP is not entry — the
+              organizer remains the source of truth for entry and payment.
             </p>
           </>
         ) : (
           <p className="max-w-prose text-sm text-muted-strong">
-            Causey will keep this in My tournaments. The organizer remains the
-            source of truth for entry and payment.
+            Causey will keep this on the Plan
+            {forLabel ? ` for ${forLabel}` : ""}. Causey RSVP is not entry — the
+            organizer remains the source of truth for entry and payment.
           </p>
         )}
         <div className={`${embedded ? "mt-4" : "mt-3"} flex flex-wrap items-center gap-4`}>
@@ -93,7 +106,9 @@ export function ExternalRegistrationPanel({
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-semibold text-brand-red hover:underline"
-            aria-label={`Open ${registrationHost} in a new tab`}
+            aria-label={`Open ${registrationHost} in a new tab${
+              forLabel ? ` for ${forLabel}` : ""
+            }`}
           >
             Open {registrationHost} <span aria-hidden="true">↗</span>
           </a>
@@ -130,17 +145,21 @@ export function ExternalRegistrationPanel({
               id="external-registration-question"
               className="text-base font-semibold text-foreground"
             >
-              Is organizer registration complete?
+              Is organizer registration complete
+              {forLabel ? ` for ${forLabel}` : ""}?
             </h2>
             <p className="mt-1 max-w-prose text-sm text-muted">
-              Causey cannot see the organizer&rsquo;s checkout. Confirm here after
-              you submit any required registration and payment.
+              Causey cannot see the organizer&rsquo;s checkout. Confirm here
+              after registration and payment are finished
+              {whose ? ` ${whose}` : ""}. Answering Going on Causey does not
+              register {subject} with the organizer.
             </p>
           </>
         ) : (
           <p className="max-w-prose text-sm text-muted">
-            Causey cannot see the organizer&rsquo;s checkout. Confirm after you
-            finish registration and payment.
+            Causey cannot see the organizer&rsquo;s checkout. Confirm after
+            registration and payment are finished
+            {whose ? ` ${whose}` : ""}. Causey RSVP is not organizer entry.
           </p>
         )}
         <div className={`${embedded ? "mt-4" : "mt-4"} flex flex-wrap items-center gap-3`}>
@@ -158,14 +177,16 @@ export function ExternalRegistrationPanel({
             onClick={() => respond("not_registered")}
             className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground disabled:opacity-60"
           >
-            I still need to register
+            Still need to register
           </button>
           <a
             href={registrationHref}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-medium text-muted-strong hover:text-brand-red"
-            aria-label={`Open ${registrationHost} in a new tab`}
+            aria-label={`Open ${registrationHost} in a new tab${
+              forLabel ? ` for ${forLabel}` : ""
+            }`}
           >
             Open registration site again <span aria-hidden="true">↗</span>
           </a>
@@ -192,19 +213,25 @@ export function ExternalRegistrationPanel({
         target="_blank"
         rel="noopener noreferrer"
         className="cta-enabled inline-flex"
-        aria-label={`Register on ${registrationHost}; opens in a new tab`}
+        aria-label={`Register on ${registrationHost}${
+          forLabel ? ` for ${forLabel}` : ""
+        }; opens in a new tab`}
         onClick={() => {
           if (signedIn) setStatus("opened");
         }}
       >
         {status === "not_registered"
-          ? "Finish organizer registration"
-          : "Register on organizer site"}{" "}
+          ? forLabel
+            ? `Finish organizer registration for ${forLabel}`
+            : "Finish organizer registration"
+          : forLabel
+            ? `Register ${forLabel} on organizer site`
+            : "Register on organizer site"}{" "}
         <span aria-hidden="true">↗</span>
       </a>
       <p className="mt-2 max-w-prose text-2xs text-muted">
         Registration and payment happen on the organizer&rsquo;s site, never on
-        Causey.
+        Causey. Causey RSVP only tells the club who is coming.
         {!signedIn ? (
           <>
             {" "}
@@ -214,7 +241,7 @@ export function ExternalRegistrationPanel({
             >
               Sign in first
             </Link>{" "}
-            if you want Causey to remember this tournament.
+            if you want Causey to remember this competition.
           </>
         ) : status === "not_registered" ? (
           <>

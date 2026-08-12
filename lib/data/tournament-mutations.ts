@@ -9,7 +9,7 @@ import type {
 } from "@/lib/validation/tournament";
 
 type ServerSupabase = Awaited<ReturnType<typeof createServerSupabaseClient>>;
-type ZipRow = { lat: number; lng: number };
+type ZipRow = { lat: number | null; lng: number | null };
 
 export async function getTournamentZip(
   supabase: ServerSupabase,
@@ -49,13 +49,15 @@ export async function insertTournamentRecord(input: {
       .insert({
         slug,
         name: values.name,
-        category: "chess",
+        category: values.category,
+        custom_category_name: values.customCategoryName,
+        participation_mode: values.participationMode,
         organizer_name: orgName,
         venue_name: values.venueName,
         address: values.address,
-        city: values.city,
-        state: values.state,
-        zip: values.zip,
+        city: values.city || null,
+        state: values.state || null,
+        zip: values.zip || null,
         lat: zipRow.lat,
         lng: zipRow.lng,
         start_date: values.startDate,
@@ -63,8 +65,8 @@ export async function insertTournamentRecord(input: {
         reg_deadline: values.regDeadline,
         reg_url: values.regUrl,
         entry_fee_cents: values.entryFeeCents,
-        rated: values.rated,
-        rating_system: "uschess",
+        rated: values.category === "chess" && values.rated,
+        rating_system: values.category === "chess" ? "uschess" : null,
         source: "organizer",
         status,
         visibility: values.visibility,
@@ -79,7 +81,7 @@ export async function insertTournamentRecord(input: {
 
     if (error) {
       if (error.code === "23505") continue;
-      return { ok: false, error: "Could not create the tournament. Try again." };
+      return { ok: false, error: "Could not create the competition. Try again." };
     }
 
     const sections = values.sections?.length
@@ -98,8 +100,8 @@ export async function insertTournamentRecord(input: {
       sections.map((section) => ({
         competition_id: created.id,
         name: section.name,
-        min_rating: section.minRating,
-        max_rating: section.maxRating,
+        min_rating: values.category === "chess" ? section.minRating : null,
+        max_rating: values.category === "chess" ? section.maxRating : null,
         min_grade: section.minGrade,
         max_grade: section.maxGrade,
         entry_fee_cents: section.entryFeeCents,
@@ -112,14 +114,14 @@ export async function insertTournamentRecord(input: {
         .eq("id", created.id);
       return {
         ok: false,
-        error: "The tournament was archived because its default section could not be created.",
+        error: "The competition was archived because its default division could not be created.",
       };
     }
 
     return { ok: true, slug: created.slug };
   }
 
-  return { ok: false, error: "A tournament with that name and date already exists." };
+  return { ok: false, error: "A competition with that name and date already exists." };
 }
 
 export async function updateTournamentRecord(input: {
@@ -128,34 +130,53 @@ export async function updateTournamentRecord(input: {
   zipRow: ZipRow;
 }): Promise<ActionResult<{ slug: string }>> {
   const { supabase, values, zipRow } = input;
-  const { data, error } = await supabase
-    .from("competitions")
-    .update({
-      name: values.name,
-      venue_name: values.venueName,
-      address: values.address,
-      city: values.city,
-      state: values.state,
-      zip: values.zip,
-      lat: zipRow.lat,
-      lng: zipRow.lng,
-      start_date: values.startDate,
-      end_date: values.endDate,
-      reg_deadline: values.regDeadline,
-      reg_url: values.regUrl,
-      entry_fee_cents: values.entryFeeCents,
-      rated: values.rated,
-      visibility: values.visibility,
-      audience:
-        values.audience ??
-        (values.visibility === "public" ? "public" : "school"),
-    })
-    .eq("id", values.competitionId)
-    .select("slug");
+  const sections = values.sections?.length
+    ? values.sections.map((section) => ({
+        name: section.name,
+        min_rating:
+          values.category === "chess" ? section.minRating : null,
+        max_rating:
+          values.category === "chess" ? section.maxRating : null,
+        min_grade: section.minGrade,
+        max_grade: section.maxGrade,
+        entry_fee_cents: section.entryFeeCents,
+      }))
+    : null;
+  const { data, error } = await supabase.rpc(
+    "update_competition_with_sections",
+    {
+      p_competition_id: values.competitionId,
+      p_values: {
+        category: values.category,
+        custom_category_name: values.customCategoryName,
+        participation_mode: values.participationMode,
+        name: values.name,
+        venue_name: values.venueName,
+        address: values.address,
+        city: values.city || null,
+        state: values.state || null,
+        zip: values.zip || null,
+        lat: zipRow.lat,
+        lng: zipRow.lng,
+        start_date: values.startDate,
+        end_date: values.endDate,
+        reg_deadline: values.regDeadline,
+        reg_url: values.regUrl,
+        entry_fee_cents: values.entryFeeCents,
+        rated: values.category === "chess" && values.rated,
+        rating_system: values.category === "chess" ? "uschess" : null,
+        visibility: values.visibility,
+        audience:
+          values.audience ??
+          (values.visibility === "public" ? "public" : "school"),
+      },
+      p_sections: sections,
+    }
+  );
 
-  if (error || !data?.length) {
-    return { ok: false, error: "Could not save changes. Try again." };
+  if (error || !data) {
+    return { ok: false, error: "Could not save the competition and its divisions. Try again." };
   }
 
-  return { ok: true, slug: values.eventSlug };
+  return { ok: true, slug: String(data) };
 }

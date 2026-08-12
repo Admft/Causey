@@ -22,11 +22,11 @@ export function normalizeEventName(name: string): string {
 export function eventFingerprint(input: {
   name: string;
   start_date: string;
-  state: string;
+  state: string | null;
   zip?: string | null;
 }): string {
   const name = normalizeEventName(input.name);
-  const state = input.state.trim().toUpperCase();
+  const state = (input.state ?? "").trim().toUpperCase();
   const zip =
     input.zip && /^\d{5}$/.test(input.zip) && input.zip !== "00000"
       ? input.zip

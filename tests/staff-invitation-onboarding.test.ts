@@ -100,7 +100,7 @@ describe("staff invitation onboarding", () => {
       "org_id is null"
     );
     expect(tournamentActions).toContain(
-      'supabase.rpc("is_org_coach"'
+      'supabase.rpc("can_operate_org_competitions"'
     );
   });
 

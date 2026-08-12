@@ -30,6 +30,21 @@ export const CompetitionAudienceSchema = z.enum([
   "invite_only",
 ]);
 
+export const CompetitionCategorySchema = z.enum([
+  "chess",
+  "stem",
+  "debate",
+  "arts",
+  "writing",
+  "other",
+]);
+
+export const ParticipationModeSchema = z.enum([
+  "in_person",
+  "online",
+  "hybrid",
+]);
+
 export const TournamentSectionDraftSchema = z.object({
   name: z.string().trim().min(1).max(80),
   minRating: z.number().int().nonnegative().nullable(),
@@ -44,6 +59,9 @@ export const TournamentSectionDraftSchema = z.object({
  * a coach can leave at any point and resume without relying on browser storage.
  */
 export const TournamentDraftDataSchema = z.object({
+  category: CompetitionCategorySchema.default("chess"),
+  customCategoryName: z.string().trim().max(80).default(""),
+  participationMode: ParticipationModeSchema.default("in_person"),
   name: z.string().max(120).default(""),
   startDate: z.string().max(10).default(""),
   endDate: z.string().max(10).default(""),
@@ -73,15 +91,17 @@ export const CompetitionSchema = z.object({
   id: z.string().uuid(),
   slug: z.string().min(1),
   name: z.string().min(1),
-  category: z.string().default("chess"),
+  category: CompetitionCategorySchema.default("chess"),
+  custom_category_name: z.string().trim().min(1).max(80).nullable().default(null),
+  participation_mode: ParticipationModeSchema.default("in_person"),
   organizer_name: z.string().nullable(),
   venue_name: z.string().nullable(),
   address: z.string().nullable(),
-  city: z.string(),
-  state: z.string().length(2),
-  zip: z.string().regex(/^\d{5}$/),
-  lat: z.number(),
-  lng: z.number(),
+  city: z.string().nullable(),
+  state: z.string().length(2).nullable(),
+  zip: z.string().regex(/^\d{5}$/).nullable(),
+  lat: z.number().nullable(),
+  lng: z.number().nullable(),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   reg_deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
@@ -90,7 +110,7 @@ export const CompetitionSchema = z.object({
   /** null = fee not listed on source; 0 = explicitly free. */
   entry_fee_cents: z.number().int().nonnegative().nullable(),
   rated: z.boolean(),
-  rating_system: z.string().default("uschess"),
+  rating_system: z.string().nullable().default("uschess"),
   series_id: z.string().uuid().nullable(),
   /**
    * Which ingestion pipeline wrote this row.
@@ -149,6 +169,41 @@ export const CompetitionSchema = z.object({
   /** Distinct users who saved or started registering for this tournament. */
   interest_count: z.number().int().nonnegative().default(0),
   status: CompetitionStatus.default("published"),
+}).superRefine((competition, context) => {
+  if (
+    competition.category === "other" &&
+    !competition.custom_category_name
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["custom_category_name"],
+      message: "Other competitions need a custom type name.",
+    });
+  }
+  if (
+    competition.category !== "other" &&
+    competition.custom_category_name !== null
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["custom_category_name"],
+      message: "Custom type names are only valid for Other.",
+    });
+  }
+  if (
+    competition.participation_mode !== "online" &&
+    (!competition.city ||
+      !competition.state ||
+      !competition.zip ||
+      competition.lat === null ||
+      competition.lng === null)
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["city"],
+      message: "In-person and hybrid competitions need a complete location.",
+    });
+  }
 });
 
 export const SectionSchema = z.object({
@@ -191,6 +246,8 @@ export const ZipSchema = z.object({
 export type Series = z.infer<typeof SeriesSchema>;
 export type SeriesLevel = z.infer<typeof SeriesLevel>;
 export type CompetitionAudience = z.infer<typeof CompetitionAudienceSchema>;
+export type CompetitionCategory = z.infer<typeof CompetitionCategorySchema>;
+export type ParticipationMode = z.infer<typeof ParticipationModeSchema>;
 export type Competition = z.infer<typeof CompetitionSchema>;
 export type Section = z.infer<typeof SectionSchema>;
 export type QualificationRule = z.infer<typeof QualificationRuleSchema>;
@@ -227,6 +284,7 @@ export const SearchSortSchema = z.enum(["popular", "soonest"]);
 export type SearchSort = z.infer<typeof SearchSortSchema>;
 
 export const SearchFiltersSchema = z.object({
+  category: CompetitionCategorySchema.optional(),
   q: z.string().trim().min(1).max(100).optional(),
   zip: z.string().regex(/^\d{5}$/).optional(),
   radius_miles: z.coerce.number().positive().max(3000).optional(),

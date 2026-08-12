@@ -35,9 +35,11 @@ function levelSummary(sections: Section[], maxNames = 3): string | null {
 }
 
 function placeLine(result: CompetitionResult): string {
+  if (result.participation_mode === "online") return "Online";
+  const locality = [result.city, result.state].filter(Boolean).join(", ");
   const where = result.venue_name
-    ? `${result.venue_name} · ${result.city}, ${result.state}`
-    : `${result.city}, ${result.state}`;
+    ? [result.venue_name, locality].filter(Boolean).join(" · ")
+    : locality || "Location not listed";
   return result.distance_miles !== null
     ? `${where} · ${formatMiles(result.distance_miles)} away`
     : where;
@@ -94,6 +96,11 @@ export function CompetitionCard({
       : result.pathway_status === "known"
         ? "Pathway on record"
         : null;
+  const organizationLabel = result.org_id
+    ? result.viewer_org_match
+      ? "Your organization"
+      : "Organization hosted"
+    : null;
   // List rows have no footer — deadline / pathway / filter-match ride the level line.
   const listTail = [
     anyFilterActive
@@ -107,8 +114,13 @@ export function CompetitionCard({
 
   const eyebrow = (
     <>
+      {organizationLabel ? (
+        <span className="text-org-gold-strong">{organizationLabel}</span>
+      ) : null}
       {featured && !hasVisual ? <FeaturedAwardMark className="h-4 w-4" /> : null}
-      <span className="text-brand-red">{standing.label}</span>
+      <span className={organizationLabel ? "text-muted-strong" : "text-brand-red"}>
+        {standing.label}
+      </span>
       {ended ? <span className="text-muted">· Ended</span> : null}
     </>
   );
@@ -117,7 +129,9 @@ export function CompetitionCard({
     return (
       <Link
         href={`/event/${result.slug}`}
-        className="card-lift relative flex flex-col gap-3 rounded-xl border border-line bg-surface p-3 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:gap-4"
+        className={`card-lift relative flex flex-col gap-3 rounded-xl border bg-surface p-3 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:gap-4 ${
+          organizationLabel ? "border-org-gold" : "border-line"
+        }`}
       >
         {featured && hasVisual ? (
           <FeaturedAwardMark className="absolute left-2.5 top-2.5 z-10 h-7 w-7" />
@@ -193,7 +207,9 @@ export function CompetitionCard({
   return (
     <Link
       href={`/event/${result.slug}`}
-      className="card-lift relative block overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]"
+      className={`card-lift relative block overflow-hidden rounded-2xl border bg-surface shadow-[var(--shadow-card)] ${
+        organizationLabel ? "border-org-gold" : "border-line"
+      }`}
     >
       {hasVisual && (
         <>

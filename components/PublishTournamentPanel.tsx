@@ -59,7 +59,7 @@ export function PublishTournamentPanel({
       <h2 className="text-base font-semibold text-foreground">
         {submitted
           ? "Submitted for platform review"
-          : "This tournament is a draft"}
+          : "This competition is a draft"}
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted-strong">
         {submitted

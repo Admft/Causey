@@ -23,7 +23,9 @@ export function FamilyRegistrationActions({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const registrationHref = `/event/${eventSlug}/register`;
+  const registrationHref = `/event/${eventSlug}/register?for=${encodeURIComponent(
+    childProfileId
+  )}`;
 
   async function markComplete() {
     if (pending) return;

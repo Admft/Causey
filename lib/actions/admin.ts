@@ -107,6 +107,25 @@ const AdminUserAccessSchema = z.object({
   platformAdmin: z.boolean(),
 });
 
+const AdminOrgMembershipSchema = z.object({
+  profileId: z.string().uuid(),
+  orgSlug: z
+    .string()
+    .trim()
+    .min(1, "Enter the organization slug.")
+    .max(120)
+    .regex(/^[a-z0-9-]+$/, "Use the organization slug (lowercase letters, numbers, hyphens)."),
+  role: z.enum([
+    "student",
+    "assistant_coach",
+    "coach",
+    "school_admin",
+    "district_admin",
+    "admin",
+  ]),
+  status: z.enum(["active", "removed"]).default("active"),
+});
+
 const AdminUserSearchSchema = z.object({
   query: z.string().trim().max(200),
   page: z.number().int().min(1).max(10_000),
@@ -218,6 +237,96 @@ export async function adminUpdateUserAccess(input: {
 
   revalidatePath("/admin/users");
   return { ok: true };
+}
+
+export async function adminUpsertOrgMembership(input: {
+  profileId: string;
+  orgSlug: string;
+  role: string;
+  status?: "active" | "removed";
+}): Promise<
+  ActionResult<{
+    orgSlug: string;
+    orgName: string;
+    role: string;
+    status: string;
+  }>
+> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Platform administrator access required.",
+    };
+  }
+  const parsed = AdminOrgMembershipSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the membership details.",
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id, slug, name, type")
+    .eq("slug", parsed.data.orgSlug)
+    .maybeSingle();
+  if (!org) {
+    return { ok: false, error: "No organization matches that slug." };
+  }
+
+  const { data, error } = await supabase.rpc("admin_upsert_org_membership", {
+    p_profile_id: parsed.data.profileId,
+    p_org_id: org.id,
+    p_role: parsed.data.role,
+    p_status: parsed.data.status,
+  });
+  if (error) {
+    if (error.message.includes("district_membership_role_not_allowed")) {
+      return {
+        ok: false,
+        error:
+          "Districts cannot have student or school-admin memberships. Use a school slug or a district staff role.",
+      };
+    }
+    if (error.message.includes("district_admin_requires_district")) {
+      return {
+        ok: false,
+        error: "District administrator only applies to district organizations.",
+      };
+    }
+    if (error.message.includes("profile_not_found")) {
+      return { ok: false, error: "That account no longer exists." };
+    }
+    if (error.message.includes("organization_not_found")) {
+      return { ok: false, error: "That organization no longer exists." };
+    }
+    console.error("Admin org membership upsert failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return { ok: false, error: "Could not update organization membership." };
+  }
+
+  const payload = (data ?? {}) as {
+    org_slug?: string;
+    org_name?: string;
+    role?: string;
+    status?: string;
+  };
+  revalidatePath("/admin/users");
+  revalidatePath(`/orgs/${org.slug}`);
+  revalidatePath(`/orgs/${org.slug}/people`);
+  revalidatePath("/orgs");
+  return {
+    ok: true,
+    orgSlug: payload.org_slug ?? org.slug,
+    orgName: payload.org_name ?? org.name,
+    role: payload.role ?? parsed.data.role,
+    status: payload.status ?? parsed.data.status,
+  };
 }
 
 export async function adminReviewOrganization(input: {
@@ -400,7 +509,10 @@ export async function adminCreateTournament(
     .maybeSingle();
   if (!org) return { ok: false, error: "Organization not found." };
 
-  const zipResult = await getTournamentZip(supabase, values.zip);
+  const zipResult =
+    values.participationMode === "online"
+      ? ({ ok: true, lat: null, lng: null } as const)
+      : await getTournamentZip(supabase, values.zip);
   if (!zipResult.ok) return zipResult;
 
   const result = await insertTournamentRecord({
@@ -431,7 +543,10 @@ export async function adminUpdateTournament(
   const values = parsed.data;
 
   const supabase = await createServerSupabaseClient();
-  const zipResult = await getTournamentZip(supabase, values.zip);
+  const zipResult =
+    values.participationMode === "online"
+      ? ({ ok: true, lat: null, lng: null } as const)
+      : await getTournamentZip(supabase, values.zip);
   if (!zipResult.ok) return zipResult;
 
   const result = await updateTournamentRecord({

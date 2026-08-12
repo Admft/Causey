@@ -31,11 +31,17 @@ function readiness(
 }
 
 describe("district pilot readiness priority", () => {
-  it("waits for district verification before school setup", () => {
+  it("only blocks on rejected district verification, not pending review", () => {
     expect(
       getDistrictReadinessAction({
         ...readiness(),
         verificationStatus: "pending",
+      }).stage
+    ).toBe("create_school");
+    expect(
+      getDistrictReadinessAction({
+        ...readiness(),
+        verificationStatus: "rejected",
       }).stage
     ).toBe("district_verification");
   });
@@ -46,15 +52,16 @@ describe("district pilot readiness priority", () => {
     );
   });
 
-  it("orders school verification, admin claim, ownership, and students", () => {
+  it("orders rejected correction, admin claim, ownership, and students before pending review", () => {
     expect(
       getDistrictReadinessAction(
-        readiness({ verificationStatus: "pending" })
+        readiness({ verificationStatus: "rejected" })
       ).stage
     ).toBe("school_verification");
     expect(
       getDistrictReadinessAction(
         readiness({
+          verificationStatus: "pending",
           activeDelegatedAdmins: 0,
           pendingAdminInvites: 0,
           ownershipTransferred: false,
@@ -78,6 +85,11 @@ describe("district pilot readiness priority", () => {
     expect(
       getDistrictReadinessAction(readiness({ activeStudents: 0 })).stage
     ).toBe("provision_students");
+    expect(
+      getDistrictReadinessAction(
+        readiness({ verificationStatus: "pending" })
+      ).stage
+    ).toBe("await_platform_verification");
   });
 
   it("leads with aggregate reporting after every school is ready", () => {
@@ -99,6 +111,14 @@ describe("district pilot readiness priority", () => {
     expect(waiting.label).toBe("Awaiting administrator claim");
     expect(waiting.href).toContain("setup=school-admin");
     expect(waiting.ready).toBe(false);
+
+    const pendingOnly = getDistrictSchoolReadinessStatus(
+      { ...baseSchool, verificationStatus: "pending" },
+      "sample-district"
+    );
+    expect(pendingOnly.label).toBe("Setup ready · platform review pending");
+    expect(pendingOnly.href).toBe("/orgs/lincoln-middle-school");
+    expect(pendingOnly.ready).toBe(false);
 
     const ready = getDistrictSchoolReadinessStatus(
       baseSchool,

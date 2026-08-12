@@ -22,6 +22,8 @@ import type {
 export interface CompetitionResult extends Competition {
   sections: Section[];
   series: Series | null;
+  /** True only when the signed-in viewer belongs to the hosting organization. */
+  viewer_org_match: boolean;
   /** Present only when the search included a resolvable zip. */
   distance_miles: number | null;
   /** Sections that satisfy the active grade/rating/fee filters. */
@@ -46,7 +48,7 @@ export interface CompetitionRef {
   slug: string;
   name: string;
   series_id: string | null;
-  state: string;
+  state: string | null;
   start_date: string;
 }
 

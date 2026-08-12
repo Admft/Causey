@@ -7,13 +7,20 @@ import {
   adminUpdateTournament,
 } from "@/lib/actions/admin";
 import {
+  deleteTournamentDraft,
   publishTournamentDraft,
   saveTournamentDraft,
   updateTournament,
 } from "@/lib/actions/tournaments";
+import {
+  CREATABLE_COMPETITION_TYPES,
+  competitionTypeLabel,
+} from "@/lib/competition-types";
 import type { TournamentDraftRow } from "@/lib/data/portal";
 import type {
   CompetitionAudience,
+  CompetitionCategory,
+  ParticipationMode,
   TournamentDraftData,
   TournamentSectionDraft,
 } from "@/lib/schemas";
@@ -48,20 +55,24 @@ function formatDate(value: string): string {
 
 /** Prefill values when editing an existing tournament. */
 export type TournamentFormInitial = {
+  category: CompetitionCategory;
+  custom_category_name: string | null;
+  participation_mode: ParticipationMode;
   name: string;
   start_date: string;
   end_date: string | null;
   reg_deadline: string | null;
   venue_name: string | null;
   address: string | null;
-  city: string;
-  state: string;
-  zip: string;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
   entry_fee_cents: number | null;
   reg_url: string | null;
   visibility: "public" | "private";
   audience?: CompetitionAudience;
   rated: boolean;
+  sections?: TournamentSectionDraft[];
 };
 
 const OPEN_SECTION: TournamentSectionDraft = {
@@ -83,6 +94,7 @@ export function TournamentCreateForm({
   edit,
   admin = false,
   returnTo,
+  defaultAudience,
 }: {
   orgId: string;
   orgSlug: string;
@@ -97,9 +109,20 @@ export function TournamentCreateForm({
   };
   admin?: boolean;
   returnTo?: string;
+  defaultAudience?: CompetitionAudience;
 }) {
   const router = useRouter();
   const savedDraft = initialDraft?.data;
+  const [category, setCategory] = useState<CompetitionCategory>(
+    savedDraft?.category ?? initial?.category ?? "chess"
+  );
+  const [customCategoryName, setCustomCategoryName] = useState(
+    savedDraft?.customCategoryName ?? initial?.custom_category_name ?? ""
+  );
+  const [participationMode, setParticipationMode] =
+    useState<ParticipationMode>(
+      savedDraft?.participationMode ?? initial?.participation_mode ?? "in_person"
+    );
   const [name, setName] = useState(savedDraft?.name ?? initial?.name ?? "");
   const [startDate, setStartDate] = useState(
     savedDraft?.startDate ?? initial?.start_date ?? ""
@@ -138,10 +161,14 @@ export function TournamentCreateForm({
       initial?.audience ??
       (savedDraft?.visibility === "public" || initial?.visibility === "public"
         ? "public"
-        : "school")
+        : defaultAudience ?? "school")
   );
   const [sections, setSections] = useState<TournamentSectionDraft[]>(
-    savedDraft?.sections?.length ? savedDraft.sections : [OPEN_SECTION]
+    savedDraft?.sections?.length
+      ? savedDraft.sections
+      : initial?.sections?.length
+        ? initial.sections
+        : [OPEN_SECTION]
   );
   const [rated, setRated] = useState(
     savedDraft?.rated ?? initial?.rated ?? false
@@ -170,6 +197,9 @@ export function TournamentCreateForm({
 
   function currentDraftData(): TournamentDraftData {
     return {
+      category,
+      customCategoryName,
+      participationMode,
       name,
       startDate,
       endDate,
@@ -265,6 +295,9 @@ export function TournamentCreateForm({
     // Every primitive field is intentional: any organizer edit is persisted.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    category,
+    customCategoryName,
+    participationMode,
     name,
     startDate,
     endDate,
@@ -367,6 +400,39 @@ export function TournamentCreateForm({
     }
   }
 
+  async function discardDraft() {
+    if (!resolvedDraftId) {
+      setError("Could not identify this draft. Reload the page and try again.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "Discard this competition draft and its uploaded cover? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+    setPending(true);
+    setError(null);
+    leaving.current = true;
+    try {
+      const result = await deleteTournamentDraft({
+        draftId: resolvedDraftId,
+        orgId,
+        orgSlug,
+      });
+      if (!result.ok) {
+        leaving.current = false;
+        setError(result.error);
+        return;
+      }
+      router.push(returnTo ?? `/orgs/${orgSlug}/competitions`);
+      router.refresh();
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -380,6 +446,9 @@ export function TournamentCreateForm({
     setPending(true);
     try {
       const fields = {
+        category,
+        customCategoryName,
+        participationMode,
         name,
         startDate,
         endDate: endDate || null,
@@ -432,7 +501,7 @@ export function TournamentCreateForm({
 
       // Coach and platform-admin create both use resumable drafts + required cover.
       if (!coverImageUrl) {
-        setError("Add a cover image before previewing the tournament.");
+        setError("Add a cover image before previewing the competition.");
         return;
       }
       const saved = await persistDraft();
@@ -474,14 +543,14 @@ export function TournamentCreateForm({
   const reviewing = !edit && step === "review";
   const publicReview = !admin && audience === "public";
   const publishLabel = admin
-    ? "Publish tournament"
+    ? "Publish competition"
     : publicReview
       ? "Submit for platform review"
       : audience === "district"
         ? "Publish to district"
         : audience === "school"
           ? "Publish to school"
-          : "Publish invite-only tournament";
+          : "Publish invite-only competition";
   const publishingLabel = publicReview ? "Submitting…" : "Publishing…";
   const fee = feeToCents(entryFee);
   const feeSummary =
@@ -492,13 +561,16 @@ export function TournamentCreateForm({
         : fee.cents === 0
           ? "Free"
           : `$${(fee.cents / 100).toFixed(2)}`;
-  const locationSummary = [
-    venueName.trim(),
-    address.trim(),
-    [city.trim(), state, zip.trim()].filter(Boolean).join(" "),
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const locationSummary =
+    participationMode === "online"
+      ? "Online"
+      : [
+          venueName.trim(),
+          address.trim(),
+          [city.trim(), state, zip.trim()].filter(Boolean).join(" "),
+        ]
+          .filter(Boolean)
+          .join(", ");
   function updateSection(
     index: number,
     patch: Partial<TournamentSectionDraft>
@@ -538,7 +610,10 @@ export function TournamentCreateForm({
             {
               value: "public",
               label: "Public",
-              description: "Listed in discovery after platform review.",
+              description:
+                category === "chess"
+                  ? "Listed in chess search after platform review."
+                  : "Public link after platform review; not added to search yet.",
             },
           ] as const
         ).map((opt) => {
@@ -577,7 +652,7 @@ export function TournamentCreateForm({
             Step {reviewing ? "2" : "1"} of 2
           </p>
           <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">
-            {reviewing ? "Preview and choose the audience" : "Add tournament details"}
+            {reviewing ? "Preview and choose the audience" : "Add competition details"}
           </h2>
           <p className="mt-2 max-w-prose text-sm text-muted">
             {reviewing
@@ -607,14 +682,24 @@ export function TournamentCreateForm({
                   ? draftError
                   : "Your changes will save as a draft."}
           </p>
-          <button
-            type="button"
-            onClick={saveDraftAndLeave}
-            disabled={pending || uploading}
-            className="text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
-          >
-            Save draft and leave
-          </button>
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              onClick={discardDraft}
+              disabled={pending || uploading}
+              className="text-sm font-semibold text-muted transition-colors hover:text-brand-red disabled:opacity-60"
+            >
+              Discard draft
+            </button>
+            <button
+              type="button"
+              onClick={saveDraftAndLeave}
+              disabled={pending || uploading}
+              className="text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+            >
+              Save draft and leave
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -635,13 +720,13 @@ export function TournamentCreateForm({
                 <CompetitionCoverImage
                   key={coverImageUrl}
                   src={coverImageUrl}
-                  alt={`Cover for ${name.trim() || "this tournament"}`}
+                  alt={`Cover for ${name.trim() || "this competition"}`}
                   aspectClass="aspect-[2/1]"
                   className="max-w-2xl rounded-2xl"
                 />
               ) : (
                 <div className="flex aspect-[2/1] max-w-2xl items-center justify-center rounded-2xl border border-dashed border-field-border bg-surface-soft px-5 text-center text-sm text-muted">
-                  Add a real tournament photo, venue image, or event artwork.
+                  Add a real competition photo, venue image, or event artwork.
                 </div>
               )}
               <label className="inline-flex w-fit cursor-pointer items-center rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red">
@@ -661,8 +746,73 @@ export function TournamentCreateForm({
             </fieldset>
           ) : null}
 
+          <fieldset className="section-rule pt-5">
+            <legend className="text-sm font-semibold text-foreground">
+              Competition type
+            </legend>
+            <p className="mt-1 text-xs text-muted">
+              Choose the closest type. Use Other for a scheduled competition
+              that is not listed.
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {CREATABLE_COMPETITION_TYPES.map((type) => {
+                const selected = category === type.id;
+                return (
+                  <button
+                    key={type.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setCategory(type.id);
+                      if (type.id !== "other") setCustomCategoryName("");
+                      if (type.id !== "chess") setRated(false);
+                    }}
+                    className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+                      selected
+                        ? "border-brand-red/40 bg-accent-soft"
+                        : "border-line bg-white hover:border-brand-red/30"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold text-foreground">
+                      {type.label}
+                    </span>
+                    <span className="mt-1 block text-2xs text-muted">
+                      {type.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {category !== "chess" ? (
+              <p className="mt-3 border-l-2 border-brand-blue pl-3 text-xs text-muted-strong">
+                Organizations can coordinate this type now, but it is not
+                searchable in a public Causey directory. Approved public
+                listings are shared by direct link.
+              </p>
+            ) : null}
+            {category === "other" ? (
+              <label className="mt-4 block max-w-lg">
+                <span className="text-xs font-semibold text-muted-strong">
+                  Name this competition type
+                </span>
+                <input
+                  className="field mt-1"
+                  required
+                  maxLength={80}
+                  value={customCategoryName}
+                  onChange={(event) =>
+                    setCustomCategoryName(event.target.value)
+                  }
+                  placeholder="Spelling bee, Model UN, academic decathlon…"
+                />
+              </label>
+            ) : null}
+          </fieldset>
+
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold text-muted-strong">Tournament name</span>
+            <span className="text-xs font-semibold text-muted-strong">
+              Competition name
+            </span>
             <input
               className="field"
               required
@@ -705,6 +855,36 @@ export function TournamentCreateForm({
             </label>
           </div>
 
+          <fieldset>
+            <legend className="text-xs font-semibold text-muted-strong">
+              Participation
+            </legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(
+                [
+                  ["in_person", "In person"],
+                  ["online", "Online"],
+                  ["hybrid", "Hybrid"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={participationMode === value}
+                  onClick={() => setParticipationMode(value)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                    participationMode === value
+                      ? "border-brand-red/40 bg-accent-soft text-brand-red"
+                      : "border-line bg-white text-muted-strong hover:border-brand-red/30"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          {participationMode !== "online" ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1 sm:col-span-2">
               <span className="text-xs font-semibold text-muted-strong">Venue</span>
@@ -764,6 +944,13 @@ export function TournamentCreateForm({
               </label>
             </div>
           </div>
+          ) : (
+            <p className="rounded-xl border border-line bg-surface-soft px-4 py-3 text-sm text-muted">
+              Online competitions do not require a venue or physical address.
+              Add the participation link under external registration when one
+              is available.
+            </p>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1">
@@ -792,15 +979,16 @@ export function TournamentCreateForm({
             </label>
           </div>
 
-          {!edit ? (
-            <fieldset className="section-rule pt-5">
+          <fieldset className="section-rule pt-5">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <legend className="text-sm font-semibold text-foreground">
-                    Tournament sections
+                    {category === "chess" ? "Tournament sections" : "Competition divisions"}
                   </legend>
                   <p className="mt-1 text-xs text-muted">
-                    Add the rating or grade splits families need before they RSVP.
+                    {category === "chess"
+                      ? "Add the rating or grade splits families need before they RSVP."
+                      : "Add the divisions or grade groups families need before they RSVP."}
                   </p>
                 </div>
                 <button
@@ -814,7 +1002,7 @@ export function TournamentCreateForm({
                   disabled={sections.length >= 20}
                   className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
                 >
-                  Add section
+                  Add {category === "chess" ? "section" : "division"}
                 </button>
               </div>
               <div className="mt-4 flex flex-col gap-4">
@@ -825,7 +1013,7 @@ export function TournamentCreateForm({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs font-semibold text-muted-strong">
-                        Section {index + 1}
+                        {category === "chess" ? "Section" : "Division"} {index + 1}
                       </p>
                       {sections.length > 1 ? (
                         <button
@@ -845,7 +1033,7 @@ export function TournamentCreateForm({
                     </div>
                     <label className="mt-3 block">
                       <span className="text-xs font-semibold text-muted-strong">
-                        Section name
+                        {category === "chess" ? "Section name" : "Division name"}
                       </span>
                       <input
                         className="field mt-1"
@@ -858,7 +1046,13 @@ export function TournamentCreateForm({
                         maxLength={80}
                       />
                     </label>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-4">
+                    <div
+                      className={`mt-3 grid gap-3 ${
+                        category === "chess" ? "sm:grid-cols-4" : "sm:grid-cols-2"
+                      }`}
+                    >
+                      {category === "chess" ? (
+                        <>
                       <label>
                         <span className="text-xs font-semibold text-muted-strong">
                           Min rating
@@ -893,6 +1087,8 @@ export function TournamentCreateForm({
                           placeholder="Any"
                         />
                       </label>
+                        </>
+                      ) : null}
                       <label>
                         <span className="text-xs font-semibold text-muted-strong">
                           Min grade
@@ -933,11 +1129,11 @@ export function TournamentCreateForm({
                   </div>
                 ))}
               </div>
-            </fieldset>
-          ) : null}
+          </fieldset>
 
           {edit ? audienceChooser : null}
 
+          {category === "chess" ? (
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
@@ -946,6 +1142,7 @@ export function TournamentCreateForm({
             />
             US Chess rated
           </label>
+          ) : null}
         </>
       ) : (
         <>
@@ -963,6 +1160,27 @@ export function TournamentCreateForm({
               {name}
             </h3>
             <dl className="mt-4 grid gap-x-6 gap-y-4 border-y border-line py-5 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-semibold text-muted-strong">Type</dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {competitionTypeLabel({
+                    category,
+                    customCategoryName,
+                  })}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-muted-strong">
+                  Participation
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {participationMode === "in_person"
+                    ? "In person"
+                    : participationMode === "online"
+                      ? "Online"
+                      : "Hybrid"}
+                </dd>
+              </div>
               <div>
                 <dt className="text-xs font-semibold text-muted-strong">When</dt>
                 <dd className="mt-1 text-sm text-foreground">
@@ -990,18 +1208,22 @@ export function TournamentCreateForm({
                   {regUrl.trim() ? "External registration link" : "RSVP on Causey"}
                 </dd>
               </div>
+              {category === "chess" ? (
               <div>
                 <dt className="text-xs font-semibold text-muted-strong">Rating</dt>
                 <dd className="mt-1 text-sm text-foreground">
                   {rated ? "US Chess rated" : "Not listed as rated"}
                 </dd>
               </div>
+              ) : null}
             </dl>
           </section>
 
           <section>
             <h3 className="text-xs font-semibold text-muted-strong">
-              Sections families will see
+              {category === "chess"
+                ? "Sections families will see"
+                : "Divisions families will see"}
             </h3>
             <ul className="mt-2 divide-y divide-line border-y border-line">
               {sections.map((section, index) => (
@@ -1009,7 +1231,8 @@ export function TournamentCreateForm({
                   <span className="font-semibold">{section.name}</span>
                   <span className="ml-2 text-xs text-muted">
                     {[
-                      section.minRating !== null || section.maxRating !== null
+                      category === "chess" &&
+                      (section.minRating !== null || section.maxRating !== null)
                         ? `rating ${section.minRating ?? "any"}–${
                             section.maxRating ?? "open"
                           }`
@@ -1032,9 +1255,13 @@ export function TournamentCreateForm({
 
           <p className="text-sm text-muted">
             {publicReview
-              ? "Submitting creates a private review page for your staff. The tournament will not appear in public search until a platform administrator approves it."
+              ? category === "chess"
+                ? "Submitting creates a private review page for your staff. The competition will not appear in chess search until a platform administrator approves it."
+                : "Submitting creates a private review page for your staff. After approval, the public link can be shared directly; this type is not searchable yet."
               : admin && audience === "public"
-                ? "Publishing makes the tournament visible in public search immediately."
+                ? category === "chess"
+                  ? "Publishing makes the competition visible in chess search immediately."
+                  : "Publishing makes the public link available immediately. This type is not searchable yet."
                 : "Publishing makes the event available to the selected audience immediately. You can edit or cancel it later."}
           </p>
         </>
@@ -1082,7 +1309,7 @@ export function TournamentCreateForm({
               ? edit.status === "rejected" && !admin
                 ? "Save changes and resubmit"
                 : "Save changes"
-              : "Preview tournament"}
+              : "Preview competition"}
         </button>
       )}
     </form>

@@ -151,10 +151,11 @@ export function PathwayExplorer() {
         </fieldset>
 
         <p className="max-w-prose border-t border-line pt-4 text-2xs text-muted">
-          Nothing you enter here is saved — this is a lookup, not a profile.
-          Rules shown are seeded scaffolding pending verification against
-          official US Chess announcements; each one carries its source note
-          and review date.
+          Nothing you enter here is saved — this is an illustrative lookup, not
+          a profile or official qualification check. Rules are seeded
+          scaffolding pending verification against official US Chess
+          announcements; each one carries its source note and review date.
+          Always confirm with the published invitational announcement.
         </p>
       </div>
 

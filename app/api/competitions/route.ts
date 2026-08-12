@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/competitions — search published competitions.
- * Query params mirror SearchFiltersSchema (q, zip, radius_miles, state,
+ * Query params mirror SearchFiltersSchema (category, q, zip, radius_miles, state,
  * source, grade_band, rating_band, max_fee_cents, date_from, date_to,
  * timing, sort, limit, offset). timing defaults to upcoming (hides ended);
  * sort defaults to popular, with soonest available as an explicit option.
@@ -14,9 +14,16 @@ export const dynamic = "force-dynamic";
  * (default limit 20) so the first load stays fast.
  */
 export async function GET(request: NextRequest) {
-  const raw = Object.fromEntries(
+  const raw: Record<string, string> = Object.fromEntries(
     [...request.nextUrl.searchParams.entries()].filter(([, v]) => v !== "")
   );
+  if (raw.category && raw.category !== "chess") {
+    return NextResponse.json(
+      { error: "That competition type is not searchable yet." },
+      { status: 400 }
+    );
+  }
+  raw.category = "chess";
 
   const parsed = SearchFiltersSchema.safeParse(raw);
   if (!parsed.success) {

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState, useTransition } from "react";
 import { adminSearchUsers } from "@/lib/actions/admin";
+import { AdminOrgMembershipForm } from "@/components/AdminOrgMembershipForm";
 import { AdminUserAccessForm } from "@/components/AdminUserAccessForm";
 
 type AdminUserRow = {
@@ -184,6 +185,10 @@ export function AdminUserDirectory({
                           platformAdmin
                         )
                       }
+                    />
+                    <AdminOrgMembershipForm
+                      profileId={user.profile_id}
+                      displayName={user.display_name || user.email || "account"}
                     />
                   </div>
                 </details>

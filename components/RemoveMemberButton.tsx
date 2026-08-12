@@ -37,24 +37,24 @@ export function RemoveMemberButton({
 
   if (confirming) {
     return (
-      <span className="flex items-center gap-2 text-sm">
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <button
           type="button"
           onClick={onRemove}
           disabled={pending}
-          className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+          className="min-h-10 font-semibold text-brand-red hover:underline disabled:opacity-60"
         >
           {pending ? "Removing…" : `Remove ${displayName}`}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="text-muted-strong hover:text-foreground"
+          className="min-h-10 text-muted-strong hover:text-foreground"
         >
           Cancel
         </button>
         {error ? (
-          <span className="font-medium text-brand-red" role="alert">
+          <span className="basis-full font-medium text-brand-red" role="alert">
             {error}
           </span>
         ) : null}
@@ -66,7 +66,7 @@ export function RemoveMemberButton({
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+      className="min-h-10 text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
     >
       Remove
     </button>

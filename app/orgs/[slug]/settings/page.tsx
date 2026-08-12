@@ -88,8 +88,9 @@ export default async function OrganizationSettingsPage({
           </section>
         ) : null}
         <section
+          id="verification"
           aria-labelledby="verification-heading"
-          className="mt-8 rounded-xl border border-line bg-surface p-5"
+          className="mt-8 scroll-mt-24 rounded-xl border border-line bg-surface p-5"
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
             Organization verification
@@ -110,8 +111,33 @@ export default async function OrganizationSettingsPage({
               : view.org.verification_status === "rejected"
                 ? verificationReview?.note ??
                   "A platform administrator returned this organization for correction."
-                : "You can continue setup while a Causey platform administrator reviews the organization identity."}
+                : "Identity review happens in Causey’s platform admin queue. There is no submit button here — keep the name and location accurate below, and continue staffing while review finishes."}
           </p>
+          {view.org.verification_status === "pending" ? (
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <Link
+                href={`/orgs/${view.org.slug}/people`}
+                className="cta-enabled inline-flex"
+              >
+                Manage people
+              </Link>
+              {view.org.type !== "district" ? (
+                <Link
+                  href={`/orgs/${view.org.slug}/roster`}
+                  className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                >
+                  Open roster
+                </Link>
+              ) : (
+                <Link
+                  href={`#schools`}
+                  className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                >
+                  Manage schools
+                </Link>
+              )}
+            </div>
+          ) : null}
           {view.org.verification_status === "rejected" ? (
             <p className="mt-2 text-xs font-medium text-muted-strong">
               Correct the organization details below, then ask a Causey
@@ -159,7 +185,9 @@ export default async function OrganizationSettingsPage({
                     <span className="text-xs text-muted">
                       {school.verification_status === "verified"
                         ? "Verified"
-                        : "Needs platform review"}
+                        : school.verification_status === "rejected"
+                          ? "Needs correction"
+                          : "Platform review pending"}
                     </span>
                   </li>
                 ))}

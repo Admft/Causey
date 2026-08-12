@@ -133,14 +133,15 @@ export function EntrantManager({
           )
         ) : (
           <>
-            <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+            <div className="mt-2 grid gap-2">
               {candidates.map((candidate) => (
                 <label
                   key={candidate.profile_id}
-                  className="flex items-center gap-2 text-sm text-foreground"
+                  className="flex min-h-11 items-center gap-3 rounded-lg border border-line bg-white px-3 py-2 text-sm text-foreground sm:border-0 sm:bg-transparent sm:px-0 sm:py-0"
                 >
                   <input
                     type="checkbox"
+                    className="size-4 accent-[var(--brand-red)]"
                     disabled={isPending}
                     checked={selected.has(candidate.profile_id)}
                     onChange={() => toggle(candidate.profile_id)}
@@ -153,7 +154,7 @@ export function EntrantManager({
               type="button"
               disabled={isPending || !selected.size}
               onClick={onInviteSelected}
-              className="cta-enabled mt-3 disabled:opacity-60"
+              className="cta-enabled mt-3 w-full justify-center sm:w-auto disabled:opacity-60"
             >
               {isPending
                 ? "Inviting…"
@@ -212,19 +213,19 @@ export function RemoveEntrantButton({
 
   if (confirming) {
     return (
-      <span className="flex items-center gap-2 text-sm">
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <button
           type="button"
           onClick={onRemove}
           disabled={isPending}
-          className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+          className="min-h-10 font-semibold text-brand-red hover:underline disabled:opacity-60"
         >
           {isPending ? "Removing…" : `Remove ${displayName}`}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="text-muted-strong hover:text-foreground"
+          className="min-h-10 text-muted-strong hover:text-foreground"
         >
           Cancel
         </button>
@@ -235,7 +236,7 @@ export function RemoveEntrantButton({
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+      className="min-h-10 text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
     >
       Remove
     </button>
@@ -272,16 +273,16 @@ export function AttendanceButtons({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col items-start gap-1 sm:items-end">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => mark("attended")}
           disabled={isPending}
           className={
             status === "attended"
-              ? "rounded-md border border-brand-red/25 bg-accent-soft px-2.5 py-1 text-xs font-semibold text-brand-red"
-              : "text-xs font-semibold text-muted-strong hover:text-brand-red"
+              ? "min-h-10 rounded-md border border-brand-red/25 bg-accent-soft px-3 py-1.5 text-sm font-semibold text-brand-red"
+              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
           }
         >
           Attended
@@ -292,8 +293,8 @@ export function AttendanceButtons({
           disabled={isPending}
           className={
             status === "did_not_attend"
-              ? "rounded-md border border-line bg-surface-soft px-2.5 py-1 text-xs font-semibold text-foreground"
-              : "text-xs font-semibold text-muted-strong hover:text-brand-red"
+              ? "min-h-10 rounded-md border border-line bg-surface-soft px-3 py-1.5 text-sm font-semibold text-foreground"
+              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
           }
         >
           Did not attend

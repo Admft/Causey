@@ -43,14 +43,17 @@ export type AdminTournamentRow = {
   id: string;
   slug: string;
   name: string;
+  category: "chess" | "stem" | "debate" | "arts" | "writing" | "other";
+  custom_category_name: string | null;
+  participation_mode: "in_person" | "online" | "hybrid";
   organizer_name: string | null;
   venue_name: string | null;
   address: string | null;
-  city: string;
-  state: string;
-  zip: string;
-  lat: number;
-  lng: number;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  lat: number | null;
+  lng: number | null;
   start_date: string;
   end_date: string | null;
   reg_deadline: string | null;
@@ -70,6 +73,14 @@ export type AdminTournamentRow = {
     slug: string;
     state: string | null;
   } | null;
+  sections?: {
+    name: string;
+    min_rating: number | null;
+    max_rating: number | null;
+    min_grade: number | null;
+    max_grade: number | null;
+    entry_fee_cents: number | null;
+  }[];
 };
 
 export type AdminAuditRow = {
@@ -97,10 +108,13 @@ export type AdminModerationQueueRow = {
   id: string;
   slug: string;
   name: string;
+  category: "chess" | "stem" | "debate" | "arts" | "writing" | "other";
+  custom_category_name: string | null;
+  participation_mode: "in_person" | "online" | "hybrid";
   organizer_name: string | null;
   venue_name: string | null;
-  city: string;
-  state: string;
+  city: string | null;
+  state: string | null;
   start_date: string;
   end_date: string | null;
   reg_deadline: string | null;
@@ -246,7 +260,7 @@ export async function getAdminTournaments(filters?: {
   let query = supabase
     .from("competitions")
     .select(
-      "id, slug, name, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state)"
+      "id, slug, name, category, custom_category_name, participation_mode, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state)"
     )
     .order("start_date", { ascending: false })
     .limit(250);
@@ -284,7 +298,7 @@ export async function getAdminTournament(
   const { data } = await supabase
     .from("competitions")
     .select(
-      "id, slug, name, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state)"
+      "id, slug, name, category, custom_category_name, participation_mode, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state), sections(name, min_rating, max_rating, min_grade, max_grade, entry_fee_cents)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -300,7 +314,7 @@ export async function getAdminModerationQueue(): Promise<{
   const { data, error } = await supabase
     .from("competitions")
     .select(
-      "id, slug, name, organizer_name, venue_name, city, state, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, audience, source, status, submitted_for_review_at, organizations!competitions_org_id_fkey(id, name, slug, verification_status)"
+      "id, slug, name, category, custom_category_name, participation_mode, organizer_name, venue_name, city, state, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, audience, source, status, submitted_for_review_at, organizations!competitions_org_id_fkey(id, name, slug, verification_status)"
     )
     .eq("status", "pending_review")
     .order("submitted_for_review_at", { ascending: true, nullsFirst: false });

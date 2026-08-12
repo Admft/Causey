@@ -18,15 +18,16 @@ import { formatDateRange } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your plan",
-  description: "Your Causey tournament invitations, registration, and saved items.",
+  title: "Plan",
+  description:
+    "Your Causey invitations, club RSVPs, and organizer registration follow-through.",
 };
 
 type AccountTournament = {
   slug: string;
   name: string;
-  city: string;
-  state: string;
+  city: string | null;
+  state: string | null;
   start_date: string;
   end_date: string | null;
 };
@@ -295,14 +296,15 @@ export default async function MePage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-        {isStudent ? "Student plan" : "Tournament plan"}
+        Plan
       </p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        Your tournaments
+        Your plan
       </h1>
       <p className="mt-2 text-sm text-muted">
-        {profile.display_name || "Your profile"} · {user.email}. Profile and
-        alert preferences live in{" "}
+        {profile.display_name || "Your profile"} · {user.email}. Club RSVPs and
+        organizer registration follow-through live here. Profile and alert
+        preferences live in{" "}
         <Link
           href="/account"
           className="font-semibold text-brand-red hover:underline"
@@ -362,14 +364,13 @@ export default async function MePage() {
 
       <section id="plan" className="mt-10 scroll-mt-24">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-          {isStudent ? "Plan" : "My tournaments"}
+          Upcoming and past
         </h2>
-        {!isStudent ? (
-          <p className="mt-2 max-w-prose text-sm text-muted">
-            Answer invitations, finish organizer registration, and keep
-            upcoming and past plans in one place.
-          </p>
-        ) : null}
+        <p className="mt-2 max-w-prose text-sm text-muted">
+          Club RSVP tells your organization who is coming. Organizer
+          registration and payment still happen on the event&rsquo;s own site
+          when a link is listed.
+        </p>
         {!hasTournamentWorkspace ? (
           <p className="mt-4 text-sm text-muted">
             {isStudent && myOrgs.length === 0 ? (

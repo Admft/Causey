@@ -27,7 +27,7 @@ const ROLE_SIGNUP_COPY: Record<
     nameLabel: "Student name",
     nameHelp: "This is the name coaches see on school and club rosters.",
     confirmationNext:
-      "join your school or club with a coach link, then track invites on My tournaments.",
+      "join your school or club with a coach link, then track invites on Plan.",
   },
   parent: {
     nameLabel: "Your name",

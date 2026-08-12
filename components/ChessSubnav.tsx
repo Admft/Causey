@@ -1,18 +1,11 @@
 import Link from "next/link";
+import { COMPETITION_TYPES } from "@/lib/competition-types";
 
 /**
  * Chess context bar — sits under the sticky header on chess surfaces.
  * Left: competition-type switcher (only Chess is live).
  * Right: in-chess tools (Tournaments search + Pathways).
  */
-
-const CATEGORIES = [
-  { id: "chess", label: "Chess", href: "/chess", available: true },
-  { id: "stem", label: "STEM", href: null, available: false },
-  { id: "debate", label: "Debate", href: null, available: false },
-  { id: "arts", label: "Arts", href: null, available: false },
-  { id: "writing", label: "Writing", href: null, available: false },
-] as const;
 
 const CHESS_TOOLS = [
   { id: "tournaments", label: "Tournaments", href: "/chess" },
@@ -37,17 +30,17 @@ export function ChessSubnav({ tool = "tournaments" }: { tool?: ChessTool }) {
           aria-label="Competition type"
           className="flex flex-wrap items-center gap-1"
         >
-          {CATEGORIES.map((cat) => {
-            if (!cat.available) {
+          {COMPETITION_TYPES.filter((type) => type.id !== "other").map((cat) => {
+            if (!cat.discoveryAvailable) {
               return (
                 <span
                   key={cat.id}
-                  title="Not ready yet"
+                  title="Organizations can host this type; public search is not ready."
                   className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-sm font-medium text-muted"
                 >
                   {cat.label}
                   <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                    Soon
+                    Not searchable
                   </span>
                 </span>
               );

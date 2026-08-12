@@ -4,6 +4,9 @@ import { TournamentDraftDataSchema } from "@/lib/schemas";
 describe("TournamentDraftDataSchema", () => {
   it("accepts an incomplete draft and fills resumable defaults", () => {
     expect(TournamentDraftDataSchema.parse({})).toEqual({
+      category: "chess",
+      customCategoryName: "",
+      participationMode: "in_person",
       name: "",
       startDate: "",
       endDate: "",

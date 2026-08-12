@@ -157,7 +157,7 @@ export function AuthNav() {
           ? [
               {
                 href: "/me",
-                label: "My tournaments",
+                label: "Plan",
                 shortLabel: "Plan",
               },
               hasOrgStaffAccess

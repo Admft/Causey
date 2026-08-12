@@ -260,12 +260,13 @@ export default async function OrgsPage() {
             Your clubs
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
-            Join with the code your coach shared. Tournament RSVPs live on{" "}
+            Join with the code your coach shared. Club RSVPs and organizer
+            registration follow-through live on{" "}
             <Link
               href="/me"
               className="font-semibold text-brand-red hover:underline"
             >
-              My tournaments
+              Plan
             </Link>
             .
           </p>

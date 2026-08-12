@@ -4,8 +4,8 @@ import { AdminModerationBulkQueue } from "@/components/AdminModerationBulkQueue"
 import { getAdminModerationQueue } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
-  title: "Tournament moderation",
-  description: "Review organizer-submitted public tournaments before discovery.",
+  title: "Competition moderation",
+  description: "Review organizer-submitted public competitions before discovery.",
 };
 
 export default async function ModerationPage() {
@@ -15,12 +15,13 @@ export default async function ModerationPage() {
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        Public tournament review
+        Public competition review
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Organizer listings stay out of public discovery until the source,
-        audience, and event details have been reviewed. Select several and
-        approve or reject them together.
+        Organizer listings remain private until the source, audience, and event
+        details have been reviewed. Approved chess listings enter chess search;
+        other competition types get a public link but remain unsearchable.
+        Select several and approve or reject them together.
       </p>
 
       {error ? (
@@ -50,7 +51,7 @@ export default async function ModerationPage() {
               href="/admin/tournaments"
               className="font-semibold text-brand-red hover:underline"
             >
-              Browse all tournament records
+              Browse all competition records
             </Link>
             .
           </p>
@@ -61,6 +62,9 @@ export default async function ModerationPage() {
             id: tournament.id,
             slug: tournament.slug,
             name: tournament.name,
+            category: tournament.category,
+            custom_category_name: tournament.custom_category_name,
+            participation_mode: tournament.participation_mode,
             organizer_name: tournament.organizer_name,
             venue_name: tournament.venue_name,
             city: tournament.city,

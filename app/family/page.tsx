@@ -22,9 +22,9 @@ import { formatDateRange } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Family desk",
+  title: "Family",
   description:
-    "See which student needs an RSVP or organizer registration and act from one place.",
+    "See which student needs a club RSVP or organizer registration and act from one place.",
 };
 
 function needsOrganizerRegistration(row: EntrantWithEvent): boolean {
@@ -40,7 +40,7 @@ export default async function FamilyPage() {
     return (
       <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
         <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
-          Family desk
+          Family
         </h1>
         <p className="mt-3 text-sm text-muted">
           Family accounts are unavailable in this build. You can still search
@@ -130,7 +130,7 @@ export default async function FamilyPage() {
       ? "Waiting for your student"
       : "Link your first student";
     missionDescription = pendingCount
-      ? "Your request is pending. Ask your student to open My tournaments (Plan), then accept the Family request."
+      ? "Your request is pending. Ask your student to open Plan, then accept the Family request."
       : "Your student needs their own Causey account first. Then send a link request so invitations appear here.";
     missionAction = pendingCount
       ? { href: "#tell-student", label: "What to tell your student" }
@@ -198,8 +198,8 @@ export default async function FamilyPage() {
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-strong">
             <li>Sign in to Causey with the email you used for the request.</li>
             <li>
-              Open <span className="font-semibold text-foreground">My tournaments</span>{" "}
-              (Plan in the header).
+              Open <span className="font-semibold text-foreground">Plan</span>{" "}
+              in the header.
             </li>
             <li>Accept the Family request near the top of the page.</li>
           </ol>
@@ -217,14 +217,14 @@ export default async function FamilyPage() {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_14rem]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-            Parent desk
+            Family
           </p>
           <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
             Who needs you
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
-            RSVPs and unfinished organizer registration for each linked student
-            land here. Clubs stay secondary.
+            Club RSVPs and unfinished organizer registration for each linked
+            student land here. Causey RSVP is not organizer entry or payment.
           </p>
 
           <div className="mt-8">

@@ -16,6 +16,8 @@ import {
   SectionSchema,
   SeriesSchema,
   TournamentDraftDataSchema,
+  type CompetitionCategory,
+  type ParticipationMode,
   type TournamentDraftData,
 } from "@/lib/schemas";
 
@@ -32,12 +34,28 @@ export function isSupabaseConfigured(): boolean {
   );
 }
 
+export async function getOrganizationSlugById(
+  orgId: string
+): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("organizations")
+    .select("slug")
+    .eq("id", orgId)
+    .maybeSingle();
+  return data?.slug ?? null;
+}
+
 export type OrgEventRow = {
   id: string;
   slug: string;
   name: string;
-  city: string;
-  state: string;
+  category: CompetitionCategory;
+  custom_category_name: string | null;
+  participation_mode: ParticipationMode;
+  city: string | null;
+  state: string | null;
   start_date: string;
   end_date: string | null;
   visibility: "public" | "private";
@@ -112,6 +130,16 @@ export type OrgForViewer = {
   drafts: TournamentDraftRow[];
   schools: DistrictSchoolRow[];
   announcements: OrgAnnouncementRow[];
+};
+
+export type OrgWorkspaceEventRow = OrgEventRow & {
+  host: { id: string; name: string; slug: string } | null;
+};
+
+export type OrgCompetitionWorkspace = {
+  events: OrgWorkspaceEventRow[];
+  drafts: TournamentDraftRow[];
+  hosts: { id: string; name: string; slug: string; type: Organization["type"] }[];
 };
 
 export async function getOrganizationVerificationReview(
@@ -239,12 +267,12 @@ export async function getOrgBySlugForViewer(
     supabase
       .from("competitions")
       .select(
-        "id, slug, name, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status, moderation_note"
+        "id, slug, name, category, custom_category_name, participation_mode, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status, moderation_note"
       )
       .eq("org_id", org.id)
       // Drafts are included so an organizer can find and publish them. RLS
       // only returns them to the creator and the org's coaches.
-      .in("status", ["draft", "pending_review", "published", "rejected"])
+      .in("status", ["draft", "pending_review", "published", "rejected", "archived"])
       .order("start_date", { ascending: true }),
     supabase
       .from("tournament_drafts")
@@ -270,7 +298,7 @@ export async function getOrgBySlugForViewer(
       p_org_id: org.id,
       p_profile_id: userId,
     }),
-    supabase.rpc("is_org_coach", {
+    supabase.rpc("can_operate_org_competitions", {
       p_org_id: org.id,
       p_profile_id: userId,
     }),
@@ -313,6 +341,113 @@ export async function getOrgBySlugForViewer(
     schools: (schoolsRes.data ?? []) as DistrictSchoolRow[],
     announcements: (announcementsRes.data ?? []) as OrgAnnouncementRow[],
   };
+}
+
+/** Whether the viewer belongs to the host, its district, or one of its schools. */
+export async function viewerHasOrganizationContext(
+  userId: string,
+  orgId: string
+): Promise<boolean> {
+  const supabase = await createServerSupabaseClient();
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("id, type, parent_org_id, created_by, owner_profile_id")
+    .eq("id", orgId)
+    .maybeSingle();
+  if (!org) return false;
+  if (org.created_by === userId || org.owner_profile_id === userId) return true;
+
+  const relatedIds = new Set<string>([org.id]);
+  if (org.parent_org_id) relatedIds.add(org.parent_org_id);
+  if (org.type === "district") {
+    const { data: schools } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("parent_org_id", org.id);
+    for (const school of schools ?? []) relatedIds.add(school.id);
+  }
+
+  const { data: membership } = await supabase
+    .from("org_memberships")
+    .select("org_id")
+    .eq("profile_id", userId)
+    .eq("status", "active")
+    .in("org_id", [...relatedIds])
+    .limit(1)
+    .maybeSingle();
+  return Boolean(membership);
+}
+
+/** Complete hosted competition inventory for an org or district hierarchy. */
+export async function getOrgCompetitionWorkspace(
+  org: Pick<Organization, "id" | "name" | "slug" | "type">
+): Promise<OrgCompetitionWorkspace> {
+  const supabase = await createServerSupabaseClient();
+  const childSchools =
+    org.type === "district"
+      ? (
+          (
+            await supabase
+              .from("organizations")
+              .select("id, name, slug, type")
+              .eq("parent_org_id", org.id)
+              .eq("type", "school")
+              .order("name")
+          ).data ?? []
+        )
+      : [];
+  const hosts = [
+    { id: org.id, name: org.name, slug: org.slug, type: org.type },
+    ...(childSchools as {
+      id: string;
+      name: string;
+      slug: string;
+      type: Organization["type"];
+    }[]),
+  ];
+  const hostIds = hosts.map((host) => host.id);
+  const [eventsRes, draftsRes] = await Promise.all([
+    supabase
+      .from("competitions")
+      .select(
+        "id, slug, name, category, custom_category_name, participation_mode, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status, moderation_note, organizations!competitions_org_id_fkey(id, name, slug)"
+      )
+      .in("org_id", hostIds)
+      .in("status", [
+        "draft",
+        "pending_review",
+        "published",
+        "rejected",
+        "archived",
+      ])
+      .order("start_date", { ascending: true }),
+    supabase
+      .from("tournament_drafts")
+      .select(
+        "id, org_id, created_by, data, cover_image_url, cover_image_path, created_at, updated_at"
+      )
+      .in("org_id", hostIds)
+      .order("updated_at", { ascending: false }),
+  ]);
+
+  const drafts = (draftsRes.data ?? []).flatMap((row) => {
+    const parsed = TournamentDraftDataSchema.safeParse(row.data);
+    return parsed.success
+      ? [{ ...row, data: parsed.data } as TournamentDraftRow]
+      : [];
+  });
+  const events = (eventsRes.data ?? []).map((row) => {
+    const { organizations, ...event } = row;
+    const relation = Array.isArray(organizations)
+      ? organizations[0] ?? null
+      : organizations;
+    return {
+      ...(event as OrgEventRow),
+      host: relation as OrgWorkspaceEventRow["host"],
+    };
+  });
+
+  return { events, drafts, hosts };
 }
 
 /** One resumable draft, with RLS limiting reads to coaches of its organization. */
@@ -652,7 +787,7 @@ export async function getOrgAttendedEvents(
   const { data } = await supabase
     .from("org_competition_attendance")
     .select(
-      "competitions(id, slug, name, city, state, start_date, end_date, visibility, entry_fee_cents)"
+      "competitions(id, slug, name, category, custom_category_name, participation_mode, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status, moderation_note)"
     )
     .eq("org_id", orgId);
   return (data ?? [])

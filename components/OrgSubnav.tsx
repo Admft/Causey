@@ -8,6 +8,12 @@ import type { OrganizationType } from "@/lib/auth/orgs";
 
 const TABS = [
   { id: "overview", label: "Overview", path: "", access: "member" },
+  {
+    id: "competitions",
+    label: "Competitions",
+    path: "/competitions",
+    access: "member",
+  },
   { id: "roster", label: "Roster & groups", path: "/roster", access: "staff" },
   { id: "people", label: "Invites & staff", path: "/people", access: "admin" },
   { id: "reports", label: "Reports", path: "/reports", access: "admin" },
@@ -16,6 +22,12 @@ const TABS = [
 
 const DISTRICT_TABS = [
   { id: "overview", label: "Overview", path: "", access: "member" },
+  {
+    id: "competitions",
+    label: "Competitions",
+    path: "/competitions",
+    access: "member",
+  },
   { id: "schools", label: "Schools", path: "/settings#schools", access: "admin" },
   { id: "people", label: "District staff", path: "/people", access: "admin" },
   { id: "reports", label: "Reports", path: "/reports", access: "admin" },

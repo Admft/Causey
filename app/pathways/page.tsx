@@ -3,9 +3,9 @@ import { ChessSubnavBar } from "@/components/ChessSubnav";
 import { PathwayExplorer } from "@/components/PathwayExplorer";
 
 export const metadata: Metadata = {
-  title: "Qualification pathways",
+  title: "Qualification pathways (illustrative)",
   description:
-    "Trace how scholastic chess results chain into invitations: win a state championship, get invited to the Denker, Barber, Rockefeller, or Haring national invitationals.",
+    "Illustrative lookup of how scholastic chess results can chain into invitations. Rules are seeded scaffolding pending verification against official US Chess sources.",
 };
 
 export default function PathwaysPage() {
@@ -13,14 +13,24 @@ export default function PathwaysPage() {
     <>
       <ChessSubnavBar tool="pathways" />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        <h1 className="max-w-[20ch] font-display text-display-lg font-bold tracking-tight text-foreground">
-          What does a result actually get you?
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+          Illustrative lookup
+        </p>
+        <h1 className="mt-2 max-w-[20ch] font-display text-display-lg font-bold tracking-tight text-foreground">
+          What might a result unlock?
         </h1>
         <p className="mt-3 max-w-prose text-md text-muted">
-          In chess, a handful of national invitationals are earned, not entered:
-          win your state high school championship and you&rsquo;re invited to the
-          Denker at the U.S. Open. Those chains are published nowhere in one
-          place — this page walks them for any event, placement by placement.
+          In chess, a handful of national invitationals are earned, not entered.
+          This page walks illustrative qualification chains from seeded rules —
+          not an official US Chess ruling. Confirm every invitation with the
+          published announcement before you plan travel or fees.
+        </p>
+        <p
+          className="mt-4 max-w-prose border-l-2 border-line pl-4 text-sm text-muted-strong"
+          role="note"
+        >
+          Rules shown are scaffolding pending verification. Each result carries
+          its source note and review date when available.
         </p>
         <div className="section-rule mt-8 pt-8">
           <PathwayExplorer />

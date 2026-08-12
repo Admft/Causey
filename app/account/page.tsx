@@ -204,7 +204,7 @@ export default async function AccountPage() {
               href="/family"
               className="font-semibold text-brand-red hover:underline"
             >
-              Family desk
+              Family
             </Link>
           </p>
           {!children.length && pendingChildRequests === 0 ? (
