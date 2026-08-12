@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Frontend polish shipped
+- [x] Coach announcements: district operators can publish for child schools (`0043`); clearer permission errors when publish is blocked — 2026-08-12
 - [x] Workflow-audit follow-ups: parent organizer registration stamps the linked child (`?for=`), Plan/Family naming unified, platform-admin org membership grant/repair on `/admin/users`, school-safe mobile roster/manage rows, pathways labeled as illustrative scaffolding — 2026-08-12
 - [x] Pending org verification no longer hijacks school/district missions: quiet status on overview, honest settings copy (no fake submit), readiness continues to staffing while only rejected verification blocks — 2026-08-12
 - [x] Multi-category rollout hardening: district admins can update child-school competitions at the RLS boundary; edits save metadata and divisions atomically; failed draft publication preserves the draft; district overview aggregates school-hosted events; assistants get a direct competitions path; type/search limitations are stated in creation and moderation; org provenance labels are viewer-relative; drafts can be explicitly discarded — 2026-08-12

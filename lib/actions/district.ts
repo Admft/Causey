@@ -574,6 +574,22 @@ export async function publishOrganizationAnnouncement(input: {
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to continue." };
   const supabase = await createServerSupabaseClient();
+
+  const { data: canOperate } = await supabase.rpc(
+    "can_operate_org_competitions",
+    {
+      p_org_id: parsed.data.orgId,
+      p_profile_id: profile.id,
+    }
+  );
+  if (canOperate !== true) {
+    return {
+      ok: false,
+      error:
+        "Only a coach or organization administrator can publish announcements.",
+    };
+  }
+
   const { data: announcement, error } = await supabase
     .from("org_announcements")
     .insert({
@@ -584,7 +600,25 @@ export async function publishOrganizationAnnouncement(input: {
     })
     .select("id")
     .maybeSingle();
-  if (error) return { ok: false, error: "Could not publish the announcement." };
+  if (error || !announcement?.id) {
+    console.error("Organization announcement publish failed:", {
+      code: error?.code,
+      message: error?.message,
+    });
+    const detail = (error?.message ?? "").toLowerCase();
+    if (
+      detail.includes("row-level security") ||
+      detail.includes("policy") ||
+      detail.includes("42501")
+    ) {
+      return {
+        ok: false,
+        error:
+          "You don’t have permission to publish announcements for this organization.",
+      };
+    }
+    return { ok: false, error: "Could not publish the announcement. Try again." };
+  }
 
   const { data: members } = await supabase
     .from("org_memberships")
@@ -595,7 +629,6 @@ export async function publishOrganizationAnnouncement(input: {
     .map((row) => row.profile_id as string)
     .filter((id) => id !== profile.id);
   if (recipients.length) {
-    const announcementId = announcement?.id ?? parsed.data.orgId;
     await createInAppNotifications(
       recipients.map((recipientId) => ({
         recipientId,
@@ -604,8 +637,8 @@ export async function publishOrganizationAnnouncement(input: {
         body: parsed.data.body.slice(0, 240),
         href: `/orgs/${parsed.data.orgSlug}`,
         entityType: "org_announcement",
-        entityId: String(announcementId),
-        dedupeKey: `announcement:${announcementId}:${recipientId}`,
+        entityId: String(announcement.id),
+        dedupeKey: `announcement:${announcement.id}:${recipientId}`,
       }))
     );
   }
