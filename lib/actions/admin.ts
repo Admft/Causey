@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
+import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
 import {
   DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE,
   organizationSupportsDistrictAudience,
@@ -25,6 +26,12 @@ import {
   type TournamentCreateInput,
   type TournamentUpdateInput,
 } from "@/lib/validation/tournament";
+
+function revalidatePublicDiscovery() {
+  for (const category of DISCOVERY_CATEGORIES) {
+    revalidatePath(category.href);
+  }
+}
 
 const AdminOrgCreateSchema = z.object({
   name: z.string().trim().min(2, "Name the organization.").max(80),
@@ -577,7 +584,7 @@ export async function adminUpdateTournament(
   revalidatePath("/admin");
   revalidatePath("/admin/tournaments");
   revalidatePath(`/admin/tournaments/${values.competitionId}/edit`);
-  revalidatePath("/chess");
+  revalidatePublicDiscovery();
   revalidatePath(`/event/${values.eventSlug}`);
   return result;
 }
@@ -611,7 +618,7 @@ export async function adminSetTournamentStatus(input: {
 
   revalidatePath("/admin");
   revalidatePath("/admin/tournaments");
-  revalidatePath("/chess");
+  revalidatePublicDiscovery();
   revalidatePath(`/event/${parsed.data.eventSlug}`);
   return { ok: true, status: parsed.data.status };
 }
@@ -652,7 +659,7 @@ export async function adminReviewTournament(input: {
   revalidatePath("/admin");
   revalidatePath("/admin/tournaments");
   revalidatePath("/admin/moderation");
-  revalidatePath("/chess");
+  revalidatePublicDiscovery();
   revalidatePath(`/event/${parsed.data.eventSlug}`);
   return { ok: true, status };
 }
@@ -687,7 +694,7 @@ export async function adminBulkSetTournamentStatus(input: {
   revalidatePath("/admin");
   revalidatePath("/admin/tournaments");
   revalidatePath("/admin/moderation");
-  revalidatePath("/chess");
+  revalidatePublicDiscovery();
   return { ok: true, updated, skipped: ids.length - updated };
 }
 
@@ -729,7 +736,7 @@ export async function adminBulkReviewTournaments(input: {
   revalidatePath("/admin");
   revalidatePath("/admin/tournaments");
   revalidatePath("/admin/moderation");
-  revalidatePath("/chess");
+  revalidatePublicDiscovery();
   return {
     ok: true,
     updated,

@@ -1,4 +1,4 @@
-# Twice-weekly tournament ingestion for runnable chess and category sources.
+# Manual tournament ingestion for runnable chess and category sources.
 #
 # Prerequisites:
 #   1. Run Supabase migrations through 0055_txsef_source.sql.
@@ -32,13 +32,16 @@ on:
           - tca_scrape
           - taea_vase_scrape
           - bennington_writers_scrape
-          - doe_science_bowl_scrape
           - afsa_essay_scrape
           - uil_theatre_scrape
           - uil_speech_debate_scrape
           - purple_comet_scrape
           - uil_music_marching_scrape
           - txsef_scrape
+      sources:
+        description: Optional comma-separated governed subset (admin dispatch)
+        required: false
+        type: string
 
 concurrency:
   group: causey-tournament-ingestion
@@ -77,40 +80,54 @@ jobs:
           echo "Supabase secrets present."
       - name: Scrape selected tournament source
         env:
-          SCRAPER_SOURCE: ${{ inputs.source || 'all' }}
+          SCRAPER_SOURCES: ${{ inputs.sources || inputs.source || 'all' }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ENRICH_MAX_AI: "80"
           ENRICH_BATCH_SIZE: "20"
-          SCRAPE_INCLUDE_BLOCKED: "0"
           # Fail instead of silently staging-only when secrets are wrong.
           REQUIRE_SUPABASE: "1"
         run: |
-          case "$SCRAPER_SOURCE" in
-            all) npm run scrape:all && npm run scrape:discovery ;;
-            tla_scrape) npm run scrape:tla ;;
-            cca_scrape) npm run scrape:cca ;;
-            onlinereg_scrape) npm run scrape:onlinereg ;;
-            chess_results_scrape) npm run scrape:chess-results ;;
-            fide_calendar_scrape) npm run scrape:fide ;;
-            tca_scrape) npm run scrape:tca ;;
-            taea_vase_scrape) npm run scrape:taea-vase ;;
-            bennington_writers_scrape) npm run scrape:bennington-writers ;;
-            doe_science_bowl_scrape) npm run scrape:doe-science-bowl ;;
-            afsa_essay_scrape) npm run scrape:afsa-essay ;;
-            uil_theatre_scrape) npm run scrape:uil-theatre ;;
-            uil_speech_debate_scrape) npm run scrape:uil-speech-debate ;;
-            purple_comet_scrape) npm run scrape:purple-comet ;;
-            uil_music_marching_scrape) npm run scrape:uil-music-marching ;;
-            txsef_scrape) npm run scrape:txsef ;;
-            *) echo "::error::Unknown scraper source: $SCRAPER_SOURCE"; exit 1 ;;
-          esac
+          run_source() {
+            case "$1" in
+              all) npm run scrape:all && npm run scrape:discovery ;;
+              tla_scrape) npm run scrape:tla ;;
+              cca_scrape) npm run scrape:cca ;;
+              onlinereg_scrape) npm run scrape:onlinereg ;;
+              chess_results_scrape) npm run scrape:chess-results ;;
+              fide_calendar_scrape) npm run scrape:fide ;;
+              tca_scrape) npm run scrape:tca ;;
+              taea_vase_scrape) npm run scrape:taea-vase ;;
+              bennington_writers_scrape) npm run scrape:bennington-writers ;;
+              afsa_essay_scrape) npm run scrape:afsa-essay ;;
+              uil_theatre_scrape) npm run scrape:uil-theatre ;;
+              uil_speech_debate_scrape) npm run scrape:uil-speech-debate ;;
+              purple_comet_scrape) npm run scrape:purple-comet ;;
+              uil_music_marching_scrape) npm run scrape:uil-music-marching ;;
+              txsef_scrape) npm run scrape:txsef ;;
+              *) echo "::error::Unknown or blocked scraper source: $1"; exit 1 ;;
+            esac
+          }
+
+          if [[ "$SCRAPER_SOURCES" == *,* && ",$SCRAPER_SOURCES," == *,all,* ]]; then
+            echo "::error::The all source cannot be combined with a subset."
+            exit 1
+          fi
+
+          IFS=',' read -ra SELECTED_SOURCES <<< "$SCRAPER_SOURCES"
+          if [ "${#SELECTED_SOURCES[@]}" -eq 0 ]; then
+            echo "::error::Select at least one governed scraper source."
+            exit 1
+          fi
+          for source in "${SELECTED_SOURCES[@]}"; do
+            run_source "$source"
+          done
       - name: Verify purge dry-run safety
-        if: inputs.source == 'all'
+        if: inputs.source == 'all' && inputs.sources == ''
         run: npm run verify:purge-dry-run
       - name: Review stale-retention candidates without deleting
-        if: inputs.source == 'all'
+        if: inputs.source == 'all' && inputs.sources == ''
         run: PURGE_DRY_RUN=1 npm run purge:stale
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

@@ -169,8 +169,8 @@ const INGESTION_SOURCE_PRESENTATION: Omit<
     href: "https://science.osti.gov/wdts/nsb/Key-Dates",
     logoUrl: "/sources/state-affiliates.svg",
     blurb:
-      "Official U.S. Department of Energy national-event dates, published from public-domain Office of Science information without implied endorsement.",
-    status: "live",
+      "Reference link only. Automated refresh is blocked because the source currently returns HTTP 403 to ordinary public requests.",
+    status: "soon",
     category: "stem",
   },
   {
@@ -369,11 +369,19 @@ const SOURCE_GOVERNANCE: Record<string, SourceGovernance> = {
     { min: 0, max: 1 },
     { permissionReviewedOn: REVIEWED_2026_08_13 }
   ),
-  doe_science_bowl_scrape: enabledGovernance(
-    "First-party Office of Science pages identify the retained factual material as public domain with attribution.",
-    { min: 1, max: 6 },
-    { permissionReviewedOn: REVIEWED_2026_08_13 }
-  ),
+  doe_science_bowl_scrape: {
+    owner: OWNER,
+    permissionBasis:
+      "Blocked after an ordinary public request returned HTTP 403; no bypass or alternate private endpoint is permitted.",
+    permissionReviewedOn: REVIEWED_2026_08_13,
+    allowedFields: FACTUAL_LISTING_FIELDS,
+    cadence: "manual",
+    crawlDelayMs: 350,
+    expectedRows: null,
+    freshnessThresholdHours: null,
+    killSwitchEnv: null,
+    automationState: "blocked",
+  },
   afsa_essay_scrape: enabledGovernance(
     "First-party public contest pages; conditions reviewed without an applicable automation or commercial-use prohibition.",
     { min: 0, max: 2 },

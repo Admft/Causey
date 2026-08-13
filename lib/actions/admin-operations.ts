@@ -4,14 +4,19 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
 import {
+  ADMIN_RUNNABLE_SCRAPER_SOURCES,
+  isAdminRunnableScraperSource,
   isAdminScraperSource,
+  type AdminRunnableScraperSource,
   type AdminScraperSource,
 } from "@/lib/admin-scrapers";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
+import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
 import { getGitHubIngestionConfig } from "@/lib/github-ingestion";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const BULK_DELETE_CAP = 100;
+const ADMIN_SCRAPER_DISPATCH_CAP = ADMIN_RUNNABLE_SCRAPER_SOURCES.length;
 const DeleteTournamentsSchema = z.object({
   competitionIds: z
     .array(z.string().uuid())
@@ -26,7 +31,9 @@ function revalidateTournamentSurfaces() {
   revalidatePath("/admin");
   revalidatePath("/admin/moderation");
   revalidatePath("/admin/tournaments");
-  revalidatePath("/chess");
+  for (const category of DISCOVERY_CATEGORIES) {
+    revalidatePath(category.href);
+  }
 }
 
 export async function adminDeleteTournaments(input: {
@@ -108,47 +115,62 @@ export async function adminDeleteAllTournaments(input: {
   return { ok: true, deleted: Number(data ?? 0) };
 }
 
-export async function adminRunScraper(input: {
-  source: string;
-}): Promise<
-  ActionResult<{
-    source: AdminScraperSource;
-    workflowUrl: string;
-  }>
-> {
-  const admin = await getPlatformAdminUser();
-  if (!admin) {
-    return { ok: false, error: "Platform administrator access required." };
+function normalizeAdminScraperDispatch(
+  input: { source?: string; sources?: string[] }
+): AdminScraperSource[] | null {
+  if (input.sources) {
+    const unique = [...new Set(input.sources)];
+    if (!unique.length || unique.length > ADMIN_SCRAPER_DISPATCH_CAP) {
+      return null;
+    }
+    if (unique.length === 1 && unique[0] === "all") {
+      return ["all"];
+    }
+    if (unique.every(isAdminRunnableScraperSource)) {
+      const selected = unique as AdminRunnableScraperSource[];
+      if (
+        selected.length === ADMIN_RUNNABLE_SCRAPER_SOURCES.length &&
+        ADMIN_RUNNABLE_SCRAPER_SOURCES.every((source) =>
+          selected.includes(source)
+        )
+      ) {
+        return ["all"];
+      }
+      return selected;
+    }
+    return null;
   }
-  if (!isAdminScraperSource(input.source)) {
-    return { ok: false, error: "Choose a valid tournament scraper." };
+  if (input.source && isAdminScraperSource(input.source)) {
+    return [input.source];
   }
+  return null;
+}
 
-  const github = getGitHubIngestionConfig();
-  if (!github.ok) {
-    return {
-      ok: false,
-      error:
-        "Scraper runs are unavailable on this deployment. Ask the deployment owner to review ingestion access.",
-    };
-  }
-
-  const { repository, ref, token, workflowUrl } = github.config;
+async function dispatchIngestionWorkflow(input: {
+  sources: AdminScraperSource[];
+  repository: string;
+  ref: string;
+  token: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
   let response: Response;
   try {
     response = await fetch(
-      `https://api.github.com/repos/${repository}/actions/workflows/ingest.yml/dispatches`,
+      `https://api.github.com/repos/${input.repository}/actions/workflows/ingest.yml/dispatches`,
       {
         method: "POST",
         headers: {
           Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${input.token}`,
           "User-Agent": "causey-admin",
           "X-GitHub-Api-Version": "2022-11-28",
         },
         body: JSON.stringify({
-          ref,
-          inputs: { source: input.source },
+          ref: input.ref,
+          inputs: {
+            source: input.sources[0],
+            sources:
+              input.sources.length > 1 ? input.sources.join(",") : "",
+          },
         }),
         cache: "no-store",
       }
@@ -172,17 +194,62 @@ export async function adminRunScraper(input: {
     };
   }
 
+  return { ok: true };
+}
+
+export async function adminRunScraper(input: {
+  source?: string;
+  sources?: string[];
+}): Promise<
+  ActionResult<{
+    sources: AdminScraperSource[];
+    workflowUrl: string;
+  }>
+> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return { ok: false, error: "Platform administrator access required." };
+  }
+
+  const sources = normalizeAdminScraperDispatch(input);
+  if (!sources) {
+    return { ok: false, error: "Choose at least one valid tournament scraper." };
+  }
+
+  const github = getGitHubIngestionConfig();
+  if (!github.ok) {
+    return {
+      ok: false,
+      error:
+        "Scraper runs are unavailable on this deployment. Ask the deployment owner to review ingestion access.",
+    };
+  }
+
+  const { repository, ref, token, workflowUrl } = github.config;
   const supabase = await createServerSupabaseClient();
-  await supabase.rpc("record_admin_scraper_dispatch", {
-    p_source: input.source,
-    p_repository: repository,
-    p_ref: ref,
+
+  const dispatched = await dispatchIngestionWorkflow({
+    sources,
+    repository,
+    ref,
+    token,
   });
+  if (!dispatched.ok) {
+    return dispatched;
+  }
+  for (const source of sources) {
+    await supabase.rpc("record_admin_scraper_dispatch", {
+      p_source: source,
+      p_repository: repository,
+      p_ref: ref,
+    });
+  }
+
   revalidatePath("/admin/scrapers");
 
   return {
     ok: true,
-    source: input.source,
+    sources,
     workflowUrl,
   };
 }

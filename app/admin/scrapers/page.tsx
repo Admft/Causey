@@ -26,8 +26,9 @@ export default async function AdminScrapersPage() {
         Scrapers
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Run one tournament source or the full sequence. Each request uses the
-        existing ingestion workflow and records its result separately.
+        Sources are grouped by competition type. Select one source, a whole
+        category, or several at once; each request uses the existing ingestion
+        workflow and records its result separately.
       </p>
 
       <div className="mt-8">

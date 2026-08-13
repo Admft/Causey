@@ -64,7 +64,7 @@ TABROOM_WRITTEN_PERMISSION=1 npm run scrape:tabroom # Only after written NSDA pe
 npm run scrape:vex              # Official public VEX Events directory
 npm run scrape:taea-vase        # Official public TAEA VASE dates
 npm run scrape:bennington-writers # Official Bennington cycle, when year-specific
-npm run scrape:doe-science-bowl # Official DOE national-event dates
+npm run scrape:doe-science-bowl # Fails closed while ordinary DOE requests return HTTP 403
 npm run scrape:afsa-essay       # Official AFSA year-specific essay cycle
 npm run scrape:uil-theatre      # Official UIL theatre state-meet dates
 npm run scrape:uil-speech-debate # Official UIL invitationals with explicit speech/debate offerings
@@ -199,6 +199,9 @@ with a similar title. Series matching and pathway enrichment run only for
   `robots.txt` allows both pages, and its Web Policies identify site materials
   as public domain while requesting source acknowledgment and prohibiting
   implied endorsement. Causey uses no DOE or National Science Bowl logo.
+  Automation is currently blocked because ordinary public requests return HTTP
+  403; the adapter remains fail-closed and is excluded from aggregate, admin,
+  and GitHub workflow runs until access and governance are reviewed again.
 - **Texas Science & Engineering Fair (`txsef_scrape`, STEM /
   `science_fair`):** Texas A&M's official public homepage must publish an exact
   year-specific state-fair date range and College Station venue, while its
