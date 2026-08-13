@@ -8,6 +8,9 @@ const SCRIPTS = [
   "ingestion/scrape-afsa-essay.ts",
   "ingestion/scrape-uil-theatre.ts",
   "ingestion/scrape-uil-speech-debate.ts",
+  "ingestion/scrape-purple-comet.ts",
+  "ingestion/scrape-uil-music-marching.ts",
+  "ingestion/scrape-txsef.ts",
 ] as const;
 
 const BLOCKED_SCRIPTS = ["ingestion/scrape-vex-events.ts"] as const;

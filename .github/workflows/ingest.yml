@@ -1,7 +1,7 @@
 # Twice-weekly tournament ingestion for runnable chess and category sources.
 #
 # Prerequisites:
-#   1. Run Supabase migrations through 0052_uil_speech_debate_source.sql.
+#   1. Run Supabase migrations through 0055_txsef_source.sql.
 #   2. Repo secrets (Settings → Secrets → Actions):
 #        NEXT_PUBLIC_SUPABASE_URL
 #        SUPABASE_SERVICE_ROLE_KEY
@@ -38,6 +38,9 @@ on:
           - afsa_essay_scrape
           - uil_theatre_scrape
           - uil_speech_debate_scrape
+          - purple_comet_scrape
+          - uil_music_marching_scrape
+          - txsef_scrape
 
 concurrency:
   group: causey-tournament-ingestion
@@ -92,6 +95,9 @@ jobs:
             afsa_essay_scrape) npm run scrape:afsa-essay ;;
             uil_theatre_scrape) npm run scrape:uil-theatre ;;
             uil_speech_debate_scrape) npm run scrape:uil-speech-debate ;;
+            purple_comet_scrape) npm run scrape:purple-comet ;;
+            uil_music_marching_scrape) npm run scrape:uil-music-marching ;;
+            txsef_scrape) npm run scrape:txsef ;;
             *) echo "::error::Unknown scraper source: $SCRAPER_SOURCE"; exit 1 ;;
           esac
       - name: Verify purge dry-run safety

@@ -98,7 +98,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Current coverage starts with U.S. Department of Energy National Science Bowl dates; robotics, science fair, and mathematics coverage remains limited.",
+      "Search the official public listings Causey has indexed so far. Current coverage includes National Science Bowl dates, the Purple Comet team mathematics window, and the Texas state science fair; robotics and regional fair coverage remains limited.",
     searchPlaceholder: "Try robotics, science fair, or a competition name",
     facetLabel: "Discipline",
     facets: [
@@ -113,6 +113,18 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         href: "https://science.osti.gov/wdts/nsb/Key-Dates",
         status: "Active for published national-event dates",
         note: "Official Office of Science dates and program information. DOE identifies the source material as public domain; Causey links to the source and does not imply DOE endorsement.",
+      },
+      {
+        name: "Purple Comet! Math Meet",
+        href: "https://www.purplecomet.org/",
+        status: "Active for the published international contest window",
+        note: "Official online team mathematics dates for middle- and high-school students. Causey retains factual event and eligibility metadata only, never contest problems, participant data, or login content.",
+      },
+      {
+        name: "Texas Science & Engineering Fair",
+        href: "https://txsef.tamu.edu/",
+        status: "Active for the published 2027 state-fair dates",
+        note: "Official Texas A&M dates and venue for grades 6–12 students who qualify through a Texas regional fair. Registration portals, fees, deadlines, and feeder-event dates are not indexed.",
       },
     ],
     referenceSources: [
@@ -137,6 +149,18 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         href: "https://www.mathcounts.org/programs/chapter-state-competition-search",
         note: "Link only. MATHCOUNTS terms require prior written consent to reproduce or republish site materials.",
       },
+      {
+        name: "MAA American Mathematics Competitions",
+        href: "https://maa.org/amcreg/",
+        status: "Reference only",
+        note: "The official page publishes current AMC dates, but ordinary access to MAA's site-wide Terms of Use returned HTTP 403 during review. Causey will not automate for-profit public reuse without reliable permission evidence.",
+      },
+      {
+        name: "MathWorks Math Modeling Challenge",
+        href: "https://m3challenge.siam.org/the-challenge/",
+        status: "Reference only: 2027 dates not yet official",
+        note: "The first-party page describes an online high-school competition but does not yet publish a complete 2027 challenge window.",
+      },
     ],
   },
   {
@@ -145,7 +169,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/arts",
     heading: "Student arts competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Current coverage includes published TAEA VASE dates and UIL theatre state meets; regional, district, zone, and local coverage remains incomplete.",
+      "Search the official public listings Causey has indexed so far. Current coverage includes published TAEA VASE dates, UIL theatre state meets, and UIL state open-class marching band dates; regional, district, zone, area, local, and other music coverage remains incomplete.",
     searchPlaceholder: "Try visual arts, music, theatre, or an event name",
     facetLabel: "Discipline",
     facets: [
@@ -165,6 +189,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         href: "https://www.uiltexas.org/theatre/state",
         status: "Active for published state-meet dates",
         note: "Official high-school One-Act Play and Theatrical Design state-meet dates. Causey does not imply complete UIL theatre coverage and does not index regional, district, zone, or local events.",
+      },
+      {
+        name: "UIL State Open Class Marching Band",
+        href: "https://www.uiltexas.org/music/marching-band/state",
+        status: "Active for published state open-class dates",
+        note: "Official conference-group dates at the Alamodome. Causey does not index area, region, local, military-class, or other UIL music contests from this source.",
       },
     ],
     referenceSources: [

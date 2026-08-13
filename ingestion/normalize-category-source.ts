@@ -35,6 +35,18 @@ export const CATEGORY_SOURCE_CONFIG = {
     category: "debate",
     organizer: "University Interscholastic League",
   },
+  purple_comet_scrape: {
+    category: "stem",
+    organizer: "Purple Comet! Math Meet",
+  },
+  uil_music_marching_scrape: {
+    category: "arts",
+    organizer: "University Interscholastic League",
+  },
+  txsef_scrape: {
+    category: "stem",
+    organizer: "Texas A&M Engineering",
+  },
 } as const;
 
 export type CategoryScrapeSource = keyof typeof CATEGORY_SOURCE_CONFIG;
@@ -105,6 +117,9 @@ export function normalizeCategorySourceEvent(
     details: {
       facets: raw.facets,
       event_type: raw.eventType,
+      ...(raw.classifications
+        ? { classifications: raw.classifications }
+        : {}),
       source_availability: raw.availability,
       source_external_key: raw.externalKey,
       ...(raw.locationSourceUrl

@@ -135,7 +135,7 @@ async function main() {
       .select("category, custom_category_name, participation_mode")
       .limit(1)
   );
-  await probe("multi-category ingest sources (0052)", async () => {
+  await probe("multi-category ingest sources (0055)", async () => {
     const r = await client
       .from("ingestion_sources")
       .select("id, category", { count: "exact", head: true })
@@ -148,11 +148,14 @@ async function main() {
         "afsa_essay_scrape",
         "uil_theatre_scrape",
         "uil_speech_debate_scrape",
+        "purple_comet_scrape",
+        "uil_music_marching_scrape",
+        "txsef_scrape",
       ]);
-    if (!r.error && r.count !== 8) {
+    if (!r.error && r.count !== 11) {
       return {
         error: {
-          message: `found ${r.count ?? 0}/8 category sources — apply migrations through 0052`,
+          message: `found ${r.count ?? 0}/11 category sources — apply migrations through 0055`,
         },
         count: r.count,
       };
@@ -219,7 +222,7 @@ async function main() {
 
   if (failed > 0) {
     console.error(
-      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0051), preferably with:`
+      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0055), preferably with:`
     );
     console.error("  supabase db push");
     console.error(

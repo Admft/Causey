@@ -20,6 +20,8 @@ export type RawCategoryEvent = {
   state: string | null;
   zip: string | null;
   facets: string[];
+  /** Explicit source-published classifications, divisions, or conferences. */
+  classifications?: string[];
   eventType: string | null;
   availability: string;
   entryFeeCents: number | null;

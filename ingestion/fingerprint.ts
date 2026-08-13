@@ -56,6 +56,9 @@ export const SOURCE_PRIORITY: Record<string, number> = {
   afsa_essay_scrape: 30,
   uil_theatre_scrape: 30,
   uil_speech_debate_scrape: 30,
+  purple_comet_scrape: 30,
+  uil_music_marching_scrape: 30,
+  txsef_scrape: 30,
   organizer: 20,
   manual: 10,
 };

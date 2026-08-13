@@ -92,6 +92,10 @@ export function parseUilSpeechDebateHtml(
     const info = cleanText(cells.eq(3).text());
     const materials = cleanText(cells.eq(4).text());
     const evidence = `${info} ${materials}`;
+    const positiveEvidence = evidence.replace(
+      /\b(?:no|except|excluding)\b[^.!;]*/gi,
+      " "
+    );
     const practiceOnly =
       /\b(?:workshop|practice)\b/i.test(evidence) &&
       !/\b(?:tournament|invitational|debates? will take place|we will (?:offer|host).*(?:speech|debate)|all (?:UIL )?events)\b/i.test(
@@ -101,13 +105,15 @@ export function parseUilSpeechDebateHtml(
       !dates ||
       !location ||
       practiceOnly ||
-      !/\b(?:speech|debate|Congress(?:ional)?|LD|CX)\b/i.test(evidence) ||
+      !/\b(?:speech|debate|Congress(?:ional)?|LD|CX)\b/i.test(
+        positiveEvidence
+      ) ||
       /\b(?:no|except)\s+(?:speech(?:\s+or|\/| and)?\s*)?debate\b/i.test(evidence)
     ) {
       return;
     }
 
-    const facets = speechDebateFacets(evidence);
+    const facets = speechDebateFacets(positiveEvidence);
     if (facets.length === 0) return;
     const year = dates.start.slice(0, 4);
     const keyHost = location.venueName

@@ -30,6 +30,12 @@ export type StagedCompetition = Competition & {
   sections?: ParsedSectionDraft[];
 };
 
+export function chessCompetitionIds(
+  rows: ReadonlyArray<Pick<StagedCompetition, "id" | "category">>
+): string[] {
+  return rows.filter((row) => row.category === "chess").map((row) => row.id);
+}
+
 export function loadDotEnv(): void {
   try {
     for (const line of readFileSync(join(process.cwd(), ".env"), "utf8").split("\n")) {
@@ -231,7 +237,10 @@ export async function persistScrapeBatch(
       source === "doe_science_bowl_scrape" ||
       source === "afsa_essay_scrape" ||
       source === "uil_theatre_scrape" ||
-      source === "uil_speech_debate_scrape"
+      source === "uil_speech_debate_scrape" ||
+      source === "purple_comet_scrape" ||
+      source === "uil_music_marching_scrape" ||
+      source === "txsef_scrape"
         ? source
         : "all"),
     opts.meta ?? {}
@@ -316,9 +325,7 @@ export async function persistScrapeBatch(
     }
 
     let seriesAttached = 0;
-    const chessIds = resolved
-      .filter((draft) => draft.category === "chess")
-      .map((draft) => draft.id);
+    const chessIds = chessCompetitionIds(resolved);
     if (chessIds.length > 0) {
       try {
         seriesAttached = await attachSeriesMatches(client, chessIds);

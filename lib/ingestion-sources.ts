@@ -25,7 +25,10 @@ export type IngestionSource = {
     | "doe_science_bowl_scrape"
     | "afsa_essay_scrape"
     | "uil_theatre_scrape"
-    | "uil_speech_debate_scrape";
+    | "uil_speech_debate_scrape"
+    | "purple_comet_scrape"
+    | "uil_music_marching_scrape"
+    | "txsef_scrape";
   category: Exclude<CompetitionCategory, "other">;
   name: string;
   href: string;
@@ -142,6 +145,28 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     category: "stem",
   },
   {
+    id: "purple_comet_scrape",
+    competitionSource: "purple_comet_scrape",
+    name: "Purple Comet! Math Meet",
+    href: "https://www.purplecomet.org/",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official international online team mathematics contest window for middle- and high-school students.",
+    status: "live",
+    category: "stem",
+  },
+  {
+    id: "txsef_scrape",
+    competitionSource: "txsef_scrape",
+    name: "Texas Science & Engineering Fair",
+    href: "https://txsef.tamu.edu/",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official Texas A&M state science-fair dates for grades 6–12 regional finalists.",
+    status: "live",
+    category: "stem",
+  },
+  {
     id: "taea_vase_scrape",
     competitionSource: "taea_vase_scrape",
     name: "TAEA VASE",
@@ -159,6 +184,17 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     logoUrl: "/sources/state-affiliates.svg",
     blurb:
       "Official high-school theatre state-meet dates. Regional, district, zone, and local coverage is not included.",
+    status: "live",
+    category: "arts",
+  },
+  {
+    id: "uil_music_marching_scrape",
+    competitionSource: "uil_music_marching_scrape",
+    name: "UIL State Open Class Marching Band",
+    href: "https://www.uiltexas.org/music/marching-band/state",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official state open-class marching band dates by conference group at the Alamodome. Other UIL music levels and contests are not included.",
     status: "live",
     category: "arts",
   },

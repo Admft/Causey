@@ -131,6 +131,9 @@ describe("official multi-category source adapters", () => {
     expect(events.map((event) => event.name).join(" ")).not.toContain(
       "Texas Tech"
     );
+    expect(events.map((event) => event.name).join(" ")).not.toContain(
+      "A&M Consolidated"
+    );
   });
 
   it("normalizes UIL speech/debate rows as publishable debate listings", () => {

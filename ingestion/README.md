@@ -32,12 +32,15 @@ Run these in the Supabase SQL editor if not already applied:
 10. **`0050_uil_theatre_source.sql`** — UIL high-school theatre state-meet source id
 11. **`0051_pause_tabroom_automation.sql`** — pause Tabroom metadata and archive primary Tabroom listings pending written NSDA permission
 12. **`0052_uil_speech_debate_source.sql`** — UIL invitational speech/debate source id
+13. **`0053_purple_comet_source.sql`** — Purple Comet! Math Meet source id
+14. **`0054_uil_music_marching_source.sql`** — UIL state open-class marching band source id
+15. **`0055_txsef_source.sql`** — Texas Science and Engineering Fair source id
 
 ## Provenance
 
 | Column / table | Meaning |
 | --- | --- |
-| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, `bennington_writers_scrape`, `doe_science_bowl_scrape`, `afsa_essay_scrape`, `uil_theatre_scrape`, and `uil_speech_debate_scrape` |
+| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, `bennington_writers_scrape`, `doe_science_bowl_scrape`, `afsa_essay_scrape`, `uil_theatre_scrape`, `uil_speech_debate_scrape`, `purple_comet_scrape`, `uil_music_marching_scrape`, and `txsef_scrape` |
 | `competitions.source_url` | Exact upstream page scraped |
 | `competitions.fingerprint` | Normalized name\|date\|state\|zip for cross-source matching |
 | `competitions.canonical_id` | Set on archived duplicates → points at the surviving row |
@@ -63,6 +66,9 @@ npm run scrape:doe-science-bowl # Official DOE national-event dates
 npm run scrape:afsa-essay       # Official AFSA year-specific essay cycle
 npm run scrape:uil-theatre      # Official UIL theatre state-meet dates
 npm run scrape:uil-speech-debate # Official UIL invitationals with explicit speech/debate offerings
+npm run scrape:purple-comet     # Official Purple Comet online math contest window
+npm run scrape:uil-music-marching # Official UIL state open-class marching band dates
+npm run scrape:txsef            # Official Texas state science-fair dates
 npm run scrape:discovery        # Runnable non-chess adapters in sequence
 SCRAPE_INCLUDE_BLOCKED=1 npm run scrape:discovery # also re-check ordinary VEX access
 npm run scrape:all              # All six chess sources in sequence
@@ -191,6 +197,17 @@ with a similar title. Series matching and pathway enrichment run only for
   `robots.txt` allows both pages, and its Web Policies identify site materials
   as public domain while requesting source acknowledgment and prohibiting
   implied endorsement. Causey uses no DOE or National Science Bowl logo.
+- **Texas Science & Engineering Fair (`txsef_scrape`, STEM /
+  `science_fair`):** Texas A&M's official public homepage must publish an exact
+  year-specific state-fair date range and College Station venue, while its
+  general-information page must identify grades 6–12 and statewide finalist
+  scope. Causey records only the state event and a regional-qualification
+  requirement; it does not enumerate regional fairs, infer feeder pathways, or
+  fetch registration portals, PDFs, fees, or deadlines. TXSEF `robots.txt`
+  allows both HTML pages with a 10-second crawl delay. Texas A&M's linking
+  policy permits attributed links, and these pages publish no automation or
+  commercial-use prohibition. Only factual metadata and source links are
+  retained.
 - **AFSA National High School Essay Contest (`afsa_essay_scrape`, Writing /
   `essay`):** the official contest page must publish the cycle, grade 9–12
   eligibility, and open/closed status, while the separate official Writer's
@@ -212,6 +229,15 @@ with a similar title. Series matching and pathway enrichment run only for
   reproduce those disallowed assets. The public page links a Web Privacy Policy
   but publishes no applicable automation prohibition; credential-use
   conditions for accredited event media are not used as an access path.
+- **UIL State Open Class Marching Band (`uil_music_marching_scrape`, Arts /
+  `music`):** the official public HTML page publishes exact conference-group
+  date ranges for 2026–2028 at the Alamodome in San Antonio. Causey stages only
+  those state open-class rows, preserves the published 1A–6A classifications,
+  and leaves entry fees, registration links/deadlines, grade bands, and street
+  address unknown. Spectator ticket prices are not treated as participant
+  fees. Area, region, local, military-class, and other UIL music contests are
+  outside this adapter's coverage. UIL `robots.txt` allows the HTML path while
+  disallowing `/files/`; no linked files are fetched or reproduced.
 - **UIL Speech & Debate Invitationals (`uil_speech_debate_scrape`, Debate):**
   the official public academic invitational calendar must publish an exact
   year-specific date, complete Texas location, and explicit speech/debate
@@ -221,6 +247,17 @@ with a similar title. Series matching and pathway enrichment run only for
   `robots.txt` allows the calendar path while disallowing `/files/`; this
   adapter reads only ordinary HTML and retains factual metadata with
   attribution.
+- **Purple Comet! Math Meet (`purple_comet_scrape`, STEM / `mathematics`):**
+  the official homepage must publish an exact next-contest window, while the
+  public rules must explicitly identify a free, online, team mathematics
+  competition for middle- and high-school students and require an adult
+  supervisor. Causey records one international online listing, two competitive
+  school-level eligibility sections, and a zero participant fee. It does not
+  fetch supervisor login/registration, contest problems, solutions, results,
+  or participant data. `robots.txt` allows all paths; the public pages expose
+  no general Terms of Use or automation prohibition, while their contest rules
+  specifically protect contest problems. Causey retains only factual dates,
+  format, eligibility summaries, and source links.
 
 Parser fixtures named `*-public-snippet.html` are minimal excerpts derived from
 public pages fetched on 2026-08-12 or 2026-08-13, not complete source snapshots. Never use
@@ -233,7 +270,11 @@ permission; FIRST requires an appropriate token/permission; AoPS and NewPages
 are secondary links; Scienteer and zFairs are tenant software rather than
 national directories; RobotEvents is not the official 2026–27 VEX pathway.
 MATHCOUNTS remains link-only because its terms require prior written consent
-to reproduce, retransmit, or republish site materials.
+to reproduce, retransmit, or republish site materials. MAA AMC publishes exact
+2026–27 dates, but its site-wide Terms of Use returned HTTP 403 to ordinary
+access during review, so Causey does not assume for-profit public reuse is
+permitted. MathWorks M3 remains reference-only until its first-party page
+publishes a complete 2027 challenge window.
 
 Politeness: use the shared retrying user agent, run sources sequentially, keep
 the twice-weekly cadence, and use `SCRAPE_MAX_EVENTS` for local checks. Do not

@@ -62,6 +62,9 @@ export const CompetitionSourceSchema = z.enum([
   "afsa_essay_scrape",
   "uil_theatre_scrape",
   "uil_speech_debate_scrape",
+  "purple_comet_scrape",
+  "uil_music_marching_scrape",
+  "txsef_scrape",
 ]);
 
 export const TournamentSectionDraftSchema = z.object({

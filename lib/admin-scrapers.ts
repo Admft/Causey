@@ -28,6 +28,18 @@ export const ADMIN_SCRAPER_OPTIONS = [
     value: "uil_speech_debate_scrape",
     label: "UIL speech & debate invitationals",
   },
+  {
+    value: "purple_comet_scrape",
+    label: "Purple Comet! Math Meet",
+  },
+  {
+    value: "uil_music_marching_scrape",
+    label: "UIL state open-class marching band",
+  },
+  {
+    value: "txsef_scrape",
+    label: "Texas Science & Engineering Fair",
+  },
 ] as const;
 
 export type AdminScraperSource =
