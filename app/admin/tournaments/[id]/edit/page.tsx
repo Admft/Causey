@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AdminTournamentStatusActions } from "@/components/AdminTournamentStatusActions";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminTournament } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
@@ -15,6 +16,9 @@ export default async function AdminEditTournamentPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const admin = await getPlatformAdminUser();
+  if (!admin) redirect("/");
+
   const { id } = await params;
   const tournament = await getAdminTournament(id);
   if (!tournament) notFound();

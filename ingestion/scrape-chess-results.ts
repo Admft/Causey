@@ -24,8 +24,7 @@ import {
 import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
-import { extractPageImage } from "./extract-page-image";
-import { decodeHtmlBuffer } from "./fetch-html";
+import { decodeHtmlBuffer, fetchResponseWithRetry } from "./fetch-html";
 
 const STAGING_FILE = "chess-results-drafts.json";
 const USER_AGENT =
@@ -35,9 +34,8 @@ async function fetchLiveUsaSearch(): Promise<{
   listingShell: string;
   resultsHtml: string;
 }> {
-  const initial = await fetch(CHESS_RESULTS_LISTING_URL, {
+  const initial = await fetchResponseWithRetry(CHESS_RESULTS_LISTING_URL, {
     headers: { "User-Agent": USER_AGENT },
-    signal: AbortSignal.timeout(12_000),
   });
   if (!initial.ok) {
     throw new Error(
@@ -73,7 +71,7 @@ async function fetchLiveUsaSearch(): Promise<{
   body.set("ctl00$P1$cb_suchen", "Search");
 
   const cookie = initial.headers.get("set-cookie")?.split(";")[0] ?? "";
-  const results = await fetch(action, {
+  const results = await fetchResponseWithRetry(action, {
     method: "POST",
     headers: {
       "User-Agent": USER_AGENT,
@@ -83,7 +81,6 @@ async function fetchLiveUsaSearch(): Promise<{
     },
     body,
     redirect: "follow",
-    signal: AbortSignal.timeout(12_000),
   });
   if (!results.ok) {
     throw new Error(
@@ -118,9 +115,6 @@ async function main() {
       }
     : await fetchLiveUsaSearch();
   const html = resultsHtml || listingShell;
-  const fallbackImage = extractPageImage(listingShell, CHESS_RESULTS_LISTING_URL, {
-    allowSiteChrome: true,
-  });
   let raw = parseChessResultsSearchHtml(html).filter(
     (r) => !r.federation || r.federation === "USA"
   );
@@ -151,7 +145,7 @@ async function main() {
     if (!competition) continue;
     drafts.push({
       ...competition,
-      image_url: competition.image_url || fallbackImage,
+      external_key: row.externalKey,
       sections: [openSection("Open")],
     });
   }

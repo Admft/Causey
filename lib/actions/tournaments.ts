@@ -28,6 +28,7 @@ export type TournamentPublicationStatus = "published" | "pending_review";
 type TournamentPublicationResult = {
   slug: string;
   status: TournamentPublicationStatus;
+  cleanupPending?: boolean;
 };
 
 const TournamentCreateSchema = ValidatedTournamentCreateSchema;
@@ -307,12 +308,15 @@ export async function deleteTournamentDraft(input: {
     };
   }
 
-  const { data: draft } = await supabase
+  const { data: draft, error: draftReadError } = await supabase
     .from("tournament_drafts")
     .select("cover_image_path")
     .eq("id", values.draftId)
     .eq("org_id", values.orgId)
     .maybeSingle();
+  if (draftReadError) {
+    return { ok: false, error: "Could not load this draft before discarding it." };
+  }
   const { count, error } = await supabase
     .from("tournament_drafts")
     .delete({ count: "exact" })
@@ -323,9 +327,18 @@ export async function deleteTournamentDraft(input: {
   }
 
   if (draft?.cover_image_path) {
-    await supabase.storage
+    const { error: coverCleanupError } = await supabase.storage
       .from("tournament-covers")
       .remove([draft.cover_image_path]);
+    if (coverCleanupError) {
+      revalidatePath(`/orgs/${values.orgSlug}`);
+      revalidatePath(`/orgs/${values.orgSlug}/competitions`);
+      return {
+        ok: false,
+        error:
+          "The draft was discarded, but its uploaded cover could not be cleaned up.",
+      };
+    }
   }
   revalidatePath(`/orgs/${values.orgSlug}`);
   revalidatePath(`/orgs/${values.orgSlug}/competitions`);
@@ -493,12 +506,15 @@ export async function publishTournamentDraft(
   );
   if (!published.ok) return published;
 
-  await supabase
+  const { count: cleanupCount, error: cleanupError } = await supabase
     .from("tournament_drafts")
-    .delete()
+    .delete({ count: "exact" })
     .eq("id", values.draftId)
     .eq("org_id", values.orgId);
   revalidatePath(`/orgs/${values.orgSlug}`);
+  if (cleanupError || cleanupCount !== 1) {
+    return { ...published, cleanupPending: true };
+  }
   return published;
 }
 

@@ -181,7 +181,9 @@ export function NotificationPreferencesForm({
         {pending ? "Saving…" : "Save alert preferences"}
       </button>
       {message ? (
-        <p className="mt-3 text-sm font-medium text-foreground">{message}</p>
+        <p className="mt-3 text-sm font-medium text-foreground" role="status">
+          {message}
+        </p>
       ) : null}
       {error ? (
         <p className="mt-3 text-sm font-medium text-brand-red" role="alert">

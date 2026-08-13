@@ -89,8 +89,11 @@ async function main() {
   await probe("scrape_runs table (0005)", async () =>
     client.from("scrape_runs").select("id").limit(1)
   );
-  await probe("competition_sources table (0005)", async () =>
-    client.from("competition_sources").select("id").limit(1)
+  await probe("competition_sources provenance fields (0005)", async () =>
+    client
+      .from("competition_sources")
+      .select("id, competition_id, source, external_key, source_url, last_seen_at")
+      .limit(1)
   );
   await probe("image_url column (0006)", async () =>
     client.from("competitions").select("image_url").limit(1)
@@ -105,6 +108,40 @@ async function main() {
   // Nullable fee (0008): try selecting is enough; nullability checked on upsert.
   await probe("entry_fee_cents readable (0008)", async () =>
     client.from("competitions").select("entry_fee_cents").limit(1)
+  );
+  await probe("organization/visibility fields (0010+)", async () =>
+    client
+      .from("competitions")
+      .select("visibility, audience, org_id, created_by, details")
+      .limit(1)
+  );
+  await probe("hub scrape sources readable (0019, 0032)", async () =>
+    client
+      .from("competitions")
+      .select("source")
+      .in("source", [
+        "tla_scrape",
+        "cca_scrape",
+        "onlinereg_scrape",
+        "chess_results_scrape",
+        "fide_calendar_scrape",
+        "tca_scrape",
+      ])
+      .limit(1)
+  );
+  await probe("multi-category competition fields (0041)", async () =>
+    client
+      .from("competitions")
+      .select("category, custom_category_name, participation_mode")
+      .limit(1)
+  );
+  await probe("section replacement fields (0041)", async () =>
+    client
+      .from("sections")
+      .select(
+        "id, competition_id, name, min_rating, max_rating, min_grade, max_grade, entry_fee_cents"
+      )
+      .limit(1)
   );
 
   if (process.env.OPENAI_API_KEY) {
@@ -125,12 +162,13 @@ async function main() {
   }
 
   if (failed > 0) {
-    console.error(`\n${failed} check(s) failed. Apply pending SQL in the Supabase SQL editor:`);
-    console.error("  supabase/migrations/0005_ingestion_ops.sql");
-    console.error("  supabase/migrations/0006_competition_image_url.sql");
-    console.error("  supabase/migrations/0007_pathway_enrichment.sql");
-    console.error("  supabase/migrations/0008_nullable_entry_fee.sql");
-    console.error("Or paste: supabase/migrations/PENDING_SCRAPE.sql");
+    console.error(
+      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0043), preferably with:`
+    );
+    console.error("  supabase db push");
+    console.error(
+      "Do not use PENDING_SCRAPE.sql; it is an obsolete partial schema snapshot."
+    );
     process.exit(1);
   }
 

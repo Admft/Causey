@@ -20,6 +20,11 @@ export const SCRAPER_ID = "tla_scrape" as const;
 export const SCRAPER_SITE = "https://new.uschess.org/upcoming-tournaments";
 
 export const RawTlaSchema = z.object({
+  /**
+   * Stable upstream identity. US Chess does not expose a numeric node id in
+   * the listing, so its canonical event path is the source-native fallback.
+   */
+  externalKey: z.string().min(1),
   name: z.string().min(3),
   /** ISO datetime from <time datetime="..."> when present, else printed text. */
   dateText: z.string().min(4),
@@ -34,6 +39,8 @@ export const RawTlaSchema = z.object({
 export type RawTla = z.infer<typeof RawTlaSchema>;
 
 export type DetailEnrichment = {
+  /** Drupal node id when exposed by the event page. */
+  sourceExternalKey?: string | null;
   venueName: string | null;
   address: string | null;
   city: string | null;
@@ -171,6 +178,16 @@ export type NormalizedTla = {
   competition: Competition;
   sections: ParsedSectionDraft[];
 };
+
+export function tlaExternalKey(detailUrl: string): string {
+  try {
+    const url = new URL(detailUrl);
+    const path = url.pathname.replace(/\/+$/, "") || "/";
+    return `uschess:${url.hostname.toLowerCase()}${path}`;
+  } catch {
+    return `uschess:${detailUrl}`;
+  }
+}
 
 export function normalizeRawTla(
   raw: RawTla,

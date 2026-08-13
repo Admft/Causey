@@ -6,6 +6,7 @@ import type {
 } from "@/lib/auth/orgs";
 import type {
   DistrictPilotReadiness,
+  DistrictReadResult,
   DistrictSchoolReadiness,
 } from "@/lib/district-readiness";
 import type { AttentionSourceEvent } from "@/lib/notifications";
@@ -19,6 +20,18 @@ export type DistrictSchoolRollup = {
   invitations_pending: number;
   going_count: number;
   attended_this_season: number;
+};
+
+export type DistrictHostedRollup = {
+  upcoming_tournaments: number;
+  invitations_pending: number;
+  going_count: number;
+  attended_this_season: number;
+};
+
+export type DistrictParticipationReport = {
+  schools: DistrictSchoolRollup[];
+  districtHosted: DistrictHostedRollup;
 };
 
 export type OrgInvitationRow = {
@@ -89,13 +102,40 @@ export type ModerationQueueRow = {
 
 export async function getDistrictSchoolRollup(
   districtId: string
-): Promise<DistrictSchoolRollup[]> {
+): Promise<DistrictReadResult<DistrictSchoolRollup[]>> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.rpc("get_district_school_rollup", {
     p_district_id: districtId,
   });
-  if (error) return [];
-  return (data ?? []) as DistrictSchoolRollup[];
+  if (error) return { ok: false };
+  return { ok: true, data: (data ?? []) as DistrictSchoolRollup[] };
+}
+
+export async function getDistrictParticipationReport(
+  districtId: string
+): Promise<DistrictReadResult<DistrictParticipationReport>> {
+  const supabase = await createServerSupabaseClient();
+  const [schoolsResult, districtHostedResult] = await Promise.all([
+    supabase.rpc("get_district_school_rollup", {
+      p_district_id: districtId,
+    }),
+    supabase.rpc("get_district_hosted_rollup", {
+      p_district_id: districtId,
+    }),
+  ]);
+  const districtHosted = districtHostedResult.data?.[0] as
+    | DistrictHostedRollup
+    | undefined;
+  if (schoolsResult.error || districtHostedResult.error || !districtHosted) {
+    return { ok: false };
+  }
+  return {
+    ok: true,
+    data: {
+      schools: (schoolsResult.data ?? []) as DistrictSchoolRollup[],
+      districtHosted,
+    },
+  };
 }
 
 type DistrictReadinessOrgRow = {
@@ -115,9 +155,9 @@ type DistrictReadinessMembershipRow = {
 
 export async function getDistrictPilotReadiness(
   districtId: string
-): Promise<DistrictPilotReadiness | null> {
+): Promise<DistrictReadResult<DistrictPilotReadiness>> {
   const supabase = await createServerSupabaseClient();
-  const [{ data: district }, { data: schools }] = await Promise.all([
+  const [districtResult, schoolsResult] = await Promise.all([
     supabase
       .from("organizations")
       .select(
@@ -135,25 +175,28 @@ export async function getDistrictPilotReadiness(
       .eq("type", "school")
       .order("name"),
   ]);
+  if (districtResult.error || schoolsResult.error) {
+    return { ok: false };
+  }
 
-  const typedDistrict = district as DistrictReadinessOrgRow | null;
-  if (!typedDistrict) return null;
-  const typedSchools = (schools ?? []) as DistrictReadinessOrgRow[];
+  const typedDistrict = districtResult.data as DistrictReadinessOrgRow | null;
+  if (!typedDistrict) return { ok: false };
+  const typedSchools = (schoolsResult.data ?? []) as DistrictReadinessOrgRow[];
   if (!typedSchools.length) {
     return {
-      districtId: typedDistrict.id,
-      districtSlug: typedDistrict.slug,
-      verificationStatus: typedDistrict.verification_status,
-      schools: [],
+      ok: true,
+      data: {
+        districtId: typedDistrict.id,
+        districtSlug: typedDistrict.slug,
+        verificationStatus: typedDistrict.verification_status,
+        schools: [],
+      },
     };
   }
 
   const schoolIds = typedSchools.map((school) => school.id);
-  const [
-    { data: districtMemberships },
-    { data: schoolMemberships },
-    { data: pendingInvitations },
-  ] = await Promise.all([
+  const [districtMembershipsResult, schoolMembershipsResult, invitationsResult] =
+    await Promise.all([
     supabase
       .from("org_memberships")
       .select("org_id, profile_id, role")
@@ -173,6 +216,16 @@ export async function getDistrictPilotReadiness(
       .eq("status", "pending")
       .gt("expires_at", new Date().toISOString()),
   ]);
+  if (
+    districtMembershipsResult.error ||
+    schoolMembershipsResult.error ||
+    invitationsResult.error
+  ) {
+    return { ok: false };
+  }
+  const districtMemberships = districtMembershipsResult.data;
+  const schoolMemberships = schoolMembershipsResult.data;
+  const pendingInvitations = invitationsResult.data;
 
   const districtOperatorIds = new Set<string>();
   if (typedDistrict.owner_profile_id) {
@@ -227,10 +280,13 @@ export async function getDistrictPilotReadiness(
   );
 
   return {
-    districtId: typedDistrict.id,
-    districtSlug: typedDistrict.slug,
-    verificationStatus: typedDistrict.verification_status,
-    schools: readinessSchools,
+    ok: true,
+    data: {
+      districtId: typedDistrict.id,
+      districtSlug: typedDistrict.slug,
+      verificationStatus: typedDistrict.verification_status,
+      schools: readinessSchools,
+    },
   };
 }
 

@@ -236,6 +236,38 @@ export default async function FamilyPage() {
             />
           </div>
 
+          {children.length ? (
+            <nav
+              aria-label="Family workspace sections"
+              className="mt-5 flex gap-2 overflow-x-auto border-b border-line pb-3 lg:hidden"
+            >
+              {rsvpInbox.length || registrationInbox.length ? (
+                <a
+                  href="#needs-response"
+                  className="min-h-10 shrink-0 rounded-lg bg-accent-soft px-3 py-2 text-sm font-semibold text-brand-red"
+                >
+                  Needs attention
+                </a>
+              ) : null}
+              {childrenByPriority.map((child) => (
+                <a
+                  key={child.profile_id}
+                  href={`#student-${child.profile_id}`}
+                  className="min-h-10 shrink-0 rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground"
+                >
+                  {child.display_name}
+                  {child.actionCount ? ` (${child.actionCount})` : ""}
+                </a>
+              ))}
+              <a
+                href="#link-student"
+                className="min-h-10 shrink-0 px-2 py-2 text-sm font-medium text-muted-strong"
+              >
+                Link student
+              </a>
+            </nav>
+          ) : null}
+
           {!children.length ? (
             <>
               {!pendingCount ? <StudentAccountHandoff /> : null}

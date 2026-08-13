@@ -41,6 +41,13 @@ const PAGE_SIZES = [
 const DEFAULT_PAGE_SIZE = 20;
 
 type PageSize = number | "all";
+type SearchInputState = {
+  keyword: string;
+  zip: string;
+  radius: string;
+  sort: SearchSort;
+  filters: FilterState;
+};
 
 function resolvePageLimit(size: PageSize): number {
   return size === "all" ? SEARCH_LOAD_ALL_LIMIT : size;
@@ -55,13 +62,7 @@ type Status =
       total: number;
     };
 
-function readParams(params: URLSearchParams): {
-  keyword: string;
-  zip: string;
-  radius: string;
-  sort: SearchSort;
-  filters: FilterState;
-} {
+function readParams(params: URLSearchParams): SearchInputState {
   return {
     keyword: params.get("q") ?? "",
     zip: params.get("zip") ?? "",
@@ -79,6 +80,38 @@ function readParams(params: URLSearchParams): {
       date_to: params.get("date_to") ?? "",
     },
   };
+}
+
+function queryFromState(
+  state: SearchInputState,
+  category: CompetitionCategory
+): URLSearchParams {
+  const p = new URLSearchParams();
+  p.set("category", category);
+  if (state.keyword.trim()) p.set("q", state.keyword.trim());
+  if (state.zip) {
+    p.set("zip", state.zip);
+    p.set("radius", state.radius);
+  }
+  if (state.filters.state) p.set("state", state.filters.state);
+  if (state.filters.source) p.set("source", state.filters.source);
+  if (state.filters.featured) p.set("featured", "1");
+  if (state.filters.timing !== "upcoming") {
+    p.set("timing", state.filters.timing);
+  }
+  if (state.filters.grade_band) {
+    p.set("grade_band", state.filters.grade_band);
+  }
+  if (state.filters.rating_band) {
+    p.set("rating_band", state.filters.rating_band);
+  }
+  if (state.filters.max_fee_dollars) {
+    p.set("max_fee", state.filters.max_fee_dollars);
+  }
+  if (state.filters.date_from) p.set("date_from", state.filters.date_from);
+  if (state.filters.date_to) p.set("date_to", state.filters.date_to);
+  if (state.sort !== "popular") p.set("sort", state.sort);
+  return p;
 }
 
 function parseTiming(raw: string | null): FilterState["timing"] {
@@ -107,6 +140,7 @@ export function SearchClient({
   const [status, setStatus] = useState<Status>({ kind: "loading" });
   const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [layout, setLayout] = useState<ResultsLayout>("grid2");
 
   const applyZip = useCallback(() => {
@@ -125,26 +159,56 @@ export function SearchClient({
   }, [zipInput]);
 
   // One place builds the query — URL bar and API always agree.
-  const query = useMemo(() => {
-    const p = new URLSearchParams();
-    p.set("category", category);
-    if (keyword.trim()) p.set("q", keyword.trim());
-    if (zip) {
-      p.set("zip", zip);
-      p.set("radius", radius);
+  const query = useMemo(
+    () => queryFromState({ keyword, zip, radius, sort, filters }, category),
+    [category, keyword, zip, radius, filters, sort]
+  );
+  const urlSnapshot = searchParams.toString();
+  const syncingFromUrl = useRef(false);
+
+  // Back/forward navigation and external URL edits are authoritative. Mark the
+  // sync before state updates so the outbound effect cannot restore stale UI.
+  useEffect(() => {
+    const incoming = readParams(new URLSearchParams(urlSnapshot));
+    const changed =
+      incoming.keyword !== keyword ||
+      incoming.zip !== zip ||
+      incoming.radius !== radius ||
+      incoming.sort !== sort ||
+      JSON.stringify(incoming.filters) !== JSON.stringify(filters);
+    if (!changed) return;
+
+    syncingFromUrl.current = true;
+    // URL navigation is an external state source; mirror it before outbound sync.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setKeyword(incoming.keyword);
+    setZipInput(incoming.zip);
+    setZip(incoming.zip);
+    setRadius(incoming.radius);
+    setSort(incoming.sort);
+    setFilters(incoming.filters);
+    setZipError(null);
+    // Local state is intentionally excluded: this effect responds only to URL
+    // navigation, while local edits flow through the outbound effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSnapshot]);
+
+  useEffect(() => {
+    if (syncingFromUrl.current) {
+      const incomingQuery = queryFromState(
+        readParams(new URLSearchParams(urlSnapshot)),
+        category
+      );
+      if (incomingQuery.toString() !== query.toString()) return;
+      syncingFromUrl.current = false;
     }
-    if (filters.state) p.set("state", filters.state);
-    if (filters.source) p.set("source", filters.source);
-    if (filters.featured) p.set("featured", "1");
-    if (filters.timing !== "upcoming") p.set("timing", filters.timing);
-    if (filters.grade_band) p.set("grade_band", filters.grade_band);
-    if (filters.rating_band) p.set("rating_band", filters.rating_band);
-    if (filters.max_fee_dollars) p.set("max_fee", filters.max_fee_dollars);
-    if (filters.date_from) p.set("date_from", filters.date_from);
-    if (filters.date_to) p.set("date_to", filters.date_to);
-    if (sort !== "popular") p.set("sort", sort);
-    return p;
-  }, [category, keyword, zip, radius, filters, sort]);
+
+    const nextUrl = query.size ? `${pathname}?${query}` : pathname;
+    const currentUrl = urlSnapshot ? `${pathname}?${urlSnapshot}` : pathname;
+    if (nextUrl !== currentUrl) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [category, pathname, query, router, urlSnapshot]);
 
   const buildApiParams = useCallback(
     (limit: number, offset: number) => {
@@ -167,13 +231,14 @@ export function SearchClient({
 
   const abortRef = useRef<AbortController | null>(null);
   useEffect(() => {
-    router.replace(query.size ? `${pathname}?${query}` : pathname, { scroll: false });
-
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    // Starting a request intentionally transitions the visible request state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus({ kind: "loading" });
     setLoadingMore(false);
+    setLoadMoreError(null);
 
     const timer = setTimeout(async () => {
       try {
@@ -208,8 +273,7 @@ export function SearchClient({
       clearTimeout(timer);
       controller.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, pageSize]);
+  }, [buildApiParams, pageSize]);
 
   const loadMore = useCallback(async () => {
     if (status.kind !== "ready" || loadingMore) return;
@@ -217,27 +281,28 @@ export function SearchClient({
     if (offset >= status.total) return;
 
     setLoadingMore(true);
+    setLoadMoreError(null);
     try {
       const chunk = resolvePageLimit(pageSize);
       const res = await fetch(`/api/competitions?${buildApiParams(chunk, offset)}`);
       const body = await res.json();
       if (!res.ok) {
-        setStatus({
-          kind: "error",
-          message: body.error ?? "Couldn't load more tournaments.",
-        });
+        setLoadMoreError(body.error ?? "Couldn't load more tournaments.");
         return;
       }
-      setStatus({
-        kind: "ready",
-        results: [...status.results, ...(body.results ?? [])],
-        total: body.total ?? status.total,
-      });
+      setStatus((current) =>
+        current.kind === "ready"
+          ? {
+              kind: "ready",
+              results: [...current.results, ...(body.results ?? [])],
+              total: body.total ?? current.total,
+            }
+          : current
+      );
     } catch {
-      setStatus({
-        kind: "error",
-        message: "Couldn't load more tournaments. Check the connection and try again.",
-      });
+      setLoadMoreError(
+        "Couldn't load more tournaments. Check the connection and try again."
+      );
     } finally {
       setLoadingMore(false);
     }
@@ -498,6 +563,11 @@ export function SearchClient({
                     ) : null}
                   </div>
                 </div>
+                {loadMoreError ? (
+                  <p className="mt-3 text-sm font-medium text-error" role="alert">
+                    {loadMoreError} Your current results are still available.
+                  </p>
+                ) : null}
               </>
             )}
           </div>

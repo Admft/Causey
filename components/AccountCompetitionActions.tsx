@@ -5,17 +5,28 @@ import { useState } from "react";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-export function SaveCompetitionButton({
-  competitionId,
-  initiallySaved,
-  signedIn,
-  returnPath,
-}: {
+type SaveCompetitionButtonProps = {
   competitionId: string;
   initiallySaved: boolean;
   signedIn: boolean;
   returnPath: string;
-}) {
+};
+
+export function SaveCompetitionButton(props: SaveCompetitionButtonProps) {
+  return (
+    <SaveCompetitionControl
+      key={`${props.competitionId}:${props.initiallySaved}`}
+      {...props}
+    />
+  );
+}
+
+function SaveCompetitionControl({
+  competitionId,
+  initiallySaved,
+  signedIn,
+  returnPath,
+}: SaveCompetitionButtonProps) {
   const router = useRouter();
   const [saved, setSaved] = useState(initiallySaved);
   const [pending, setPending] = useState(false);
@@ -91,17 +102,28 @@ export function SaveCompetitionButton({
   );
 }
 
-export function DifficultyRating({
-  competitionId,
-  initialScore,
-  signedIn,
-  returnPath,
-}: {
+type DifficultyRatingProps = {
   competitionId: string;
   initialScore: number | null;
   signedIn: boolean;
   returnPath: string;
-}) {
+};
+
+export function DifficultyRating(props: DifficultyRatingProps) {
+  return (
+    <DifficultyRatingControl
+      key={`${props.competitionId}:${props.initialScore ?? "none"}`}
+      {...props}
+    />
+  );
+}
+
+function DifficultyRatingControl({
+  competitionId,
+  initialScore,
+  signedIn,
+  returnPath,
+}: DifficultyRatingProps) {
   const router = useRouter();
   const [score, setScore] = useState<number | null>(initialScore);
   const [pending, setPending] = useState(false);

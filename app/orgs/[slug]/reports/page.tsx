@@ -5,7 +5,7 @@ import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PortalEmptyState } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import {
-  getDistrictSchoolRollup,
+  getDistrictParticipationReport,
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
@@ -27,14 +27,26 @@ export default async function OrganizationReportsPage({
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
 
-  const [districtRollup, attendance] = await Promise.all([
+  const [districtReportResult, attendance] = await Promise.all([
     view.isDistrictAdmin
-      ? getDistrictSchoolRollup(view.org.id)
-      : Promise.resolve([]),
+      ? getDistrictParticipationReport(view.org.id)
+      : Promise.resolve(null),
     view.org.type === "district"
       ? Promise.resolve([])
       : getOrgSeasonAttendance(view.org.id),
   ]);
+  const districtReport =
+    districtReportResult?.ok === true ? districtReportResult.data : null;
+  const districtRollup = districtReport?.schools ?? [];
+  const districtHosted = districtReport?.districtHosted ?? null;
+  const districtReportError = districtReportResult?.ok === false;
+  const hasDistrictHostedActivity = districtHosted
+    ? districtHosted.upcoming_tournaments +
+        districtHosted.invitations_pending +
+        districtHosted.going_count +
+        districtHosted.attended_this_season >
+      0
+    : false;
   const attended = attendance.filter((row) => row.status === "attended").length;
   const absent = attendance.filter((row) => row.status === "did_not_attend").length;
 
@@ -49,16 +61,24 @@ export default async function OrganizationReportsPage({
         orgType={view.org.type}
       />
       <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        <p className="text-sm font-semibold text-brand-red">Reporting</p>
+        <p className="text-sm font-semibold text-brand-red">
+          {view.org.type === "district"
+            ? "District reporting"
+            : view.org.type === "school"
+              ? "School reporting"
+              : "Reporting"}
+        </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-          {view.isDistrictAdmin ? "Participation by school" : "Season attendance"}
+          {view.isDistrictAdmin ? "District participation" : "Season attendance"}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           {view.isDistrictAdmin
-            ? "This view stays aggregate by default. It does not expose students’ private searches, saves, or browsing activity."
+            ? "School-hosted and district-hosted activity stay separate. This aggregate view does not expose students’ private searches, saves, or browsing activity."
             : "Review attendance outcomes for organization-hosted tournaments this calendar year."}
         </p>
-        {view.isDistrictAdmin && districtRollup.length ? (
+        {view.isDistrictAdmin &&
+        !districtReportError &&
+        (districtRollup.length || hasDistrictHostedActivity) ? (
           <a
             href={`/orgs/${view.org.slug}/reports/export`}
             className="mt-5 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
@@ -68,61 +88,127 @@ export default async function OrganizationReportsPage({
         ) : null}
 
         {view.isDistrictAdmin ? (
-          !districtRollup.length ? (
-            <section className="section-rule mt-8 pt-8">
+          districtReportError ? (
+            <section className="section-rule mt-8 pt-8" role="alert">
               <h2 className="font-display text-xl font-bold text-foreground">
-                Add a school before reporting
+                District reporting could not load
               </h2>
-              <p className="mt-2 text-sm text-muted">
-                District totals appear after school workspaces are connected.{" "}
+              <p className="mt-2 max-w-prose text-sm text-muted">
+                No totals or CSV were generated. Retry the report before using
+                participation numbers.{" "}
                 <Link
-                  href={`/orgs/${view.org.slug}/settings#schools`}
+                  href={`/orgs/${view.org.slug}/reports?retry=report`}
                   className="font-semibold text-brand-red hover:underline"
                 >
-                  Create a school workspace
+                  Retry district reporting
                 </Link>
                 .
               </p>
             </section>
           ) : (
-            <section className="mt-8 overflow-x-auto rounded-xl border border-line bg-surface">
-              <table className="w-full min-w-[48rem] text-left text-sm">
-                <thead className="border-b border-line bg-surface-soft text-xs text-muted-strong">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">School</th>
-                    <th className="px-4 py-3 font-semibold">Students</th>
-                    <th className="px-4 py-3 font-semibold">Upcoming</th>
-                    <th className="px-4 py-3 font-semibold">Needs RSVP</th>
-                    <th className="px-4 py-3 font-semibold">Going</th>
-                    <th className="px-4 py-3 font-semibold">Attended</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {districtRollup.map((school) => (
-                    <tr key={school.school_id}>
-                      <td className="px-4 py-3 font-semibold text-foreground">
-                        {school.school_name}
-                      </td>
-                      <td className="px-4 py-3 text-muted-strong">
-                        {school.active_students}
-                      </td>
-                      <td className="px-4 py-3 text-muted-strong">
-                        {school.upcoming_tournaments}
-                      </td>
-                      <td className="px-4 py-3 text-muted-strong">
-                        {school.invitations_pending}
-                      </td>
-                      <td className="px-4 py-3 text-muted-strong">
-                        {school.going_count}
-                      </td>
-                      <td className="px-4 py-3 text-muted-strong">
-                        {school.attended_this_season}
-                      </td>
-                    </tr>
+            <>
+              <section className="section-rule mt-8 pt-8">
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  District-hosted competitions
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm text-muted">
+                  These totals belong to the district workspace. They are not
+                  divided among school rows without a recorded school
+                  attribution.
+                </p>
+                <dl className="mt-5 grid gap-3 sm:grid-cols-4">
+                  {[
+                    {
+                      label: "Upcoming",
+                      value: districtHosted?.upcoming_tournaments ?? 0,
+                    },
+                    {
+                      label: "Needs RSVP",
+                      value: districtHosted?.invitations_pending ?? 0,
+                    },
+                    {
+                      label: "Going",
+                      value: districtHosted?.going_count ?? 0,
+                    },
+                    {
+                      label: "Attended",
+                      value: districtHosted?.attended_this_season ?? 0,
+                    },
+                  ].map((stat) => (
+                    <div key={stat.label}>
+                      <dt className="text-xs font-semibold text-muted">
+                        {stat.label}
+                      </dt>
+                      <dd className="mt-1 font-display text-xl font-bold text-foreground">
+                        {stat.value}
+                      </dd>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </section>
+                </dl>
+              </section>
+
+              {!districtRollup.length ? (
+                <section className="section-rule mt-8 pt-8">
+                  <h2 className="font-display text-xl font-bold text-foreground">
+                    Add a school for school-level reporting
+                  </h2>
+                  <p className="mt-2 text-sm text-muted">
+                    No school workspaces are connected. District-hosted totals
+                    remain separate above.{" "}
+                    <Link
+                      href={`/orgs/${view.org.slug}/settings#schools`}
+                      className="font-semibold text-brand-red hover:underline"
+                    >
+                      Create a school workspace
+                    </Link>
+                    .
+                  </p>
+                </section>
+              ) : (
+                <section className="mt-8 overflow-x-auto rounded-xl border border-line bg-surface">
+                  <table className="w-full min-w-[48rem] text-left text-sm">
+                    <caption className="sr-only">
+                      School-hosted participation totals for schools in{" "}
+                      {view.org.name}
+                    </caption>
+                    <thead className="border-b border-line bg-surface-soft text-xs text-muted-strong">
+                      <tr>
+                        <th scope="col" className="px-4 py-3 font-semibold">School</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Students</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Upcoming</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Needs RSVP</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Going</th>
+                        <th scope="col" className="px-4 py-3 font-semibold">Attended</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {districtRollup.map((school) => (
+                        <tr key={school.school_id}>
+                          <th scope="row" className="px-4 py-3 font-semibold text-foreground">
+                            {school.school_name}
+                          </th>
+                          <td className="px-4 py-3 text-muted-strong">
+                            {school.active_students}
+                          </td>
+                          <td className="px-4 py-3 text-muted-strong">
+                            {school.upcoming_tournaments}
+                          </td>
+                          <td className="px-4 py-3 text-muted-strong">
+                            {school.invitations_pending}
+                          </td>
+                          <td className="px-4 py-3 text-muted-strong">
+                            {school.going_count}
+                          </td>
+                          <td className="px-4 py-3 text-muted-strong">
+                            {school.attended_this_season}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </section>
+              )}
+            </>
           )
         ) : (
           <>

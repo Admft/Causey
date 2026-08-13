@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PortalMission } from "@/components/PortalPrimitives";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
   getAdminAuditLog,
   getAdminModerationQueue,
@@ -14,6 +16,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminOverviewPage() {
+  const admin = await getPlatformAdminUser();
+  if (!admin) redirect("/");
+
   const [overview, auditRows, moderation] = await Promise.all([
     getAdminOverview(),
     getAdminAuditLog(8),

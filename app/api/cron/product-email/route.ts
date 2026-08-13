@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 
   try {
     const queued = await enqueueProductEmails();
-    const delivery = await deliverPendingEmailOutbox(75);
+    const delivery = await deliverPendingEmailOutbox(25);
     return NextResponse.json({ ok: true, queued, delivery });
   } catch (error) {
     const message =

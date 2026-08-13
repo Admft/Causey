@@ -325,7 +325,7 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
                       <a
                         href={tournament.reg_url}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         aria-label={`Open registration for ${tournament.name} in a new tab`}
                         className="font-semibold text-muted-strong hover:text-brand-red"
                       >

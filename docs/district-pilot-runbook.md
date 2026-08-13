@@ -1,17 +1,23 @@
 # District pilot runbook
 
-This runbook is for one Causey-assisted district pilot. It assumes chess is
-the active competition surface and product email is delivered through the
-verified `mail.causey.dev` Resend integration.
+This runbook is for Causey-assisted district pilots, including two districts
+running concurrently. It assumes chess is the active competition surface and
+product email is delivered through the verified `mail.causey.dev` Resend
+integration.
 
 ## 1. Prepare the pilot environment
 
 1. Run `npm run validate:migrations`, link the intended Supabase project, and
-   inspect `supabase migration list`. Apply every versioned migration through
-   the latest file (currently
-   `0044_database_security_remediation.sql`), including each uniquely
-   numbered `0045+` migration added later. `PENDING_SCRAPE.sql` was removed
-   after integration; do not restore or apply a copy of that scratch file.
+   inspect `supabase migration list`. Migration
+   `0044_database_security_remediation.sql` is the minimum security gate:
+   do not provision either district unless the target ledger and schema effects
+   include every versioned file through `0044`. Also apply every newer
+   migration in the branch, currently through
+   `0046_district_hosted_reporting.sql` (including
+   `0045_atomic_district_school_creation.sql`). A clean filename check alone
+   does not prove the target database is current. `PENDING_SCRAPE.sql` was
+   removed after integration; do not restore or apply a copy of that scratch
+   file.
    Duplicate `0015` and `0016` versions are a historical baseline and must not
    be renamed after application. For a fresh project, apply both files in each
    duplicate group in exact filename order using a controlled SQL-editor/psql
@@ -61,6 +67,13 @@ verified `mail.causey.dev` Resend integration.
 
 Districts are platform-created. Do not create a district as a generic coach
 organization or attach students directly to the district.
+
+For two concurrent pilots, complete these steps for District A and then
+District B as separate records. Do not reuse a district record, school
+workspace, district-administrator membership, invitation, or provisioning
+batch between them. Before creating schools, open both district workspaces in
+separate tabs and confirm each workspace has a different organization ID in
+the platform operations record.
 
 ## 3. Create and delegate each school
 
@@ -123,7 +136,55 @@ At one school:
 9. Confirm enabled product-email alerts arrive once and active linked
    guardians receive student reminders only when guardian routing is enabled.
 
-## 7. Record pilot limitations
+## 7. Run the concurrent two-district isolation smoke
+
+Use non-production test accounts approved for the pilot check. Keep one
+platform-admin session, one District A administrator session, and one District
+B administrator session distinguishable. Never copy student or staff data
+between districts to make the test pass.
+
+1. As platform admin, confirm `/admin/organizations` lists District A and
+   District B as separate district rows. Expand each row and confirm its school
+   list contains only schools whose `parent_org_id` is that district.
+2. Verify District A schools from District A's bulk action, then District B
+   schools from District B's action. Never combine the selections. Confirm the
+   first action does not change any District B school. The database operation
+   must reject a mixed-district set if a stale or crafted request submits one.
+3. In the District A administrator session, create one District A school,
+   invite its school administrator, claim the invitation with the intended
+   account, transfer ownership, and activate one student. Repeat independently
+   in District B with District B accounts.
+4. Confirm the District A administrator can see only District A child schools,
+   memberships, readiness rows, and People/Roster actions. Directly requesting
+   a District B workspace or report must return not-found/forbidden behavior,
+   not a partially populated page.
+5. Repeat the previous check from the District B administrator session against
+   District A.
+6. Run one tournament invitation/RSVP/attendance workflow at one school in
+   each district. Also create one district-hosted competition in each district
+   and record distinct RSVP/attendance values. Use different test accounts in
+   each district.
+7. Open District A Reports and download its participation CSV. Confirm every
+   `School-hosted` row belongs to District A, its one `District-hosted` row has
+   a blank school and active-student value, and neither scope includes the
+   District B smoke. Confirm district-hosted activity was not added to a school
+   row. Repeat for District B. Confirm each response is private/no-store.
+8. While signed in as District A administrator, request District B's CSV URL.
+   Confirm no CSV is returned. Repeat in the opposite direction.
+9. Return to the platform-admin queue. Confirm both districts and their child
+   schools remain independently grouped and each verification review/audit
+   result names only the organization acted on.
+10. Record the target project, migration ledger through `0044` plus all newer
+    branch migrations, test-account IDs, organization IDs, timestamps, and
+    pass/fail result in the private deployment log. Do not put participant
+    names or claim tokens in that log.
+
+Stop onboarding if any school, membership, readiness row, report count, CSV
+row, verification result, or admin grouping appears under the other district.
+Preserve the IDs and timestamps for investigation; do not repair the symptom
+by moving the record manually.
+
+## 8. Record pilot limitations
 
 Tell pilot participants before onboarding:
 

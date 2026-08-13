@@ -38,6 +38,62 @@ type CompRow = {
   details: Record<string, unknown> | null;
 };
 
+type LocationEvidence = Pick<
+  CompRow,
+  "zip" | "city" | "address" | "lat" | "lng"
+>;
+
+function normalizedLocation(value: string | null): string {
+  return (value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function distanceMiles(a: LocationEvidence, b: LocationEvidence): number | null {
+  if (
+    a.lat == null ||
+    a.lng == null ||
+    b.lat == null ||
+    b.lng == null ||
+    (a.lat === 0 && a.lng === 0) ||
+    (b.lat === 0 && b.lng === 0)
+  ) {
+    return null;
+  }
+  const radians = (degrees: number) => (degrees * Math.PI) / 180;
+  const dLat = radians(b.lat - a.lat);
+  const dLng = radians(b.lng - a.lng);
+  const lat1 = radians(a.lat);
+  const lat2 = radians(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+export function duplicateLocationEvidence(
+  a: LocationEvidence,
+  b: LocationEvidence
+): "zip" | "address" | "coordinates" | "uncertain" {
+  const aZip = /^\d{5}$/.test(a.zip ?? "") && a.zip !== "00000" ? a.zip : null;
+  const bZip = /^\d{5}$/.test(b.zip ?? "") && b.zip !== "00000" ? b.zip : null;
+  if (aZip && bZip && aZip === bZip) return "zip";
+
+  const aCity = normalizedLocation(a.city);
+  const bCity = normalizedLocation(b.city);
+  if (!aCity || aCity === "unknown" || aCity !== bCity) return "uncertain";
+
+  const aAddress = normalizedLocation(a.address);
+  const bAddress = normalizedLocation(b.address);
+  if (aAddress && bAddress && aAddress === bAddress) return "address";
+
+  const miles = distanceMiles(a, b);
+  if (miles !== null && miles <= 5) return "coordinates";
+  return "uncertain";
+}
+
 function rank(row: CompRow): number {
   const src = SOURCE_PRIORITY[row.source] ?? 0;
   const publishedBoost = row.status === "published" ? 1 : 0;
@@ -237,8 +293,14 @@ export async function linkFingerprintDuplicates(
       if (group.length < 2) continue;
       const winner = group.reduce((a, b) => (rank(b) > rank(a) ? b : a));
       const losers = group.filter((r) => r.id !== winner.id);
+      const confidentLosers = losers.filter(
+        (loser) => duplicateLocationEvidence(winner, loser) !== "uncertain"
+      );
+      const uncertainLosers = losers.filter(
+        (loser) => duplicateLocationEvidence(winner, loser) === "uncertain"
+      );
 
-      const patch = mergeCompetitionFields(winner, losers);
+      const patch = mergeCompetitionFields(winner, confidentLosers);
       if (Object.keys(patch).length > 0) {
         const { error: mergeErr } = await client
           .from("competitions")
@@ -249,7 +311,32 @@ export async function linkFingerprintDuplicates(
         }
       }
 
-      for (const loser of losers) {
+      for (const loser of uncertainLosers) {
+        if (loser.source === "manual") continue;
+        const details = {
+          ...(loser.details ?? {}),
+          ingestion_duplicate_review: {
+            reason: "Fingerprint matched without ZIP or strong location evidence",
+            candidate_id: winner.id,
+            fingerprint: loser.fingerprint,
+          },
+        };
+        const { error: reviewError } = await client
+          .from("competitions")
+          .update({ status: "pending_review", details })
+          .eq("id", loser.id)
+          .neq("status", "archived");
+        if (reviewError) {
+          throw new Error(
+            `dedupe review routing failed for ${loser.id}: ${reviewError.message}`
+          );
+        }
+        console.warn(
+          `Dedupe review required: ${loser.id} and ${winner.id} share a fingerprint without strong location evidence.`
+        );
+      }
+
+      for (const loser of confidentLosers) {
         const { error: updErr } = await client
           .from("competitions")
           .update({

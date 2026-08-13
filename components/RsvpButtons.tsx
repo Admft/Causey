@@ -9,17 +9,28 @@ import type { EntrantStatus } from "@/lib/auth/orgs";
  * Two-button RSVP. Works for yourself and — when profileId is a linked
  * child — on their behalf (RLS decides what the caller may touch).
  */
-export function RsvpButtons({
-  competitionId,
-  profileId,
-  status,
-  eventSlug,
-}: {
+type RsvpButtonsProps = {
   competitionId: string;
   profileId: string;
   status: EntrantStatus;
   eventSlug?: string;
-}) {
+};
+
+export function RsvpButtons(props: RsvpButtonsProps) {
+  return (
+    <RsvpButtonState
+      key={`${props.competitionId}:${props.profileId}:${props.status}`}
+      {...props}
+    />
+  );
+}
+
+function RsvpButtonState({
+  competitionId,
+  profileId,
+  status,
+  eventSlug,
+}: RsvpButtonsProps) {
   const router = useRouter();
   const [current, setCurrent] = useState<EntrantStatus>(status);
   const [pending, setPending] = useState(false);

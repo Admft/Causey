@@ -6,9 +6,18 @@ import { AdminDistrictSchoolBulkVerify } from "@/components/AdminDistrictSchoolB
 import { AdminOrganizationForm } from "@/components/AdminOrganizationForm";
 import { AdminOrganizationReviewActions } from "@/components/AdminOrganizationReviewActions";
 import type { AdminOrganizationRow } from "@/lib/data/admin";
+import {
+  getDistrictReadinessSummary,
+  type DistrictPilotReadiness,
+  type DistrictReadResult,
+} from "@/lib/district-readiness";
 
 type Status = AdminOrganizationRow["verification_status"];
 type StatusFilter = Status | "all";
+type DistrictReadinessById = Record<
+  string,
+  DistrictReadResult<DistrictPilotReadiness>
+>;
 
 const TYPE_LABELS: Record<AdminOrganizationRow["type"], string> = {
   district: "District",
@@ -86,15 +95,23 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 function OrganizationPanel({
   org,
   schools,
+  readinessResult,
 }: {
   org: AdminOrganizationRow;
   schools: AdminOrganizationRow[];
+  readinessResult:
+    | DistrictReadResult<DistrictPilotReadiness>
+    | undefined;
 }) {
   const review = org.organization_verification_reviews[0] ?? null;
   const pendingSchools = schools.filter(
     (school) => school.verification_status === "pending"
   );
   const isDistrict = org.type === "district";
+  const readiness =
+    readinessResult?.ok === true
+      ? getDistrictReadinessSummary(readinessResult.data)
+      : null;
   const parentPending =
     org.type === "school" && org.parent?.verification_status === "pending";
 
@@ -116,6 +133,46 @@ function OrganizationPanel({
           <Fact label="Last reviewed">{formatDate(review.reviewed_at)}</Fact>
         ) : null}
       </dl>
+
+      {isDistrict ? (
+        readiness ? (
+          <div className="border-t border-line pt-4">
+            <p className="text-2xs font-semibold uppercase tracking-wide text-muted">
+              Pilot readiness
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              {readiness.readySchools} of {readiness.totalSchools}{" "}
+              {readiness.totalSchools === 1 ? "school" : "schools"} ready
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              Next: {readiness.nextAction.title}.{" "}
+              <Link
+                href={readiness.nextAction.href}
+                className="font-semibold text-brand-red hover:underline"
+              >
+                {readiness.nextAction.label}
+              </Link>
+              .
+            </p>
+          </div>
+        ) : (
+          <div className="border-t border-line pt-4" role="alert">
+            <p className="text-sm font-semibold text-foreground">
+              Pilot readiness unavailable
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              Do not treat this district as empty or ready.{" "}
+              <Link
+                href="/admin/organizations?retry=readiness"
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Retry organization readiness
+              </Link>
+              .
+            </p>
+          </div>
+        )
+      ) : null}
 
       {org.verification_status === "rejected" && review?.note ? (
         <p className="rounded-lg border border-brand-red/30 bg-accent-soft px-3 py-2 text-sm text-muted-strong">
@@ -195,8 +252,10 @@ function OrganizationPanel({
 
 export function AdminOrganizationsExplorer({
   organizations,
+  districtReadinessById,
 }: {
   organizations: AdminOrganizationRow[];
+  districtReadinessById: DistrictReadinessById;
 }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -376,6 +435,14 @@ export function AdminOrganizationsExplorer({
           {filtered.map((org) => {
             const open = expandedId === org.id;
             const schools = schoolsByDistrict.get(org.id) ?? [];
+            const readinessResult =
+              org.type === "district"
+                ? districtReadinessById[org.id]
+                : undefined;
+            const readiness =
+              readinessResult?.ok === true
+                ? getDistrictReadinessSummary(readinessResult.data)
+                : null;
             return (
               <li key={org.id}>
                 <button
@@ -399,6 +466,17 @@ export function AdminOrganizationsExplorer({
                           }`
                         : ""}
                     </span>
+                    {org.type === "district" ? (
+                      <span className="mt-1 block truncate text-xs font-semibold text-muted-strong">
+                        {readiness
+                          ? `${readiness.readySchools} of ${readiness.totalSchools} ${
+                              readiness.totalSchools === 1
+                                ? "school"
+                                : "schools"
+                            } ready · ${readiness.nextAction.title}`
+                          : "Pilot readiness unavailable · retry before operating"}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="hidden shrink-0 text-xs text-muted sm:block">
                     Added {formatDate(org.created_at)}
@@ -422,7 +500,11 @@ export function AdminOrganizationsExplorer({
                   </svg>
                 </button>
                 {open ? (
-                  <OrganizationPanel org={org} schools={schools} />
+                  <OrganizationPanel
+                    org={org}
+                    schools={schools}
+                    readinessResult={readinessResult}
+                  />
                 ) : null}
               </li>
             );

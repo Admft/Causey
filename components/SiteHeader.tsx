@@ -22,6 +22,8 @@ export function SiteHeader() {
 
     const heroBrand = document.querySelector("[data-home-hero-brand]");
     if (!heroBrand) {
+      // The observed home-hero element is an external DOM dependency.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHomeHeroBrandIsPast(true);
       return;
     }
@@ -101,7 +103,7 @@ export function SiteHeader() {
           tabIndex={showHeaderBrand ? undefined : -1}
           className={`site-header-brand ${
             showHeaderBrand ? "site-header-brand--visible" : ""
-          }`}
+          } rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-red`}
         >
           <CauseyLogo size="md" />
         </Link>

@@ -24,7 +24,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import { extractPageImage } from "./extract-page-image";
-import { fetchHtml } from "./fetch-html";
+import { fetchHtml, fetchPublicHtml } from "./fetch-html";
 import {
   normalizeRawTla,
   SCRAPER_SITE,
@@ -41,6 +41,7 @@ import {
 import {
   loadDotEnv,
   loadStagedCompetitions,
+  loadStagingMetadata,
   persistScrapeBatch,
   stageCompetitions,
   type StagedCompetition,
@@ -63,7 +64,7 @@ function cachedOrganizerFetch(url: string): Promise<string | null> {
   const request = (async () => {
     try {
       await sleep(DETAIL_DELAY_MS);
-      return await fetchHtml(url);
+      return await fetchPublicHtml(url);
     } catch {
       return null;
     }
@@ -104,11 +105,6 @@ async function enrichFromOrganizerSite(
     }
   }
 
-  // A relevant organizer image is still preferable to an empty card when the
-  // event page has no cover. This fallback never changes the registration URL.
-  detail.imageUrl ??= extractPageImage(homepageHtml, detail.organizerWebsite, {
-    allowSiteChrome: true,
-  });
 }
 
 async function loadListingPages(): Promise<RawTla[]> {
@@ -146,6 +142,7 @@ async function main() {
   // Re-upsert last successful scrape without re-fetching the web.
   if (process.env.SCRAPE_UPSERT_ONLY === "1") {
     const drafts = loadStagedCompetitions("tla-drafts.json");
+    const staging = loadStagingMetadata("tla-drafts.json");
     console.log(`Upsert-only mode: loading ${drafts.length} staged TLA rows`);
     const client = getServiceRoleClient();
     if (!client) {
@@ -155,6 +152,10 @@ async function main() {
     await persistScrapeBatch(client, drafts, "tla_scrape", {
       scrapeRunSource: "tla_scrape",
       meta: { mode: "upsert_only" },
+      completeSourceSnapshot:
+        process.env.SCRAPE_COMPLETE_SNAPSHOT === "1" &&
+        staging?.completeSourceSnapshot === true &&
+        staging.rowCount === drafts.length,
     });
     return;
   }
@@ -228,7 +229,11 @@ async function main() {
       continue;
     }
     if (row.sections.length > 0) sectionsParsed += 1;
-    drafts.push({ ...row.competition, sections: row.sections });
+    drafts.push({
+      ...row.competition,
+      external_key: detail?.sourceExternalKey ?? raw.externalKey,
+      sections: row.sections,
+    });
   }
   if (!SKIP_DETAIL) process.stdout.write("\n");
 
@@ -244,7 +249,16 @@ async function main() {
   console.log(`  ready to show (published): ${published}`);
   console.log(`  needs location review (draft): ${drafts.length - published}`);
 
-  stageCompetitions("tla-drafts.json", drafts);
+  const completeSourceSnapshot =
+    !process.env.SCRAPE_HTML_FILE &&
+    !process.env.SCRAPE_MAX_EVENTS &&
+    skippedNormalize === 0;
+  stageCompetitions("tla-drafts.json", drafts, { completeSourceSnapshot });
+
+  if (process.env.SCRAPE_STAGE_ONLY === "1") {
+    console.log("Stage-only mode — no database writes.");
+    return;
+  }
 
   if (!client) {
     const msg =
@@ -263,6 +277,9 @@ async function main() {
   await persistScrapeBatch(client, drafts, "tla_scrape", {
     scrapeRunSource: "tla_scrape",
     meta: { listing: LISTING_URL, site: SCRAPER_SITE },
+    completeSourceSnapshot:
+      completeSourceSnapshot &&
+      process.env.SCRAPE_COMPLETE_SNAPSHOT !== "0",
   });
   console.log(
     "Done. Every row has source='tla_scrape' and source_url set to its US Chess page."

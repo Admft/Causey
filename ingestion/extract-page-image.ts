@@ -25,12 +25,11 @@ function absolutize(href: string, baseUrl: string): string | null {
 
 function looksUsable(
   url: string,
-  alt?: string | null,
-  allowSiteChrome = false
+  alt?: string | null
 ): boolean {
   if (!url || url.startsWith("data:")) return false;
-  if (!allowSiteChrome && REJECT_URL_RE.test(url)) return false;
-  if (!allowSiteChrome && alt && REJECT_ALT_RE.test(alt)) return false;
+  if (REJECT_URL_RE.test(url)) return false;
+  if (alt && REJECT_ALT_RE.test(alt)) return false;
   // Tiny SVGs are almost always icons; raster covers are what we want.
   if (/\.svg(\?|#|$)/i.test(url)) return false;
   return true;
@@ -64,11 +63,9 @@ function metaContent($: ReturnType<typeof load>, selectors: string[]): string | 
  */
 export function extractPageImage(
   html: string,
-  baseUrl: string,
-  opts: { allowSiteChrome?: boolean } = {}
+  baseUrl: string
 ): string | null {
   const $ = load(html);
-  const allowSiteChrome = opts.allowSiteChrome === true;
 
   const metaCandidates = [
     metaContent($, [
@@ -82,15 +79,11 @@ export function extractPageImage(
 
   for (const raw of metaCandidates) {
     const abs = absolutize(raw, baseUrl);
-    if (abs && looksUsable(abs, null, allowSiteChrome)) return abs;
+    if (abs && looksUsable(abs)) return abs;
   }
 
-  // Event pages stay content-only. The explicit final fallback may inspect the
-  // whole site page because the user prefers a source/organizer visual to none.
   const contentImgs = $(
-    allowSiteChrome
-      ? "img"
-      : "article img, .field--name-body img, .field-name-body img, main img, .content img"
+    "article img, .field--name-body img, .field-name-body img, main img, .content img"
   ).toArray();
 
   for (const el of contentImgs) {
@@ -110,7 +103,7 @@ export function extractPageImage(
 
     const alt = img.attr("alt") ?? null;
     const abs = absolutize(src, baseUrl);
-    if (abs && looksUsable(abs, alt, allowSiteChrome)) return abs;
+    if (abs && looksUsable(abs, alt)) return abs;
   }
 
   return null;

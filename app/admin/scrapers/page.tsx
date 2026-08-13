@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AdminScraperControls } from "@/components/AdminScraperControls";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminScrapeRuns } from "@/lib/data/admin";
 import { getGitHubIngestionConfig } from "@/lib/github-ingestion";
 
@@ -9,6 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminScrapersPage() {
+  const admin = await getPlatformAdminUser();
+  if (!admin) redirect("/");
+
   const [runs, github] = await Promise.all([
     getAdminScrapeRuns(),
     Promise.resolve(getGitHubIngestionConfig()),

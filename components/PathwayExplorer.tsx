@@ -47,13 +47,8 @@ export function PathwayExplorer() {
   }, []);
 
   useEffect(() => {
-    if (!source) {
-      setWalk(null);
-      setWalkState("idle");
-      return;
-    }
+    if (!source) return;
     const controller = new AbortController();
-    setWalkState("loading");
     fetch(`/api/pathways?source=${encodeURIComponent(source)}&placement=${placement}`, {
       signal: controller.signal,
     })
@@ -86,7 +81,16 @@ export function PathwayExplorer() {
               id="pathway-source"
               className="field"
               value={source}
-              onChange={(e) => setSource(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setSource(next);
+                if (!next) {
+                  setWalk(null);
+                  setWalkState("idle");
+                } else {
+                  setWalkState("loading");
+                }
+              }}
               disabled={!options}
             >
               <option value="">
@@ -127,24 +131,32 @@ export function PathwayExplorer() {
 
         <fieldset>
           <legend className="text-xs font-semibold text-muted-strong">Your result</legend>
-          <div className="mt-1.5 flex gap-2" role="radiogroup">
+          <div className="mt-1.5 flex gap-2">
             {PLACEMENT_CHOICES.map((p) => {
               const selected = placement === p.value;
               return (
-                <button
-                  key={p.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setPlacement(p.value)}
-                  className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors ${
-                    selected
-                      ? "bg-brand-red text-white"
-                      : "border border-line bg-surface text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
-                  }`}
-                >
-                  {p.label}
-                </button>
+                <label key={p.value} className="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pathway-placement"
+                    value={p.value}
+                    checked={selected}
+                    onChange={() => {
+                      setPlacement(p.value);
+                      if (source) setWalkState("loading");
+                    }}
+                    className="peer sr-only"
+                  />
+                  <span
+                    className={`block rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-red ${
+                      selected
+                        ? "bg-brand-red text-white"
+                        : "border border-line bg-surface text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
+                    }`}
+                  >
+                    {p.label}
+                  </span>
+                </label>
               );
             })}
           </div>

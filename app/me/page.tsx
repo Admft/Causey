@@ -39,6 +39,15 @@ type TournamentPlan = {
   registrationMarked: boolean;
 };
 
+function formatTournamentMeta(competition: AccountTournament): string {
+  const location = [competition.city, competition.state]
+    .filter(Boolean)
+    .join(", ");
+  return `${formatDateRange(competition.start_date, competition.end_date)}${
+    location ? ` · ${location}` : ""
+  }`;
+}
+
 function addTournamentPlan(
   plans: Map<string, TournamentPlan>,
   competitionId: string,
@@ -416,13 +425,7 @@ export default async function MePage() {
                           {row.competition!.name}
                         </Link>
                         <span className="mt-1 block text-xs text-muted">
-                          {formatDateRange(
-                            row.competition!.start_date,
-                            row.competition!.end_date
-                          )}
-                          {row.competition!.city
-                            ? ` · ${row.competition!.city}, ${row.competition!.state}`
-                            : ""}
+                          {formatTournamentMeta(row.competition!)}
                         </span>
                       </div>
                       <RsvpButtons
@@ -451,10 +454,7 @@ export default async function MePage() {
                       key={competitionId}
                       href={`/event/${competition.slug}`}
                       title={competition.name}
-                      meta={`${formatDateRange(
-                        competition.start_date,
-                        competition.end_date
-                      )} · ${competition.city}, ${competition.state}`}
+                      meta={formatTournamentMeta(competition)}
                       trailing={
                         <span className="text-sm font-semibold text-brand-red">
                           Finish registration
@@ -476,14 +476,10 @@ export default async function MePage() {
                       key={plan.competitionId}
                       href={`/event/${plan.competition.slug}`}
                       title={plan.competition.name}
-                      meta={`${formatDateRange(
-                        plan.competition.start_date,
-                        plan.competition.end_date
-                      )}${
-                        plan.competition.city
-                          ? ` · ${plan.competition.city}, ${plan.competition.state}`
-                          : ""
-                      } · ${planStatus(plan, false)}`}
+                      meta={`${formatTournamentMeta(plan.competition)} · ${planStatus(
+                        plan,
+                        false
+                      )}`}
                     />
                   ))}
                 </ul>
@@ -504,14 +500,10 @@ export default async function MePage() {
                       key={plan.competitionId}
                       href={`/event/${plan.competition.slug}`}
                       title={plan.competition.name}
-                      meta={`${formatDateRange(
-                        plan.competition.start_date,
-                        plan.competition.end_date
-                      )}${
-                        plan.competition.city
-                          ? ` · ${plan.competition.city}, ${plan.competition.state}`
-                          : ""
-                      } · ${planStatus(plan, true)}`}
+                      meta={`${formatTournamentMeta(plan.competition)} · ${planStatus(
+                        plan,
+                        true
+                      )}`}
                     />
                   ))}
                 </ul>
@@ -573,8 +565,8 @@ export default async function MePage() {
                   const c = row.competitions as unknown as {
                     slug: string;
                     name: string;
-                    city: string;
-                    state: string;
+                    city: string | null;
+                    state: string | null;
                     start_date: string;
                     end_date: string | null;
                   } | null;
@@ -584,7 +576,7 @@ export default async function MePage() {
                       key={row.competition_id}
                       href={`/event/${c.slug}`}
                       title={c.name}
-                      meta={`${formatDateRange(c.start_date, c.end_date)} · ${c.city}, ${c.state}`}
+                      meta={formatTournamentMeta(c)}
                     />
                   );
                 })}

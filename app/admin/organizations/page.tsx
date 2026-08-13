@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AdminOrganizationsExplorer } from "@/components/AdminOrganizationsExplorer";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminOrganizations } from "@/lib/data/admin";
+import { getDistrictPilotReadiness } from "@/lib/data/district";
 
 export const metadata: Metadata = {
   title: "Admin organizations",
@@ -8,7 +11,23 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminOrganizationsPage() {
+  const admin = await getPlatformAdminUser();
+  if (!admin) redirect("/");
+
   const organizations = await getAdminOrganizations();
+  const districtReadinessById = Object.fromEntries(
+    await Promise.all(
+      organizations
+        .filter((organization) => organization.type === "district")
+        .map(
+          async (district) =>
+            [
+              district.id,
+              await getDistrictPilotReadiness(district.id),
+            ] as const
+        )
+    )
+  );
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -23,7 +42,10 @@ export default async function AdminOrganizationsPage() {
       </p>
 
       <div className="mt-8">
-        <AdminOrganizationsExplorer organizations={organizations} />
+        <AdminOrganizationsExplorer
+          organizations={organizations}
+          districtReadinessById={districtReadinessById}
+        />
       </div>
     </main>
   );

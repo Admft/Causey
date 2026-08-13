@@ -22,7 +22,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
-import { extractPageImage } from "./extract-page-image";
 import { decodeHtmlBuffer, fetchHtml } from "./fetch-html";
 import {
   CCA_LISTING_URL,
@@ -39,6 +38,7 @@ import {
 import {
   loadDotEnv,
   loadStagedCompetitions,
+  loadStagingMetadata,
   persistScrapeBatch,
   stageCompetitions,
   type StagedCompetition,
@@ -80,6 +80,7 @@ async function main() {
 
   if (process.env.SCRAPE_UPSERT_ONLY === "1") {
     const drafts = loadStagedCompetitions(STAGING_FILE);
+    const staging = loadStagingMetadata(STAGING_FILE);
     console.log(`Upsert-only mode: ${drafts.length} rows from data/staging/${STAGING_FILE}`);
     const client = getServiceRoleClient();
     if (!client) {
@@ -89,6 +90,10 @@ async function main() {
     await persistScrapeBatch(client, drafts, CCA_SCRAPER_ID, {
       scrapeRunSource: "cca_scrape",
       meta: { mode: "upsert_only" },
+      completeSourceSnapshot:
+        process.env.SCRAPE_COMPLETE_SNAPSHOT === "1" &&
+        staging?.completeSourceSnapshot === true &&
+        staging.rowCount === drafts.length,
     });
     return;
   }
@@ -104,10 +109,6 @@ async function main() {
     console.log(`Fetching ${CCA_LISTING_URL}`);
     html = await fetchHtml(CCA_LISTING_URL);
   }
-  const fallbackImage = extractPageImage(html, CCA_LISTING_URL, {
-    allowSiteChrome: true,
-  });
-
   let raws = mergeListing(html);
   // Main events before blitz so location inheritance works.
   raws.sort((a, b) => Number(a.isBlitz) - Number(b.isBlitz));
@@ -262,10 +263,11 @@ async function main() {
       continue;
     }
     if (row.sections.length > 0) sectionsParsed += 1;
-    const imageUrl = row.competition.image_url || fallbackImage;
+    const imageUrl = row.competition.image_url;
     if (imageUrl) withImage += 1;
     drafts.push({
       ...row.competition,
+      external_key: raw.externalKey,
       image_url: imageUrl,
       sections: row.sections,
     });
@@ -286,7 +288,14 @@ async function main() {
   );
   console.log(`  draft: ${drafts.filter((d) => d.status === "draft").length}`);
 
-  stageCompetitions(STAGING_FILE, drafts);
+  const completeSourceSnapshot =
+    !fixture && MAX_EVENTS === 0 && skippedNormalize === 0;
+  stageCompetitions(STAGING_FILE, drafts, { completeSourceSnapshot });
+
+  if (process.env.SCRAPE_STAGE_ONLY === "1") {
+    console.log("Stage-only mode — no database writes.");
+    return;
+  }
 
   if (!client) {
     const msg = "No Supabase configured — staging file is the output.";
@@ -301,6 +310,9 @@ async function main() {
   await persistScrapeBatch(client, drafts, CCA_SCRAPER_ID, {
     scrapeRunSource: "cca_scrape",
     meta: { listing: CCA_LISTING_URL },
+    completeSourceSnapshot:
+      completeSourceSnapshot &&
+      process.env.SCRAPE_COMPLETE_SNAPSHOT !== "0",
   });
   console.log("Done. Rows tagged source='cca_scrape' with CCA source_url.");
 }

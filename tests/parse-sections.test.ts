@@ -90,14 +90,14 @@ describe("parseEntryFeeCents", () => {
   it("finds dollar entry fees", () => {
     expect(parseEntryFeeCents("Entry fee: $10 Vision House")).toBe(1000);
     expect(parseEntryFeeCents("EF: $6 for visiting players")).toBe(600);
-    expect(parseEntryFeeCents(SOUTHERN)).toBe(12800);
+    expect(parseEntryFeeCents(SOUTHERN)).toBe(15000);
   });
 
   it("detects free events", () => {
     expect(
-      parseEntryFeeCents("completely free for CCC members. This is a great way")
-    ).toBe(0);
-    expect(parseEntryFeeCents("This is a FREE semi-casual weekly event")).toBe(0);
+      parseEntryFeeCents("completely free for CCC members. Guests pay at the door.")
+    ).toBeNull();
+    expect(parseEntryFeeCents("No entry fee for this weekly event.")).toBe(0);
   });
 
   it("returns null when fee is unknown", () => {
@@ -109,6 +109,11 @@ describe("parseEventTextExtras", () => {
   it("bundles sections + fee", () => {
     const extras = parseEventTextExtras(IRVING);
     expect(extras.sections.length).toBeGreaterThanOrEqual(2);
-    expect(extras.rated).toBe(true);
+    expect(extras.rated).toBe(false);
+  });
+
+  it("does not assume rating status without explicit evidence", () => {
+    expect(parseEventTextExtras("Five round weekend Swiss").rated).toBe(false);
+    expect(parseEventTextExtras("US Chess rated tournament").rated).toBe(true);
   });
 });

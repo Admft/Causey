@@ -23,7 +23,9 @@ export function AuthNav() {
   const configured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
-  const [email, setEmail] = useState<string | null | undefined>(undefined);
+  const [email, setEmail] = useState<string | null | undefined>(
+    configured ? undefined : null
+  );
   const [role, setRole] = useState<AccountRole | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasOrgStaffAccess, setHasOrgStaffAccess] = useState(false);
@@ -31,10 +33,7 @@ export function AuthNav() {
   const [unreadAlerts, setUnreadAlerts] = useState(0);
 
   useEffect(() => {
-    if (!configured) {
-      setEmail(null);
-      return;
-    }
+    if (!configured) return;
     const supabase = createBrowserSupabaseClient();
 
     async function loadAccess(userId: string | undefined) {

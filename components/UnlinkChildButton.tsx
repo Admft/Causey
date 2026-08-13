@@ -14,12 +14,21 @@ export function UnlinkChildButton({
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onUnlink() {
     setPending(true);
+    setError(null);
     try {
-      await revokeLink(childProfileId);
+      const result = await revokeLink(childProfileId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setConfirming(false);
       router.refresh();
+    } catch {
+      setError("Could not unlink this student. Check your connection and try again.");
     } finally {
       setPending(false);
     }
@@ -27,7 +36,7 @@ export function UnlinkChildButton({
 
   if (confirming) {
     return (
-      <span className="flex items-center gap-2 text-sm">
+      <span className="flex flex-wrap items-center gap-2 text-sm">
         <button
           type="button"
           onClick={onUnlink}
@@ -43,13 +52,21 @@ export function UnlinkChildButton({
         >
           Cancel
         </button>
+        {error ? (
+          <span className="basis-full font-medium text-brand-red" role="alert">
+            {error} {childName} remains linked.
+          </span>
+        ) : null}
       </span>
     );
   }
   return (
     <button
       type="button"
-      onClick={() => setConfirming(true)}
+      onClick={() => {
+        setError(null);
+        setConfirming(true);
+      }}
       className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
     >
       Unlink

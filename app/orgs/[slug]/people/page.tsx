@@ -194,7 +194,11 @@ export default async function OrganizationPeoplePage({
       />
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-          People
+          {isDistrict
+            ? "District staffing"
+            : view.org.type === "school"
+              ? "School staffing"
+              : "People"}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           Invites &amp; staff

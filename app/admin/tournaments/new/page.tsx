@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminOrganizations } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
@@ -14,6 +16,9 @@ export default async function AdminNewTournamentPage({
 }: {
   searchParams: Promise<{ org?: string }>;
 }) {
+  const admin = await getPlatformAdminUser();
+  if (!admin) redirect("/");
+
   const { org: selectedId } = await searchParams;
   const organizations = await getAdminOrganizations();
   const selected = organizations.find((org) => org.id === selectedId) ?? null;

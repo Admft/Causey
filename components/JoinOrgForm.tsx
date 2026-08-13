@@ -28,13 +28,18 @@ export function JoinOrgForm() {
       }
       router.push(`/orgs/${result.slug}`);
       router.refresh();
+    } catch {
+      setError("Could not join this organization. Check your connection and try again.");
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <form
+      onSubmit={onSubmit}
+      className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+    >
       <label className="flex flex-1 flex-col gap-1">
         <span className="text-xs font-semibold text-muted-strong">
           Join code from your coach
@@ -56,7 +61,10 @@ export function JoinOrgForm() {
         {pending ? "Joining…" : "Join organization"}
       </button>
       {error ? (
-        <p className="text-sm font-medium text-brand-red sm:w-full" role="alert">
+        <p
+          className="text-sm font-medium text-brand-red sm:basis-full"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}

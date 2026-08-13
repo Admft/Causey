@@ -46,6 +46,15 @@ describe("FIDE calendar parser", () => {
     expect(dates?.end).toMatch(/^\d{4}-08-28$/);
   });
 
+  it("anchors yearless FIDE dates to the requested calendar year", () => {
+    const dates = parseFideDateRange(
+      "5-7 Jun",
+      new Date("2026-08-12T12:00:00Z")
+    );
+    expect(dates?.start).toBe("2026-06-05");
+    expect(dates?.end).toBe("2026-06-07");
+  });
+
   it("parses US location into city/state", () => {
     const loc = parseFideLocation("Saint Louis, Missouri, USA");
     expect(loc.state).toBe("MO");
@@ -83,6 +92,7 @@ describe("Chess-Results parser", () => {
     );
     expect(row?.state).toBe("XX");
     expect(row?.status).toBe("draft");
+    expect(row?.rated).toBe(false);
     expect(chessResultsStandingHint(raw)).toMatch(/local|solid|major|national|international/);
   });
 });
@@ -107,5 +117,6 @@ describe("OnlineRegistration parser", () => {
     expect(row?.source).toBe("onlinereg_scrape");
     expect(row?.details.catalog_standing).toBe(onlineRegStandingHint(raw));
     expect(row?.status).toBe("draft");
+    expect(row?.rated).toBe(false);
   });
 });

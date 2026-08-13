@@ -25,7 +25,7 @@ export type SeriesMatchRule = {
  */
 export const SERIES_MATCH_RULES: SeriesMatchRule[] = [
   {
-    match: /denker/i,
+    match: /\bdenker\s+tournament\s+of\s+high\s+school\s+champions\b/i,
     state: null,
     seriesId: "00000000-0000-4000-8000-000000000101",
     label: "Denker Tournament of High School Champions",
@@ -37,13 +37,13 @@ export const SERIES_MATCH_RULES: SeriesMatchRule[] = [
     label: "Barber Tournament of K-8 Champions",
   },
   {
-    match: /rockefeller/i,
+    match: /\brockefeller\s+tournament\s+of\s+k-?5\s+champions\b/i,
     state: null,
     seriesId: "00000000-0000-4000-8000-000000000103",
     label: "Rockefeller Tournament of K-5 Champions",
   },
   {
-    match: /haring/i,
+    match: /\bharing\s+tournament\s+of\s+girls(?:'|’)?\s+state\s+champions\b/i,
     state: null,
     seriesId: "00000000-0000-4000-8000-000000000104",
     label: "Haring Tournament of Girls State Champions",
@@ -55,19 +55,19 @@ export const SERIES_MATCH_RULES: SeriesMatchRule[] = [
     label: "U.S. Junior Championship",
   },
   {
-    match: /texas\s+scholastic/i,
+    match: /\btexas\s+(?:state\s+)?scholastic\s+championships?\b/i,
     state: "TX",
     seriesId: "00000000-0000-4000-8000-000000000106",
     label: "Texas Scholastic Championship",
   },
   {
-    match: /new\s+york\s+state\s+scholastic/i,
+    match: /\bnew\s+york\s+state\s+scholastic\s+championships?\b/i,
     state: "NY",
     seriesId: "00000000-0000-4000-8000-000000000107",
     label: "New York State Scholastic Championship",
   },
   {
-    match: /calchess|california\s+.*scholastic/i,
+    match: /\b(?:calchess|california)\s+(?:state\s+)?scholastic\s+championships?\b/i,
     state: "CA",
     seriesId: "00000000-0000-4000-8000-000000000108",
     label: "CalChess State Scholastic Championship",
@@ -79,19 +79,19 @@ export const SERIES_MATCH_RULES: SeriesMatchRule[] = [
     label: "Illinois K-12 State Championship",
   },
   {
-    match: /new\s+jersey\s+state\s+scholastic/i,
+    match: /\bnew\s+jersey\s+state\s+scholastic\s+championships?\b/i,
     state: "NJ",
     seriesId: "00000000-0000-4000-8000-000000000110",
     label: "New Jersey State Scholastic Championship",
   },
   {
-    match: /north\s+texas.*(scholastic|regional)/i,
+    match: /\bnorth\s+texas\s+scholastic\s+regional\b/i,
     state: "TX",
     seriesId: "00000000-0000-4000-8000-000000000111",
     label: "North Texas Scholastic Regional",
   },
   {
-    match: /chicago\s+scholastic/i,
+    match: /\bchicago\s+scholastic\s+championship\s+series\b/i,
     state: "IL",
     seriesId: "00000000-0000-4000-8000-000000000112",
     label: "Chicago Scholastic Championship Series",

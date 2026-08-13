@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   transferOrganizationOwnership,
@@ -38,6 +39,18 @@ export function OrganizationSettingsForm({
       ["coach", "school_admin", "district_admin"].includes(member.member_role) &&
       member.member_status === "active"
   );
+  // Claimed school admin viewing before the district transfers ownership:
+  // the owner is still the district-side creator.
+  const viewerMembership = staff.find(
+    (member) => member.profile_id === viewerId
+  );
+  const awaitingDistrictHandoff =
+    org.type === "school" &&
+    Boolean(org.parent_org_id) &&
+    ownerId !== viewerId &&
+    (!org.owner_profile_id || org.owner_profile_id === org.created_by) &&
+    viewerMembership?.member_status === "active" &&
+    ["school_admin", "admin"].includes(viewerMembership.member_role);
 
   async function save(event: FormEvent) {
     event.preventDefault();
@@ -55,7 +68,11 @@ export function OrganizationSettingsForm({
         setError(result.error);
         return;
       }
-      setMessage("Organization settings saved.");
+      setMessage(
+        org.verification_status === "rejected"
+          ? "Settings saved. The record stays flagged for correction until Causey re-reviews it — confirm with your pilot contact that corrections are in."
+          : "Organization settings saved."
+      );
       router.refresh();
     } finally {
       setPending(null);
@@ -152,9 +169,25 @@ export function OrganizationSettingsForm({
           separately from the people workspace.
         </p>
         {ownerId !== viewerId ? (
-          <p className="mt-5 text-sm text-muted">
-            Only the current owner can transfer this organization.
-          </p>
+          awaitingDistrictHandoff ? (
+            <div className="mt-5">
+              <p className="text-sm text-muted">
+                Ownership is still with the district workspace. They complete
+                the handoff from this page — there is nothing to submit.
+                Staffing and roster setup can continue meanwhile.
+              </p>
+              <Link
+                href={`/orgs/${org.slug}/people`}
+                className="mt-3 inline-block text-sm font-semibold text-brand-red hover:underline"
+              >
+                Open the people workspace
+              </Link>
+            </div>
+          ) : (
+            <p className="mt-5 text-sm text-muted">
+              Only the current owner can transfer this organization.
+            </p>
+          )
         ) : eligibleOwners.length ? (
           <div className="mt-5">
             <label>
@@ -184,15 +217,25 @@ export function OrganizationSettingsForm({
             </button>
           </div>
         ) : (
-          <p className="mt-5 text-sm text-muted">
-            Invite another school or district administrator before transferring
-            ownership.
+          <p className="mt-5 max-w-prose text-sm text-muted">
+            There is no one to transfer to yet.{" "}
+            <Link
+              href={`/orgs/${org.slug}/people`}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Invite an administrator
+            </Link>{" "}
+            from the people workspace — they appear here after they claim
+            their invitation.
           </p>
         )}
       </section>
 
       {message ? (
-        <p className="rounded-xl border border-line bg-surface-soft px-4 py-3 text-sm font-medium text-foreground lg:col-span-2">
+        <p
+          className="rounded-xl border border-line bg-surface-soft px-4 py-3 text-sm font-medium text-foreground lg:col-span-2"
+          role="status"
+        >
           {message}
         </p>
       ) : null}

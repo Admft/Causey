@@ -10,6 +10,7 @@ export const CCA_SCRAPER_ID = "cca_scrape" as const;
 export const CCA_LISTING_URL = "https://www.chesstour.com/refs.html";
 
 export const RawCcaSchema = z.object({
+  externalKey: z.string().min(1),
   name: z.string().min(3),
   dateText: z.string().min(4),
   city: z.string().min(1),
@@ -177,7 +178,7 @@ export function normalizeRawCca(
     visibility: "public" as const,
     org_id: null,
     created_by: null,
-    details: {},
+    details: { cca_event_id: raw.externalKey },
     status: ready ? ("published" as const) : ("draft" as const),
   };
 

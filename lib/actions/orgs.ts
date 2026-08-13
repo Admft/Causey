@@ -8,6 +8,7 @@ import { canCreateOrg } from "@/lib/org-permissions";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
+import { actionErrorMessage } from "@/lib/actions/errors";
 
 const OrgCreateSchema = z.object({
   name: z.string().trim().min(2, "Name your organization.").max(80),
@@ -61,14 +62,23 @@ export async function createOrg(input: {
       return { ok: false, error: "Could not create the organization. Try again." };
     }
 
-    const { error: memberError } = await supabase.from("org_memberships").insert({
-      org_id: org.id,
-      profile_id: profile.id,
-      role: "coach",
-      status: "active",
-    });
-    if (memberError && memberError.code !== "23505") {
-      // Org exists and created_by still grants coach powers — not fatal.
+    const { data: membership, error: memberError } = await supabase
+      .from("org_memberships")
+      .insert({
+        org_id: org.id,
+        profile_id: profile.id,
+        role: "coach",
+        status: "active",
+      })
+      .select("profile_id")
+      .maybeSingle();
+    if (memberError || !membership) {
+      revalidatePath("/orgs");
+      return {
+        ok: false,
+        error:
+          "The organization was created, but your staff membership could not be set up. Contact support before retrying.",
+      };
     }
 
     revalidatePath("/orgs");
@@ -126,25 +136,51 @@ export async function removeMember(
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
+  const { count, error } = await supabase
     .from("org_memberships")
-    .update({ status: "removed" })
+    .update({ status: "removed" }, { count: "exact" })
     .eq("org_id", orgId)
-    .eq("profile_id", profileId);
-  if (error) return { ok: false, error: "Could not remove this member." };
+    .eq("profile_id", profileId)
+    .neq("status", "removed");
+  if (error || count !== 1) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "That member was not found or could not be removed.",
+        "You don’t have permission to remove this member."
+      ),
+    };
+  }
 
   // Drop them from the org's groups too.
-  const { data: groups } = await supabase
+  const { data: groups, error: groupsError } = await supabase
     .from("org_groups")
     .select("id")
     .eq("org_id", orgId);
+  if (groupsError) {
+    revalidatePath(`/orgs/${orgSlug}/roster`);
+    revalidatePath(`/orgs/${orgSlug}`);
+    return {
+      ok: false,
+      error: "The member was removed, but their group assignments could not be checked.",
+    };
+  }
   const groupIds = (groups ?? []).map((g) => g.id);
   if (groupIds.length) {
-    await supabase
+    const { error: cleanupError } = await supabase
       .from("org_group_members")
       .delete()
       .in("group_id", groupIds)
       .eq("profile_id", profileId);
+    if (cleanupError) {
+      revalidatePath(`/orgs/${orgSlug}/roster`);
+      revalidatePath(`/orgs/${orgSlug}`);
+      return {
+        ok: false,
+        error: "The member was removed, but some group assignments could not be cleaned up.",
+      };
+    }
   }
 
   revalidatePath(`/orgs/${orgSlug}/roster`);
@@ -157,12 +193,22 @@ export async function leaveOrg(orgId: string): Promise<ActionResult> {
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
+  const { count, error } = await supabase
     .from("org_memberships")
-    .update({ status: "removed" })
+    .update({ status: "removed" }, { count: "exact" })
     .eq("org_id", orgId)
-    .eq("profile_id", user.id);
-  if (error) return { ok: false, error: "Could not leave this organization." };
+    .eq("profile_id", user.id)
+    .eq("status", "active");
+  if (error || count !== 1) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "You are not an active member of this organization.",
+        "You don’t have permission to leave this organization."
+      ),
+    };
+  }
 
   revalidatePath("/orgs");
   return { ok: true };

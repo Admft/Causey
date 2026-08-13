@@ -66,9 +66,9 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
         {panels.map((panel) => {
           const isActive = panel.id === active;
           return (
-            <button
+            <a
               key={panel.id}
-              type="button"
+              href={`#${panel.id}`}
               onClick={() => select(panel.id)}
               aria-current={isActive ? "page" : undefined}
               className={
@@ -78,7 +78,7 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
               }
             >
               {panel.label}
-            </button>
+            </a>
           );
         })}
       </nav>
@@ -91,9 +91,9 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
           {panels.map((panel) => {
             const isActive = panel.id === active;
             return (
-              <button
+              <a
                 key={panel.id}
-                type="button"
+                href={`#${panel.id}`}
                 onClick={() => select(panel.id)}
                 aria-current={isActive ? "page" : undefined}
                 className={
@@ -103,15 +103,19 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
                 }
               >
                 {panel.label}
-              </button>
+              </a>
             );
           })}
         </div>
       </nav>
 
-      <div className="mt-8 lg:mt-0" id={current?.id} role="tabpanel">
+      <section
+        className="mt-8 lg:mt-0"
+        id={current?.id}
+        aria-label={current ? `${current.label} settings` : "Settings"}
+      >
         {current?.content}
-      </div>
+      </section>
     </div>
   );
 }

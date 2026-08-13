@@ -1,0 +1,14 @@
+{
+  "mode": "premium",
+  "other_models_usage_percent": 39,
+  "cursor_models_usage_percent": 2,
+  "threshold_switch_to_cursor": 50,
+  "threshold_cursor_until": 40,
+  "ui_model": "kimi-k3-max",
+  "backend_model": "gpt-5.6-sol-high",
+  "cursor_fallback_ui": "composer-2.5-fast",
+  "cursor_fallback_backend": "cursor-grok-4.6-high",
+  "coordinator_model": "inherit",
+  "updated_at": "2026-08-12T22:42:00-05:00",
+  "notes": "Use other models (kimi/gpt) until other_models_usage_percent >= 50. Then switch ALL agents to Cursor models until cursor_models_usage_percent >= 40. Then restore other models."
+}

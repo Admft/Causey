@@ -36,10 +36,17 @@ export const metadata: Metadata = {
 };
 
 const ORG_TYPE_LABEL: Record<string, string> = {
-  school: "School",
+  school: "School account",
   club: "Club",
   team: "Team",
-  district: "District",
+  district: "District account",
+};
+
+const ADMIN_WORKSPACE_LABEL: Record<string, string> = {
+  school: "school administration",
+  district: "district administration",
+  club: "club administration",
+  team: "team administration",
 };
 
 function formatSavedAt(value: string): string {
@@ -104,7 +111,7 @@ export default async function OrgPage({
     entrantRows,
     attendedEvents,
     roster,
-    districtReadiness,
+    districtReadinessResult,
     competitionWorkspace,
   ] =
     await Promise.all([
@@ -144,6 +151,14 @@ export default async function OrgPage({
     (org.owner_profile_id === user.id ||
       membership?.role === "admin" ||
       membership?.role === "school_admin");
+  // Claimed school admin, pre-transfer: the owner is still the district-side
+  // creator, so the handoff step belongs to the district workspace.
+  const ownershipHandoffPending =
+    org.type === "school" &&
+    Boolean(org.parent_org_id) &&
+    isDirectSchoolAdmin &&
+    (org.owner_profile_id ?? org.created_by) !== user.id &&
+    (!org.owner_profile_id || org.owner_profile_id === org.created_by);
 
   const today = new Date().toISOString().slice(0, 10);
   const activeEvents = events.filter((event) => event.status !== "archived");
@@ -185,6 +200,19 @@ export default async function OrgPage({
       };
     }
     if (needsSchoolAdminHandoff) {
+      // The People page is admin-only — never route a coach into its redirect.
+      if (!isAdmin) {
+        return {
+          title: "This school needs an administrator",
+          description:
+            "A school administrator owns the roster and day-to-day setup. Delegation is handled from the district workspace — ask your district administrator to invite one.",
+          action: { href: "/orgs", label: "Back to organizations" },
+          secondary: {
+            href: `/orgs/${org.slug}/competitions`,
+            label: "View competitions",
+          },
+        };
+      }
       return {
         title: "Delegate this school",
         description:
@@ -213,19 +241,38 @@ export default async function OrgPage({
           },
         };
       }
-      return {
-        title: "Review school staffing",
-        description:
-          "Keep administrator and coach access current before working on roster or competition tasks.",
-        action: {
-          href: `/orgs/${org.slug}/people`,
-          label: "Manage people",
-        },
-        secondary: {
-          href: `/orgs/${org.slug}/reports`,
-          label: "Review attendance",
-        },
-      };
+      if (ownershipHandoffPending) {
+        return {
+          title: "Ownership handoff is pending",
+          description:
+            "The district workspace completes the handoff from this school's settings — there is nothing to submit. Staffing and roster setup can continue meanwhile.",
+          action: {
+            href: `/orgs/${org.slug}/people`,
+            label: "Review staffing",
+          },
+          secondary: {
+            href: `/orgs/${org.slug}/settings#ownership`,
+            label: "View ownership status",
+          },
+        };
+      }
+      // Staffing leads only while the roster is empty; a provisioned school
+      // advances to the competition chain below.
+      if (!hasStudents) {
+        return {
+          title: "Review school staffing",
+          description:
+            "Keep administrator and coach access current, then bring students onto the roster.",
+          action: {
+            href: `/orgs/${org.slug}/people`,
+            label: "Manage people",
+          },
+          secondary: {
+            href: `/orgs/${org.slug}/roster#add-students`,
+            label: "Invite students",
+          },
+        };
+      }
     }
     if (freshestDraft && priorityUpcoming?.status !== "rejected") {
       return {
@@ -327,6 +374,11 @@ export default async function OrgPage({
   const otherUpcoming = priorityUpcoming
     ? upcoming.filter((e) => e.id !== priorityUpcoming.id)
     : upcoming;
+  const districtReadiness =
+    districtReadinessResult?.ok === true
+      ? districtReadinessResult.data
+      : null;
+  const districtReadinessError = districtReadinessResult?.ok === false;
   const districtAction = districtReadiness
     ? getDistrictReadinessAction(districtReadiness)
     : null;
@@ -363,14 +415,15 @@ export default async function OrgPage({
                 activeMemberCount === 1 ? "member" : "members"
               }`}
           {isAdmin
-            ? org.type === "district"
-              ? " · district administration"
-              : " · school administration"
+            ? ` · ${ADMIN_WORKSPACE_LABEL[org.type] ?? "organization administration"}`
             : canManageTournaments
               ? " · coaching workspace"
               : isCoach
                 ? " · assistant workspace"
               : ""}
+          {org.type === "school" && org.parent_org_id
+            ? " · part of a district"
+            : ""}
         </p>
 
         {isAdmin && org.verification_status === "pending" ? (
@@ -417,6 +470,25 @@ export default async function OrgPage({
           </section>
         ) : null}
 
+        {org.type === "district" && isAdmin && districtReadinessError ? (
+          <section className="section-rule mt-8 pt-8" role="alert">
+            <h2 className="font-display text-xl font-bold text-foreground">
+              School readiness could not load
+            </h2>
+            <p className="mt-2 max-w-prose text-sm text-muted">
+              Retry this workspace before adding schools or changing setup, so
+              you do not act on incomplete information.{" "}
+              <Link
+                href={`/orgs/${org.slug}?retry=readiness`}
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Retry school readiness
+              </Link>
+              .
+            </p>
+          </section>
+        ) : null}
+
         {org.type === "district" && isAdmin && districtAction ? (
           <section className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
             <div>
@@ -449,14 +521,23 @@ export default async function OrgPage({
                   href={`/orgs/${org.slug}/settings#schools`}
                   className="text-xs font-semibold text-muted-strong hover:text-brand-red"
                 >
-                  Add another school
+                  {districtReadiness?.schools.length
+                    ? "Add another school"
+                    : "Add a school"}
                 </Link>
               </div>
 
               {!districtReadiness?.schools.length ? (
                 <p className="mt-4 max-w-prose text-sm text-muted">
-                  No school workspaces yet. Create the first school, then
-                  delegate its administrator before provisioning students.
+                  No school workspaces yet.{" "}
+                  <Link
+                    href={`/orgs/${org.slug}/settings#schools`}
+                    className="font-semibold text-brand-red hover:underline"
+                  >
+                    Create the first school
+                  </Link>
+                  , then delegate its administrator before provisioning
+                  students.
                 </p>
               ) : (
                 <ul className="mt-4 divide-y divide-line border-y border-line">

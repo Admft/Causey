@@ -127,7 +127,7 @@ export function AdminScraperControls({
               <a
                 href={workflowUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="font-semibold text-brand-red hover:underline"
                 aria-label="Open the ingestion workflow in GitHub Actions (opens in a new tab)"
               >
@@ -145,7 +145,7 @@ export function AdminScraperControls({
             <a
               href={workflowUrl}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="text-sm font-semibold text-muted-strong hover:text-brand-red"
               aria-label="View all ingestion workflow runs in GitHub Actions (opens in a new tab)"
             >

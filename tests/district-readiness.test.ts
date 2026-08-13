@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   getDistrictReadinessAction,
+  getDistrictReadinessSummary,
   getDistrictSchoolReadinessStatus,
   type DistrictPilotReadiness,
   type DistrictSchoolReadiness,
@@ -96,6 +97,40 @@ describe("district pilot readiness priority", () => {
     expect(getDistrictReadinessAction(readiness(baseSchool)).stage).toBe(
       "review_reporting"
     );
+  });
+
+  it("summarizes two districts independently with their next actions", () => {
+    const districtA = getDistrictReadinessSummary({
+      districtId: "district-a",
+      districtSlug: "district-a",
+      verificationStatus: "verified",
+      schools: [
+        { ...baseSchool, id: "school-a-1", slug: "school-a-1" },
+        {
+          ...baseSchool,
+          id: "school-a-2",
+          slug: "school-a-2",
+          activeStudents: 0,
+        },
+      ],
+    });
+    const districtB = getDistrictReadinessSummary({
+      districtId: "district-b",
+      districtSlug: "district-b",
+      verificationStatus: "verified",
+      schools: [],
+    });
+
+    expect(districtA).toMatchObject({
+      totalSchools: 2,
+      readySchools: 1,
+      nextAction: { stage: "provision_students", schoolId: "school-a-2" },
+    });
+    expect(districtB).toMatchObject({
+      totalSchools: 0,
+      readySchools: 0,
+      nextAction: { stage: "create_school", schoolId: null },
+    });
   });
 
   it("returns plain per-school status and direct resolution links", () => {

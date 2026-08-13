@@ -115,7 +115,9 @@ export default async function OrgCompetitionsPage({
             <p className="text-sm font-semibold text-brand-red">
               {view.org.type === "district"
                 ? "District and school events"
-                : "Organization events"}
+                : view.org.type === "school"
+                  ? "School events"
+                  : "Organization events"}
             </p>
             <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
               Competitions

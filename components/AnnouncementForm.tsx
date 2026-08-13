@@ -75,7 +75,9 @@ export function AnnouncementForm({
           {pending ? "Publishing…" : "Publish announcement"}
         </button>
         {message ? (
-          <p className="text-sm font-medium text-foreground">{message}</p>
+          <p className="text-sm font-medium text-foreground" role="status">
+            {message}
+          </p>
         ) : null}
         {error ? (
           <p className="text-sm font-medium text-brand-red" role="alert">

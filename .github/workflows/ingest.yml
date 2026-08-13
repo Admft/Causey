@@ -80,6 +80,9 @@ jobs:
             tca_scrape) npm run scrape:tca ;;
             *) echo "::error::Unknown scraper source: $SCRAPER_SOURCE"; exit 1 ;;
           esac
+      - name: Verify purge dry-run safety
+        if: github.event_name == 'schedule' || inputs.source == 'all'
+        run: npm run verify:purge-dry-run
       - name: Purge competitions ended over a year ago
         if: github.event_name == 'schedule' || inputs.source == 'all'
         run: npm run purge:stale

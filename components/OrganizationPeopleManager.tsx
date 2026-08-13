@@ -78,6 +78,9 @@ export function OrganizationPeopleManager({
   const [message, setMessage] = useState<string | null>(null);
   const [claimPath, setClaimPath] = useState<string | null>(null);
   const [bulkClaims, setBulkClaims] = useState<BulkInviteClaimRow[]>([]);
+  const [failedRows, setFailedRows] = useState<
+    { row: number; email: string; error: string }[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -103,6 +106,7 @@ export function OrganizationPeopleManager({
     setMessage(null);
     setClaimPath(null);
     setBulkClaims([]);
+    setFailedRows([]);
     setCopied(false);
     try {
       const result = await inviteOrganizationMember({
@@ -140,6 +144,7 @@ export function OrganizationPeopleManager({
     setMessage(null);
     setClaimPath(null);
     setBulkClaims([]);
+    setFailedRows([]);
     setCopied(false);
     try {
       const result = await bulkInviteOrganizationMembers({
@@ -157,11 +162,14 @@ export function OrganizationPeopleManager({
           result.invited === 1 ? "invitation" : "invitations"
         } created${
           result.failed.length
-            ? `; ${result.failed.length} rows need correction`
+            ? `; ${result.failed.length} ${
+                result.failed.length === 1 ? "row needs" : "rows need"
+              } correction`
             : ""
         }.`
       );
       setBulkClaims(result.claims);
+      setFailedRows(result.failed);
       setCsv("");
       setFilename("");
       router.refresh();
@@ -176,6 +184,7 @@ export function OrganizationPeopleManager({
     setMessage(null);
     setClaimPath(null);
     setBulkClaims([]);
+    setFailedRows([]);
     setCopied(false);
     try {
       const result = await reissueOrganizationInvitation({
@@ -377,7 +386,29 @@ export function OrganizationPeopleManager({
               ) : null}
             </div>
           ) : null}
-          {!claimPath && !bulkClaims.length ? (
+          {failedRows.length ? (
+            <div className="mt-3">
+              <p className="text-sm font-semibold text-foreground">
+                Rows that need correction
+              </p>
+              <ul className="mt-2 max-h-48 overflow-auto divide-y divide-line border-y border-line">
+                {failedRows.map((failure) => (
+                  <li key={`${failure.row}-${failure.email}`} className="py-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      Row {failure.row}
+                      {failure.email ? ` — ${failure.email}` : ""}
+                    </p>
+                    <p className="text-xs text-muted">{failure.error}</p>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-muted">
+                Fix these rows in the CSV, then import the file again. Rows
+                that already created an invitation do not need to be resent.
+              </p>
+            </div>
+          ) : null}
+          {!claimPath && !bulkClaims.length && !failedRows.length ? (
             <p className="mt-1 text-sm text-muted">
               The invitation is recorded. Reissue it below to copy a fresh
               claim link.
@@ -483,13 +514,18 @@ export function OrganizationPeopleManager({
             )}{" "}
             After import, copy or download claim links immediately.
           </p>
-          <input
-            className="field mt-4"
-            type="file"
-            accept=".csv,text/csv"
-            onChange={loadCsv}
-            required
-          />
+          <label className="mt-4 block">
+            <span className="text-xs font-semibold text-muted-strong">
+              CSV roster file
+            </span>
+            <input
+              className="field mt-1"
+              type="file"
+              accept=".csv,text/csv"
+              onChange={loadCsv}
+              required
+            />
+          </label>
           <button
             type="submit"
             disabled={!csv || pending !== null}

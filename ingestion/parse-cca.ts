@@ -90,6 +90,12 @@ function absoluteCcaUrl(href: string): string {
   return new URL(href, CCA_LISTING_URL).toString();
 }
 
+function ccaExternalKey(detailUrl: string): string {
+  const url = new URL(detailUrl);
+  const leaf = url.pathname.split("/").pop()?.toLowerCase() ?? url.pathname;
+  return url.hash ? `${leaf}${url.hash.toLowerCase()}` : leaf;
+}
+
 /**
  * Listing cards are Word junk — pull event .htm links and scrape nearby text
  * for "Month D-D: Name, City, ST".
@@ -130,6 +136,7 @@ export function parseCcaListingHtml(html: string): RawCca[] {
     const parsedLine = parseScheduleSnippet(blob, isBlitz);
     const candidate = parsedLine
       ? {
+          externalKey: ccaExternalKey(detailUrl),
           name: parsedLine.name,
           dateText: parsedLine.dateText,
           city: parsedLine.city,
@@ -138,6 +145,7 @@ export function parseCcaListingHtml(html: string): RawCca[] {
           isBlitz,
         }
       : {
+          externalKey: ccaExternalKey(detailUrl),
           // Detail page fills these; placeholders keep Zod happy until then.
           name: isBlitz ? `CCA Blitz (${leaf})` : `CCA Event (${leaf})`,
           dateText: "January 1, 2099",
@@ -171,7 +179,7 @@ function parseScheduleSnippet(
   const dateText = `${cleanCcaText(m[1])}, ${year}`;
   let name = cleanCcaText(m[2].replace(/\bENTER NOW\b/gi, ""));
   if (isBlitz && !/blitz/i.test(name)) name = `${name} Blitz`;
-  let city = cleanCcaText(m[3].replace(/\s*\(near [^)]+\)\s*/i, ""));
+  const city = cleanCcaText(m[3].replace(/\s*\(near [^)]+\)\s*/i, ""));
   const state = stateToCode(m[4]) ?? m[4].toUpperCase();
   if (state.length !== 2) return null;
   return { name, dateText, city, state };
@@ -212,7 +220,15 @@ export function parseCcaComingEvents(
       .replace(/[^a-z0-9]+/g, "-")
       .slice(0, 50);
     const detailUrl = `${CCA_LISTING_URL}#coming-${slug}`;
-    const candidate = { name, dateText, city, state, detailUrl, isBlitz: false };
+    const candidate = {
+      externalKey: `coming:${slug}`,
+      name,
+      dateText,
+      city,
+      state,
+      detailUrl,
+      isBlitz: false,
+    };
     const parsed = RawCcaSchema.safeParse(candidate);
     if (parsed.success) rows.push(parsed.data);
   }

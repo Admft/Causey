@@ -57,6 +57,11 @@ function hasSectionFilters(filters: SearchFilters): boolean {
   );
 }
 
+/** Escape Postgres LIKE wildcards so user text is matched literally. */
+export function escapePostgrestLikePattern(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
+}
+
 export class SupabaseDataSource implements DataSource {
   constructor(private readonly requestClient?: SupabaseClient) {}
 
@@ -131,7 +136,9 @@ export class SupabaseDataSource implements DataSource {
       .eq("status", "published");
 
     if (filters.category) query = query.eq("category", filters.category);
-    if (filters.q) query = query.ilike("name", `%${filters.q}%`);
+    if (filters.q) {
+      query = query.ilike("name", `%${escapePostgrestLikePattern(filters.q)}%`);
+    }
     if (filters.state) query = query.eq("state", filters.state);
     if (filters.source) query = query.eq("source", filters.source);
     if (filters.date_from) query = query.gte("start_date", filters.date_from);

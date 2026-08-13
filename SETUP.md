@@ -62,8 +62,10 @@ These are not missing by accident; they are deliberate early constraints:
   is configured separately)
 - Self-serve district creation (platform administrators provision districts)
 
-Accounts and district workflows are live — apply migrations through `0038`
-and use `/signup`. Coaches create school/club workspaces with join codes,
+Accounts and district workflows are live — apply every versioned migration
+through the latest file (currently `0044_database_security_remediation.sql`)
+and use `/signup`. Any future `0045+` migration is part of the required sequence.
+Coaches create school/club workspaces with join codes,
 district administrators create connected schools, platform administrators
 verify organizations, and staff use expiring claim links instead of shared
 passwords. Organizers create tournament drafts, publish by audience, invite
@@ -97,6 +99,10 @@ Notes:
 
 - `npm run dev` — start the app locally
 - `npm test` — run tests
+- `npm run lint` — run the Next/React/TypeScript ESLint rules
+- `npm run typecheck` — run TypeScript without emitting files
+- `npm run validate:migrations` — reject unsafe migration filenames
+- `npm run audit:prod` — audit production dependencies at high severity
 - `npm run seed:generate` — regenerate seed files
 - `npm run seed:supabase` — load seed data into Supabase
 - `npm run scrape:tla` — scrape US Chess upcoming-tournaments into Supabase
@@ -114,18 +120,28 @@ need to be completed or connected.
 What exists already:
 
 - `supabase/migrations/0001_init.sql` through
-  `supabase/migrations/0034_bulk_district_school_verification.sql`
+  `supabase/migrations/0044_database_security_remediation.sql`
 - `lib/data/supabase.ts`
 - `scripts/seed-supabase.ts`
 
 What still needs to happen:
 
 - Create a real Supabase project.
-- Link it with the Supabase CLI and inspect `supabase migration list`.
-- Apply all SQL files through `0034`, skipping `PENDING_SCRAPE.sql`. The repo
-  currently has duplicate `0015` and `0016` numeric prefixes, so a fresh
-  project must apply those duplicate-version files in filename order through
-  the SQL editor rather than relying on `db push` to track both.
+- Run `npm run validate:migrations`, link with the Supabase CLI, and inspect
+  `supabase migration list`.
+- Apply every versioned SQL file through the latest file (currently `0044`),
+  then continue with each uniquely numbered `0045+` migration as it lands.
+- `PENDING_SCRAPE.sql` was removed after its ingestion changes were integrated
+  into numbered migrations. Do not restore or apply copies of that scratch
+  file.
+- The duplicate `0015` and `0016` prefixes are an allowlisted historical
+  baseline. Do not rename migrations that may already be applied. Supabase
+  migration history cannot distinguish two files with the same version.
+  For a fresh database, apply both files in each duplicate group in exact
+  filename order with a controlled SQL-editor/psql checklist, then record both
+  filenames in the environment's deployment log. For an existing database,
+  verify the effects and migration ledger before using `migration repair` or
+  `db push`; never mark a version applied merely to silence the CLI.
 
 Why this matters:
 
@@ -196,7 +212,28 @@ What exists already:
 
 What still needs to happen:
 
-- Run `npm run seed:supabase`
+- Treat `npm run seed:supabase` as demo/staging bootstrap by default. It
+  upserts fixed IDs and includes illustrative qualification rules and sample
+  ZIP data.
+- Before running it against production, verify the linked Supabase project and
+  obtain an explicit data-owner approval. Prefer reviewed ingestion and
+  curated production records over loading the demo seed.
+- The command does not purge unrelated rows, but matching seeded IDs are
+  updated. Take a backup and review the seed diff before any production run.
+
+### Production retention purge
+
+`npm run purge:stale` permanently removes competitions whose effective end
+date is over one year old, plus dependent qualification rules. Before enabling
+or changing the scheduled purge:
+
+1. Verify the target Supabase project and take a recoverable backup.
+2. Run `PURGE_DRY_RUN=1 npm run purge:stale` with the production credentials.
+3. Review the reported count and retention cutoff with the data owner.
+4. Run without `PURGE_DRY_RUN` only after approval.
+
+CI runs `npm run verify:purge-dry-run` to ensure the dry-run branch still exits
+before database updates or deletes. It does not replace a production dry run.
 
 Why this matters:
 
@@ -328,10 +365,11 @@ If you want the simplest summary:
 
 If someone is taking this from MVP to launch, do the work in this order:
 
-1. Stand up Supabase and apply migrations through `0034`
+1. Stand up Supabase and apply all versioned migrations through the latest
+   file (currently `0044`, plus future `0045+` files)
 2. Load full zip data (`npm run seed:zips`)
 3. Fill `.env` and switch to `DATA_SOURCE=supabase`
-4. Seed the database (`npm run seed:supabase`)
+4. Seed only approved demo/staging environments (`npm run seed:supabase`)
 5. Follow `docs/district-pilot-runbook.md` for one assisted district
 6. Verify scraper and ingestion workflow
 7. Replace seeded qualification rules with verified ones

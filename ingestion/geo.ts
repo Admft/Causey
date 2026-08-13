@@ -10,6 +10,7 @@ import { Readable } from "node:stream";
 import { execFileSync } from "node:child_process";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { stateToCode } from "./normalize";
+import { fetchResponseWithRetry } from "./fetch-html";
 
 const GEONAMES_URL = "https://download.geonames.org/export/zip/US.zip";
 const CACHE_DIR = join(process.cwd(), "data", "cache");
@@ -68,7 +69,7 @@ export async function loadCityZipIndex(opts?: {
   if (!existsSync(txtPath)) {
     if (!existsSync(zipPath)) {
       console.log(`Downloading GeoNames US postal codes for city→zip index…`);
-      const res = await fetch(GEONAMES_URL);
+      const res = await fetchResponseWithRetry(GEONAMES_URL);
       if (!res.ok || !res.body) {
         throw new Error(`GeoNames download failed: HTTP ${res.status}`);
       }

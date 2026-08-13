@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { getDistrictSchoolRollup } from "@/lib/data/district";
+import { getDistrictParticipationReport } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
 
 export const dynamic = "force-dynamic";
 
 function csvCell(value: string | number): string {
-  const text = String(value);
+  const raw = String(value);
+  const text =
+    typeof value === "string" && /^[\t\r ]*[=+\-@]/.test(raw)
+      ? `'${raw}`
+      : raw;
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
@@ -31,8 +35,22 @@ export async function GET(
     );
   }
 
-  const rows = await getDistrictSchoolRollup(view.org.id);
+  const report = await getDistrictParticipationReport(view.org.id);
+  if (!report.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "District reporting is temporarily unavailable. Retry from the Reports page.",
+      },
+      {
+        status: 503,
+        headers: { "Cache-Control": "private, no-store" },
+      }
+    );
+  }
+  const { schools, districtHosted } = report.data;
   const header = [
+    "Attribution",
     "School",
     "Active students",
     "Upcoming tournaments",
@@ -42,8 +60,20 @@ export async function GET(
   ];
   const csv = [
     header.map(csvCell).join(","),
-    ...rows.map((school) =>
+    [
+      "District-hosted",
+      "",
+      "",
+      districtHosted.upcoming_tournaments,
+      districtHosted.invitations_pending,
+      districtHosted.going_count,
+      districtHosted.attended_this_season,
+    ]
+      .map(csvCell)
+      .join(","),
+    ...schools.map((school) =>
       [
+        "School-hosted",
         school.school_name,
         school.active_students,
         school.upcoming_tournaments,

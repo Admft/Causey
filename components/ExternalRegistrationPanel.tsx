@@ -8,7 +8,32 @@ import {
   type ExternalRegistrationStatus,
 } from "@/lib/actions/external-registrations";
 
-export function ExternalRegistrationPanel({
+type ExternalRegistrationPanelProps = {
+  competitionId: string;
+  eventSlug: string;
+  registrationHost: string;
+  initialStatus: ExternalRegistrationStatus | null;
+  signedIn: boolean;
+  /** When true, drop outer section chrome — parent already titled the next step. */
+  embedded?: boolean;
+  /** Defaults to the signed-in user; parents pass a linked child. */
+  profileId?: string;
+  /** Shown when acting for someone other than "you". */
+  forLabel?: string;
+};
+
+export function ExternalRegistrationPanel(
+  props: ExternalRegistrationPanelProps
+) {
+  return (
+    <ExternalRegistrationPanelState
+      key={`${props.competitionId}:${props.profileId ?? "self"}:${props.initialStatus ?? "none"}`}
+      {...props}
+    />
+  );
+}
+
+function ExternalRegistrationPanelState({
   competitionId,
   eventSlug,
   registrationHost,
@@ -19,17 +44,7 @@ export function ExternalRegistrationPanel({
   profileId,
   /** Shown when acting for someone other than "you". */
   forLabel,
-}: {
-  competitionId: string;
-  eventSlug: string;
-  registrationHost: string;
-  initialStatus: ExternalRegistrationStatus | null;
-  signedIn: boolean;
-  /** When true, drop outer section chrome — parent already titled the next step. */
-  embedded?: boolean;
-  profileId?: string;
-  forLabel?: string;
-}) {
+}: ExternalRegistrationPanelProps) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [pending, setPending] = useState(false);
@@ -216,9 +231,6 @@ export function ExternalRegistrationPanel({
         aria-label={`Register on ${registrationHost}${
           forLabel ? ` for ${forLabel}` : ""
         }; opens in a new tab`}
-        onClick={() => {
-          if (signedIn) setStatus("opened");
-        }}
       >
         {status === "not_registered"
           ? forLabel

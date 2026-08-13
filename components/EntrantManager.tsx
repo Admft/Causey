@@ -83,17 +83,19 @@ export function EntrantManager({
     });
   }
 
+  const invitableGroups = groups.filter((group) => group.memberCount > 0);
+
   return (
     <div className="flex flex-col gap-5">
-      {groups.length ? (
+      {invitableGroups.length ? (
         <div>
           <h3 className="text-xs font-semibold text-muted-strong">Invite a group</h3>
           <div className="mt-2 flex flex-wrap gap-2">
-            {groups.map((group) => (
+            {invitableGroups.map((group) => (
               <button
                 key={group.id}
                 type="button"
-                disabled={isPending || !group.memberCount}
+                disabled={isPending}
                 onClick={() => onInviteGroup(group)}
                 className="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand-red/30 disabled:opacity-60"
               >
@@ -102,6 +104,17 @@ export function EntrantManager({
             ))}
           </div>
         </div>
+      ) : groups.length ? (
+        <p className="text-sm text-muted">
+          Your groups have no students yet.{" "}
+          <Link
+            href={rosterHref}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Open the roster
+          </Link>{" "}
+          to add students to a group.
+        </p>
       ) : null}
 
       <div>
@@ -201,13 +214,23 @@ export function RemoveEntrantButton({
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function onRemove() {
+    setError(null);
     startTransition(async () => {
-      await removeEntrant(competitionId, eventSlug, profileId);
-      setConfirming(false);
-      router.refresh();
+      try {
+        const result = await removeEntrant(competitionId, eventSlug, profileId);
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        setConfirming(false);
+        router.refresh();
+      } catch {
+        setError("Could not remove this entrant. Check your connection and try again.");
+      }
     });
   }
 
@@ -229,6 +252,11 @@ export function RemoveEntrantButton({
         >
           Cancel
         </button>
+        {error ? (
+          <span className="basis-full font-medium text-brand-red" role="alert">
+            {error} {displayName} is still on this event.
+          </span>
+        ) : null}
       </span>
     );
   }
@@ -301,7 +329,9 @@ export function AttendanceButtons({
         </button>
       </div>
       {error ? (
-        <span className="text-xs font-medium text-brand-red">{error}</span>
+        <span className="text-xs font-medium text-brand-red" role="alert">
+          {error}
+        </span>
       ) : null}
     </div>
   );

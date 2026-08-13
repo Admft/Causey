@@ -139,9 +139,11 @@ export default async function OrganizationSettingsPage({
             </div>
           ) : null}
           {view.org.verification_status === "rejected" ? (
-            <p className="mt-2 text-xs font-medium text-muted-strong">
-              Correct the organization details below, then ask a Causey
-              platform administrator to review it again.
+            <p className="mt-2 max-w-2xl text-xs font-medium text-muted-strong">
+              Correct the organization details below and save. Saving does not
+              change the review status by itself — once corrections are in,
+              your Causey pilot contact re-queues the record for platform
+              review.
             </p>
           ) : null}
         </section>
@@ -182,13 +184,20 @@ export default async function OrganizationSettingsPage({
                     >
                       {school.name}
                     </Link>
-                    <span className="text-xs text-muted">
-                      {school.verification_status === "verified"
-                        ? "Verified"
-                        : school.verification_status === "rejected"
-                          ? "Needs correction"
+                    {school.verification_status === "rejected" ? (
+                      <Link
+                        href={`/orgs/${school.slug}/settings#verification`}
+                        className="text-xs font-semibold text-brand-red hover:underline"
+                      >
+                        Needs correction — correct school details
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted">
+                        {school.verification_status === "verified"
+                          ? "Verified"
                           : "Platform review pending"}
-                    </span>
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -1,5 +1,9 @@
 import type { OrganizationVerificationStatus } from "@/lib/auth/orgs";
 
+export type DistrictReadResult<T> =
+  | { ok: true; data: T }
+  | { ok: false };
+
 export type DistrictSchoolReadiness = {
   id: string;
   name: string;
@@ -41,6 +45,12 @@ export type DistrictSchoolReadinessStatus = {
   href: string;
   actionLabel: string;
   ready: boolean;
+};
+
+export type DistrictReadinessSummary = {
+  totalSchools: number;
+  readySchools: number;
+  nextAction: DistrictReadinessAction;
 };
 
 function schoolSetupStatus(
@@ -270,5 +280,18 @@ export function getDistrictReadinessAction(
     href: `/orgs/${readiness.districtSlug}/reports`,
     label: "Review district reporting",
     schoolId: null,
+  };
+}
+
+export function getDistrictReadinessSummary(
+  readiness: DistrictPilotReadiness
+): DistrictReadinessSummary {
+  return {
+    totalSchools: readiness.schools.length,
+    readySchools: readiness.schools.filter(
+      (school) =>
+        getDistrictSchoolReadinessStatus(school, readiness.districtSlug).ready
+    ).length,
+    nextAction: getDistrictReadinessAction(readiness),
   };
 }

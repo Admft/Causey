@@ -114,10 +114,11 @@ export default async function RosterPage({
         tab="roster"
         showRoster
         showAdmin={view.isAdmin}
+        orgType={org.type}
       />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-          Roster
+          {org.type === "school" ? "School roster" : "Roster"}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           {org.name}
@@ -162,9 +163,11 @@ export default async function RosterPage({
           </div>
           {!students.length ? (
             <p className="mt-3 text-sm text-muted">
-              {org.join_code
+              {canOperate && org.join_code
                 ? "No students yet. Copy the join link above and send it to families."
-                : "No students have joined yet."}
+                : canOperate
+                  ? "No students have joined yet."
+                  : "No students have joined yet. A coach or administrator shares the join link when it is ready."}
             </p>
           ) : (
             <ul className="mt-4 divide-y divide-line border-y border-line">

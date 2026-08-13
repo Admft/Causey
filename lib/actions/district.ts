@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
-import { createInAppNotifications } from "@/lib/actions/notifications";
+import { actionErrorMessage } from "@/lib/actions/errors";
+import { createInAppNotifications } from "@/lib/actions/in-app-notifications";
 import type { OrgMemberRole } from "@/lib/auth/orgs";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
@@ -13,12 +14,6 @@ import {
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-const StaffRoleSchema = z.enum([
-  "assistant_coach",
-  "coach",
-  "school_admin",
-  "district_admin",
-]);
 const InvitationRoleSchema = z.enum([
   "student",
   "assistant_coach",
@@ -86,10 +81,22 @@ export async function createDistrictSchool(input: {
   const user = await currentUserOrError();
   if (!user.ok) return user;
   const supabase = await createServerSupabaseClient();
-  const { data: allowed } = await supabase.rpc("is_district_admin", {
-    p_district_id: parsed.data.districtId,
-    p_profile_id: user.id,
-  });
+  const { data: allowed, error: permissionError } = await supabase.rpc(
+    "is_district_admin",
+    {
+      p_district_id: parsed.data.districtId,
+      p_profile_id: user.id,
+    }
+  );
+  if (permissionError) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        permissionError,
+        "Could not verify district administrator access."
+      ),
+    };
+  }
   if (allowed !== true) {
     return { ok: false, error: "District administrator access required." };
   }
@@ -97,34 +104,42 @@ export async function createDistrictSchool(input: {
   const base = slugifyName(parsed.data.name);
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     const slug = attempt === 1 ? base : withSlugSuffix(base, attempt);
-    const { data: school, error } = await supabase
-      .from("organizations")
-      .insert({
-        name: parsed.data.name,
-        slug,
-        type: "school",
-        state: parsed.data.state,
-        parent_org_id: parsed.data.districtId,
-        created_by: user.id,
-        owner_profile_id: user.id,
-        verification_status: "pending",
-      })
-      .select("id, slug")
-      .single();
+    const { data, error } = await supabase.rpc("create_district_school", {
+      p_district_id: parsed.data.districtId,
+      p_name: parsed.data.name,
+      p_slug: slug,
+      p_state: parsed.data.state,
+    });
     if (error) {
       if (error.code === "23505") continue;
-      return { ok: false, error: "Could not create the school. Try again." };
+      if (
+        error.code === "42501" ||
+        error.message.includes("district_admin_required")
+      ) {
+        return {
+          ok: false,
+          error: "District administrator access required.",
+        };
+      }
+      return {
+        ok: false,
+        error: actionErrorMessage(
+          error,
+          "Could not create the school. Try again."
+        ),
+      };
     }
 
-    await supabase.from("org_memberships").upsert({
-      org_id: school.id,
-      profile_id: user.id,
-      role: "school_admin",
-      status: "active",
-    });
+    const school = data?.[0] as { school_slug?: string } | undefined;
+    if (!school?.school_slug) {
+      return {
+        ok: false,
+        error: "Could not confirm the new school. Refresh before retrying.",
+      };
+    }
     revalidatePath(`/orgs/${parsed.data.districtSlug}`);
     revalidatePath("/orgs");
-    return { ok: true, slug: school.slug };
+    return { ok: true, slug: school.school_slug };
   }
   return { ok: false, error: "That school name is already in use." };
 }
@@ -142,21 +157,45 @@ export async function updateOrganizationSettings(input: {
   const user = await currentUserOrError();
   if (!user.ok) return user;
   const supabase = await createServerSupabaseClient();
-  const { data: allowed } = await supabase.rpc("can_administer_org", {
-    p_org_id: parsed.data.orgId,
-    p_profile_id: user.id,
-  });
+  const { data: allowed, error: permissionError } = await supabase.rpc(
+    "can_administer_org",
+    {
+      p_org_id: parsed.data.orgId,
+      p_profile_id: user.id,
+    }
+  );
+  if (permissionError) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        permissionError,
+        "Could not verify organization administrator access."
+      ),
+    };
+  }
   if (allowed !== true) {
     return { ok: false, error: "Organization administrator access required." };
   }
-  const { error } = await supabase
+  const { count, error } = await supabase
     .from("organizations")
-    .update({
-      name: parsed.data.name,
-      state: parsed.data.state,
-    })
+    .update(
+      {
+        name: parsed.data.name,
+        state: parsed.data.state,
+      },
+      { count: "exact" }
+    )
     .eq("id", parsed.data.orgId);
-  if (error) return { ok: false, error: "Could not save organization settings." };
+  if (error || count !== 1) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "The organization was not found or its settings could not be saved.",
+        "You don’t have permission to change these organization settings."
+      ),
+    };
+  }
   revalidatePath(`/orgs/${parsed.data.orgSlug}`);
   revalidatePath(`/orgs/${parsed.data.orgSlug}/settings`);
   revalidatePath("/orgs");
@@ -456,10 +495,22 @@ export async function bulkInviteOrganizationMembers(input: {
     } else failed.push({ row: index + 1, email, error: result.error });
   }
 
-  await supabase
+  const { count: batchUpdateCount, error: batchUpdateError } = await supabase
     .from("provisioning_batches")
-    .update({ invited_rows: invited, failed_rows: failed.length })
+    .update(
+      { invited_rows: invited, failed_rows: failed.length },
+      { count: "exact" }
+    )
     .eq("id", batch.id);
+  if (batchUpdateError || batchUpdateCount !== 1) {
+    revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
+    return {
+      ok: false,
+      error: `${invited} ${
+        invited === 1 ? "invitation was" : "invitations were"
+      } created, but the import summary could not be saved. Contact support before retrying.`,
+    };
+  }
   revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
   return { ok: true, invited, failed, claims };
 }
@@ -575,42 +626,23 @@ export async function publishOrganizationAnnouncement(input: {
   if (!profile) return { ok: false, error: "Sign in to continue." };
   const supabase = await createServerSupabaseClient();
 
-  // #region agent log
-  const { debugAgentLog, debugOperatorPermissions } = await import(
-    "@/lib/debug/operator-permissions"
-  );
-  const perms = await debugOperatorPermissions(
-    supabase,
-    profile.id,
-    parsed.data.orgId
-  );
-  debugAgentLog({
-    hypothesisId: "A",
-    location: "lib/actions/district.ts:publishOrganizationAnnouncement",
-    message: "announcement publish permission snapshot",
-    data: {
-      orgSlug: parsed.data.orgSlug,
-      ...perms,
-    },
-  });
-  // #endregion
-
-  const { data: canOperate } = await supabase.rpc(
+  const { data: canOperate, error: permissionError } = await supabase.rpc(
     "can_operate_org_competitions",
     {
       p_org_id: parsed.data.orgId,
       p_profile_id: profile.id,
     }
   );
+  if (permissionError) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        permissionError,
+        "Could not verify announcement access."
+      ),
+    };
+  }
   if (canOperate !== true) {
-    // #region agent log
-    debugAgentLog({
-      hypothesisId: "A",
-      location: "lib/actions/district.ts:publishOrganizationAnnouncement:denied",
-      message: "announcement blocked by can_operate precheck",
-      data: { canOperate },
-    });
-    // #endregion
     return {
       ok: false,
       error:
@@ -629,71 +661,34 @@ export async function publishOrganizationAnnouncement(input: {
     .select("id")
     .maybeSingle();
   if (error || !announcement?.id) {
-    // #region agent log
-    debugAgentLog({
-      hypothesisId:
-        error?.code === "42P01" ||
-        (error?.message ?? "").includes("audit_events")
-          ? "F"
-          : "A",
-      location: "lib/actions/district.ts:publishOrganizationAnnouncement:insert",
-      message: "announcement insert failed",
-      data: {
-        code: error?.code ?? null,
-        err: error?.message ?? null,
-        hasRow: Boolean(announcement?.id),
-        ...perms,
-      },
-    });
-    // #endregion
-    console.error("Organization announcement publish failed:", {
-      code: error?.code,
-      message: error?.message,
-    });
-    const detail = (error?.message ?? "").toLowerCase();
-    if (
-      detail.includes("row-level security") ||
-      detail.includes("policy") ||
-      detail.includes("42501")
-    ) {
-      return {
-        ok: false,
-        error:
-          "You don’t have permission to publish announcements for this organization.",
-      };
-    }
-    if (
-      error?.code === "42P01" ||
-      detail.includes("does not exist")
-    ) {
-      return {
-        ok: false,
-        error:
-          "Could not publish the announcement because a required database table is missing. Apply pending migrations (including audit_events from 0016).",
-      };
-    }
-    return { ok: false, error: "Could not publish the announcement. Try again." };
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "Could not publish the announcement. Try again.",
+        "You don’t have permission to publish announcements for this organization."
+      ),
+    };
   }
 
-  // #region agent log
-  debugAgentLog({
-    hypothesisId: "A",
-    location: "lib/actions/district.ts:publishOrganizationAnnouncement:ok",
-    message: "announcement insert succeeded",
-    data: { announcementId: announcement.id, ...perms },
-  });
-  // #endregion
-
-  const { data: members } = await supabase
+  const { data: members, error: membersError } = await supabase
     .from("org_memberships")
     .select("profile_id")
     .eq("org_id", parsed.data.orgId)
     .eq("status", "active");
+  if (membersError) {
+    revalidatePath(`/orgs/${parsed.data.orgSlug}`);
+    return {
+      ok: false,
+      error:
+        "The announcement was published, but recipients could not be loaded for in-app updates.",
+    };
+  }
   const recipients = (members ?? [])
     .map((row) => row.profile_id as string)
     .filter((id) => id !== profile.id);
   if (recipients.length) {
-    await createInAppNotifications(
+    const notifications = await createInAppNotifications(
       recipients.map((recipientId) => ({
         recipientId,
         kind: "announcement" as const,
@@ -705,6 +700,18 @@ export async function publishOrganizationAnnouncement(input: {
         dedupeKey: `announcement:${announcement.id}:${recipientId}`,
       }))
     );
+    if (notifications.failures.length) {
+      revalidatePath(`/orgs/${parsed.data.orgSlug}`);
+      revalidatePath("/me/notifications");
+      return {
+        ok: false,
+        error: `The announcement was published, but ${notifications.failures.length} ${
+          notifications.failures.length === 1
+            ? "recipient update could"
+            : "recipient updates could"
+        } not be created.`,
+      };
+    }
   }
 
   revalidatePath(`/orgs/${parsed.data.orgSlug}`);
@@ -759,16 +766,56 @@ export async function markEntrantAttendance(input: {
   const user = await currentUserOrError();
   if (!user.ok) return user;
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
+  const [managementCheck, entrantCheck] = await Promise.all([
+    supabase.rpc("can_manage_competition", {
+      p_competition_id: parsed.data.competitionId,
+      p_profile_id: user.id,
+    }),
+    supabase.rpc("can_invite_to_competition", {
+      p_competition_id: parsed.data.competitionId,
+      p_entrant_id: parsed.data.profileId,
+      p_inviter_id: user.id,
+    }),
+  ]);
+  const canManage = managementCheck.data === true || entrantCheck.data === true;
+  if (!canManage && managementCheck.error && entrantCheck.error) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        managementCheck.error,
+        "Could not verify attendance management access."
+      ),
+    };
+  }
+  if (!canManage) {
+    return {
+      ok: false,
+      error: "Only competition staff can record attendance.",
+    };
+  }
+
+  const { count, error } = await supabase
     .from("competition_entrants")
-    .update({
-      status: parsed.data.status,
-      attendance_marked_by: user.id,
-      attendance_marked_at: new Date().toISOString(),
-    })
+    .update(
+      {
+        status: parsed.data.status,
+        attendance_marked_by: user.id,
+        attendance_marked_at: new Date().toISOString(),
+      },
+      { count: "exact" }
+    )
     .eq("competition_id", parsed.data.competitionId)
     .eq("profile_id", parsed.data.profileId);
-  if (error) return { ok: false, error: "Could not save attendance." };
+  if (error || count !== 1) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "That entrant was not found or attendance could not be saved.",
+        "You don’t have permission to record attendance for this entrant."
+      ),
+    };
+  }
   revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
   return { ok: true };
 }

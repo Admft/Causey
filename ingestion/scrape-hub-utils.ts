@@ -10,6 +10,7 @@ import { decodeHtmlBuffer, fetchHtml } from "./fetch-html";
 import {
   loadDotEnv,
   loadStagedCompetitions,
+  loadStagingMetadata,
   persistScrapeBatch,
   stageCompetitions,
   type StagedCompetition,
@@ -57,8 +58,18 @@ export async function upsertOrExit(
   stagingFile: string,
   meta: Record<string, unknown>
 ) {
+  const parsedCount = typeof meta.parsed === "number" ? meta.parsed : drafts.length;
+  const completeSourceSnapshot =
+    !process.env.SCRAPE_HTML_FILE &&
+    !process.env.SCRAPE_MAX_EVENTS &&
+    parsedCount === drafts.length;
   console.log(`Staging ${drafts.length} rows → data/staging/${stagingFile}`);
-  stageCompetitions(stagingFile, drafts);
+  stageCompetitions(stagingFile, drafts, { completeSourceSnapshot });
+
+  if (process.env.SCRAPE_STAGE_ONLY === "1") {
+    console.log("Stage-only mode — no database writes.");
+    return;
+  }
 
   const client = getServiceRoleClient();
   if (!client) {
@@ -69,6 +80,9 @@ export async function upsertOrExit(
     await persistScrapeBatch(client, drafts, source, {
       scrapeRunSource: asScrapeRunSource(source),
       meta,
+      completeSourceSnapshot:
+        completeSourceSnapshot &&
+        process.env.SCRAPE_COMPLETE_SNAPSHOT !== "0",
     });
   } catch (err) {
     // Staging already succeeded — common when local DB lags migrations.
@@ -88,6 +102,7 @@ export async function runUpsertOnly(
   source: Competition["source"]
 ) {
   const drafts = loadStagedCompetitions(stagingFile);
+  const staging = loadStagingMetadata(stagingFile);
   console.log(`Upsert-only mode: ${drafts.length} rows from data/staging/${stagingFile}`);
   const client = getServiceRoleClient();
   if (!client) {
@@ -97,6 +112,10 @@ export async function runUpsertOnly(
   await persistScrapeBatch(client, drafts, source, {
     scrapeRunSource: asScrapeRunSource(source),
     meta: { mode: "upsert_only" },
+    completeSourceSnapshot:
+      process.env.SCRAPE_COMPLETE_SNAPSHOT === "1" &&
+      staging?.completeSourceSnapshot === true &&
+      staging.rowCount === drafts.length,
   });
 }
 

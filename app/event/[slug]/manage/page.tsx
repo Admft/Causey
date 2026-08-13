@@ -103,6 +103,7 @@ export default async function ManageEventPage({
     name: string;
     showRoster: boolean;
     showAdmin: boolean;
+    orgType: "school" | "district" | "club" | "team";
   } | null = null;
   let moderationNote: string | null = null;
   const preferredOrgId =
@@ -135,6 +136,7 @@ export default async function ManageEventPage({
           name: view.org.name,
           showRoster: view.isCoach && view.org.type !== "district",
           showAdmin: view.isAdmin,
+          orgType: view.org.type,
         };
       }
     }
@@ -309,6 +311,7 @@ export default async function ManageEventPage({
           tab={null}
           showRoster={orgShell.showRoster}
           showAdmin={orgShell.showAdmin}
+          orgType={orgShell.orgType}
         />
       ) : null}
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">

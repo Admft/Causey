@@ -15,6 +15,7 @@ export function HouseholdRequestActions({
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingUnlink, setConfirmingUnlink] = useState(false);
 
   async function respond(accept: boolean) {
     setError(null);
@@ -25,7 +26,10 @@ export function HouseholdRequestActions({
         setError(result.error);
         return;
       }
+      setConfirmingUnlink(false);
       router.refresh();
+    } catch {
+      setError("Could not update this family link. Check your connection and try again.");
     } finally {
       setPending(false);
     }
@@ -34,14 +38,38 @@ export function HouseholdRequestActions({
   return (
     <div className="flex flex-col items-end gap-1">
       {linked ? (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => respond(false)}
-          className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
-        >
-          Unlink
-        </button>
+        confirmingUnlink ? (
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => respond(false)}
+              className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+            >
+              {pending ? "Unlinking…" : "Yes, unlink parent"}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setConfirmingUnlink(false)}
+              className="text-sm text-muted-strong hover:text-foreground disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              setError(null);
+              setConfirmingUnlink(true);
+            }}
+            className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+          >
+            Unlink
+          </button>
+        )
       ) : (
         <div className="flex items-center gap-2">
           <button

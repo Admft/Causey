@@ -81,7 +81,8 @@ export function normalizeRawOnlineReg(
     reg_deadline: null,
     reg_url: raw.regUrl,
     entry_fee_cents: null,
-    rated: true,
+    // Registration hub presence does not prove rating status.
+    rated: false,
     rating_system: "uschess",
     series_id: null,
     source: ONLINEREG_SCRAPER_ID,
@@ -99,6 +100,7 @@ export function normalizeRawOnlineReg(
       entry_count: raw.entryCount,
       onlinereg_tid: raw.tid,
       raw_name: raw.name,
+      rated_status: "unknown",
       ...(opts.geoPrecision ? { geo_precision: opts.geoPrecision } : {}),
     },
     interest_count: 0,

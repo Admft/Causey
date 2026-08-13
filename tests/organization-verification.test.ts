@@ -9,8 +9,11 @@ const migration = readFileSync(
   ),
   "utf8"
 );
-const districtActions = readFileSync(
-  resolve(process.cwd(), "lib/actions/district.ts"),
+const schoolCreationMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/0045_atomic_district_school_creation.sql"
+  ),
   "utf8"
 );
 
@@ -56,7 +59,9 @@ describe("organization verification governance", () => {
   });
 
   it("leaves district-created schools pending for platform review", () => {
-    expect(districtActions).toContain('verification_status: "pending"');
-    expect(districtActions).not.toContain('verification_status: "verified"');
+    expect(schoolCreationMigration).toContain("verification_status");
+    expect(schoolCreationMigration).toContain(
+      "'school',\n    normalized_state,\n    p_district_id,\n    actor,\n    actor,\n    'pending'"
+    );
   });
 });

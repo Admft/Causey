@@ -26,6 +26,7 @@ export function PublishTournamentPanel({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const publicReview = audience === "public";
 
   async function onPublish() {
@@ -37,6 +38,7 @@ export function PublishTournamentPanel({
         setError(result.error);
         return;
       }
+      setConfirming(false);
       if (result.status === "pending_review") {
         if (orgSlug) {
           router.push(
@@ -55,7 +57,10 @@ export function PublishTournamentPanel({
   }
 
   return (
-    <div className="rounded-2xl border border-brand-red/30 bg-accent-soft p-5">
+    <div
+      className="rounded-2xl border border-brand-red/30 bg-accent-soft p-5"
+      role={submitted ? "status" : undefined}
+    >
       <h2 className="text-base font-semibold text-foreground">
         {submitted
           ? "Submitted for platform review"
@@ -80,20 +85,54 @@ export function PublishTournamentPanel({
               Edit details
             </Link>
           </p>
-          <button
-            type="button"
-            onClick={onPublish}
-            disabled={pending}
-            className="cta-enabled mt-4 disabled:opacity-60"
-          >
-            {pending
-              ? publicReview
-                ? "Submitting…"
-                : "Publishing…"
-              : publicReview
-                ? "Submit for platform review"
-                : "Publish to members"}
-          </button>
+          {confirming ? (
+            <div className="mt-4 rounded-xl border border-brand-red/25 bg-white/70 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                {publicReview
+                  ? "Submit this listing for platform review?"
+                  : "Publish this competition to members?"}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                This uses the details and audience shown above. You can cancel
+                and edit them before continuing.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onPublish}
+                  disabled={pending}
+                  className="cta-enabled disabled:opacity-60"
+                >
+                  {pending
+                    ? publicReview
+                      ? "Submitting…"
+                      : "Publishing…"
+                    : publicReview
+                      ? "Yes, submit for review"
+                      : "Yes, publish to members"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  disabled={pending}
+                  className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setConfirming(true);
+              }}
+              className="cta-enabled mt-4"
+            >
+              {publicReview ? "Review submission" : "Review publication"}
+            </button>
+          )}
         </>
       ) : null}
       {error ? (

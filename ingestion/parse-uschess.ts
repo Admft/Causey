@@ -10,6 +10,7 @@ import {
   RawTlaSchema,
   SCRAPER_SITE,
   stateToCode,
+  tlaExternalKey,
   type DetailEnrichment,
   type RawTla,
 } from "./normalize";
@@ -60,6 +61,7 @@ export function parseListingHtml(html: string, baseUrl = LISTING_URL): RawTla[] 
 
     const detailUrl = href.startsWith("http") ? href : new URL(href, baseUrl).toString();
     const candidate = {
+      externalKey: tlaExternalKey(detailUrl),
       name,
       dateText,
       city: loc.city,
@@ -183,6 +185,10 @@ export function findOrganizerEventUrlInSitemap(
 
 export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichment {
   const $ = load(html);
+  const nodeId =
+    $("[data-history-node-id]").first().attr("data-history-node-id")?.match(/^\d+$/)?.[0] ??
+    html.match(/"currentPath"\s*:\s*"node\/(\d+)"/i)?.[1] ??
+    null;
 
   const venueName =
     $(".views-field-field-event-location-name .field-content")
@@ -236,6 +242,7 @@ export function parseDetailHtml(html: string, pageUrl?: string): DetailEnrichmen
     null;
 
   return {
+    sourceExternalKey: nodeId ? `uschess-node:${nodeId}` : null,
     venueName,
     address,
     city,

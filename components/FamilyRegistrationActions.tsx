@@ -53,7 +53,7 @@ export function FamilyRegistrationActions({
 
   if (done) {
     return (
-      <p className="text-sm font-semibold text-muted-strong" aria-live="polite">
+      <p className="text-sm font-semibold text-muted-strong" role="status">
         Marked complete for {childName}
       </p>
     );

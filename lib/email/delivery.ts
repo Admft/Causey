@@ -24,6 +24,8 @@ type EmailOutboxRow = {
   attempts: number;
 };
 
+const DELIVERY_CONCURRENCY = 5;
+
 const OrganizationInvitationPayload = z.object({
   claim_token: z.string().regex(/^[a-f0-9]{64}$/i),
   org_id: z.string().uuid(),
@@ -112,15 +114,38 @@ async function recordNotificationDelivery(
     : undefined;
   if (!notificationId) return;
   const service = getServiceRoleClient();
-  if (!service) return;
-  await service
+  if (!service) throw new Error("Supabase service role is not configured.");
+  const { data, error } = await service
     .from("notifications")
     .update(
       errorMessage
         ? { email_error: errorMessage.slice(0, 500) }
         : { emailed_at: new Date().toISOString(), email_error: null }
     )
-    .eq("id", notificationId);
+    .eq("id", notificationId)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) {
+    throw new Error("Could not record notification email delivery.");
+  }
+}
+
+async function updateClaimedOutboxRow(
+  rowId: string,
+  values: Record<string, unknown>
+) {
+  const service = getServiceRoleClient();
+  if (!service) throw new Error("Supabase service role is not configured.");
+  const { data, error } = await service
+    .from("email_outbox")
+    .update(values)
+    .eq("id", rowId)
+    .eq("status", "sending")
+    .select("id")
+    .maybeSingle();
+  if (error || !data) {
+    throw new Error("Could not finalize a claimed email outbox row.");
+  }
 }
 
 export async function deliverPendingEmailOutbox(
@@ -147,7 +172,7 @@ export async function deliverPendingEmailOutbox(
   let sent = 0;
   let failed = 0;
 
-  for (const row of rows) {
+  async function deliverRow(row: EmailOutboxRow): Promise<"sent" | "failed"> {
     try {
       const message = await messageForOutboxRow(row);
       const rendered = renderProductEmail(message);
@@ -166,33 +191,57 @@ export async function deliverPendingEmailOutbox(
 
       if (sendError) throw new Error(sendError.message);
 
-      await service
-        .from("email_outbox")
-        .update({
-          status: "sent",
-          sent_at: new Date().toISOString(),
-          locked_at: null,
-          last_error: null,
-          provider_message_id: result?.id ?? null,
-        })
-        .eq("id", row.id);
-      await recordNotificationDelivery(row);
-      sent += 1;
+      await updateClaimedOutboxRow(row.id, {
+        status: "sent",
+        sent_at: new Date().toISOString(),
+        locked_at: null,
+        last_error: null,
+        provider_message_id: result?.id ?? null,
+      });
+      try {
+        await recordNotificationDelivery(row);
+      } catch (notificationError) {
+        console.error("Notification email receipt update failed:", {
+          outboxId: row.id,
+          message:
+            notificationError instanceof Error
+              ? notificationError.message
+              : "Unknown receipt update failure.",
+        });
+      }
+      return "sent";
     } catch (sendError) {
       const message =
         sendError instanceof Error ? sendError.message : "Email delivery failed.";
       const retryMinutes = Math.min(60, 2 ** Math.max(1, row.attempts) * 5);
-      await service
-        .from("email_outbox")
-        .update({
-          status: "failed",
-          locked_at: null,
-          last_error: message.slice(0, 500),
-          send_after: new Date(Date.now() + retryMinutes * 60_000).toISOString(),
-        })
-        .eq("id", row.id);
-      await recordNotificationDelivery(row, message);
-      failed += 1;
+      await updateClaimedOutboxRow(row.id, {
+        status: "failed",
+        locked_at: null,
+        last_error: message.slice(0, 500),
+        send_after: new Date(Date.now() + retryMinutes * 60_000).toISOString(),
+      });
+      try {
+        await recordNotificationDelivery(row, message);
+      } catch (notificationError) {
+        console.error("Notification email failure receipt update failed:", {
+          outboxId: row.id,
+          message:
+            notificationError instanceof Error
+              ? notificationError.message
+              : "Unknown receipt update failure.",
+        });
+      }
+      return "failed";
+    }
+  }
+
+  for (let start = 0; start < rows.length; start += DELIVERY_CONCURRENCY) {
+    const outcomes = await Promise.all(
+      rows.slice(start, start + DELIVERY_CONCURRENCY).map(deliverRow)
+    );
+    for (const outcome of outcomes) {
+      if (outcome === "sent") sent += 1;
+      else failed += 1;
     }
   }
 

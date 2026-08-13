@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AdminTournamentBulkList } from "@/components/AdminTournamentBulkList";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
   getAdminTournamentCount,
   getAdminTournaments,
@@ -21,6 +23,9 @@ export default async function AdminTournamentsPage({
 }: {
   searchParams: Promise<{ status?: string; source?: string; ready?: string }>;
 }) {
+  const admin = await getPlatformAdminUser();
+  if (!admin) redirect("/");
+
   const filters = await searchParams;
   const readyOnly = filters.ready === "1";
   const [tournaments, totalTournamentCount] = await Promise.all([

@@ -257,6 +257,7 @@ export function parseEntryFeeCents(text: string): number | null {
     /Top\s+\d+\s+sections?\s+entry\s+fee[:\s]*\$?\s*(\d{1,3})/gi,
     /\$\s*(\d{1,3})\s+online\b/gi,
     /\$\s*(\d{1,3})(?:\.\d{2})?\s+through\b/gi,
+    /\$\s*(\d{1,3})(?:\.\d{2})?\s+(?:later|at\s+(?:the\s+)?door|on[- ]?site)\b/gi,
   ];
   for (const re of patterns) {
     let m: RegExpExecArray | null;
@@ -269,20 +270,26 @@ export function parseEntryFeeCents(text: string): number | null {
     }
   }
   if (amounts.length > 0) {
-    // Prefer the highest listed base fee when early-bird + door prices appear;
-    // " $40 less" discounts are already filtered out.
     const unique = [...new Set(amounts)].sort((a, b) => a - b);
-    // Early-bird is usually the lowest primary; door price higher.
-    return unique[0]!;
+    // Do not understate cost when early-bird and later/door prices coexist.
+    return unique[unique.length - 1]!;
+  }
+
+  if (
+    /\bfree\s+(?:for|to)\s+[^.]{0,48}\b(?:members?|students?|residents?|invitees?|registered\s+players?)\b/i.test(
+      t
+    )
+  ) {
+    return null;
   }
 
   if (
     /\bcompletely\s+free\b/i.test(t) ||
-    /\bthis\s+is\s+a\s+free\b/i.test(t) ||
+    /\bthis\s+is\s+a\s+free(?:\s+\w+){0,3}\s+(?:event|tournament)\b/i.test(t) ||
+    /\bfree\s+(?:entry|admission|registration)\b/i.test(t) ||
     /\bno\s+entry\s+fee\b/i.test(t) ||
     /\bentry\s+fee[:\s]*\$?\s*0\b/i.test(t) ||
-    /\bEF[:\s]*\$?\s*0\b/i.test(t) ||
-    (/\bfree\b/i.test(t) && !/\$\s*\d+/.test(t))
+    /\bEF[:\s]*\$?\s*0\b/i.test(t)
   ) {
     return 0;
   }
@@ -301,8 +308,7 @@ export function parseRatedFlags(text: string): { rated: boolean; fideRated: bool
     (/\b(?:US\s*Chess|USCF)[- ]?rated\b/i.test(t) ||
       /\brated\s+tournament\b/i.test(t) ||
       /\bDual\s+Rated\b/i.test(t) ||
-      fideRated ||
-      true); // TLA/CCA feeds are overwhelmingly rated
+      fideRated);
   return { rated, fideRated };
 }
 

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AdminModerationBulkQueue } from "@/components/AdminModerationBulkQueue";
+import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminModerationQueue } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
@@ -9,6 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default async function ModerationPage() {
+  const admin = await getPlatformAdminUser();
+  if (!admin) redirect("/");
+
   const { queue, error } = await getAdminModerationQueue();
 
   return (

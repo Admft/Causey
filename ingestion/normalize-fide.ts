@@ -29,17 +29,10 @@ export function parseFideDateRange(
     const mon1 = MONTHS[m[2].slice(0, 3).toLowerCase()];
     const mon2 = MONTHS[m[4].slice(0, 3).toLowerCase()];
     if (!mon1 || !mon2) return null;
-    let y1 = year;
+    const y1 = year;
     let y2 = year;
     // Cross-year rare; if end month < start month, end is next year
     if (mon2 < mon1) y2 = year + 1;
-    // If start month already passed and end is later same year — ok.
-    // If both months are behind "now", roll both forward.
-    const cur = now.getUTCMonth() + 1;
-    if (mon2 < cur && mon1 < cur) {
-      y1 += 1;
-      y2 += 1;
-    }
     return {
       start: `${y1}-${pad(mon1)}-${pad(Number(m[1]))}`,
       end: `${y2}-${pad(mon2)}-${pad(Number(m[3]))}`,
@@ -51,11 +44,9 @@ export function parseFideDateRange(
   if (m) {
     const mon = MONTHS[m[3].slice(0, 3).toLowerCase()];
     if (!mon) return null;
-    let y = year;
-    if (mon < now.getUTCMonth() + 1) y += 1;
     return {
-      start: `${y}-${pad(mon)}-${pad(Number(m[1]))}`,
-      end: `${y}-${pad(mon)}-${pad(Number(m[2]))}`,
+      start: `${year}-${pad(mon)}-${pad(Number(m[1]))}`,
+      end: `${year}-${pad(mon)}-${pad(Number(m[2]))}`,
     };
   }
 

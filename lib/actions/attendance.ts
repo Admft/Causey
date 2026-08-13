@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
+import { actionErrorMessage } from "@/lib/actions/errors";
 
 /**
  * Mark (or unmark) one of the coach's orgs as attending a public event.
@@ -21,23 +22,6 @@ export async function setOrgAttendance(input: {
 
   const supabase = await createServerSupabaseClient();
 
-  // #region agent log
-  const { debugAgentLog, debugOperatorPermissions } = await import(
-    "@/lib/debug/operator-permissions"
-  );
-  const perms = await debugOperatorPermissions(supabase, user.id, input.orgId);
-  debugAgentLog({
-    hypothesisId: "E",
-    location: "lib/actions/attendance.ts:setOrgAttendance",
-    message: "org attendance permission snapshot",
-    data: {
-      attending: input.attending,
-      competitionId: input.competitionId,
-      ...perms,
-    },
-  });
-  // #endregion
-
   if (input.attending) {
     const { error } = await supabase.from("org_competition_attendance").upsert(
       {
@@ -48,32 +32,30 @@ export async function setOrgAttendance(input: {
       { onConflict: "org_id,competition_id", ignoreDuplicates: true }
     );
     if (error) {
-      // #region agent log
-      debugAgentLog({
-        hypothesisId: "E",
-        location: "lib/actions/attendance.ts:setOrgAttendance:upsert",
-        message: "org attendance upsert failed",
-        data: { code: error.code, err: error.message, ...perms },
-      });
-      // #endregion
-      return { ok: false, error: "Could not mark your organization as attending." };
+      return {
+        ok: false,
+        error: actionErrorMessage(
+          error,
+          "Could not mark your organization as attending.",
+          "You don’t have permission to manage attendance for this organization."
+        ),
+      };
     }
   } else {
-    const { error } = await supabase
+    const { count, error } = await supabase
       .from("org_competition_attendance")
-      .delete()
+      .delete({ count: "exact" })
       .eq("org_id", input.orgId)
       .eq("competition_id", input.competitionId);
-    if (error) {
-      // #region agent log
-      debugAgentLog({
-        hypothesisId: "E",
-        location: "lib/actions/attendance.ts:setOrgAttendance:delete",
-        message: "org attendance delete failed",
-        data: { code: error.code, err: error.message, ...perms },
-      });
-      // #endregion
-      return { ok: false, error: "Could not remove the attendance mark." };
+    if (error || count !== 1) {
+      return {
+        ok: false,
+        error: actionErrorMessage(
+          error,
+          "The attendance mark was not found or could not be removed.",
+          "You don’t have permission to manage attendance for this organization."
+        ),
+      };
     }
   }
 

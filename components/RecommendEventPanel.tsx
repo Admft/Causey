@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sendRecommendation } from "@/lib/actions/recommendations";
 import type { RecommendTarget } from "@/lib/data/portal";
 
@@ -20,6 +20,11 @@ export function RecommendEventPanel({
   const [sent, setSent] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const firstTargetRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) firstTargetRef.current?.focus();
+  }, [open]);
 
   function toggle(profileId: string) {
     setSelected((prev) => {
@@ -57,7 +62,7 @@ export function RecommendEventPanel({
     <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
       <h2 className="text-sm font-semibold text-foreground">Recommend this event</h2>
       {sent !== null && !open ? (
-        <p className="mt-2 text-sm text-muted-strong">
+        <p className="mt-2 text-sm text-muted-strong" role="status">
           Sent to {sent} {sent === 1 ? "person" : "people"}.
         </p>
       ) : null}
@@ -78,6 +83,7 @@ export function RecommendEventPanel({
                 className="flex items-center gap-2 text-sm text-foreground"
               >
                 <input
+                  ref={target.profile_id === targets[0]?.profile_id ? firstTargetRef : undefined}
                   type="checkbox"
                   disabled={pending}
                   checked={selected.has(target.profile_id)}

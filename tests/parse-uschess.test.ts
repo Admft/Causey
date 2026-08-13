@@ -28,12 +28,21 @@ describe("US Chess listing parser", () => {
     expect(rows[0].dateText).toMatch(/2026-07-21/);
   });
 
+  it("extracts a stable Drupal node id when the detail page exposes one", () => {
+    const detail = parseDetailHtml(
+      `<article data-history-node-id="48291"><div class="views-field-body"><div class="field-content">Event</div></div></article>`,
+      "https://new.uschess.org/changeable-event-title"
+    );
+    expect(detail.sourceExternalKey).toBe("uschess-node:48291");
+  });
+
   it("reads pager max page from the fixture", () => {
     expect(maxPagerPage(load(fixture))).toBeGreaterThanOrEqual(1);
   });
 
   it("tags normalized rows with tla_scrape provenance", () => {
     const raw = parseListingHtml(fixture)[0]!;
+    expect(raw.externalKey).toMatch(/^uschess:/);
     const row = normalizeRawTla(raw, { id: "00000000-0000-4000-8000-000000000001" });
     expect(row?.competition.source).toBe("tla_scrape");
     expect(row?.competition.source_url).toBe(raw.detailUrl);

@@ -3,77 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
+import { actionErrorMessage } from "@/lib/actions/errors";
+import { createInAppNotifications } from "@/lib/actions/in-app-notifications";
 import { getSessionUser } from "@/lib/auth/session";
-import {
-  isNotificationKind,
-  type NotificationKind,
-} from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-
-const CreateSchema = z.object({
-  recipientId: z.string().uuid(),
-  kind: z.string().min(1),
-  title: z.string().trim().min(1).max(200),
-  body: z.string().trim().min(1).max(1000),
-  href: z.string().trim().max(500).nullable().optional(),
-  entityType: z.string().trim().max(80).nullable().optional(),
-  entityId: z.string().trim().max(120).nullable().optional(),
-  dedupeKey: z.string().trim().max(240).nullable().optional(),
-});
-
-export type CreateInAppNotificationInput = {
-  recipientId: string;
-  kind: NotificationKind;
-  title: string;
-  body: string;
-  href?: string | null;
-  entityType?: string | null;
-  entityId?: string | null;
-  dedupeKey?: string | null;
-};
-
-/**
- * Inserts one in-app notification via prefs-aware RPC. Never touches email.
- * Safe to call after invite/RSVP/announcement/account events.
- */
-export async function createInAppNotification(
-  input: CreateInAppNotificationInput
-): Promise<ActionResult<{ id: string | null }>> {
-  if (!isNotificationKind(input.kind)) {
-    return { ok: false, error: "Invalid notification kind." };
-  }
-  const parsed = CreateSchema.safeParse(input);
-  if (!parsed.success) {
-    return { ok: false, error: "Invalid notification payload." };
-  }
-  const user = await getSessionUser();
-  if (!user) return { ok: false, error: "Sign in to continue." };
-
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.rpc("create_in_app_notification", {
-    p_recipient_id: parsed.data.recipientId,
-    p_kind: parsed.data.kind,
-    p_title: parsed.data.title,
-    p_body: parsed.data.body,
-    p_href: parsed.data.href ?? null,
-    p_entity_type: parsed.data.entityType ?? null,
-    p_entity_id: parsed.data.entityId ?? null,
-    p_dedupe_key: parsed.data.dedupeKey ?? null,
-  });
-  if (error) {
-    return { ok: false, error: "Could not create the in-app update." };
-  }
-  revalidatePath("/me/notifications");
-  return { ok: true, id: (data as string | null) ?? null };
-}
-
-export async function createInAppNotifications(
-  inputs: CreateInAppNotificationInput[]
-): Promise<void> {
-  for (const input of inputs) {
-    await createInAppNotification(input);
-  }
-}
 
 const AccountAlertSchema = z.enum([
   "password_updated",
@@ -107,16 +40,21 @@ export async function recordAccountInAppAlert(
     },
   }[parsed.data];
 
-  return createInAppNotification({
-    recipientId: user.id,
-    kind: "account",
-    title: copy.title,
-    body: copy.body,
-    href: "/account#signin",
-    entityType: "account",
-    entityId: parsed.data,
-    dedupeKey: copy.dedupe,
-  });
+  const result = await createInAppNotifications([
+    {
+      recipientId: user.id,
+      kind: "account",
+      title: copy.title,
+      body: copy.body,
+      href: "/account#signin",
+      entityType: "account",
+      entityId: parsed.data,
+      dedupeKey: copy.dedupe,
+    },
+  ]);
+  return result.failures.length
+    ? { ok: false, error: result.failures[0].error }
+    : { ok: true };
 }
 
 export async function markNotificationRead(id: string): Promise<ActionResult> {
@@ -126,12 +64,21 @@ export async function markNotificationRead(id: string): Promise<ActionResult> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: "Sign in to continue." };
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase
+  const { count, error } = await supabase
     .from("notifications")
-    .update({ read_at: new Date().toISOString() })
+    .update({ read_at: new Date().toISOString() }, { count: "exact" })
     .eq("id", id)
     .eq("recipient_id", user.id);
-  if (error) return { ok: false, error: "Could not update the notification." };
+  if (error || count !== 1) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "That notification was not found or is no longer available.",
+        "You can only update your own notifications."
+      ),
+    };
+  }
   revalidatePath("/me/notifications");
   return { ok: true };
 }

@@ -20,6 +20,11 @@ describe("pathway triage", () => {
     expect(t.kind).toBe("needs_ai");
   });
 
+  it("does not turn a broad name substring into a known pathway", () => {
+    const t = triagePathway("Denker Park Weekend Open", "TX");
+    expect(t.kind).toBe("needs_ai");
+  });
+
   it("hashes are stable for identical inputs", () => {
     const a = pathwayInputHash({
       name: "Test Open",

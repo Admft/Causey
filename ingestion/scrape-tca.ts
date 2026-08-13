@@ -117,7 +117,11 @@ async function main() {
       [row.excerpt, detail?.bodyText].filter(Boolean).join("\n"),
       row.name
     );
-    drafts.push({ ...competition, sections: extras.sections });
+    drafts.push({
+      ...competition,
+      external_key: row.externalKey,
+      sections: extras.sections,
+    });
   }
   if (!SKIP_DETAIL) process.stdout.write("\n");
 

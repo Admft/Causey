@@ -148,7 +148,9 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         </p>
       ) : null}
       {saved ? (
-        <p className="text-sm font-medium text-foreground">Profile saved.</p>
+        <p className="text-sm font-medium text-foreground" role="status">
+          Profile saved.
+        </p>
       ) : null}
 
       <button type="submit" disabled={pending} className="cta-enabled w-fit disabled:opacity-60">

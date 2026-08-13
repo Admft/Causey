@@ -276,6 +276,7 @@ export function TournamentCreateForm({
     if (edit || !resolvedDraftId || initialDraft) return;
     // Create the draft row immediately so cover uploads and leave-saves
     // don't race an empty tournament_drafts table.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void persistDraft();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedDraftId, edit, initialDraft]);
@@ -465,6 +466,15 @@ export function TournamentCreateForm({
         sections,
         rated,
       };
+      if (
+        edit &&
+        !admin &&
+        edit.status === "rejected" &&
+        step === "details"
+      ) {
+        setStep("review");
+        return;
+      }
       if (edit) {
         const result = admin
           ? await adminUpdateTournament({
@@ -540,7 +550,7 @@ export function TournamentCreateForm({
     }
   }
 
-  const reviewing = !edit && step === "review";
+  const reviewing = step === "review";
   const publicReview = !admin && audience === "public";
   const publishLabel = admin
     ? "Publish competition"
@@ -707,15 +717,13 @@ export function TournamentCreateForm({
         <>
           {!edit && resolvedDraftId ? (
             <fieldset className="flex flex-col gap-3">
-              <div>
-                <legend className="text-xs font-semibold text-muted-strong">
-                  Cover image <span className="text-brand-red">Required</span>
-                </legend>
-                <p className="mt-1 text-xs text-muted">
-                  Use a landscape JPG, PNG, or WebP up to 5 MB. The preview shows
-                  the crop families will see.
-                </p>
-              </div>
+              <legend className="text-xs font-semibold text-muted-strong">
+                Cover image <span className="text-brand-red">Required</span>
+              </legend>
+              <p className="-mt-2 text-xs text-muted">
+                Use a landscape JPG, PNG, or WebP up to 5 MB. The preview shows
+                the crop families will see.
+              </p>
               {coverImageUrl ? (
                 <CompetitionCoverImage
                   key={coverImageUrl}
@@ -980,17 +988,15 @@ export function TournamentCreateForm({
           </div>
 
           <fieldset className="section-rule pt-5">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <legend className="text-sm font-semibold text-foreground">
-                    {category === "chess" ? "Tournament sections" : "Competition divisions"}
-                  </legend>
-                  <p className="mt-1 text-xs text-muted">
-                    {category === "chess"
-                      ? "Add the rating or grade splits families need before they RSVP."
-                      : "Add the divisions or grade groups families need before they RSVP."}
-                  </p>
-                </div>
+              <legend className="text-sm font-semibold text-foreground">
+                {category === "chess" ? "Tournament sections" : "Competition divisions"}
+              </legend>
+              <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+                <p className="text-xs text-muted">
+                  {category === "chess"
+                    ? "Add the rating or grade splits families need before they RSVP."
+                    : "Add the divisions or grade groups families need before they RSVP."}
+                </p>
                 <button
                   type="button"
                   onClick={() =>
@@ -1307,7 +1313,7 @@ export function TournamentCreateForm({
               : "Saving draft…"
             : edit
               ? edit.status === "rejected" && !admin
-                ? "Save changes and resubmit"
+                ? "Review changes and resubmit"
                 : "Save changes"
               : "Preview competition"}
         </button>

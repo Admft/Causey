@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
+import { actionErrorMessage } from "@/lib/actions/errors";
 
 const NoteSchema = z
   .string()
@@ -23,7 +24,8 @@ export async function sendRecommendation(input: {
 }): Promise<ActionResult<{ sent: number }>> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: "Sign in to continue." };
-  if (!input.toProfileIds.length) {
+  const toProfileIds = [...new Set(input.toProfileIds)];
+  if (!toProfileIds.length) {
     return { ok: false, error: "Pick at least one person." };
   }
   const note = NoteSchema.safeParse(input.note);
@@ -32,26 +34,36 @@ export async function sendRecommendation(input: {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.from("event_recommendations").upsert(
-    input.toProfileIds.map((toProfileId) => ({
-      competition_id: input.competitionId,
-      from_profile_id: user.id,
-      to_profile_id: toProfileId,
-      note: note.data || null,
-    })),
-    {
-      onConflict: "competition_id,from_profile_id,to_profile_id",
-      ignoreDuplicates: true,
-    }
-  );
+  const { data, error } = await supabase
+    .from("event_recommendations")
+    .upsert(
+      toProfileIds.map((toProfileId) => ({
+        competition_id: input.competitionId,
+        from_profile_id: user.id,
+        to_profile_id: toProfileId,
+        note: note.data || null,
+      })),
+      {
+        onConflict: "competition_id,from_profile_id,to_profile_id",
+        ignoreDuplicates: true,
+      }
+    )
+    .select("id");
   if (error) {
-    return { ok: false, error: "Could not send the recommendation." };
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "Could not send the recommendation.",
+        "You can only recommend competitions to connected accounts."
+      ),
+    };
   }
 
   revalidatePath("/orgs");
   revalidatePath("/family");
   revalidatePath(`/event/${input.eventSlug}`);
-  return { ok: true, sent: input.toProfileIds.length };
+  return { ok: true, sent: data?.length ?? 0 };
 }
 
 export async function dismissRecommendation(id: string): Promise<ActionResult> {

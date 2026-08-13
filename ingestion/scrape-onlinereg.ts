@@ -31,7 +31,6 @@ import {
 import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
-import { extractPageImage } from "./extract-page-image";
 import { fetchHtml } from "./fetch-html";
 
 const STAGING_FILE = "onlinereg-drafts.json";
@@ -59,9 +58,6 @@ async function main() {
           },
         }
       );
-  const fallbackImage = extractPageImage(listingShell, ONLINEREG_LISTING_URL, {
-    allowSiteChrome: true,
-  });
   let raw = parseOnlineRegIndexHtml(html);
   console.log(`Parsed ${raw.length} OnlineRegistration events.`);
   if (raw.length === 0) {
@@ -95,7 +91,7 @@ async function main() {
     if (!competition) continue;
     drafts.push({
       ...competition,
-      image_url: competition.image_url || fallbackImage,
+      external_key: row.tid,
       sections: [openSection("Open")],
     });
   }

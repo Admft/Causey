@@ -184,7 +184,8 @@ export function normalizeRawChessResults(
     reg_deadline: null,
     reg_url: raw.detailUrl,
     entry_fee_cents: null,
-    rated: true,
+    // A Chess-Results listing alone does not establish federation rating.
+    rated: false,
     rating_system: "fide",
     series_id: null,
     source: CHESS_RESULTS_SCRAPER_ID,
@@ -205,6 +206,7 @@ export function normalizeRawChessResults(
       federation: raw.federation,
       chess_results_tnr: raw.externalKey,
       location_raw: raw.locationText,
+      rated_status: "unknown",
       ...(opts.geoPrecision ? { geo_precision: opts.geoPrecision } : {}),
     },
     interest_count: 0,
