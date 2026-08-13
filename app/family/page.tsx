@@ -172,9 +172,9 @@ export default async function FamilyPage() {
     missionDescription =
       "No invitations or unfinished organizer registrations need you right now.";
     missionAction = {
-      href: preferredDiscoveryHref(
-        profile?.preferred_competition_category ?? null
-      ),
+      href: profile?.preferred_competition_category
+        ? preferredDiscoveryHref(profile.preferred_competition_category)
+        : "/#search",
       label: "Search tournaments",
     };
   }

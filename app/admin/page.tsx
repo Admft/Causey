@@ -79,8 +79,8 @@ export default async function AdminOverviewPage() {
         Moderation first
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Keep bad or incomplete public listings out of chess search. Create
-        districts and drafts only after the review queue is handled.
+        Keep bad or incomplete public listings out of category directories.
+        Create districts and drafts only after the review queue is handled.
       </p>
 
       <div className="mt-8">

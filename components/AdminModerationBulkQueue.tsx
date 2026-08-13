@@ -261,9 +261,12 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
                       : "Hybrid"}
                 </p>
                 <p className="mt-1 text-xs text-muted">
-                  {tournament.category === "chess"
-                    ? "Discovery after approval: chess search"
-                    : "Discovery after approval: public link only; not searchable"}
+                  {tournament.category === "other"
+                    ? "Discovery after approval: public link only; custom types are not in a category directory"
+                    : `Discovery after approval: ${competitionTypeLabel({
+                        category: tournament.category,
+                        customCategoryName: tournament.custom_category_name,
+                      })} directory`}
                 </p>
               </div>
             </div>

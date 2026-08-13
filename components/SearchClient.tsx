@@ -20,7 +20,10 @@ import {
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
 import { ChessHeroGraphic } from "@/components/ChessHeroGraphic";
-import { discoveryCategory } from "@/lib/category-discovery";
+import {
+  discoveryCategory,
+  type DiscoveryCategory,
+} from "@/lib/category-discovery";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
 
 /**
@@ -123,15 +126,14 @@ function parseTiming(raw: string | null): FilterState["timing"] {
 }
 
 export function SearchClient({
-  category = "chess",
+  category,
 }: {
-  category?: CompetitionCategory;
+  category: DiscoveryCategory;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const categoryDefinition =
-    discoveryCategory(category) ?? discoveryCategory("chess")!;
+  const categoryDefinition = discoveryCategory(category)!;
   const initial = useMemo(() => readParams(new URLSearchParams(searchParams)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [keyword, setKeyword] = useState(initial.keyword);

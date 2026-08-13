@@ -624,9 +624,12 @@ export function TournamentCreateForm({
       ? {
           ...opt,
           description:
-            category === "chess"
-              ? "Listed in chess search after platform review."
-              : "Public link after platform review; not added to search yet.",
+            category === "other"
+              ? "Public link after platform review; custom types are not added to a category directory."
+              : `Listed in the ${competitionTypeLabel({
+                  category,
+                  customCategoryName: null,
+                })} directory after platform review.`,
         }
       : opt.value === "school"
         ? {

@@ -10,7 +10,12 @@ import {
 import {
   COMPETITION_SOURCE_FILTER_OPTIONS,
   competitionSourceLabel,
+  sourceByCompetitionSource,
 } from "@/lib/ingestion-sources";
+import {
+  discoveryCategory,
+  discoveryCategoryHref,
+} from "@/lib/category-discovery";
 import { isTournamentPublishReady } from "@/lib/tournament-readiness";
 
 export const metadata: Metadata = {
@@ -40,6 +45,12 @@ export default async function AdminTournamentsPage({
     filters.status === "draft" && filters.source
       ? competitionSourceLabel(filters.source)
       : null;
+  const selectedSource = filters.source
+    ? sourceByCompetitionSource(filters.source)
+    : null;
+  const sourceDirectory = selectedSource
+    ? discoveryCategory(selectedSource.category)
+    : null;
   const readyDraftCount = tournaments.filter(
     (tournament) =>
       tournament.status === "draft" && isTournamentPublishReady(tournament)
@@ -134,7 +145,7 @@ export default async function AdminTournamentsPage({
             Publish ready drafts
           </span>{" "}
           to accept the complete ones. Incomplete location rows stay draft so
-          they do not enter chess search as Unknown / 00000.
+          they do not enter public search with an unknown location.
           {incompleteDraftCount > 0
             ? ` ${incompleteDraftCount} still need a real city and ZIP.`
             : ""}
@@ -161,14 +172,23 @@ export default async function AdminTournamentsPage({
           >
             Drafts
           </Link>
-          . In chess search, upcoming is the default — open{" "}
-          <Link
-            href={`/chess?source=${encodeURIComponent(filters.source)}&timing=all`}
-            className="font-semibold text-brand-red hover:underline"
-          >
-            all published {competitionSourceLabel(filters.source)} listings
-          </Link>{" "}
-          to include events that already ended.
+          .
+          {sourceDirectory ? (
+            <>
+              {" "}
+              In {sourceDirectory.label} search, upcoming is the default — open{" "}
+              <Link
+                href={discoveryCategoryHref(sourceDirectory.id, {
+                  source: filters.source,
+                  timing: "all",
+                })}
+                className="font-semibold text-brand-red hover:underline"
+              >
+                all published {competitionSourceLabel(filters.source)} listings
+              </Link>{" "}
+              to include events that already ended.
+            </>
+          ) : null}
         </p>
       ) : null}
 

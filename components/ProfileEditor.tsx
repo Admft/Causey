@@ -27,7 +27,7 @@ const STATES = [
 ];
 
 const SHORTCUT_SCHEMA_GAP_MESSAGE =
-  "Tournament shortcut could not be saved because this environment has not applied the account database update (migration 0056) yet. Your other profile changes were not saved either; try again after the update lands.";
+  "Tournament shortcut is temporarily unavailable. Your other profile changes were not saved either; try again later or ask the person who manages Causey access.";
 
 function isShortcutSchemaGap(error: unknown): boolean {
   const message =

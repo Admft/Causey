@@ -21,6 +21,8 @@ const signupForm = read("components/SignupForm.tsx");
 const searchClient = read("components/SearchClient.tsx");
 const layout = read("app/layout.tsx");
 const eventPage = read("app/event/[slug]/page.tsx");
+const homeAccountPitch = read("components/HomeAccountPitch.tsx");
+const adminTournaments = read("app/admin/tournaments/page.tsx");
 
 describe("homepage leads with multi-category discovery", () => {
   it("names all five categories in metadata and copy without a chess hero", () => {
@@ -53,6 +55,8 @@ describe("hero search requires an explicit category", () => {
     expect(heroSearch).toContain('role="alert"');
     expect(heroSearch).toContain("discoveryCategoryHref(");
     expect(heroSearch).toContain("Search tournaments");
+    expect(heroSearch).toContain("optionally narrow by zip and distance");
+    expect(heroSearch).not.toContain("search by name or zip");
   });
 });
 
@@ -92,6 +96,12 @@ describe("navigation drops the unconditional chess shortcut", () => {
     expect(authNav).toContain('pathname.startsWith("/pathways")');
     expect(authNav).not.toContain('href="/chess"');
   });
+
+  it("recovers to signed-out navigation when the auth lookup rejects", () => {
+    expect(authNav).toContain(".catch(() =>");
+    expect(authNav).toContain("setEmail(null)");
+    expect(authNav).toContain("request !== accessRequest");
+  });
 });
 
 describe("account tournament shortcut setting", () => {
@@ -103,10 +113,11 @@ describe("account tournament shortcut setting", () => {
     expect(profileEditor).toContain("None");
   });
 
-  it("tells the truth when migration 0056 is missing", () => {
+  it("fails the whole save without exposing schema internals", () => {
     expect(profileEditor).toContain("SHORTCUT_SCHEMA_GAP_MESSAGE");
-    expect(profileEditor).toContain("migration 0056");
     expect(profileEditor).toContain('message.includes("preferred_competition_category")');
+    expect(profileEditor).not.toContain("migration 0056");
+    expect(profileEditor).toContain("Your other profile changes were not saved");
   });
 });
 
@@ -143,6 +154,20 @@ describe("coverage and empty states stay honest", () => {
     expect(searchClient).not.toContain(
       "only the limited official sources listed below"
     );
+    const stem = DISCOVERY_CATEGORIES.find((category) => category.id === "stem")!;
+    expect(stem.activeSources.map((source) => source.name)).not.toContain(
+      "U.S. Department of Energy National Science Bowl"
+    );
+    expect(stem.referenceSources.map((source) => source.name)).toContain(
+      "U.S. Department of Energy National Science Bowl"
+    );
+    const writing = DISCOVERY_CATEGORIES.find(
+      (category) => category.id === "writing"
+    )!;
+    expect(writing.emptyDescription).toContain("Timing to All");
+    expect(writing.activeSources.map((source) => source.name)).toContain(
+      "AFSA National High School Essay Contest"
+    );
   });
 
   it("chess directories stay chess-specific and pathways is labeled chess", () => {
@@ -175,5 +200,21 @@ describe("generalized links and return paths", () => {
     ]) {
       expect(read(file)).not.toContain('href="/chess"');
     }
+    expect(adminTournaments).not.toContain("In chess search");
+    expect(adminTournaments).not.toContain("enter chess search");
+  });
+
+  it("sends no-preference role actions to the homepage chooser", () => {
+    expect(homeAccountPitch).toContain(': "/#search"');
+    expect(read("app/me/page.tsx")).toContain(': "/#search"');
+    expect(read("app/family/page.tsx")).toContain(': "/#search"');
+  });
+
+  it("requires every search surface to name its category", () => {
+    expect(searchClient).toContain("category: DiscoveryCategory");
+    expect(searchClient).not.toContain('category = "chess"');
+    expect(read("app/chess/page.tsx")).toContain(
+      '<SearchClient category="chess" />'
+    );
   });
 });

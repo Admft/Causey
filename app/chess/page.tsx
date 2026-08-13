@@ -15,7 +15,7 @@ export default function ChessSearchPage() {
     <>
       <ChessSubnavBar tool="tournaments" />
       <Suspense>
-        <SearchClient />
+        <SearchClient category="chess" />
       </Suspense>
       <TournamentSources />
     </>

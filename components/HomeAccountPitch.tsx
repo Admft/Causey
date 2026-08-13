@@ -84,10 +84,11 @@ export async function HomeAccountPitch() {
   const profile = await getCurrentProfile();
 
   if (profile) {
-    const searchHref = preferredDiscoveryHref(
-      profile.preferred_competition_category,
-      { zip: profile.zip }
-    );
+    const searchHref = profile.preferred_competition_category
+      ? preferredDiscoveryHref(profile.preferred_competition_category, {
+          zip: profile.zip,
+        })
+      : "/#search";
     const next =
       SIGNED_IN_NEXT(searchHref)[profile.role] ??
       SIGNED_IN_NEXT(searchHref).student;

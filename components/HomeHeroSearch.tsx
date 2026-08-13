@@ -80,8 +80,8 @@ export function HomeHeroSearch({
         Find tournaments
       </h2>
       <p className="mt-2 text-sm text-muted">
-        Pick a competition type, then search by name or zip. Entry details and
-        source links stay on the event page before you commit to anything.
+        Pick a competition type, then optionally narrow by zip and distance.
+        Each directory also has name and category-specific filters.
       </p>
 
       <div className="mt-5 flex flex-col gap-3">

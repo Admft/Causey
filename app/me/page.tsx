@@ -249,9 +249,9 @@ export default async function MePage() {
   const nextAction = ROLE_NEXT_ACTION[profile.role];
   // Generic discovery links follow the account's saved directory shortcut;
   // without one they land on the homepage chooser instead of chess.
-  const searchHref = preferredDiscoveryHref(
-    profile.preferred_competition_category
-  );
+  const searchHref = profile.preferred_competition_category
+    ? preferredDiscoveryHref(profile.preferred_competition_category)
+    : "/#search";
   const searchAction = { href: searchHref, label: "Search tournaments" };
   const studentMission =
     pendingParentLinks.length > 0

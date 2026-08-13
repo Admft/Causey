@@ -42,8 +42,12 @@ export function AuthNav() {
   useEffect(() => {
     if (!configured) return;
     const supabase = createBrowserSupabaseClient();
+    let active = true;
+    let accessRequest = 0;
 
     async function loadAccess(userId: string | undefined) {
+      const request = ++accessRequest;
+      if (!active) return;
       if (!userId) {
         setRole(null);
         setIsAdmin(false);
@@ -90,6 +94,7 @@ export function AuthNav() {
           .eq("recipient_id", userId)
           .is("read_at", null),
       ]);
+      if (!active || request !== accessRequest) return;
       setRole((profileResult.data?.role as AccountRole) ?? null);
       // A missing preferred_competition_category column (migration 0056 not
       // applied) surfaces as a profile read error; the nav just renders no
@@ -116,15 +121,28 @@ export function AuthNav() {
       setUnreadAlerts(unreadResult.error ? 0 : unreadResult.count ?? 0);
     }
 
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data.user?.email ?? null);
-      void loadAccess(data.user?.id);
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!active) return;
+        setEmail(data.user?.email ?? null);
+        void loadAccess(data.user?.id);
+      })
+      .catch(() => {
+        if (!active) return;
+        setEmail(null);
+        void loadAccess(undefined);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
       setEmail(session?.user?.email ?? null);
       void loadAccess(session?.user?.id);
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      active = false;
+      accessRequest += 1;
+      sub.subscription.unsubscribe();
+    };
   }, [configured]);
 
   if (!configured || email === undefined) {

@@ -119,9 +119,9 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Current coverage includes National Science Bowl dates, the Purple Comet team mathematics window, and the Texas state science fair; robotics and regional fair coverage remains limited.",
+      "Search the official public listings Causey has indexed so far. Current published coverage includes the Purple Comet team mathematics window and the Texas state science fair; robotics, science bowl, and regional fair coverage remains limited.",
     emptyDescription:
-      "STEM coverage is currently limited to National Science Bowl, Purple Comet, and Texas state science fair dates. Try clearing filters or switching Timing to All; the source list below shows exactly what is indexed.",
+      "Published STEM coverage is currently limited to Purple Comet and the Texas state science fair. Try clearing filters or switching Timing to All; the source list below distinguishes indexed rows from reference-only sources.",
     searchPlaceholder: "Try robotics, science fair, or a competition name",
     facetLabel: "Discipline",
     facets: [
@@ -131,12 +131,6 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       { value: "science_bowl", label: "Science bowl" },
     ],
     activeSources: [
-      {
-        name: "U.S. Department of Energy National Science Bowl",
-        href: "https://science.osti.gov/wdts/nsb/Key-Dates",
-        status: "Active for published national-event dates",
-        note: "Official Office of Science dates and program information. DOE identifies the source material as public domain; Causey links to the source and does not imply DOE endorsement.",
-      },
       {
         name: "Purple Comet! Math Meet",
         href: "https://www.purplecomet.org/",
@@ -151,6 +145,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       },
     ],
     referenceSources: [
+      {
+        name: "U.S. Department of Energy National Science Bowl",
+        href: "https://science.osti.gov/wdts/nsb/Key-Dates",
+        status: "Reference only: ordinary public requests returned HTTP 403",
+        note: "The retained adapter fails closed and aggregate/admin workflows exclude it. Causey will not bypass source controls; previously reviewed public-domain terms do not override the current access block.",
+      },
       {
         name: "VEX Events",
         href: "https://events.vex.com/robot-competitions/vex-robotics-competition",
@@ -243,9 +243,9 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/writing",
     heading: "Student writing competitions.",
     description:
-      "Search the official public opportunities Causey has indexed so far. Coverage is intentionally small, and dates remain unpublished until an organizer gives a specific year.",
+      "Search the official public opportunities Causey has indexed so far. There are no upcoming published writing rows today; the ended 2025–26 AFSA essay cycle remains available under Timing: All.",
     emptyDescription:
-      "Writing coverage is intentionally small: listings publish only when an organizer names a complete, year-specific cycle. Try switching Timing to All, and use the reference links below for wider coverage.",
+      "There are no upcoming published writing rows today. Switch Timing to All to review the ended 2025–26 AFSA essay cycle; future listings publish only when an organizer names a complete, year-specific cycle.",
     searchPlaceholder: "Try poetry, fiction, nonfiction, or an award name",
     facetLabel: "Genre",
     facets: [
@@ -255,6 +255,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       { value: "nonfiction", label: "Nonfiction" },
     ],
     activeSources: [
+      {
+        name: "AFSA National High School Essay Contest",
+        href: "https://afsa.org/essay-contest",
+        status: "Indexed ended 2025–26 cycle",
+        note: "The official year-specific cycle is retained under Timing: All. Its March 1, 2026 deadline is not presented as an upcoming event or open application.",
+      },
       {
         name: "Bennington Young Writers Awards",
         href: "https://www.bennington.edu/events/young-writers-awards",
