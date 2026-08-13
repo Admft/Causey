@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AuthNav } from "@/components/AuthNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
-import { PrimaryNav } from "@/components/PrimaryNav";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -114,7 +113,6 @@ export function SiteHeader() {
           }`}
           aria-label="Primary"
         >
-          <PrimaryNav />
           <AuthNav />
         </nav>
       </div>

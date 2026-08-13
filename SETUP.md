@@ -1,7 +1,9 @@
 # SETUP — current state, how to run it, and what is left
 
 This repo already contains a working MVP of the Causey product app focused on
-US scholastic chess discovery.
+US scholastic competition discovery. Chess has the broadest indexed coverage;
+speech and debate, STEM, arts, and writing have public directories fed by a
+small set of permitted official sources and may return few or no listings.
 
 The app can be run locally today with no secrets and no external services:
 
@@ -21,7 +23,8 @@ includes seeded competitions, sections, and a working qualification graph.
 The following pieces are already implemented in this repository:
 
 - A Next.js App Router product app.
-- Search UI for scholastic chess tournaments by zip and radius.
+- Search UI for scholastic tournaments by category, zip, and radius across
+  chess, speech and debate, STEM, arts, and writing directories.
 - Filtering by state, grade band, rating band, fee, and date window.
 - Event detail pages with:
   - entry fee visibility,

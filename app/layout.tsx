@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { EarlyBuildBanner } from "@/components/EarlyBuildBanner";
 import { SiteHeader } from "@/components/SiteHeader";
+import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s · Causey",
   },
   description:
-    "Search a growing, incomplete index of scholastic chess tournaments, then coordinate invitations and attendance with your organization.",
+    "Search a growing, incomplete index of student competitions across chess, speech and debate, STEM, arts, and writing, then coordinate invitations and attendance with your organization.",
   openGraph: {
     type: "website",
     siteName: "Causey",
@@ -67,17 +68,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </p>
             </div>
             <div className="flex flex-col gap-2 text-xs">
-              <Link
-                href="/chess"
-                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
-              >
-                Chess tournaments
-              </Link>
+              {DISCOVERY_CATEGORIES.map((category) => (
+                <Link
+                  key={category.id}
+                  href={category.href}
+                  className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+                >
+                  {category.label} tournaments
+                </Link>
+              ))}
               <Link
                 href="/pathways"
                 className="font-medium text-muted-strong transition-colors hover:text-brand-red"
               >
-                Qualification pathways
+                Chess qualification pathways
               </Link>
               <Link
                 href="/districts"

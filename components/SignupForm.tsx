@@ -11,6 +11,10 @@ import {
 import { homePathForRole } from "@/lib/auth/home-path";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { ROLE_OPTIONS, type AccountRole, type AgeBand } from "@/lib/auth/types";
+import {
+  DISCOVERY_CATEGORIES,
+  type DiscoveryCategory,
+} from "@/lib/category-discovery";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -81,7 +85,10 @@ export function SignupForm({
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
-  const [chessInterest, setChessInterest] = useState(false);
+  // New accounts start with no selected interests; nothing is prechecked.
+  const [interests, setInterests] = useState<Set<DiscoveryCategory>>(
+    () => new Set()
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
@@ -121,7 +128,9 @@ export function SignupForm({
         throw new Error("Zip must be 5 digits.");
       }
 
-      const interests = chessInterest ? ["chess"] : [];
+      const selectedInterests = DISCOVERY_CATEGORIES.filter((category) =>
+        interests.has(category.id)
+      ).map((category) => category.id);
       const supabase = createBrowserSupabaseClient();
       const origin = window.location.origin;
       const callbackUrl = new URL("/auth/callback", origin);
@@ -139,7 +148,7 @@ export function SignupForm({
             age_band: ageBand,
             state: state || null,
             zip: zip || null,
-            interests,
+            interests: selectedInterests,
             preferred_competition_category: null,
           },
         },
@@ -367,15 +376,42 @@ export function SignupForm({
             placeholder="Optional"
           />
         </label>
-        <label className="flex items-center gap-2 pt-6 text-sm text-foreground sm:col-span-2">
-          <input
-            type="checkbox"
-            checked={chessInterest}
-            onChange={(e) => setChessInterest(e.target.checked)}
-          />
-          Interested in chess
-        </label>
       </div>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-xs font-semibold text-muted-strong">
+          Competition interests (optional)
+        </legend>
+        <p className="text-2xs text-muted">
+          Choose any you follow. You can change these later in Account
+          settings.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {DISCOVERY_CATEGORIES.map((category) => (
+            <label
+              key={category.id}
+              className="flex items-center gap-2 text-sm text-foreground"
+            >
+              <input
+                type="checkbox"
+                checked={interests.has(category.id)}
+                onChange={(e) =>
+                  setInterests((current) => {
+                    const next = new Set(current);
+                    if (e.target.checked) {
+                      next.add(category.id);
+                    } else {
+                      next.delete(category.id);
+                    }
+                    return next;
+                  })
+                }
+              />
+              {category.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">

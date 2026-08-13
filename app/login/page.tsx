@@ -100,7 +100,7 @@ export default async function LoginPage({
         <div className="animate-rise animate-rise-delay-1 mt-8">
           {claimUnavailable ? (
             <Link
-              href="/chess"
+              href="/#search"
               className="card-lift group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6"
             >
               <div className="min-w-0">

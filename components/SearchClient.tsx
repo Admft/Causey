@@ -469,9 +469,7 @@ export function SearchClient({
                     ? `Upcoming ${competitionSourceLabel(
                         filters.source
                       )} listings only. Most published records from this source may already have ended — switch Timing to All or Ended. A zip radius can also hide events in other cities.`
-                    : category === "chess"
-                      ? "Try widening the radius, raising the fee ceiling, or clearing a filter. State championships may be farther away."
-                      : "Try widening the radius or date range, or clear a filter. This directory currently covers only the limited official sources listed below."}
+                    : categoryDefinition.emptyDescription}
                 </p>
               </div>
             )}

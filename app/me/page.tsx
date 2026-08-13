@@ -6,6 +6,7 @@ import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import type { AccountRole } from "@/lib/auth/types";
+import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import {
   getMyEntrantRows,
   getMyOrgs,
@@ -84,7 +85,8 @@ const ROLE_NEXT_ACTION: Record<
       "Ask your coach for a join link or code. Club invitations and RSVPs show up here after you join.",
     href: "/orgs",
     label: "Open my clubs",
-    secondary: { href: "/chess", label: "Search tournaments" },
+    // Filled in per account below so the shortcut follows the saved category.
+    secondary: { href: "/#search", label: "Search tournaments" },
   },
   parent: {
     title: "See which student needs you",
@@ -245,6 +247,12 @@ export default async function MePage() {
 
   const isStudent = profile.role === "student";
   const nextAction = ROLE_NEXT_ACTION[profile.role];
+  // Generic discovery links follow the account's saved directory shortcut;
+  // without one they land on the homepage chooser instead of chess.
+  const searchHref = preferredDiscoveryHref(
+    profile.preferred_competition_category
+  );
+  const searchAction = { href: searchHref, label: "Search tournaments" };
   const studentMission =
     pendingParentLinks.length > 0
       ? {
@@ -258,7 +266,7 @@ export default async function MePage() {
           secondary:
             myOrgs.length === 0
               ? { href: "/orgs", label: "Join a club" }
-              : { href: "/chess", label: "Search tournaments" },
+              : searchAction,
         }
       : actionCount > 0
         ? {
@@ -285,20 +293,20 @@ export default async function MePage() {
                   ? "Answer invitations"
                   : "Finish registration",
             },
-            secondary: { href: "/chess", label: "Search more tournaments" },
+            secondary: { href: searchHref, label: "Search more tournaments" },
           }
         : myOrgs.length === 0
           ? {
               title: nextAction.title,
               description: nextAction.description,
               action: { href: nextAction.href, label: nextAction.label },
-              secondary: nextAction.secondary,
+              secondary: isStudent ? searchAction : nextAction.secondary,
             }
           : {
-              title: "Find your next chess tournament",
+              title: "Find your next tournament",
               description:
-                "You’re on a roster. Search scholastic events, or wait here for club invitations.",
-              action: { href: "/chess", label: "Search tournaments" },
+                "You’re on a roster. Search public events, or wait here for club invitations.",
+              action: searchAction,
               secondary: { href: "/orgs", label: "Open my clubs" },
             };
 
@@ -396,7 +404,7 @@ export default async function MePage() {
               <>
                 You don&rsquo;t have tournament plans yet.{" "}
                 <Link
-                  href="/chess"
+                  href={searchHref}
                   className="font-semibold text-brand-red hover:underline"
                 >
                   Search tournaments

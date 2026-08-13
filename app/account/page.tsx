@@ -11,6 +11,7 @@ import { homePathForRole } from "@/lib/auth/home-path";
 import { isCurrentUserPlatformAdmin } from "@/lib/auth/platform-admin";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import type { AccountRole } from "@/lib/auth/types";
+import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import { getNotificationPreferences } from "@/lib/data/district";
 import {
   getActiveChildren,
@@ -111,9 +112,11 @@ export default async function AccountPage() {
     typeof user.new_email === "string" && user.new_email
       ? user.new_email
       : null;
-  const searchHref = profile.zip
-    ? `/chess?zip=${encodeURIComponent(profile.zip)}`
-    : "/chess";
+  const searchHref = profile.preferred_competition_category
+    ? preferredDiscoveryHref(profile.preferred_competition_category, {
+        zip: profile.zip,
+      })
+    : "/#search";
 
   let incompleteCue: string | null = null;
   if (!profile.zip) {
@@ -130,7 +133,7 @@ export default async function AccountPage() {
         Profile
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        {roleLabel} account (locked). Zip sets nearby chess search
+        {roleLabel} account (locked). Zip sets nearby tournament search
         {profile.role === "student"
           ? "; coaches see name and age band on a roster, not your birth date"
           : ""}
@@ -139,16 +142,16 @@ export default async function AccountPage() {
       <div className="mt-6">
         <ProfileEditor profile={profile} />
       </div>
-      {profile.zip ? (
-        <p className="mt-4">
-          <Link
-            href={searchHref}
-            className="text-sm font-semibold text-muted-strong hover:text-brand-red"
-          >
-            Search tournaments near {profile.zip}
-          </Link>
-        </p>
-      ) : null}
+      <p className="mt-4">
+        <Link
+          href={searchHref}
+          className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+        >
+          {profile.zip
+            ? `Search tournaments near ${profile.zip}`
+            : "Search tournaments"}
+        </Link>
+      </p>
     </div>
   );
 

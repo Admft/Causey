@@ -641,7 +641,7 @@ export default async function OrgPage({
                 description={
                   isCoach
                     ? "A coach or administrator publishes competitions. You can review the roster while you wait."
-                    : "Search public chess listings, or check back after your coach publishes an event."
+                    : "Search public tournament listings, or check back after your coach publishes an event."
                 }
                 action={
                   isCoach
@@ -649,7 +649,7 @@ export default async function OrgPage({
                         href: `/orgs/${org.slug}/roster`,
                         label: "Review roster",
                       }
-                    : { href: "/chess", label: "Search tournaments" }
+                    : { href: "/#search", label: "Search tournaments" }
                 }
               />
             ) : (

@@ -3,7 +3,7 @@ import { ChessSubnavBar } from "@/components/ChessSubnav";
 import { PathwayExplorer } from "@/components/PathwayExplorer";
 
 export const metadata: Metadata = {
-  title: "Qualification pathways (illustrative)",
+  title: "Chess qualification pathways (illustrative)",
   description:
     "Illustrative lookup of how scholastic chess results can chain into invitations. Rules are seeded scaffolding pending verification against official US Chess sources.",
 };

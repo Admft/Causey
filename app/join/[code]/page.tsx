@@ -53,7 +53,7 @@ function NoMatch({ code }: { code?: string }) {
       </p>
       <p className="mt-6 text-sm text-muted">
         Still have the right code? Ask your coach for a fresh link, or{" "}
-        <Link href="/chess" className="font-semibold text-brand-red hover:underline">
+        <Link href="/#search" className="font-semibold text-brand-red hover:underline">
           search tournaments
         </Link>{" "}
         while you wait.

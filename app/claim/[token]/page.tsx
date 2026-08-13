@@ -47,7 +47,7 @@ export default async function ClaimInvitationPage({
           administrator for a new invitation before creating an account.
         </p>
         <Link
-          href="/chess"
+          href="/#search"
           className="mt-6 inline-flex text-sm font-semibold text-brand-red hover:underline"
         >
           Search tournaments

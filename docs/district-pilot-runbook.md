@@ -1,9 +1,10 @@
 # District pilot runbook
 
 This runbook is for Causey-assisted district pilots, including two districts
-running concurrently. It assumes chess is the active competition surface and
-product email is delivered through the verified `mail.causey.dev` Resend
-integration.
+running concurrently. Chess is still the broadest active competition surface,
+but the public directories now also cover speech and debate, STEM, arts, and
+writing with smaller permitted source sets. Product email is delivered through
+the verified `mail.causey.dev` Resend integration.
 
 ## 1. Prepare the pilot environment
 

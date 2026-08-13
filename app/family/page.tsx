@@ -9,6 +9,7 @@ import { RsvpButtons } from "@/components/RsvpButtons";
 import { StudentAccountHandoff } from "@/components/StudentAccountHandoff";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import {
   getChildrenWithEvents,
   getMyRecommendations,
@@ -44,9 +45,9 @@ export default async function FamilyPage() {
         </h1>
         <p className="mt-3 text-sm text-muted">
           Family accounts are unavailable in this build. You can still search
-          public chess tournaments while account access is restored.
+          public tournament listings while account access is restored.
         </p>
-        <Link href="/chess" className="cta-enabled mt-6 inline-flex">
+        <Link href="/#search" className="cta-enabled mt-6 inline-flex">
           Search tournaments
         </Link>
       </div>
@@ -170,7 +171,12 @@ export default async function FamilyPage() {
     missionTitle = "Your family is caught up";
     missionDescription =
       "No invitations or unfinished organizer registrations need you right now.";
-    missionAction = { href: "/chess", label: "Search tournaments" };
+    missionAction = {
+      href: preferredDiscoveryHref(
+        profile?.preferred_competition_category ?? null
+      ),
+      label: "Search tournaments",
+    };
   }
 
   const linkStudentSection = (

@@ -51,9 +51,9 @@ export default async function OrgsPage() {
         </h1>
         <p className="mt-3 text-sm text-muted">
           Organization workspaces are unavailable in this build. You can still
-          search public chess tournaments while account access is restored.
+          search public tournament listings while account access is restored.
         </p>
-        <Link href="/chess" className="cta-enabled mt-6 inline-flex">
+        <Link href="/#search" className="cta-enabled mt-6 inline-flex">
           Search tournaments
         </Link>
       </div>

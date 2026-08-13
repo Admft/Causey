@@ -20,6 +20,7 @@ import {
 } from "@/components/AccountCompetitionActions";
 import { isCompetitionEnded } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
+import { discoveryCategory } from "@/lib/category-discovery";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
 import { RecommendEventPanel } from "@/components/RecommendEventPanel";
@@ -79,6 +80,11 @@ export default async function EventPage({ params }: Params) {
   if (!competition) notFound();
 
   const isChess = competition.category === "chess";
+  const categoryDefinition = discoveryCategory(competition.category);
+  // Public indexed events return to their directory; private/org-only events
+  // return to the hosting organization's competition list.
+  const backToDirectory =
+    categoryDefinition !== null && competition.visibility === "public";
   const [rules, seriesList] = isChess
     ? await Promise.all([
         data.listQualificationRules(),
@@ -256,19 +262,23 @@ export default async function EventPage({ params }: Params) {
 
   return (
     <>
-      {isChess ? <ChessSubnavBar tool="tournaments" /> : null}
+      {categoryDefinition ? (
+        <ChessSubnavBar category={categoryDefinition.id} tool="tournaments" />
+      ) : null}
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <Link
         href={
-          isChess
-            ? "/chess"
+          backToDirectory
+            ? categoryDefinition.href
             : hostOrgSlug
               ? `/orgs/${hostOrgSlug}/competitions`
               : "/orgs"
         }
         className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
       >
-        {isChess ? "← All chess tournaments" : "← Organization competitions"}
+        {backToDirectory
+          ? `← All ${categoryDefinition.label} tournaments`
+          : "← Organization competitions"}
       </Link>
 
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">

@@ -89,7 +89,7 @@ export default async function SignupPage({
       </div>
       <p className="mt-6 text-xs text-muted">
         You can search without creating an account.{" "}
-        <Link href="/chess" className="font-medium text-muted-strong hover:text-brand-red">
+        <Link href="/#search" className="font-medium text-muted-strong hover:text-brand-red">
           Keep browsing tournaments
         </Link>
       </p>

@@ -49,7 +49,8 @@ and [`docs/district-pilot-runbook.md`](docs/district-pilot-runbook.md).
 ```
 app/                    Next.js App Router pages + API routes
   page.tsx              discovery-first home
-  chess/                 zip/radius tournament search
+  chess/ debate/ stem/   category directories — zip/radius tournament
+  arts/ writing/         search over each one's permitted official sources
   event/[slug]/         event detail: sections, eligibility badges,
                         organizer registration link, account actions
   pathways/             pathway explorer (event + placement → what it opens)

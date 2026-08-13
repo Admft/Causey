@@ -2,60 +2,125 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
+import {
+  DISCOVERY_CATEGORIES,
+  discoveryCategoryHref,
+  discoveryCategoryLabel,
+  type DiscoveryCategory,
+} from "@/lib/category-discovery";
 
 const RADII = ["10", "25", "50", "100", "250"];
 
 /**
- * Hero entry point. Chess search is the only finished surface, so the hero
- * hands the visitor straight to it instead of describing it — the zip and
- * radius map onto the params /chess already reads, so results load in one hop.
+ * Hero entry point for every public directory. The visitor picks a
+ * competition type explicitly — there is no hidden chess default; signed-in
+ * users may start from the shortcut saved on their account. Zip and radius
+ * map onto the params every category search page already reads, so results
+ * load in one hop.
  */
-export function HomeHeroSearch() {
+export function HomeHeroSearch({
+  initialCategory = null,
+}: {
+  initialCategory?: DiscoveryCategory | null;
+}) {
   const router = useRouter();
+  const [category, setCategory] = useState<DiscoveryCategory | "">(
+    initialCategory ?? ""
+  );
   const [zip, setZip] = useState("");
   const [radius, setRadius] = useState("50");
-  const [error, setError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [zipError, setZipError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+  const zipRef = useRef<HTMLInputElement>(null);
 
-  function validate(value: string): boolean {
+  function validateZip(value: string): boolean {
     const trimmed = value.trim();
     if (trimmed && !/^\d{5}$/.test(trimmed)) {
-      setError("Enter a 5-digit zip code, like 75201.");
+      setZipError("Enter a 5-digit zip code, like 75201.");
       return false;
     }
-    setError(null);
+    setZipError(null);
     return true;
   }
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (!category) {
+      setCategoryError("Choose a competition type to search.");
+      categoryRef.current?.focus();
+      return;
+    }
+    setCategoryError(null);
     const trimmed = zip.trim();
-    if (!validate(trimmed)) return;
+    if (!validateZip(trimmed)) {
+      zipRef.current?.focus();
+      return;
+    }
 
     setPending(true);
-    const params = new URLSearchParams();
-    if (trimmed) {
-      params.set("zip", trimmed);
-      params.set("radius", radius);
-    }
-    router.push(params.size ? `/chess?${params}` : "/chess");
+    // Only the params every directory understands make the trip.
+    router.push(
+      discoveryCategoryHref(category, {
+        zip: trimmed || null,
+        radius: trimmed ? radius : null,
+      })
+    );
   }
 
   return (
     <form
+      id="search"
       onSubmit={onSubmit}
       className="w-full min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
     >
       <h2 className="font-display text-display-sm font-bold tracking-tight text-foreground">
-        Find chess tournaments
+        Find tournaments
       </h2>
       <p className="mt-2 text-sm text-muted">
-        Entry fees and section eligibility are shown before you commit to
-        anything.
+        Pick a competition type, then search by name or zip. Entry details and
+        source links stay on the event page before you commit to anything.
       </p>
 
       <div className="mt-5 flex flex-col gap-3">
+        <div className="min-w-0">
+          <label
+            htmlFor="hero-category"
+            className="text-xs font-semibold text-muted-strong"
+          >
+            Competition type
+          </label>
+          <select
+            id="hero-category"
+            ref={categoryRef}
+            className="field mt-1 w-full"
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value as DiscoveryCategory | "");
+              setCategoryError(null);
+            }}
+            aria-invalid={categoryError !== null}
+            aria-describedby={categoryError ? "hero-category-error" : undefined}
+          >
+            <option value="">Choose a competition type</option>
+            {DISCOVERY_CATEGORIES.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {categoryError ? (
+            <p
+              id="hero-category-error"
+              role="alert"
+              className="mt-1 text-2xs text-error"
+            >
+              {categoryError}
+            </p>
+          ) : null}
+        </div>
         <div className="min-w-0">
           <label
             htmlFor="hero-zip"
@@ -65,6 +130,7 @@ export function HomeHeroSearch() {
           </label>
           <input
             id="hero-zip"
+            ref={zipRef}
             className="field mt-1"
             inputMode="numeric"
             autoComplete="postal-code"
@@ -72,10 +138,15 @@ export function HomeHeroSearch() {
             placeholder="75201"
             value={zip}
             onChange={(event) => setZip(event.target.value)}
-            onBlur={(event) => validate(event.target.value)}
-            aria-invalid={error !== null}
-            aria-describedby={error ? "hero-zip-error" : undefined}
+            onBlur={(event) => validateZip(event.target.value)}
+            aria-invalid={zipError !== null}
+            aria-describedby={zipError ? "hero-zip-error" : undefined}
           />
+          {zipError ? (
+            <p id="hero-zip-error" role="alert" className="mt-1 text-2xs text-error">
+              {zipError}
+            </p>
+          ) : null}
         </div>
         <div className="min-w-0">
           <label
@@ -99,12 +170,6 @@ export function HomeHeroSearch() {
         </div>
       </div>
 
-      {error ? (
-        <p id="hero-zip-error" role="alert" className="mt-2 text-2xs text-error">
-          {error}
-        </p>
-      ) : null}
-
       <button
         type="submit"
         disabled={pending}
@@ -114,11 +179,16 @@ export function HomeHeroSearch() {
       </button>
 
       <p className="mt-4 text-2xs text-muted">
-        Indexed from US Chess, Continental Chess, OnlineRegistration.cc,
-        Chess-Results, FIDE, and Texas Chess Association listings.{" "}
-        <Link href="/chess" className="font-semibold text-brand-red hover:underline">
-          Browse without a zip
-        </Link>
+        {category ? (
+          <Link
+            href={discoveryCategoryHref(category)}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Browse {discoveryCategoryLabel(category)} without a zip
+          </Link>
+        ) : (
+          "Every directory lists the official sources it indexes, including the ones still link-only."
+        )}
       </p>
     </form>
   );

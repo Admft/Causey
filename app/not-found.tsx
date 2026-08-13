@@ -11,8 +11,8 @@ export default function NotFound() {
         The event may have been unpublished, or the link has a typo. Everything
         currently listed is one search away.
       </p>
-      <Link href="/chess" className="cta-enabled mt-6">
-        Search chess tournaments
+      <Link href="/#search" className="cta-enabled mt-6">
+        Search tournaments
       </Link>
     </div>
   );

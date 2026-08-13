@@ -5,11 +5,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { AccountRole } from "@/lib/auth/types";
+import {
+  discoveryCategory,
+  parseDiscoveryCategory,
+  type DiscoveryCategory,
+} from "@/lib/category-discovery";
 
 /**
- * Sign in / Account controls for the primary nav.
- * Mobile uses short labels so Chess + portal + Account + Sign out stay one
- * row; full wording returns at sm+.
+ * Sign in / Account controls for the primary nav. A signed-in user gets at
+ * most one tournament shortcut, from the category saved in Account settings;
+ * signed-out visitors get none. Mobile uses short labels so the shortcut,
+ * portal, Account, and Sign out stay one row; full wording returns at sm+.
  */
 function navLinkClass(active: boolean) {
   return active
@@ -31,6 +37,7 @@ export function AuthNav() {
   const [hasOrgStaffAccess, setHasOrgStaffAccess] = useState(false);
   const [hasDistrictAccess, setHasDistrictAccess] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
+  const [shortcut, setShortcut] = useState<DiscoveryCategory | null>(null);
 
   useEffect(() => {
     if (!configured) return;
@@ -43,6 +50,7 @@ export function AuthNav() {
         setHasOrgStaffAccess(false);
         setHasDistrictAccess(false);
         setUnreadAlerts(0);
+        setShortcut(null);
         return;
       }
       const [
@@ -54,7 +62,7 @@ export function AuthNav() {
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("role")
+          .select("role, preferred_competition_category")
           .eq("id", userId)
           .maybeSingle(),
         supabase.rpc("is_platform_admin"),
@@ -83,6 +91,16 @@ export function AuthNav() {
           .is("read_at", null),
       ]);
       setRole((profileResult.data?.role as AccountRole) ?? null);
+      // A missing preferred_competition_category column (migration 0056 not
+      // applied) surfaces as a profile read error; the nav just renders no
+      // shortcut rather than guessing one.
+      setShortcut(
+        profileResult.error
+          ? null
+          : parseDiscoveryCategory(
+              profileResult.data?.preferred_competition_category
+            )
+      );
       setIsAdmin(adminResult.error ? false : adminResult.data === true);
       setHasOrgStaffAccess(
         Boolean(membershipResult.data?.length || ownedOrgResult.data?.length)
@@ -167,8 +185,28 @@ export function AuthNav() {
             ? [organizationLink]
             : [];
 
+  const shortcutDefinition = shortcut ? discoveryCategory(shortcut) : null;
+  const shortcutActive = shortcutDefinition
+    ? pathname === shortcutDefinition.href ||
+      pathname.startsWith(`${shortcutDefinition.href}/`) ||
+      (shortcutDefinition.id === "chess" && pathname.startsWith("/pathways"))
+    : false;
+
   return (
     <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+      {shortcutDefinition ? (
+        <Link
+          href={shortcutDefinition.href}
+          aria-label={`${shortcutDefinition.label} tournaments`}
+          aria-current={shortcutActive ? "page" : undefined}
+          className={navLinkClass(shortcutActive)}
+        >
+          <span className="sm:hidden">{shortcutDefinition.shortLabel}</span>
+          <span className="hidden sm:inline">
+            {shortcutDefinition.label} tournaments
+          </span>
+        </Link>
+      ) : null}
       {isAdmin ? (
         <Link
           href="/admin"

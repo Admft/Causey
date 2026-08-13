@@ -4,14 +4,23 @@ import { HomeAccountPitch } from "@/components/HomeAccountPitch";
 import { HomeCoveragePath } from "@/components/HomeCoveragePath";
 import { HomeDistrictPitch } from "@/components/HomeDistrictPitch";
 import { HomeHeroSearch } from "@/components/HomeHeroSearch";
+import { getCurrentProfile } from "@/lib/auth/session";
+import { parseDiscoveryCategory } from "@/lib/category-discovery";
 
 export const metadata: Metadata = {
   title: "Find student competitions",
   description:
-    "Causey indexes scholastic chess tournaments across the US so students can find events within reach.",
+    "Causey indexes official scholastic competition listings across chess, speech and debate, STEM, arts, and writing so students can find events within reach. Coverage varies by category and is still incomplete.",
 };
 
-export default function CompetitionTypesPage() {
+export default async function CompetitionTypesPage() {
+  // Signed-in visitors may start from their saved directory shortcut; a
+  // schema gap or signed-out visit simply means no preselected category.
+  const profile = await getCurrentProfile();
+  const initialCategory = parseDiscoveryCategory(
+    profile?.preferred_competition_category
+  );
+
   return (
     <>
       <section className="access-grid overflow-x-clip">
@@ -21,16 +30,17 @@ export default function CompetitionTypesPage() {
               <CauseyLogo size="hero" />
             </div>
             <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[18ch] font-display text-display-xl font-bold tracking-tight text-foreground sm:mt-6">
-              Scholastic chess tournaments, indexed in one place.
+              Student competitions, indexed in one place.
             </h1>
             <p className="animate-rise animate-rise-delay-1 mt-3 max-w-prose text-md text-muted sm:mt-4">
-              Search by zip to see what is actually within reach. Chess is the
-              first competition type we have finished; four more are in progress
-              below.
+              Search chess, speech and debate, STEM, arts, and writing events by
+              zip to see what is actually within reach. Coverage varies sharply
+              by category; chess is the broadest directory today, and every
+              directory is still incomplete.
             </p>
           </div>
           <div className="animate-rise animate-rise-delay-2 relative z-10 min-w-0 w-full">
-            <HomeHeroSearch />
+            <HomeHeroSearch initialCategory={initialCategory} />
           </div>
         </div>
       </section>

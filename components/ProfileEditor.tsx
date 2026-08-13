@@ -14,6 +14,7 @@ import {
   type Profile,
 } from "@/lib/auth/types";
 import {
+  DISCOVERY_CATEGORIES,
   parseDiscoveryCategory,
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
@@ -25,14 +26,34 @@ const STATES = [
   "VA","WA","WV","WI","WY","DC",
 ];
 
+const SHORTCUT_SCHEMA_GAP_MESSAGE =
+  "Tournament shortcut could not be saved because this environment has not applied the account database update (migration 0056) yet. Your other profile changes were not saved either; try again after the update lands.";
+
+function isShortcutSchemaGap(error: unknown): boolean {
+  const message =
+    error && typeof error === "object" && "message" in error
+      ? String((error as { message: unknown }).message)
+      : String(error ?? "");
+  return message.includes("preferred_competition_category");
+}
+
 export function ProfileEditor({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [dateOfBirth, setDateOfBirth] = useState(profile.date_of_birth ?? "");
   const [state, setState] = useState(profile.state ?? "");
   const [zip, setZip] = useState(profile.zip ?? "");
-  const [chessInterest, setChessInterest] = useState(
-    profile.interests.includes("chess")
+  const [interests, setInterests] = useState<Set<DiscoveryCategory>>(
+    () =>
+      new Set(
+        profile.interests.flatMap((interest) => {
+          const category = parseDiscoveryCategory(interest);
+          return category ? [category] : [];
+        })
+      )
+  );
+  const [shortcut, setShortcut] = useState<DiscoveryCategory | "">(
+    parseDiscoveryCategory(profile.preferred_competition_category) ?? ""
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -47,6 +68,19 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
     }
   }, [dateOfBirth]);
 
+  function toggleInterest(category: DiscoveryCategory, checked: boolean) {
+    setInterests((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(category);
+      } else {
+        next.delete(category);
+      }
+      return next;
+    });
+    setSaved(false);
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -60,20 +94,16 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       if (dateOfBirth) {
         ageBand = ageBandFromDateOfBirth(dateOfBirth);
       }
-      const interests: DiscoveryCategory[] = profile.interests.flatMap((interest) => {
-        const category = parseDiscoveryCategory(interest);
-        return category && category !== "chess" ? [category] : [];
-      });
-      if (chessInterest) interests.push("chess");
       const update = ProfileEditableFieldsSchema.parse({
         display_name: displayName,
         date_of_birth: dateOfBirth || null,
         age_band: ageBand,
         state: state || null,
         zip: zip || null,
-        interests,
-        preferred_competition_category:
-          profile.preferred_competition_category,
+        interests: DISCOVERY_CATEGORIES.filter((category) =>
+          interests.has(category.id)
+        ).map((category) => category.id),
+        preferred_competition_category: shortcut || null,
         updated_at: new Date().toISOString(),
       });
       const supabase = createBrowserSupabaseClient();
@@ -85,7 +115,13 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       setSaved(true);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save profile.");
+      if (isShortcutSchemaGap(err)) {
+        setError(SHORTCUT_SCHEMA_GAP_MESSAGE);
+      } else {
+        setError(
+          err instanceof Error ? err.message : "Could not save profile."
+        );
+      }
     } finally {
       setPending(false);
     }
@@ -149,13 +185,54 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           />
         </label>
       </div>
-      <label className="flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          checked={chessInterest}
-          onChange={(e) => setChessInterest(e.target.checked)}
-        />
-        Interested in chess
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-xs font-semibold text-muted-strong">
+          Competition interests
+        </legend>
+        <p className="text-2xs text-muted">
+          Used to tune what Causey shows you. Choose any, or none.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {DISCOVERY_CATEGORIES.map((category) => (
+            <label
+              key={category.id}
+              className="flex items-center gap-2 text-sm text-foreground"
+            >
+              <input
+                type="checkbox"
+                checked={interests.has(category.id)}
+                onChange={(e) => toggleInterest(category.id, e.target.checked)}
+              />
+              {category.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-semibold text-muted-strong">
+          Tournament shortcut
+        </span>
+        <select
+          className="field"
+          value={shortcut}
+          onChange={(e) => {
+            setShortcut(e.target.value as DiscoveryCategory | "");
+            setSaved(false);
+          }}
+        >
+          <option value="">None</option>
+          {DISCOVERY_CATEGORIES.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.label}
+            </option>
+          ))}
+        </select>
+        <span className="text-2xs text-muted">
+          Adds one directory shortcut to the site header when you are signed
+          in. Separate from interests; choose None for no shortcut.
+        </span>
       </label>
 
       {error ? (

@@ -27,9 +27,13 @@ export type CategorySource = {
 export type CategoryDiscoveryDefinition = {
   id: DiscoveryCategory;
   label: string;
+  /** Compact label for space-constrained chrome (mobile header nav). */
+  shortLabel: string;
   href: string;
   heading: string;
   description: string;
+  /** Empty-results guidance naming what this directory actually covers. */
+  emptyDescription: string;
   searchPlaceholder: string;
   facetLabel?: string;
   facets: readonly CategoryFacet[];
@@ -41,10 +45,13 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
   {
     id: "chess",
     label: "Chess",
+    shortLabel: "Chess",
     href: "/chess",
     heading: "Scholastic chess tournaments near you.",
     description:
       "Search the chess events Causey has indexed so far. Coverage is growing and still incomplete; confirm fees, eligibility, and registration with the organizer.",
+    emptyDescription:
+      "Try widening the radius, raising the fee ceiling, or clearing a filter. State championships may be farther away.",
     searchPlaceholder: "Try World Open, state championship, or scholastic",
     facets: [],
     activeSources: [
@@ -66,10 +73,13 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
   {
     id: "debate",
     label: "Speech & Debate",
+    shortLabel: "Debate",
     href: "/debate",
     heading: "Speech and debate tournaments.",
     description:
       "Search the official UIL invitational listings Causey has indexed so far. Coverage is limited to Texas rows that explicitly name speech or debate offerings and publish complete locations.",
+    emptyDescription:
+      "Causey currently indexes only UIL invitational rows with explicit speech or debate offerings, so many real tournaments are not listed here yet. Try widening the radius or switching Timing to All, and use the reference links below for wider coverage.",
     searchPlaceholder: "Try public forum, Lincoln-Douglas, or a tournament name",
     facetLabel: "Event type or format",
     facets: [
@@ -105,10 +115,13 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
   {
     id: "stem",
     label: "STEM",
+    shortLabel: "STEM",
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
       "Search the official public listings Causey has indexed so far. Current coverage includes National Science Bowl dates, the Purple Comet team mathematics window, and the Texas state science fair; robotics and regional fair coverage remains limited.",
+    emptyDescription:
+      "STEM coverage is currently limited to National Science Bowl, Purple Comet, and Texas state science fair dates. Try clearing filters or switching Timing to All; the source list below shows exactly what is indexed.",
     searchPlaceholder: "Try robotics, science fair, or a competition name",
     facetLabel: "Discipline",
     facets: [
@@ -176,10 +189,13 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
   {
     id: "arts",
     label: "Arts",
+    shortLabel: "Arts",
     href: "/arts",
     heading: "Student arts competitions.",
     description:
       "Search the official public listings Causey has indexed so far. Current coverage includes published TAEA VASE dates, UIL theatre state meets, and UIL state open-class marching band dates; regional, district, zone, area, local, and other music coverage remains incomplete.",
+    emptyDescription:
+      "Arts coverage is currently limited to published TAEA VASE dates plus UIL state theatre and marching band dates. Try clearing filters or switching Timing to All; the source list below shows exactly what is indexed.",
     searchPlaceholder: "Try visual arts, music, theatre, or an event name",
     facetLabel: "Discipline",
     facets: [
@@ -223,10 +239,13 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
   {
     id: "writing",
     label: "Writing",
+    shortLabel: "Writing",
     href: "/writing",
     heading: "Student writing competitions.",
     description:
       "Search the official public opportunities Causey has indexed so far. Coverage is intentionally small, and dates remain unpublished until an organizer gives a specific year.",
+    emptyDescription:
+      "Writing coverage is intentionally small: listings publish only when an organizer names a complete, year-specific cycle. Try switching Timing to All, and use the reference links below for wider coverage.",
     searchPlaceholder: "Try poetry, fiction, nonfiction, or an award name",
     facetLabel: "Genre",
     facets: [
@@ -304,6 +323,12 @@ export function discoveryCategoryHref(
 
 export function discoveryCategoryLabel(category: DiscoveryCategory): string {
   return DISCOVERY_BY_ID.get(category)?.label ?? category;
+}
+
+export function discoveryCategoryShortLabel(
+  category: DiscoveryCategory
+): string {
+  return DISCOVERY_BY_ID.get(category)?.shortLabel ?? category;
 }
 
 export function preferredDiscoveryHref(

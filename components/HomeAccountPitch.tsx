@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { AccountRole } from "@/lib/auth/types";
 import { getCurrentProfile } from "@/lib/auth/session";
+import { preferredDiscoveryHref } from "@/lib/category-discovery";
 
 /**
  * Conversion band for signed-out visitors. Searching works without an account,
@@ -9,7 +10,9 @@ import { getCurrentProfile } from "@/lib/auth/session";
  * When already signed in, swap to role next-actions — never pitch Sign up.
  */
 
-const SIGNED_IN_NEXT: Record<
+const SIGNED_IN_NEXT = (
+  searchHref: string
+): Record<
   AccountRole,
   {
     heading: string;
@@ -17,7 +20,7 @@ const SIGNED_IN_NEXT: Record<
     primary: { href: string; label: string };
     secondary: { href: string; label: string; description: string }[];
   }
-> = {
+> => ({
   student: {
     heading: "You are signed in as a student",
     blurb:
@@ -25,7 +28,7 @@ const SIGNED_IN_NEXT: Record<
     primary: { href: "/me", label: "Open my tournaments" },
     secondary: [
       {
-        href: "/chess",
+        href: searchHref,
         label: "Search tournaments",
         description:
           "Indexed feeds and club-published events in one search.",
@@ -44,7 +47,7 @@ const SIGNED_IN_NEXT: Record<
     primary: { href: "/family", label: "Open family desk" },
     secondary: [
       {
-        href: "/chess",
+        href: searchHref,
         label: "Search tournaments",
         description:
           "Indexed feeds and club-published events in one search.",
@@ -63,7 +66,7 @@ const SIGNED_IN_NEXT: Record<
     primary: { href: "/orgs", label: "Open my organizations" },
     secondary: [
       {
-        href: "/chess",
+        href: searchHref,
         label: "Search tournaments",
         description:
           "Indexed feeds and club-published events in one search.",
@@ -75,13 +78,19 @@ const SIGNED_IN_NEXT: Record<
       },
     ],
   },
-};
+});
 
 export async function HomeAccountPitch() {
   const profile = await getCurrentProfile();
 
   if (profile) {
-    const next = SIGNED_IN_NEXT[profile.role] ?? SIGNED_IN_NEXT.student;
+    const searchHref = preferredDiscoveryHref(
+      profile.preferred_competition_category,
+      { zip: profile.zip }
+    );
+    const next =
+      SIGNED_IN_NEXT(searchHref)[profile.role] ??
+      SIGNED_IN_NEXT(searchHref).student;
     return (
       <section
         className="home-band band-join band-join--blue bg-brand-blue-soft/50"
