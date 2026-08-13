@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestDataSource } from "@/lib/data";
+import { isDiscoveryCategory } from "@/lib/category-discovery";
 import { DEFAULT_SEARCH_LIMIT, SearchFiltersSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -17,13 +18,7 @@ export async function GET(request: NextRequest) {
   const raw: Record<string, string> = Object.fromEntries(
     [...request.nextUrl.searchParams.entries()].filter(([, v]) => v !== "")
   );
-  if (raw.category && raw.category !== "chess") {
-    return NextResponse.json(
-      { error: "That competition type is not searchable yet." },
-      { status: 400 }
-    );
-  }
-  raw.category = "chess";
+  raw.category ??= "chess";
 
   const parsed = SearchFiltersSchema.safeParse(raw);
   if (!parsed.success) {
@@ -32,6 +27,12 @@ export async function GET(request: NextRequest) {
         error: "Invalid search filters.",
         issues: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`),
       },
+      { status: 400 }
+    );
+  }
+  if (!parsed.data.category || !isDiscoveryCategory(parsed.data.category)) {
+    return NextResponse.json(
+      { error: "That competition type does not have a public directory." },
       { status: 400 }
     );
   }

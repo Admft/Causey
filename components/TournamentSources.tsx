@@ -73,7 +73,11 @@ function SourceColumn({
                   <a
                     href={source.href}
                     {...(external
-                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      ? {
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                          "aria-label": `${source.name} (opens in a new tab)`,
+                        }
                       : {})}
                     className="group inline-flex items-baseline gap-1.5 text-base font-semibold text-foreground transition-colors hover:text-brand-red"
                   >
@@ -101,9 +105,12 @@ function SourceColumn({
 function AffiliatePreviewColumn() {
   return (
     <div className="rounded-xl border border-line bg-surface-soft p-5 sm:p-6">
-      <h3 className="text-xs font-semibold text-muted-strong">Adding soon</h3>
+      <h3 className="text-xs font-semibold text-muted-strong">
+        Reference directory, not indexed
+      </h3>
       <p className="mt-2 text-sm text-muted">
-        Scrapers are in progress; none of these are indexed yet.
+        Causey links to the full US Chess affiliate directory. Texas is indexed;
+        the affiliate calendars listed here are reference links only.
       </p>
       <ul className="mt-4 grid grid-cols-1 gap-y-3 border-t border-line pt-4 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-4">
         {PREVIEW_AFFILIATES.map((affiliate) => (

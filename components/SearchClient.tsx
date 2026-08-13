@@ -20,6 +20,7 @@ import {
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
 import { ChessHeroGraphic } from "@/components/ChessHeroGraphic";
+import { discoveryCategory } from "@/lib/category-discovery";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
 
 /**
@@ -75,6 +76,7 @@ function readParams(params: URLSearchParams): SearchInputState {
       timing: parseTiming(params.get("timing")),
       grade_band: params.get("grade_band") ?? "",
       rating_band: params.get("rating_band") ?? "",
+      facet: params.get("facet") ?? "",
       max_fee_dollars: params.get("max_fee") ?? "",
       date_from: params.get("date_from") ?? "",
       date_to: params.get("date_to") ?? "",
@@ -105,6 +107,7 @@ function queryFromState(
   if (state.filters.rating_band) {
     p.set("rating_band", state.filters.rating_band);
   }
+  if (state.filters.facet) p.set("facet", state.filters.facet);
   if (state.filters.max_fee_dollars) {
     p.set("max_fee", state.filters.max_fee_dollars);
   }
@@ -127,6 +130,8 @@ export function SearchClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const categoryDefinition =
+    discoveryCategory(category) ?? discoveryCategory("chess")!;
   const initial = useMemo(() => readParams(new URLSearchParams(searchParams)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [keyword, setKeyword] = useState(initial.keyword);
@@ -319,20 +324,19 @@ export function SearchClient({
       <section className="access-grid section-rule">
         <div className="relative mx-auto min-h-[400px] max-w-6xl px-5 py-14 sm:px-8 sm:py-16 lg:min-h-[440px]">
           <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-            Chess
+            {categoryDefinition.label}
           </p>
           <h1 className="mt-2 max-w-[20ch] font-display text-display-lg font-bold tracking-tight text-foreground">
-            Scholastic chess tournaments near you.
+            {categoryDefinition.heading}
           </h1>
           <p className="mt-3 max-w-lg text-md text-muted">
-            Search the events Causey has indexed so far — coverage is growing
-            and still incomplete. Enter a zip to see what&rsquo;s in reach, with
-            entry fee and who can play shown before you commit.
+            {categoryDefinition.description}
           </p>
           <div className="mt-6 max-w-lg lg:hidden">
             <SearchFilters
               filters={filters}
               onChange={setFilters}
+              category={category}
               idPrefix="mobile-filter"
             />
           </div>
@@ -347,7 +351,7 @@ export function SearchClient({
               id="tournament-search"
               type="search"
               className="field mt-1"
-              placeholder="Try World Open, state championship, or scholastic"
+              placeholder={categoryDefinition.searchPlaceholder}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
@@ -403,7 +407,7 @@ export function SearchClient({
             </button>
           </form>
 
-          <ChessHeroGraphic />
+          {category === "chess" ? <ChessHeroGraphic /> : null}
         </div>
       </section>
 
@@ -418,13 +422,18 @@ export function SearchClient({
               <SearchFilters
                 filters={filters}
                 onChange={setFilters}
+                category={category}
                 idPrefix="desktop-filter"
               />
             </div>
           </aside>
 
           <div aria-live="polite">
-            <ActiveFilterChips filters={filters} onChange={setFilters} />
+            <ActiveFilterChips
+              filters={filters}
+              onChange={setFilters}
+              category={category}
+            />
 
             {status.kind === "loading" && (
               <div className={resultsGridClass(layout)} aria-label="Loading results">
@@ -460,7 +469,9 @@ export function SearchClient({
                     ? `Upcoming ${competitionSourceLabel(
                         filters.source
                       )} listings only. Most published records from this source may already have ended — switch Timing to All or Ended. A zip radius can also hide events in other cities.`
-                    : "Try widening the radius, raising the fee ceiling, or clearing a filter — state championships especially may be further out but are where qualification pathways start."}
+                    : category === "chess"
+                      ? "Try widening the radius, raising the fee ceiling, or clearing a filter. State championships may be farther away."
+                      : "Try widening the radius or date range, or clear a filter. This directory currently covers only the limited official sources listed below."}
                 </p>
               </div>
             )}

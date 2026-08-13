@@ -362,6 +362,13 @@ export const SearchFiltersSchema = z.object({
       message: "Rating bands are available only for chess.",
     });
   }
+  if (filters.featured && filters.category && filters.category !== "chess") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["featured"],
+      message: "Featured chess standing is available only for chess.",
+    });
+  }
   if (
     filters.facet &&
     (!filters.category ||

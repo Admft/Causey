@@ -12,5 +12,9 @@ export {
 
 import { INGESTION_SOURCES } from "@/lib/ingestion-sources";
 
-export const LIVE_SOURCES = INGESTION_SOURCES.filter((s) => s.status === "live");
-export const SOON_SOURCES = INGESTION_SOURCES.filter((s) => s.status === "soon");
+export const LIVE_SOURCES = INGESTION_SOURCES.filter(
+  (source) => source.category === "chess" && source.status === "live"
+);
+export const SOON_SOURCES = INGESTION_SOURCES.filter(
+  (source) => source.category === "chess" && source.status === "soon"
+);

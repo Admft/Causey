@@ -1261,13 +1261,13 @@ export function TournamentCreateForm({
 
           <p className="text-sm text-muted">
             {publicReview
-              ? category === "chess"
-                ? "Submitting creates a private review page for your staff. The competition will not appear in chess search until a platform administrator approves it."
-                : "Submitting creates a private review page for your staff. After approval, the public link can be shared directly; this type is not searchable yet."
+              ? category === "other"
+                ? "Submitting creates a private review page for your staff. After approval, the public link can be shared directly; custom types do not have a public directory."
+                : "Submitting creates a private review page for your staff. The competition will not appear in its category directory until a platform administrator approves it."
               : admin && audience === "public"
-                ? category === "chess"
-                  ? "Publishing makes the competition visible in chess search immediately."
-                  : "Publishing makes the public link available immediately. This type is not searchable yet."
+                ? category === "other"
+                  ? "Publishing makes the public link available immediately. Custom types do not have a public directory."
+                  : "Publishing makes the competition visible in its category directory immediately."
                 : "Publishing makes the event available to the selected audience immediately. You can edit or cancel it later."}
           </p>
         </>

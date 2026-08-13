@@ -1,7 +1,8 @@
 # Ingestion — scrape → normalize → upsert → dedupe → series → scrape_runs
 
-There is no unified chess-tournament API. Supply comes from scrapers plus
-hand curation of **pathways** (series + qualification rules).
+There is no unified competition API. Chess supply comes from scrapers plus
+hand curation of **pathways** (series + qualification rules). The first
+non-chess adapters use only official public pages and skip chess pathway logic.
 
 ```
 listing + detail scrape
@@ -25,12 +26,13 @@ Run these in the Supabase SQL editor if not already applied:
 4. **`0007_pathway_enrichment.sql`** — `ingestion_sources` logos, `pathway_*` columns, `enrichment_runs`
 5. **`0019_hub_scrape_sources.sql`** — OnlineReg / Chess-Results / FIDE source enums + live `ingestion_sources`
 6. **`0039_admin_tournament_operations.sql`** — admin deletion RPC, scrape-run visibility, and dispatch audit
+7. **`0047_multi_category_discovery_sources.sql`** — Tabroom, VEX Events, TAEA VASE, and Bennington source ids + category metadata
 
 ## Provenance
 
 | Column / table | Meaning |
 | --- | --- |
-| `competitions.source` | Pipeline: `manual`, `tla_scrape`, `cca_scrape`, `organizer`, `onlinereg_scrape`, `chess_results_scrape`, `fide_calendar_scrape` |
+| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, and `bennington_writers_scrape` |
 | `competitions.source_url` | Exact upstream page scraped |
 | `competitions.fingerprint` | Normalized name\|date\|state\|zip for cross-source matching |
 | `competitions.canonical_id` | Set on archived duplicates → points at the surviving row |
@@ -48,7 +50,13 @@ npm run scrape:onlinereg        # OnlineRegistration.cc index
 npm run scrape:chess-results    # Chess-Results USA search
 npm run scrape:fide             # FIDE Calendar tiles
 npm run scrape:tca              # Texas Chess Association events + pictures
-npm run scrape:all              # All six in sequence (dedupe-friendly)
+npm run scrape:tabroom          # Configured public Tabroom circuit calendar
+npm run scrape:vex              # Official public VEX Events directory
+npm run scrape:taea-vase        # Official public TAEA VASE dates
+npm run scrape:bennington-writers # Official Bennington cycle, when year-specific
+npm run scrape:discovery        # Runnable non-chess adapters in sequence
+SCRAPE_INCLUDE_BLOCKED=1 npm run scrape:discovery # also re-check ordinary VEX access
+npm run scrape:all              # All six chess sources in sequence
 
 SCRAPE_UPSERT_ONLY=1 npm run scrape:tla   # re-upsert staged JSON
 SCRAPE_HTML_FILE=… SCRAPE_SKIP_DETAIL=1 npm run scrape:tla
@@ -135,12 +143,48 @@ False merges are rare (name + date + state [+ zip]). If one happens, clear
 `canonical_id`, set status back to `published`/`draft` in Supabase, and tighten
 the fingerprint inputs.
 
+Non-chess fingerprints include the category before name/date/location. A STEM
+event therefore cannot collapse into an Arts, Writing, Debate, or Chess row
+with a similar title. Series matching and pathway enrichment run only for
+`category='chess'`.
+
+## Official non-chess sources
+
+- **Tabroom (`tabroom_scrape`, Debate):** public calendars only. The initial
+  adapter is deliberately configured to one public circuit calendar; it does
+  not claim complete Tabroom coverage.
+- **VEX Events (`vex_events_scrape`, STEM / `robotics`):** public HTML event
+  directory. No private API or token is used. The repository fetcher received
+  HTTP 403 on 2026-08-12, so live refresh remains blocked unless ordinary
+  public access succeeds later; no bypass is attempted.
+- **TAEA VASE (`taea_vase_scrape`, Arts / `visual_arts`):** official directors'
+  dates and state overview. Rows without a specific date remain unstaged.
+- **Bennington Young Writers Awards (`bennington_writers_scrape`, Writing):**
+  genres come from the official award page. The adapter leaves data unchanged
+  when the page gives month/day deadlines without a year.
+
+Parser fixtures named `*-public-snippet.html` are minimal excerpts derived from
+public pages fetched on 2026-08-12, not complete source snapshots. Never use
+them with stale retraction.
+
+Restricted or reference-only sources are not scraped: SpeechWire, Scholastic,
+and YoungArts prohibit automation; Society for Science's fair finder needs
+permission; FIRST requires an appropriate token/permission; AoPS and NewPages
+are secondary links; Scienteer and zFairs are tenant software rather than
+national directories; RobotEvents is not the official 2026–27 VEX pathway.
+
+Politeness: use the shared retrying user agent, run sources sequentially, keep
+the twice-weekly cadence, and use `SCRAPE_MAX_EVENTS` for local checks. Do not
+increase request concurrency or bypass access controls. A blocked or changed
+page should produce no fabricated fixture or event.
+
 ## Twice-weekly automation (recommended: GitHub Actions)
 
 **Primary:** `.github/workflows/ingest.yml`
 
 - Cron: Mondays + Thursdays **11:00 UTC**
-- Runs `npm run scrape:all`
+- Runs `npm run scrape:all && npm run scrape:discovery`; the discovery runner
+  skips VEX while normal public requests return HTTP 403
 - Manual: Actions → **Ingest tournaments** → choose one source or all
 
 Secrets required:

@@ -10,6 +10,10 @@ export type ScrapeRunSource =
   | "chess_results_scrape"
   | "fide_calendar_scrape"
   | "tca_scrape"
+  | "tabroom_scrape"
+  | "vex_events_scrape"
+  | "taea_vase_scrape"
+  | "bennington_writers_scrape"
   | "all";
 
 export type ScrapeRunStats = {

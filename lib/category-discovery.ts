@@ -11,6 +11,7 @@ export type CategorySource = {
   name: string;
   href: string;
   note: string;
+  status?: string;
 };
 
 export type CategoryDiscoveryDefinition = {
@@ -40,6 +41,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       {
         name: "Causey chess feeds",
         href: "/chess#sources-heading",
+        status: "Active",
         note: "Six active feeds are listed below, including US Chess, state, registration, results, and international calendars.",
       },
     ],
@@ -72,6 +74,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       {
         name: "Tabroom",
         href: "https://www.tabroom.com/index/index.mhtml",
+        status: "Active for the configured Texas public circuit",
         note: "Official public tournament calendars. Causey indexes only configured public circuits and does not claim complete Tabroom coverage.",
       },
     ],
@@ -101,7 +104,8 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       {
         name: "VEX Events",
         href: "https://events.vex.com/robot-competitions/vex-robotics-competition",
-        note: "Official public VEX event pages. Causey uses the public HTML directory and does not claim every program or region is indexed.",
+        status: "Blocked: repository fetch received HTTP 403 on August 12, 2026",
+        note: "Official public VEX event pages. The parser is covered by a truthful public-page snippet, but automated refresh remains disabled unless normal public access succeeds without a bypass.",
       },
     ],
     referenceSources: [
@@ -135,6 +139,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       {
         name: "TAEA VASE",
         href: "https://www.taea.org/vase/directors-dates.asp",
+        status: "Active",
         note: "Official public Visual Arts Scholastic Event dates. Causey indexes only dates with enough published detail to identify an event.",
       },
     ],
@@ -170,6 +175,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       {
         name: "Bennington Young Writers Awards",
         href: "https://www.bennington.edu/events/young-writers-awards",
+        status: "Active adapter; waiting for a year-specific cycle",
         note: "Official public award page. Causey publishes a listing only when the page names a complete, year-specific cycle.",
       },
     ],

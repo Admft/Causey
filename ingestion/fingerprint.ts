@@ -24,6 +24,7 @@ export function eventFingerprint(input: {
   start_date: string;
   state: string | null;
   zip?: string | null;
+  category?: string | null;
 }): string {
   const name = normalizeEventName(input.name);
   const state = (input.state ?? "").trim().toUpperCase();
@@ -31,9 +32,12 @@ export function eventFingerprint(input: {
     input.zip && /^\d{5}$/.test(input.zip) && input.zip !== "00000"
       ? input.zip
       : null;
-  return zip
+  const identity = zip
     ? `${name}|${input.start_date}|${state}|${zip}`
     : `${name}|${input.start_date}|${state}`;
+  return input.category && input.category !== "chess"
+    ? `${input.category}|${identity}`
+    : identity;
 }
 
 /** Prefer US Chess (TLA) as the canonical listing when sources collide. */
@@ -44,6 +48,10 @@ export const SOURCE_PRIORITY: Record<string, number> = {
   cca_scrape: 30,
   onlinereg_scrape: 25,
   chess_results_scrape: 22,
+  tabroom_scrape: 30,
+  vex_events_scrape: 30,
+  taea_vase_scrape: 30,
+  bennington_writers_scrape: 30,
   organizer: 20,
   manual: 10,
 };

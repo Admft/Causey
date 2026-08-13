@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { GRADE_BANDS, RATING_BANDS, type GradeBand, type RatingBand } from "@/lib/schemas";
-import { COMPETITION_SOURCE_FILTER_OPTIONS } from "@/lib/ingestion-sources";
+import {
+  GRADE_BANDS,
+  RATING_BANDS,
+  type CompetitionCategory,
+  type GradeBand,
+  type RatingBand,
+} from "@/lib/schemas";
+import { competitionSourceOptionsForCategory } from "@/lib/ingestion-sources";
+import { discoveryCategory } from "@/lib/category-discovery";
 import { formatDate } from "@/lib/format";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import type { TimingFilter } from "@/lib/competition-timing";
@@ -23,6 +30,7 @@ export interface FilterState {
   timing: TimingFilter;
   grade_band: string;
   rating_band: string;
+  facet: string;
   max_fee_dollars: string;
   date_from: string;
   date_to: string;
@@ -35,6 +43,7 @@ export const EMPTY_FILTERS: FilterState = {
   timing: "upcoming",
   grade_band: "",
   rating_band: "",
+  facet: "",
   max_fee_dollars: "",
   date_from: "",
   date_to: "",
@@ -49,9 +58,6 @@ const FEE_CEILINGS = [
   { value: "60", label: "$60 or less" },
   { value: "100", label: "$100 or less" },
 ];
-
-/** Listing origins shown in plain language; values match competitions.source. */
-const SOURCE_OPTIONS = COMPETITION_SOURCE_FILTER_OPTIONS;
 
 const TIMING_OPTIONS: { value: TimingFilter; label: string }[] = [
   { value: "upcoming", label: "Upcoming" },
@@ -83,10 +89,12 @@ function Field({
 export function SearchFilters({
   filters,
   onChange,
+  category = "chess",
   idPrefix = "filter",
 }: {
   filters: FilterState;
   onChange: (next: FilterState) => void;
+  category?: CompetitionCategory;
   idPrefix?: string;
 }) {
   const set = (key: keyof FilterState) => (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) =>
@@ -94,6 +102,8 @@ export function SearchFilters({
 
   const [open, setOpen] = useState(false);
   const id = (name: string) => `${idPrefix}-${name}`;
+  const categoryDefinition = discoveryCategory(category);
+  const sourceOptions = competitionSourceOptionsForCategory(category);
 
   const activeCount =
     (filters.featured ? 1 : 0) +
@@ -191,30 +201,50 @@ export function SearchFilters({
         </div>
       </div>
 
-      <button
-        type="button"
-        aria-pressed={filters.featured}
-        onClick={() => onChange({ ...filters, featured: !filters.featured })}
-        className={`col-span-2 inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors lg:col-span-1 ${
-          filters.featured
-            ? "border-brand-red/40 bg-accent-soft text-brand-red"
-            : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
-        }`}
-      >
-        <FeaturedAwardMark className="h-5 w-5" />
-        Featured only
-      </button>
+      {category === "chess" ? (
+        <button
+          type="button"
+          aria-pressed={filters.featured}
+          onClick={() => onChange({ ...filters, featured: !filters.featured })}
+          className={`col-span-2 inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors lg:col-span-1 ${
+            filters.featured
+              ? "border-brand-red/40 bg-accent-soft text-brand-red"
+              : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
+          }`}
+        >
+          <FeaturedAwardMark className="h-5 w-5" />
+          Featured only
+        </button>
+      ) : null}
 
       <Field id={id("source")} label="Listing source" className="col-span-2 lg:col-span-1">
         <select id={id("source")} className="field" value={filters.source} onChange={set("source")}>
           <option value="">Any source</option>
-          {SOURCE_OPTIONS.map((s) => (
+          {sourceOptions.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
             </option>
           ))}
         </select>
       </Field>
+
+      {categoryDefinition?.facetLabel ? (
+        <Field id={id("facet")} label={categoryDefinition.facetLabel}>
+          <select
+            id={id("facet")}
+            className="field"
+            value={filters.facet}
+            onChange={set("facet")}
+          >
+            <option value="">Any {categoryDefinition.facetLabel.toLowerCase()}</option>
+            {categoryDefinition.facets.map((facet) => (
+              <option key={facet.value} value={facet.value}>
+                {facet.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : null}
 
       <Field id={id("grade")} label="Grade">
         <select id={id("grade")} className="field" value={filters.grade_band} onChange={set("grade_band")}>
@@ -227,16 +257,18 @@ export function SearchFilters({
         </select>
       </Field>
 
-      <Field id={id("rating")} label="Rating">
-        <select id={id("rating")} className="field" value={filters.rating_band} onChange={set("rating_band")}>
-          <option value="">Any rating</option>
-          {Object.entries(RATING_BANDS).map(([value, band]) => (
-            <option key={value} value={value}>
-              {band.label}
-            </option>
-          ))}
-        </select>
-      </Field>
+      {category === "chess" ? (
+        <Field id={id("rating")} label="Rating">
+          <select id={id("rating")} className="field" value={filters.rating_band} onChange={set("rating_band")}>
+            <option value="">Any rating</option>
+            {Object.entries(RATING_BANDS).map(([value, band]) => (
+              <option key={value} value={value}>
+                {band.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : null}
 
       <Field id={id("fee")} label="Entry fee">
         <select id={id("fee")} className="field" value={filters.max_fee_dollars} onChange={set("max_fee_dollars")}>
@@ -294,7 +326,10 @@ export function SearchFilters({
 
 type Chip = { key: keyof FilterState; label: string; value: string };
 
-function activeChips(filters: FilterState): Chip[] {
+function activeChips(
+  filters: FilterState,
+  category: CompetitionCategory
+): Chip[] {
   const chips: Chip[] = [];
   if (filters.timing === "ended") {
     chips.push({ key: "timing", label: "Ended only", value: "upcoming" });
@@ -304,7 +339,9 @@ function activeChips(filters: FilterState): Chip[] {
   if (filters.featured) {
     chips.push({ key: "featured", label: "Featured only", value: "" });
   }
-  const source = SOURCE_OPTIONS.find((s) => s.value === filters.source);
+  const source = competitionSourceOptionsForCategory(category).find(
+    (s) => s.value === filters.source
+  );
   if (source) {
     chips.push({ key: "source", label: `Source: ${source.label}`, value: "" });
   }
@@ -315,6 +352,12 @@ function activeChips(filters: FilterState): Chip[] {
   const rating = RATING_BANDS[filters.rating_band as RatingBand];
   if (rating) {
     chips.push({ key: "rating_band", label: `Rating: ${rating.label}`, value: "" });
+  }
+  const facet = discoveryCategory(category)?.facets.find(
+    (option) => option.value === filters.facet
+  );
+  if (facet) {
+    chips.push({ key: "facet", label: facet.label, value: "" });
   }
   const fee = FEE_CEILINGS.find((f) => f.value === filters.max_fee_dollars);
   if (fee) {
@@ -343,11 +386,13 @@ function activeChips(filters: FilterState): Chip[] {
 export function ActiveFilterChips({
   filters,
   onChange,
+  category = "chess",
 }: {
   filters: FilterState;
   onChange: (next: FilterState) => void;
+  category?: CompetitionCategory;
 }) {
-  const chips = activeChips(filters);
+  const chips = activeChips(filters, category);
   if (chips.length === 0) return null;
 
   const remove = (chip: Chip) =>

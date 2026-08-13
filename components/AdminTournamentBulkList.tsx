@@ -117,7 +117,7 @@ export function AdminTournamentBulkList({
     if (!ids.length) return;
     if (
       !window.confirm(
-        `Publish ${ids.length} ${label}? Chess records will appear in chess search; other types remain available by direct link until their public directories open.`
+        `Publish ${ids.length} ${label}? Public records will appear in their matching category directory.`
       )
     ) {
       return;
@@ -142,8 +142,8 @@ export function AdminTournamentBulkList({
         result.skipped > 0
           ? `Published ${result.updated}; ${result.skipped} could not be updated.`
           : filterStatus === "draft"
-            ? `Published ${result.updated} ${publishedLabel}. They left this Draft list — filter to Published to see them. Chess search shows upcoming chess listings; non-chess directories remain closed.`
-            : `Published ${result.updated} ${publishedLabel}. They stay here as Published. Chess search shows upcoming chess listings; non-chess directories remain closed.`
+            ? `Published ${result.updated} ${publishedLabel}. They left this Draft list. Filter to Published to see them; public records appear in their matching category directory.`
+            : `Published ${result.updated} ${publishedLabel}. They stay here as Published; public records appear in their matching category directory.`
       );
       router.refresh();
     } finally {

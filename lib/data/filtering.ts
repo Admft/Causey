@@ -83,6 +83,19 @@ export function matchingSectionIds(
     .map((s) => s.id);
 }
 
+/** Category facets are normalized into details.facets by ingestion adapters. */
+export function competitionMatchesFacet(
+  competition: Competition,
+  filters: SearchFilters
+): boolean {
+  if (!filters.facet) return true;
+  const facets = competition.details.facets;
+  return (
+    Array.isArray(facets) &&
+    facets.some((value) => value === filters.facet)
+  );
+}
+
 /** Date-window + timing (upcoming / ended / all) predicate on the competition row. */
 export function competitionInDateWindow(
   competition: Competition,

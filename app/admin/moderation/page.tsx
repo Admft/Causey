@@ -24,9 +24,10 @@ export default async function ModerationPage() {
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
         Organizer listings remain private until the source, audience, and event
-        details have been reviewed. Approved chess listings enter chess search;
-        other competition types get a public link but remain unsearchable.
-        Select several and approve or reject them together.
+        details have been reviewed. Approved public listings enter the matching
+        category directory. Coverage notices remain visible because each
+        non-chess directory currently has only limited official sources. Select
+        several and approve or reject them together.
       </p>
 
       {error ? (

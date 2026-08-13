@@ -223,7 +223,11 @@ export async function persistScrapeBatch(
       source === "onlinereg_scrape" ||
       source === "chess_results_scrape" ||
       source === "fide_calendar_scrape" ||
-      source === "tca_scrape"
+      source === "tca_scrape" ||
+      source === "tabroom_scrape" ||
+      source === "vex_events_scrape" ||
+      source === "taea_vase_scrape" ||
+      source === "bennington_writers_scrape"
         ? source
         : "all"),
     opts.meta ?? {}
@@ -245,6 +249,7 @@ export async function persistScrapeBatch(
           start_date: d.start_date,
           state: d.state,
           zip: d.zip,
+          category: d.category,
         }),
       };
     });
@@ -292,6 +297,7 @@ export async function persistScrapeBatch(
               start_date: c.start_date,
               state: c.state,
               zip: c.zip,
+              category: c.category,
             }),
           };
         })
@@ -306,31 +312,35 @@ export async function persistScrapeBatch(
     }
 
     let seriesAttached = 0;
-    try {
-      seriesAttached = await attachSeriesMatches(
-        client,
-        resolved.map((d) => d.id)
-      );
-      if (seriesAttached > 0) {
-        console.log(`Attached ${seriesAttached} competition(s) to curated series.`);
+    const chessIds = resolved
+      .filter((draft) => draft.category === "chess")
+      .map((draft) => draft.id);
+    if (chessIds.length > 0) {
+      try {
+        seriesAttached = await attachSeriesMatches(client, chessIds);
+        if (seriesAttached > 0) {
+          console.log(`Attached ${seriesAttached} competition(s) to curated series.`);
+        }
+      } catch (err) {
+        console.warn(
+          `Series match skipped: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
-    } catch (err) {
-      console.warn(
-        `Series match skipped: ${err instanceof Error ? err.message : String(err)}`
-      );
     }
 
     let pathwaysEnriched = 0;
-    try {
-      const enrich = await enrichPathways(client, {
-        competitionIds: resolved.map((d) => d.id),
-        source,
-      });
-      pathwaysEnriched = enrich.updated;
-    } catch (err) {
-      console.warn(
-        `Pathway enrich skipped: ${err instanceof Error ? err.message : String(err)}`
-      );
+    if (chessIds.length > 0) {
+      try {
+        const enrich = await enrichPathways(client, {
+          competitionIds: chessIds,
+          source,
+        });
+        pathwaysEnriched = enrich.updated;
+      } catch (err) {
+        console.warn(
+          `Pathway enrich skipped: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
     }
 
     let staleArchived = 0;

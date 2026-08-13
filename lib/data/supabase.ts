@@ -53,7 +53,10 @@ function requireClient() {
 
 function hasSectionFilters(filters: SearchFilters): boolean {
   return Boolean(
-    filters.grade_band || filters.rating_band || filters.max_fee_cents !== undefined
+    filters.grade_band ||
+      filters.rating_band ||
+      filters.max_fee_cents !== undefined ||
+      filters.facet
   );
 }
 

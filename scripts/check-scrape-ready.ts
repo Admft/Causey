@@ -135,6 +135,18 @@ async function main() {
       .select("category, custom_category_name, participation_mode")
       .limit(1)
   );
+  await probe("multi-category ingest sources (0047)", async () =>
+    client
+      .from("ingestion_sources")
+      .select("id, category")
+      .in("id", [
+        "tabroom_scrape",
+        "vex_events_scrape",
+        "taea_vase_scrape",
+        "bennington_writers_scrape",
+      ])
+      .limit(4)
+  );
   await probe("section replacement fields (0041)", async () =>
     client
       .from("sections")
@@ -163,7 +175,7 @@ async function main() {
 
   if (failed > 0) {
     console.error(
-      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0043), preferably with:`
+      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0047), preferably with:`
     );
     console.error("  supabase db push");
     console.error(

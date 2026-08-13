@@ -11,6 +11,7 @@ import { haversineMiles } from "@/lib/geo";
 import {
   competitionNameRank,
   competitionInDateWindow,
+  competitionMatchesFacet,
   matchingSectionIds,
 } from "@/lib/data/filtering";
 import type { CompetitionResult, CompetitionSearchPage } from "@/lib/data/types";
@@ -97,6 +98,7 @@ export function buildCompetitionResult(input: {
   const { competition: c, sections: compSections, series: rawSeries, distance_miles, filters } =
     input;
   if (filters.category && c.category !== filters.category) return null;
+  if (!competitionMatchesFacet(c, filters)) return null;
   if (!competitionInDateWindow(c, filters)) return null;
 
   const matching = matchingSectionIds(c, compSections, filters);

@@ -461,9 +461,9 @@ export default async function OrgPage({
               Submitted for platform review
             </h2>
             <p className="mt-2 max-w-prose text-sm text-muted-strong">
-              {submittedEvent.category === "chess"
-                ? `“${submittedEvent.name}” is not in chess search yet.`
-                : `“${submittedEvent.name}” does not have a public link until review, and this competition type is not searchable yet.`}{" "}
+              {submittedEvent.category === "other"
+                ? `“${submittedEvent.name}” does not have a public link until review. Custom competition types do not have a public directory.`
+                : `“${submittedEvent.name}” is not in its category directory yet.`}{" "}
               You can prepare invitations while Causey reviews the listing; its
               status will update here.
             </p>

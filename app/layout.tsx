@@ -60,11 +60,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex flex-col gap-2">
               <CauseyLogo size="sm" />
               <p className="max-w-sm text-xs text-muted">
-                Causey is an early build. Chess search covers indexed US
-                tournaments; fees, venues, dates, and pathways can be missing
-                or wrong. Organizations can host other competition types, but
-                those public directories are not ready. Confirm public details
-                on the organizer&rsquo;s site.
+                Causey is an early build. Chess search is usable; speech and
+                debate, STEM, arts, and writing use only a few official sources.
+                Fees, venues, dates, and coverage can be missing or wrong.
+                Confirm public details on the organizer&rsquo;s site.
               </p>
             </div>
             <div className="flex flex-col gap-2 text-xs">
