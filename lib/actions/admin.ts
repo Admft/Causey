@@ -5,6 +5,10 @@ import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
+  DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE,
+  organizationSupportsDistrictAudience,
+} from "@/lib/competition-audience";
+import {
   getTournamentZip,
   insertTournamentRecord,
   updateTournamentRecord,
@@ -543,6 +547,20 @@ export async function adminUpdateTournament(
   const values = parsed.data;
 
   const supabase = await createServerSupabaseClient();
+  if (values.audience === "district") {
+    const { data: existing } = await supabase
+      .from("competitions")
+      .select("org_id, organizations!competitions_org_id_fkey(type, parent_org_id)")
+      .eq("id", values.competitionId)
+      .maybeSingle();
+    const host = existing?.organizations as
+      | { type: "school" | "club" | "team" | "district"; parent_org_id: string | null }
+      | null
+      | undefined;
+    if (!organizationSupportsDistrictAudience(host ?? null)) {
+      return { ok: false, error: DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE };
+    }
+  }
   const zipResult =
     values.participationMode === "online"
       ? ({ ok: true, lat: null, lng: null } as const)

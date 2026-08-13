@@ -13,6 +13,11 @@ import {
   updateTournament,
 } from "@/lib/actions/tournaments";
 import {
+  competitionAudienceOptions,
+  organizationSupportsDistrictAudience,
+  resolveCompetitionAudience,
+} from "@/lib/competition-audience";
+import {
   CREATABLE_COMPETITION_TYPES,
   competitionTypeLabel,
 } from "@/lib/competition-types";
@@ -88,6 +93,8 @@ export function TournamentCreateForm({
   orgId,
   orgSlug,
   orgState,
+  orgType,
+  parentOrgId = null,
   draftId,
   initialDraft,
   initial,
@@ -99,6 +106,9 @@ export function TournamentCreateForm({
   orgId: string;
   orgSlug: string;
   orgState: string | null;
+  /** Host org type — used to decide whether District-only audience is real. */
+  orgType?: "school" | "club" | "team" | "district";
+  parentOrgId?: string | null;
   draftId?: string;
   initialDraft?: TournamentDraftRow;
   initial?: TournamentFormInitial;
@@ -113,6 +123,11 @@ export function TournamentCreateForm({
 }) {
   const router = useRouter();
   const savedDraft = initialDraft?.data;
+  const districtAudienceAvailable = organizationSupportsDistrictAudience(
+    orgType
+      ? { type: orgType, parent_org_id: parentOrgId ?? null }
+      : null
+  );
   const [category, setCategory] = useState<CompetitionCategory>(
     savedDraft?.category ?? initial?.category ?? "chess"
   );
@@ -156,13 +171,19 @@ export function TournamentCreateForm({
   const [visibility, setVisibility] = useState<"private" | "public">(
     savedDraft?.visibility ?? initial?.visibility ?? "private"
   );
-  const [audience, setAudience] = useState<CompetitionAudience>(
-    savedDraft?.audience ??
+  const [audience, setAudience] = useState<CompetitionAudience>(() => {
+    const visibility =
+      savedDraft?.visibility ?? initial?.visibility ?? "private";
+    const requested =
+      savedDraft?.audience ??
       initial?.audience ??
-      (savedDraft?.visibility === "public" || initial?.visibility === "public"
-        ? "public"
-        : defaultAudience ?? "school")
-  );
+      (visibility === "public" ? "public" : defaultAudience ?? "school");
+    return resolveCompetitionAudience(
+      requested,
+      districtAudienceAvailable,
+      visibility
+    );
+  });
   const [sections, setSections] = useState<TournamentSectionDraft[]>(
     savedDraft?.sections?.length
       ? savedDraft.sections
@@ -596,37 +617,40 @@ export function TournamentCreateForm({
     const value = Number(raw);
     return Number.isInteger(value) ? value : null;
   }
+  const audienceChoices = competitionAudienceOptions(
+    districtAudienceAvailable
+  ).map((opt) =>
+    opt.value === "public"
+      ? {
+          ...opt,
+          description:
+            category === "chess"
+              ? "Listed in chess search after platform review."
+              : "Public link after platform review; not added to search yet.",
+        }
+      : opt.value === "school"
+        ? {
+            ...opt,
+            label:
+              orgType === "club"
+                ? "Club only"
+                : orgType === "team"
+                  ? "Team only"
+                  : orgType === "district"
+                    ? "This organization only"
+                    : "School only",
+            description:
+              orgType === "club" || orgType === "team"
+                ? "Members, linked parents, and staff in this organization."
+                : opt.description,
+          }
+        : opt
+  );
   const audienceChooser = (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-xs font-semibold text-muted-strong">Who can see it</legend>
       <div className="grid gap-2 sm:grid-cols-2">
-        {(
-          [
-            {
-              value: "school",
-              label: "School only",
-              description: "Members, linked parents, and staff in this school.",
-            },
-            {
-              value: "district",
-              label: "District only",
-              description: "People across the connected district and its schools.",
-            },
-            {
-              value: "invite_only",
-              label: "Invite only",
-              description: "Only invited students, linked parents, and event staff.",
-            },
-            {
-              value: "public",
-              label: "Public",
-              description:
-                category === "chess"
-                  ? "Listed in chess search after platform review."
-                  : "Public link after platform review; not added to search yet.",
-            },
-          ] as const
-        ).map((opt) => {
+        {audienceChoices.map((opt) => {
           const selected = audience === opt.value;
           return (
             <button
@@ -651,6 +675,12 @@ export function TournamentCreateForm({
           );
         })}
       </div>
+      {!districtAudienceAvailable ? (
+        <p className="text-2xs text-muted">
+          District-only is available after this organization is connected to a
+          district.
+        </p>
+      ) : null}
     </fieldset>
   );
 

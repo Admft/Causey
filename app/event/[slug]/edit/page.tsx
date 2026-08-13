@@ -39,7 +39,7 @@ export default async function EditEventPage({
   const [{ data: org }, { data: moderation }] = await Promise.all([
     supabase
       .from("organizations")
-      .select("id, slug, state, name")
+      .select("id, slug, state, name, type, parent_org_id")
       .eq("id", competition.org_id)
       .maybeSingle(),
     supabase
@@ -117,6 +117,8 @@ export default async function EditEventPage({
             orgId={org.id}
             orgSlug={org.slug}
             orgState={org.state}
+            orgType={org.type}
+            parentOrgId={org.parent_org_id}
             initial={{
               category: competition.category,
               custom_category_name: competition.custom_category_name,

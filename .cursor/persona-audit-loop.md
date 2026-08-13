@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-13 — **Audience-chooser honesty**: District-only appears only for district hosts and connected schools; create/edit/admin paths clamp and reject unsupported district audience; migration `0053` enforces the hierarchy at insert/update; club/team labels stop saying “School only.”
 - 2026-08-08 — **Product email live path**: verified `mail.causey.dev` with Resend; protected Vercel worker claims the service-role outbox with idempotent retries; invitations, reminders, stored updates, and active-guardian copies respect email and per-kind preferences (`0036`).
 - 2026-08-08 — **District-readiness audit batch**: public district pilot + trust pages, fail-closed join links, separate-device student signup handoff, assistant/coach/admin capability boundaries, district-first navigation and multi-school command center, aggregate CSV export, and next-action empty states.
 - 2026-08-08 — **TCA publish honesty**: Admin tournament list counts published vs draft, highlights Published badges, and points chess search at Timing: All so accepted TCA rows are not mistaken for failed publishes. Incomplete Unknown/00000 drafts stay out of search on purpose.
@@ -82,6 +83,8 @@ _(none — ready for next audit tick)_
 - Student-data disclosure/privacy policy and DOB minimization decision (owner/legal)
 - For-profit packaging and school/district buyer journey (pricing/go-to-market)
 - README/product-state truth cleanup
+- District-readable admin activity log (needs scoped RPC — do not open raw `audit_events`)
+- Apply pending migrations through `0053` in each environment
 
 ### Tick 16 audit
 - Platform admin · organizations · verification status exists but `/admin/organizations` neither shows nor changes it · operators cannot complete the trust workflow that moderation already references · **P1 · done**

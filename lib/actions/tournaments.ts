@@ -5,6 +5,10 @@ import { z } from "zod";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
+  DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE,
+  organizationSupportsDistrictAudience,
+} from "@/lib/competition-audience";
+import {
   getTournamentZip,
   insertTournamentRecord,
   updateTournamentRecord,
@@ -66,6 +70,27 @@ async function canOperateOrganizationTournament(
   return Boolean(await getPlatformAdminUser());
 }
 
+async function assertDistrictAudienceAllowed(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  orgId: string,
+  audience: string | null | undefined
+): Promise<ActionResult> {
+  if (audience !== "district") return { ok: true };
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("type, parent_org_id")
+    .eq("id", orgId)
+    .maybeSingle();
+  if (
+    organizationSupportsDistrictAudience(
+      org as { type: "school" | "club" | "team" | "district"; parent_org_id: string | null } | null
+    )
+  ) {
+    return { ok: true };
+  }
+  return { ok: false, error: DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE };
+}
+
 /**
  * Organizer/admin create path (SEC-06): events start as drafts and stay out of
  * public discovery until publishTournament / PublishTournamentPanel.
@@ -102,6 +127,13 @@ export async function createTournament(
     .eq("id", values.orgId)
     .maybeSingle();
   if (!org) return { ok: false, error: "Organization not found." };
+
+  const audienceGate = await assertDistrictAudienceAllowed(
+    supabase,
+    values.orgId,
+    values.audience
+  );
+  if (!audienceGate.ok) return audienceGate;
 
   const zipResult =
     values.participationMode === "online"
@@ -477,6 +509,13 @@ export async function publishTournamentDraft(
     };
   }
 
+  const audienceGate = await assertDistrictAudienceAllowed(
+    supabase,
+    values.orgId,
+    tournament.data.audience
+  );
+  if (!audienceGate.ok) return audienceGate;
+
   const { data: org } = await supabase
     .from("organizations")
     .select("id, name")
@@ -647,9 +686,19 @@ export async function updateTournament(
   const supabase = await createServerSupabaseClient();
   const { data: existing } = await supabase
     .from("competitions")
-    .select("status, category")
+    .select("status, category, org_id")
     .eq("id", values.competitionId)
     .maybeSingle();
+  if (existing?.org_id) {
+    const audienceGate = await assertDistrictAudienceAllowed(
+      supabase,
+      existing.org_id,
+      values.audience
+    );
+    if (!audienceGate.ok) return audienceGate;
+  } else if (values.audience === "district") {
+    return { ok: false, error: DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE };
+  }
   const zipResult =
     values.participationMode === "online"
       ? ({ ok: true, lat: null, lng: null } as const)

@@ -45,12 +45,14 @@ export default async function NewCompetitionPage({
             name: view.org.name,
             state: view.org.state,
             type: view.org.type,
+            parentOrgId: view.org.parent_org_id,
           },
           ...view.schools.map((school) => ({
             id: school.id,
             name: school.name,
             state: school.state,
             type: "school" as const,
+            parentOrgId: view.org.id,
           })),
         ]
       : [
@@ -59,6 +61,7 @@ export default async function NewCompetitionPage({
             name: view.org.name,
             state: view.org.state,
             type: view.org.type,
+            parentOrgId: view.org.parent_org_id,
           },
         ];
   const targetHost =
@@ -144,6 +147,8 @@ export default async function NewCompetitionPage({
                 orgId={targetHost.id}
                 orgSlug={view.org.slug}
                 orgState={targetHost.state}
+                orgType={targetHost.type}
+                parentOrgId={targetHost.parentOrgId}
                 draftId={draftId}
                 initialDraft={requestedDraft ?? undefined}
                 defaultAudience={

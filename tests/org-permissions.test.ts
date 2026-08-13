@@ -4,6 +4,8 @@ import {
   canCreateTournament,
   canRsvpFor,
   isActiveMember,
+  isDistrictAdmin,
+  isOrgAdmin,
   isOrgCoach,
   isOrgStaff,
 } from "@/lib/org-permissions";
@@ -95,6 +97,13 @@ describe("canCreateTournament", () => {
     ).toBe(true);
     expect(
       canCreateTournament(
+        { id: "assistant", role: "coach", role_unlocked: true },
+        org,
+        { role: "assistant_coach", status: "active" }
+      )
+    ).toBe(false);
+    expect(
+      canCreateTournament(
         { id: "other", role: "coach", role_unlocked: true },
         org,
         { role: "student", status: "active" }
@@ -105,6 +114,57 @@ describe("canCreateTournament", () => {
         { id: "student-1", role: "student", role_unlocked: true },
         org,
         { role: "student", status: "active" }
+      )
+    ).toBe(false);
+  });
+});
+
+describe("isOrgAdmin", () => {
+  it("keeps coaches and assistants out of administration gates", () => {
+    expect(isOrgAdmin(org, null, "coach-1")).toBe(true);
+    expect(
+      isOrgAdmin(org, { role: "school_admin", status: "active" }, "other")
+    ).toBe(true);
+    expect(
+      isOrgAdmin(org, { role: "district_admin", status: "active" }, "other")
+    ).toBe(true);
+    expect(isOrgAdmin(org, { role: "coach", status: "active" }, "other")).toBe(
+      false
+    );
+    expect(
+      isOrgAdmin(org, { role: "assistant_coach", status: "active" }, "other")
+    ).toBe(false);
+  });
+});
+
+describe("isDistrictAdmin", () => {
+  it("requires a district organization and district_admin membership", () => {
+    expect(
+      isDistrictAdmin(
+        { type: "district", owner_profile_id: "owner-1" },
+        null,
+        "owner-1"
+      )
+    ).toBe(true);
+    expect(
+      isDistrictAdmin(
+        { type: "district", owner_profile_id: "owner-1" },
+        { role: "district_admin", status: "active" },
+        "other"
+      )
+    ).toBe(true);
+    expect(
+      isDistrictAdmin(
+        { type: "school", owner_profile_id: "owner-1" },
+        { role: "district_admin", status: "active" },
+        "other"
+      )
+    ).toBe(false);
+    expect(
+      isDistrictAdmin(
+        { type: "district", owner_profile_id: "owner-1" },
+        { role: "school_admin", status: "active" },
+        "other"
       )
     ).toBe(false);
   });
