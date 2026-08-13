@@ -20,6 +20,24 @@ export async function setOrgAttendance(input: {
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
+
+  // #region agent log
+  const { debugAgentLog, debugOperatorPermissions } = await import(
+    "@/lib/debug/operator-permissions"
+  );
+  const perms = await debugOperatorPermissions(supabase, user.id, input.orgId);
+  debugAgentLog({
+    hypothesisId: "E",
+    location: "lib/actions/attendance.ts:setOrgAttendance",
+    message: "org attendance permission snapshot",
+    data: {
+      attending: input.attending,
+      competitionId: input.competitionId,
+      ...perms,
+    },
+  });
+  // #endregion
+
   if (input.attending) {
     const { error } = await supabase.from("org_competition_attendance").upsert(
       {
@@ -30,6 +48,14 @@ export async function setOrgAttendance(input: {
       { onConflict: "org_id,competition_id", ignoreDuplicates: true }
     );
     if (error) {
+      // #region agent log
+      debugAgentLog({
+        hypothesisId: "E",
+        location: "lib/actions/attendance.ts:setOrgAttendance:upsert",
+        message: "org attendance upsert failed",
+        data: { code: error.code, err: error.message, ...perms },
+      });
+      // #endregion
       return { ok: false, error: "Could not mark your organization as attending." };
     }
   } else {
@@ -38,7 +64,17 @@ export async function setOrgAttendance(input: {
       .delete()
       .eq("org_id", input.orgId)
       .eq("competition_id", input.competitionId);
-    if (error) return { ok: false, error: "Could not remove the attendance mark." };
+    if (error) {
+      // #region agent log
+      debugAgentLog({
+        hypothesisId: "E",
+        location: "lib/actions/attendance.ts:setOrgAttendance:delete",
+        message: "org attendance delete failed",
+        data: { code: error.code, err: error.message, ...perms },
+      });
+      // #endregion
+      return { ok: false, error: "Could not remove the attendance mark." };
+    }
   }
 
   revalidatePath(`/orgs/${input.orgSlug}`);

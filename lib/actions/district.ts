@@ -575,6 +575,26 @@ export async function publishOrganizationAnnouncement(input: {
   if (!profile) return { ok: false, error: "Sign in to continue." };
   const supabase = await createServerSupabaseClient();
 
+  // #region agent log
+  const { debugAgentLog, debugOperatorPermissions } = await import(
+    "@/lib/debug/operator-permissions"
+  );
+  const perms = await debugOperatorPermissions(
+    supabase,
+    profile.id,
+    parsed.data.orgId
+  );
+  debugAgentLog({
+    hypothesisId: "A",
+    location: "lib/actions/district.ts:publishOrganizationAnnouncement",
+    message: "announcement publish permission snapshot",
+    data: {
+      orgSlug: parsed.data.orgSlug,
+      ...perms,
+    },
+  });
+  // #endregion
+
   const { data: canOperate } = await supabase.rpc(
     "can_operate_org_competitions",
     {
@@ -583,6 +603,14 @@ export async function publishOrganizationAnnouncement(input: {
     }
   );
   if (canOperate !== true) {
+    // #region agent log
+    debugAgentLog({
+      hypothesisId: "A",
+      location: "lib/actions/district.ts:publishOrganizationAnnouncement:denied",
+      message: "announcement blocked by can_operate precheck",
+      data: { canOperate },
+    });
+    // #endregion
     return {
       ok: false,
       error:
@@ -601,6 +629,23 @@ export async function publishOrganizationAnnouncement(input: {
     .select("id")
     .maybeSingle();
   if (error || !announcement?.id) {
+    // #region agent log
+    debugAgentLog({
+      hypothesisId:
+        error?.code === "42P01" ||
+        (error?.message ?? "").includes("audit_events")
+          ? "F"
+          : "A",
+      location: "lib/actions/district.ts:publishOrganizationAnnouncement:insert",
+      message: "announcement insert failed",
+      data: {
+        code: error?.code ?? null,
+        err: error?.message ?? null,
+        hasRow: Boolean(announcement?.id),
+        ...perms,
+      },
+    });
+    // #endregion
     console.error("Organization announcement publish failed:", {
       code: error?.code,
       message: error?.message,
@@ -617,8 +662,27 @@ export async function publishOrganizationAnnouncement(input: {
           "You don’t have permission to publish announcements for this organization.",
       };
     }
+    if (
+      error?.code === "42P01" ||
+      detail.includes("does not exist")
+    ) {
+      return {
+        ok: false,
+        error:
+          "Could not publish the announcement because a required database table is missing. Apply pending migrations (including audit_events from 0016).",
+      };
+    }
     return { ok: false, error: "Could not publish the announcement. Try again." };
   }
+
+  // #region agent log
+  debugAgentLog({
+    hypothesisId: "A",
+    location: "lib/actions/district.ts:publishOrganizationAnnouncement:ok",
+    message: "announcement insert succeeded",
+    data: { announcementId: announcement.id, ...perms },
+  });
+  // #endregion
 
   const { data: members } = await supabase
     .from("org_memberships")

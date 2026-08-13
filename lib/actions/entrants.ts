@@ -86,6 +86,43 @@ export async function inviteEntrants(
   if (!profileIds.length) return { ok: true, invited: 0 };
 
   const supabase = await createServerSupabaseClient();
+
+  // #region agent log
+  const { debugAgentLog, debugOperatorPermissions } = await import(
+    "@/lib/debug/operator-permissions"
+  );
+  const { data: competitionMeta } = await supabase
+    .from("competitions")
+    .select("org_id, slug")
+    .eq("id", competitionId)
+    .maybeSingle();
+  const perms = await debugOperatorPermissions(
+    supabase,
+    user.id,
+    competitionMeta?.org_id ?? null
+  );
+  const { data: canInviteSample } = await supabase.rpc(
+    "can_invite_to_competition",
+    {
+      p_competition_id: competitionId,
+      p_entrant_id: profileIds[0],
+      p_inviter_id: user.id,
+    }
+  );
+  debugAgentLog({
+    hypothesisId: "D",
+    location: "lib/actions/entrants.ts:inviteEntrants",
+    message: "invite entrants permission snapshot",
+    data: {
+      competitionId,
+      eventSlug,
+      profileCount: profileIds.length,
+      canInviteSample: canInviteSample === true,
+      ...perms,
+    },
+  });
+  // #endregion
+
   const { data, error } = await supabase
     .from("competition_entrants")
     .upsert(
@@ -99,6 +136,14 @@ export async function inviteEntrants(
     )
     .select("profile_id");
   if (error) {
+    // #region agent log
+    debugAgentLog({
+      hypothesisId: "D",
+      location: "lib/actions/entrants.ts:inviteEntrants:upsert",
+      message: "invite entrants failed",
+      data: { code: error.code, err: error.message, ...perms },
+    });
+    // #endregion
     return {
       ok: false,
       error: "Could not send the invitations. Check your connection and try again.",

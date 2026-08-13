@@ -22,12 +22,34 @@ export async function createGroup(
   }
 
   const supabase = await createServerSupabaseClient();
+
+  // #region agent log
+  const { debugAgentLog, debugOperatorPermissions } = await import(
+    "@/lib/debug/operator-permissions"
+  );
+  const perms = await debugOperatorPermissions(supabase, user.id, orgId);
+  debugAgentLog({
+    hypothesisId: "B",
+    location: "lib/actions/groups.ts:createGroup",
+    message: "create group permission snapshot",
+    data: { orgSlug, ...perms },
+  });
+  // #endregion
+
   const { data, error } = await supabase
     .from("org_groups")
     .insert({ org_id: orgId, name: parsed.data })
     .select("id")
     .single();
   if (error) {
+    // #region agent log
+    debugAgentLog({
+      hypothesisId: "B",
+      location: "lib/actions/groups.ts:createGroup:insert",
+      message: "create group failed",
+      data: { code: error.code, err: error.message, ...perms },
+    });
+    // #endregion
     return {
       ok: false,
       error:
