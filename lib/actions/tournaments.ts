@@ -9,11 +9,16 @@ import {
   organizationSupportsDistrictAudience,
 } from "@/lib/competition-audience";
 import {
+  discoveryCategoryHref,
+  isDiscoveryCategory,
+} from "@/lib/category-discovery";
+import {
   getTournamentZip,
   insertTournamentRecord,
   updateTournamentRecord,
 } from "@/lib/data/tournament-mutations";
 import {
+  COMPETITION_DETAILS_SCHEMA_VERSION,
   TournamentDraftDataSchema,
   type TournamentDraftData,
 } from "@/lib/schemas";
@@ -168,7 +173,7 @@ export async function publishTournament(input: {
   const supabase = await createServerSupabaseClient();
   const { data: existing } = await supabase
     .from("competitions")
-    .select("organizations(slug)")
+    .select("category, organizations(slug)")
     .eq("id", input.competitionId)
     .maybeSingle();
 
@@ -187,7 +192,9 @@ export async function publishTournament(input: {
     updated.status === "pending_review" ? "pending_review" : "published";
 
   const orgSlug = (existing?.organizations as { slug?: string } | null)?.slug;
-  revalidatePath("/chess");
+  if (existing?.category && isDiscoveryCategory(existing.category)) {
+    revalidatePath(discoveryCategoryHref(existing.category));
+  }
   revalidatePath(`/event/${input.eventSlug}`);
   revalidatePath(`/event/${input.eventSlug}/manage`);
   if (orgSlug) revalidatePath(`/orgs/${orgSlug}`);
@@ -593,6 +600,10 @@ async function insertWithSlugRetry(
         rated: values.category === "chess" && values.rated,
         rating_system: values.category === "chess" ? "uschess" : null,
         source: "organizer",
+        details: {
+          schema_version: COMPETITION_DETAILS_SCHEMA_VERSION,
+          facets: [],
+        },
         image_url: imageUrl,
         status: "published",
         visibility: values.visibility,
@@ -655,10 +666,10 @@ async function insertWithSlugRetry(
     }
 
     if (
-      values.category === "chess" &&
+      isDiscoveryCategory(values.category) &&
       (values.audience === "public" || values.visibility === "public")
     ) {
-      revalidatePath("/chess");
+      revalidatePath(discoveryCategoryHref(values.category));
     }
     revalidatePath(`/orgs/${values.orgSlug}`);
     return {
@@ -738,8 +749,11 @@ export async function updateTournament(
         : "published";
   }
 
-  if (existing?.category === "chess" || values.category === "chess") {
-    revalidatePath("/chess");
+  if (existing?.category && isDiscoveryCategory(existing.category)) {
+    revalidatePath(discoveryCategoryHref(existing.category));
+  }
+  if (isDiscoveryCategory(values.category)) {
+    revalidatePath(discoveryCategoryHref(values.category));
   }
   revalidatePath(`/event/${values.eventSlug}`);
   revalidatePath(`/event/${values.eventSlug}/manage`);
@@ -754,6 +768,11 @@ export async function cancelTournament(input: {
   orgSlug: string;
 }): Promise<ActionResult> {
   const supabase = await createServerSupabaseClient();
+  const { data: existing } = await supabase
+    .from("competitions")
+    .select("category")
+    .eq("id", input.competitionId)
+    .maybeSingle();
   // No RETURNING: an archived row is no longer SELECT-visible (even to its
   // coach), so confirm via the affected-row count instead.
   const { count, error } = await supabase
@@ -764,7 +783,9 @@ export async function cancelTournament(input: {
     return { ok: false, error: "Could not cancel the competition." };
   }
 
-  revalidatePath("/chess");
+  if (existing?.category && isDiscoveryCategory(existing.category)) {
+    revalidatePath(discoveryCategoryHref(existing.category));
+  }
   revalidatePath(`/event/${input.eventSlug}`);
   revalidatePath(`/orgs/${input.orgSlug}`);
   return { ok: true };

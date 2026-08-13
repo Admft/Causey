@@ -101,7 +101,12 @@ describe("publishTournament", () => {
         from: () => ({
           select: () => ({
             eq: () => ({
-              maybeSingle: async () => ({ data: { organizations: { slug: "probe-school" } } }),
+              maybeSingle: async () => ({
+                data: {
+                  category: "chess",
+                  organizations: { slug: "probe-school" },
+                },
+              }),
             }),
           }),
           update: () => ({

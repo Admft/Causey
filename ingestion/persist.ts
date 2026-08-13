@@ -6,6 +6,10 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Competition } from "../lib/schemas";
+import {
+  assertSourceAutomationAllowed,
+  assertSourceBatchHealthy,
+} from "../lib/ingestion-sources";
 import { linkFingerprintDuplicates, writeCompetitionSources } from "./dedupe";
 import { eventFingerprint } from "./fingerprint";
 import { attachSeriesMatches } from "./series-match";
@@ -221,6 +225,8 @@ export async function persistScrapeBatch(
     retractionMode?: RetractionMode;
   } = {}
 ): Promise<PersistResult> {
+  assertSourceAutomationAllowed(source);
+  assertSourceBatchHealthy({ sourceId: source, rows: drafts.length });
   const runId = await startScrapeRun(
     client,
     opts.scrapeRunSource ??

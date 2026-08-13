@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
   const raw: Record<string, string> = Object.fromEntries(
     [...request.nextUrl.searchParams.entries()].filter(([, v]) => v !== "")
   );
-  raw.category ??= "chess";
 
   const parsed = SearchFiltersSchema.safeParse(raw);
   if (!parsed.success) {
@@ -30,7 +29,13 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
-  if (!parsed.data.category || !isDiscoveryCategory(parsed.data.category)) {
+  if (!parsed.data.category) {
+    return NextResponse.json(
+      { error: "Choose a competition type before searching." },
+      { status: 400 }
+    );
+  }
+  if (!isDiscoveryCategory(parsed.data.category)) {
     return NextResponse.json(
       { error: "That competition type does not have a public directory." },
       { status: 400 }

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ActionResult } from "@/lib/actions/result";
+import { COMPETITION_DETAILS_SCHEMA_VERSION } from "@/lib/schemas";
 import { slugify, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
@@ -68,6 +69,10 @@ export async function insertTournamentRecord(input: {
         rated: values.category === "chess" && values.rated,
         rating_system: values.category === "chess" ? "uschess" : null,
         source: "organizer",
+        details: {
+          schema_version: COMPETITION_DETAILS_SCHEMA_VERSION,
+          facets: [],
+        },
         status,
         visibility: values.visibility,
         audience:

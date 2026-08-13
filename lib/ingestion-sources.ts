@@ -7,6 +7,31 @@ import type { CompetitionCategory } from "@/lib/schemas";
  */
 
 export type IngestionSourceStatus = "live" | "soon";
+export type SourceAutomationState =
+  | "enabled"
+  | "paused"
+  | "blocked"
+  | "reference";
+export type SourceHealthState =
+  | "healthy"
+  | "warning"
+  | "failing"
+  | "paused"
+  | "blocked"
+  | "not_configured";
+
+export type SourceGovernance = {
+  owner: string;
+  permissionBasis: string;
+  permissionReviewedOn: string | null;
+  allowedFields: readonly string[];
+  cadence: "twice_weekly" | "manual" | "disabled";
+  crawlDelayMs: number;
+  expectedRows: { min: number; max: number } | null;
+  freshnessThresholdHours: number | null;
+  killSwitchEnv: string | null;
+  automationState: SourceAutomationState;
+};
 
 export type IngestionSource = {
   id: string;
@@ -35,9 +60,13 @@ export type IngestionSource = {
   logoUrl: string;
   blurb: string;
   status: IngestionSourceStatus;
+  governance: SourceGovernance;
 };
 
-export const INGESTION_SOURCES: IngestionSource[] = [
+const INGESTION_SOURCE_PRESENTATION: Omit<
+  IngestionSource,
+  "governance"
+>[] = [
   {
     id: "tla_scrape",
     competitionSource: "tla_scrape",
@@ -231,6 +260,358 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     category: "writing",
   },
 ];
+
+const FACTUAL_LISTING_FIELDS = [
+  "source identity",
+  "canonical official URL",
+  "dates and published status",
+  "category and facets",
+  "explicit online status or published location",
+  "published eligibility and fee fields",
+] as const;
+
+const OWNER = "Causey data operations";
+const REVIEWED_2026_08_13 = "2026-08-13";
+
+function enabledGovernance(
+  permissionBasis: string,
+  expectedRows: { min: number; max: number } | null,
+  options: {
+    permissionReviewedOn?: string | null;
+    crawlDelayMs?: number;
+    freshnessThresholdHours?: number;
+  } = {}
+): SourceGovernance {
+  return {
+    owner: OWNER,
+    permissionBasis,
+    permissionReviewedOn: options.permissionReviewedOn ?? null,
+    allowedFields: FACTUAL_LISTING_FIELDS,
+    cadence: "twice_weekly",
+    crawlDelayMs: options.crawlDelayMs ?? 350,
+    expectedRows,
+    freshnessThresholdHours: options.freshnessThresholdHours ?? 192,
+    killSwitchEnv: null,
+    automationState: "enabled",
+  };
+}
+
+const SOURCE_GOVERNANCE: Record<string, SourceGovernance> = {
+  tla_scrape: enabledGovernance(
+    "Existing official US Chess public tournament listing workflow; production-use review remains an operations responsibility.",
+    null
+  ),
+  cca_scrape: enabledGovernance(
+    "Existing organizer public event-page workflow; production-use review remains an operations responsibility.",
+    null
+  ),
+  onlinereg_scrape: enabledGovernance(
+    "Existing public registration-directory workflow; factual listing metadata only.",
+    null
+  ),
+  chess_results_scrape: enabledGovernance(
+    "Existing public results-directory workflow; upcoming USA event metadata only.",
+    null
+  ),
+  fide_calendar_scrape: enabledGovernance(
+    "Existing official public calendar workflow; factual event metadata only.",
+    null
+  ),
+  tca_scrape: enabledGovernance(
+    "Existing official Texas affiliate public event-page workflow.",
+    null
+  ),
+  state_affiliates: {
+    owner: OWNER,
+    permissionBasis: "Outbound reference directory only; no automated ingestion.",
+    permissionReviewedOn: null,
+    allowedFields: [],
+    cadence: "disabled",
+    crawlDelayMs: 0,
+    expectedRows: null,
+    freshnessThresholdHours: null,
+    killSwitchEnv: null,
+    automationState: "reference",
+  },
+  tabroom_scrape: {
+    owner: OWNER,
+    permissionBasis:
+      "Paused: NSDA terms prohibit automated access and commercial/public reuse without written permission.",
+    permissionReviewedOn: REVIEWED_2026_08_13,
+    allowedFields: [],
+    cadence: "disabled",
+    crawlDelayMs: 0,
+    expectedRows: null,
+    freshnessThresholdHours: null,
+    killSwitchEnv: null,
+    automationState: "paused",
+  },
+  vex_events_scrape: {
+    owner: OWNER,
+    permissionBasis:
+      "Blocked after an ordinary public request returned HTTP 403; no bypass or private API is permitted.",
+    permissionReviewedOn: "2026-08-12",
+    allowedFields: FACTUAL_LISTING_FIELDS,
+    cadence: "manual",
+    crawlDelayMs: 350,
+    expectedRows: null,
+    freshnessThresholdHours: null,
+    killSwitchEnv: null,
+    automationState: "blocked",
+  },
+  taea_vase_scrape: enabledGovernance(
+    "First-party public directors’ dates and state overview; factual event metadata only.",
+    { min: 1, max: 30 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  bennington_writers_scrape: enabledGovernance(
+    "First-party public award page; rows require an exact year-specific cycle.",
+    { min: 0, max: 1 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  doe_science_bowl_scrape: enabledGovernance(
+    "First-party Office of Science pages identify the retained factual material as public domain with attribution.",
+    { min: 1, max: 6 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  afsa_essay_scrape: enabledGovernance(
+    "First-party public contest pages; conditions reviewed without an applicable automation or commercial-use prohibition.",
+    { min: 0, max: 2 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  uil_theatre_scrape: enabledGovernance(
+    "First-party ordinary HTML allowed by robots.txt; disallowed linked files are never fetched.",
+    { min: 1, max: 6 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  uil_speech_debate_scrape: enabledGovernance(
+    "First-party ordinary HTML allowed by robots.txt; third-party registration pages and disallowed files are excluded.",
+    { min: 1, max: 100 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  purple_comet_scrape: enabledGovernance(
+    "First-party public pages allowed by robots.txt; protected problems, login content, and participant data are excluded.",
+    { min: 1, max: 2 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  uil_music_marching_scrape: enabledGovernance(
+    "First-party ordinary HTML allowed by robots.txt; disallowed linked files are never fetched.",
+    { min: 1, max: 12 },
+    { permissionReviewedOn: REVIEWED_2026_08_13 }
+  ),
+  txsef_scrape: enabledGovernance(
+    "First-party public Texas A&M HTML and attributed factual metadata under the published linking policy.",
+    { min: 1, max: 2 },
+    {
+      permissionReviewedOn: REVIEWED_2026_08_13,
+      crawlDelayMs: 10_000,
+    }
+  ),
+};
+
+export const INGESTION_SOURCES: IngestionSource[] =
+  INGESTION_SOURCE_PRESENTATION.map((source) => {
+    const governance =
+      SOURCE_GOVERNANCE[source.id] ?? {
+        owner: OWNER,
+        permissionBasis: "No automated ingestion permission basis recorded.",
+        permissionReviewedOn: null,
+        allowedFields: [],
+        cadence: "disabled",
+        crawlDelayMs: 0,
+        expectedRows: null,
+        freshnessThresholdHours: null,
+        killSwitchEnv: null,
+        automationState: "reference",
+      } satisfies SourceGovernance;
+    return {
+      ...source,
+      governance: {
+        ...governance,
+        killSwitchEnv:
+          governance.automationState === "enabled"
+            ? sourceAutomationKillSwitch(source.id)
+            : null,
+      },
+    };
+  });
+
+export type SourceHealth = {
+  sourceId: string;
+  state: SourceHealthState;
+  message: string;
+  lastSuccessAt: string | null;
+};
+
+export type SourceHealthRun = {
+  source: string;
+  status: "running" | "succeeded" | "failed";
+  started_at: string;
+  finished_at: string | null;
+  rows_staged?: number | null;
+};
+
+export function sourceAutomationKillSwitch(sourceId: string): string {
+  return `SCRAPE_DISABLE_${sourceId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`;
+}
+
+export function assertSourceAutomationAllowed(
+  sourceId: string,
+  env: Readonly<Record<string, string | undefined>> = process.env
+): IngestionSource {
+  const source = sourceById(sourceId);
+  if (!source) throw new Error(`Unknown ingestion source: ${sourceId}`);
+  const state = source.governance.automationState;
+  if (
+    sourceId === "tabroom_scrape" &&
+    state === "paused" &&
+    env.TABROOM_WRITTEN_PERMISSION === "1"
+  ) {
+    return source;
+  }
+  if (state !== "enabled") {
+    throw new Error(
+      `${source.name} automation is ${state}; refusing to fetch or publish.`
+    );
+  }
+  const killSwitch = source.governance.killSwitchEnv;
+  if (killSwitch && env[killSwitch] === "1") {
+    throw new Error(`${source.name} is disabled by ${killSwitch}.`);
+  }
+  return source;
+}
+
+export function evaluateSourceBatchHealth(input: {
+  sourceId: string;
+  rows: number;
+  previousRows?: number | null;
+}): SourceHealth {
+  const source = sourceById(input.sourceId);
+  if (!source) {
+    return {
+      sourceId: input.sourceId,
+      state: "failing",
+      message: "Source metadata is missing.",
+      lastSuccessAt: null,
+    };
+  }
+  const expected = source.governance.expectedRows;
+  if (input.rows === 0 && expected?.min === 0) {
+    return {
+      sourceId: source.id,
+      state: "warning",
+      message: "Zero rows are allowed for this source, but require review.",
+      lastSuccessAt: null,
+    };
+  }
+  if (
+    expected &&
+    (input.rows < expected.min || input.rows > expected.max)
+  ) {
+    return {
+      sourceId: source.id,
+      state: "failing",
+      message: `Row count ${input.rows} is outside expected range ${expected.min}–${expected.max}.`,
+      lastSuccessAt: null,
+    };
+  }
+  if (
+    expected &&
+    input.previousRows &&
+    input.previousRows >= 4 &&
+    Math.abs(input.rows - input.previousRows) / input.previousRows > 0.75
+  ) {
+    return {
+      sourceId: source.id,
+      state: "failing",
+      message: `Row count changed abnormally from ${input.previousRows} to ${input.rows}.`,
+      lastSuccessAt: null,
+    };
+  }
+  return {
+    sourceId: source.id,
+    state: "healthy",
+    message: `${input.rows} row(s) passed the source count gate.`,
+    lastSuccessAt: null,
+  };
+}
+
+export function assertSourceBatchHealthy(input: {
+  sourceId: string;
+  rows: number;
+  previousRows?: number | null;
+}): SourceHealth {
+  const health = evaluateSourceBatchHealth(input);
+  if (health.state === "failing") throw new Error(health.message);
+  return health;
+}
+
+export function evaluateSourceOperationalHealth(
+  source: IngestionSource,
+  runs: readonly SourceHealthRun[],
+  now = new Date()
+): SourceHealth {
+  const automation = source.governance.automationState;
+  if (automation === "paused" || automation === "blocked") {
+    return {
+      sourceId: source.id,
+      state: automation,
+      message: source.governance.permissionBasis,
+      lastSuccessAt: null,
+    };
+  }
+  if (automation !== "enabled") {
+    return {
+      sourceId: source.id,
+      state: "not_configured",
+      message: "Reference-only source; no automated health expected.",
+      lastSuccessAt: null,
+    };
+  }
+  const sourceRuns = runs
+    .filter((run) => run.source === source.competitionSource)
+    .sort((a, b) => b.started_at.localeCompare(a.started_at));
+  const latest = sourceRuns[0];
+  const success = sourceRuns.find((run) => run.status === "succeeded");
+  if (!success) {
+    return {
+      sourceId: source.id,
+      state: latest?.status === "failed" ? "failing" : "not_configured",
+      message: latest?.status === "failed"
+        ? "The latest parser or persistence run failed."
+        : "No successful run is recorded.",
+      lastSuccessAt: null,
+    };
+  }
+  if (latest?.status === "failed" && latest.started_at > success.started_at) {
+    return {
+      sourceId: source.id,
+      state: "failing",
+      message: "The latest parser or persistence run failed.",
+      lastSuccessAt: success.finished_at ?? success.started_at,
+    };
+  }
+  const lastSuccessAt = success.finished_at ?? success.started_at;
+  const threshold = source.governance.freshnessThresholdHours;
+  if (
+    threshold !== null &&
+    now.getTime() - new Date(lastSuccessAt).getTime() >
+      threshold * 60 * 60 * 1000
+  ) {
+    return {
+      sourceId: source.id,
+      state: "warning",
+      message: `No successful refresh within ${threshold} hours.`,
+      lastSuccessAt,
+    };
+  }
+  return {
+    sourceId: source.id,
+    state: "healthy",
+    message: "The latest governed run succeeded within its freshness window.",
+    lastSuccessAt,
+  };
+}
 
 export function sourceByCompetitionSource(
   source: string

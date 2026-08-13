@@ -9,13 +9,12 @@
 #   3. Optional: OPENAI_API_KEY for pathway enrichment (gpt-4.1-mini)
 #   4. Manual dry-run locally: npm run scrape:all && npm run scrape:discovery
 #
-# Schedule: Mondays and Thursdays 11:00 UTC (twice weekly).
-# Also triggerable via Actions → Ingest tournaments → Run workflow.
+# Production scheduling is intentionally disabled on dev. GitHub schedules use
+# the default branch, so enabling cron requires a separate approved release.
+# Trigger manually against dev via Actions → Ingest tournaments → Run workflow.
 name: Ingest tournaments
 
 on:
-  schedule:
-    - cron: "0 11 * * 1,4"
   workflow_dispatch:
     inputs:
       source:
@@ -31,7 +30,6 @@ on:
           - chess_results_scrape
           - fide_calendar_scrape
           - tca_scrape
-          - vex_events_scrape
           - taea_vase_scrape
           - bennington_writers_scrape
           - doe_science_bowl_scrape
@@ -46,15 +44,23 @@ concurrency:
   group: causey-tournament-ingestion
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Confirm approved workflow ref
+        if: github.ref_name != 'dev'
+        run: |
+          echo "::error::Ingestion dispatch is approved only from dev until an explicit production release."
+          exit 1
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
       - run: npm ci
       - name: Check Supabase secrets
@@ -77,6 +83,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ENRICH_MAX_AI: "80"
           ENRICH_BATCH_SIZE: "20"
+          SCRAPE_INCLUDE_BLOCKED: "0"
           # Fail instead of silently staging-only when secrets are wrong.
           REQUIRE_SUPABASE: "1"
         run: |
@@ -88,7 +95,6 @@ jobs:
             chess_results_scrape) npm run scrape:chess-results ;;
             fide_calendar_scrape) npm run scrape:fide ;;
             tca_scrape) npm run scrape:tca ;;
-            vex_events_scrape) npm run scrape:vex ;;
             taea_vase_scrape) npm run scrape:taea-vase ;;
             bennington_writers_scrape) npm run scrape:bennington-writers ;;
             doe_science_bowl_scrape) npm run scrape:doe-science-bowl ;;
@@ -101,11 +107,11 @@ jobs:
             *) echo "::error::Unknown scraper source: $SCRAPER_SOURCE"; exit 1 ;;
           esac
       - name: Verify purge dry-run safety
-        if: github.event_name == 'schedule' || inputs.source == 'all'
+        if: inputs.source == 'all'
         run: npm run verify:purge-dry-run
-      - name: Purge competitions ended over a year ago
-        if: github.event_name == 'schedule' || inputs.source == 'all'
-        run: npm run purge:stale
+      - name: Review stale-retention candidates without deleting
+        if: inputs.source == 'all'
+        run: PURGE_DRY_RUN=1 npm run purge:stale
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

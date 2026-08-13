@@ -15,6 +15,10 @@ import {
 import { openSection } from "./parse-sections";
 import type { StagedCompetition } from "./persist";
 import { getServiceRoleClient } from "../lib/supabase/client";
+import {
+  assertSourceAutomationAllowed,
+  evaluateSourceBatchHealth,
+} from "../lib/ingestion-sources";
 
 export async function runCategorySourceScraper(options: {
   label: string;
@@ -25,6 +29,7 @@ export async function runCategorySourceScraper(options: {
   parse: (html: string, url: string) => RawCategoryEvent[];
   allowNoCompleteEvents?: boolean;
 }): Promise<void> {
+  assertSourceAutomationAllowed(options.source);
   const listingUrls = process.env.SCRAPE_HTML_FILE
     ? [options.listingUrl]
     : [options.listingUrl, ...(options.additionalListingUrls ?? [])];
@@ -45,6 +50,11 @@ export async function runCategorySourceScraper(options: {
   const raw = capRows(parsed);
   if (raw.length === 0) {
     if (options.allowNoCompleteEvents) {
+      const health = evaluateSourceBatchHealth({
+        sourceId: options.source,
+        rows: 0,
+      });
+      console.warn(`${options.label} source-health alert: ${health.message}`);
       console.log(
         `${options.label} has no complete, year-specific cycle to stage; leaving existing data unchanged.`
       );

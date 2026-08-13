@@ -8,7 +8,15 @@ import {
   parseDateOnly,
 } from "@/lib/auth/age-band";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import type { AgeBand, Profile } from "@/lib/auth/types";
+import {
+  ProfileEditableFieldsSchema,
+  type AgeBand,
+  type Profile,
+} from "@/lib/auth/types";
+import {
+  parseDiscoveryCategory,
+  type DiscoveryCategory,
+} from "@/lib/category-discovery";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -52,18 +60,26 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       if (dateOfBirth) {
         ageBand = ageBandFromDateOfBirth(dateOfBirth);
       }
+      const interests: DiscoveryCategory[] = profile.interests.flatMap((interest) => {
+        const category = parseDiscoveryCategory(interest);
+        return category && category !== "chess" ? [category] : [];
+      });
+      if (chessInterest) interests.push("chess");
+      const update = ProfileEditableFieldsSchema.parse({
+        display_name: displayName,
+        date_of_birth: dateOfBirth || null,
+        age_band: ageBand,
+        state: state || null,
+        zip: zip || null,
+        interests,
+        preferred_competition_category:
+          profile.preferred_competition_category,
+        updated_at: new Date().toISOString(),
+      });
       const supabase = createBrowserSupabaseClient();
       const { error: updError } = await supabase
         .from("profiles")
-        .update({
-          display_name: displayName.trim(),
-          date_of_birth: dateOfBirth || null,
-          age_band: ageBand,
-          state: state || null,
-          zip: zip || null,
-          interests: chessInterest ? ["chess"] : [],
-          updated_at: new Date().toISOString(),
-        })
+        .update(update)
         .eq("id", profile.id);
       if (updError) throw updError;
       setSaved(true);

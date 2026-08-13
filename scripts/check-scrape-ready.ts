@@ -194,6 +194,12 @@ async function main() {
     }
     return r;
   });
+  await probe("profile category shortcut contract (0056)", async () =>
+    client
+      .from("profiles")
+      .select("preferred_competition_category")
+      .limit(1)
+  );
   await probe("section replacement fields (0041)", async () =>
     client
       .from("sections")
@@ -222,7 +228,7 @@ async function main() {
 
   if (failed > 0) {
     console.error(
-      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0055), preferably with:`
+      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0057), preferably with:`
     );
     console.error("  supabase db push");
     console.error(

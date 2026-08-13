@@ -1,6 +1,9 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/auth/types";
 
+export const PROFILE_SELECT =
+  "id, role, display_name, date_of_birth, age_band, state, zip, interests, preferred_competition_category, role_unlocked, created_at, updated_at";
+
 export async function getSessionUser() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -19,10 +22,15 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select(PROFILE_SELECT)
     .eq("id", user.id)
     .maybeSingle();
 
   if (error || !data) return null;
-  return data as Profile;
+  return {
+    ...data,
+    interests: Array.isArray(data.interests) ? data.interests : [],
+    preferred_competition_category:
+      data.preferred_competition_category ?? null,
+  } as Profile;
 }

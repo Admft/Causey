@@ -5,6 +5,10 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Competition } from "../lib/schemas";
+import {
+  assertSourceAutomationAllowed,
+  assertSourceBatchHealthy,
+} from "../lib/ingestion-sources";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import { decodeHtmlBuffer, fetchHtml } from "./fetch-html";
 import {
@@ -69,11 +73,21 @@ export async function upsertOrExit(
   stagingFile: string,
   meta: Record<string, unknown>
 ) {
+  assertSourceAutomationAllowed(source);
   const parsedCount = typeof meta.parsed === "number" ? meta.parsed : drafts.length;
   const completeSourceSnapshot =
     !process.env.SCRAPE_HTML_FILE &&
     !process.env.SCRAPE_MAX_EVENTS &&
     parsedCount === drafts.length;
+  const previous = loadStagingMetadata(stagingFile);
+  const health = assertSourceBatchHealthy({
+    sourceId: source,
+    rows: drafts.length,
+    previousRows: previous?.rowCount,
+  });
+  if (health.state === "warning") {
+    console.warn(`Source-health alert: ${health.message}`);
+  }
   console.log(`Staging ${drafts.length} rows → data/staging/${stagingFile}`);
   stageCompetitions(stagingFile, drafts, { completeSourceSnapshot });
 
@@ -114,6 +128,12 @@ export async function runUpsertOnly(
 ) {
   const drafts = loadStagedCompetitions(stagingFile);
   const staging = loadStagingMetadata(stagingFile);
+  assertSourceAutomationAllowed(source);
+  assertSourceBatchHealthy({
+    sourceId: source,
+    rows: drafts.length,
+    previousRows: staging?.rowCount,
+  });
   console.log(`Upsert-only mode: ${drafts.length} rows from data/staging/${stagingFile}`);
   const client = getServiceRoleClient();
   if (!client) {

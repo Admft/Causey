@@ -1,6 +1,16 @@
 import type { CompetitionCategory } from "@/lib/schemas";
 
-export type DiscoveryCategory = Exclude<CompetitionCategory, "other">;
+export const PUBLIC_DISCOVERY_CATEGORY_IDS = [
+  "chess",
+  "debate",
+  "stem",
+  "arts",
+  "writing",
+] as const;
+
+export type DiscoveryCategory =
+  (typeof PUBLIC_DISCOVERY_CATEGORY_IDS)[number];
+export type PreferredCompetitionCategory = DiscoveryCategory | null;
 
 export type CategoryFacet = {
   value: string;
@@ -252,17 +262,61 @@ const DISCOVERY_BY_ID = new Map(
   DISCOVERY_CATEGORIES.map((category) => [category.id, category])
 );
 
+export function parseDiscoveryCategory(
+  value: unknown
+): DiscoveryCategory | null {
+  return typeof value === "string" &&
+    PUBLIC_DISCOVERY_CATEGORY_IDS.some((category) => category === value)
+    ? (value as DiscoveryCategory)
+    : null;
+}
+
 export function discoveryCategory(
   category: CompetitionCategory
 ): CategoryDiscoveryDefinition | null {
-  if (category === "other") return null;
-  return DISCOVERY_BY_ID.get(category) ?? null;
+  const publicCategory = parseDiscoveryCategory(category);
+  return publicCategory ? DISCOVERY_BY_ID.get(publicCategory) ?? null : null;
 }
 
 export function isDiscoveryCategory(
-  category: CompetitionCategory
+  category: unknown
 ): category is DiscoveryCategory {
-  return discoveryCategory(category) !== null;
+  return parseDiscoveryCategory(category) !== null;
+}
+
+export function discoveryCategoryHref(
+  category: DiscoveryCategory,
+  params?: URLSearchParams | Record<string, string | null | undefined>
+): string {
+  const href = DISCOVERY_BY_ID.get(category)?.href ?? "/";
+  if (!params) return href;
+  const search =
+    params instanceof URLSearchParams
+      ? new URLSearchParams(params)
+      : new URLSearchParams(
+          Object.entries(params).flatMap(([key, value]) =>
+            value ? [[key, value]] : []
+          )
+        );
+  const query = search.toString();
+  return query ? `${href}?${query}` : href;
+}
+
+export function discoveryCategoryLabel(category: DiscoveryCategory): string {
+  return DISCOVERY_BY_ID.get(category)?.label ?? category;
+}
+
+export function preferredDiscoveryHref(
+  category: PreferredCompetitionCategory,
+  params?: URLSearchParams | Record<string, string | null | undefined>
+): string {
+  return category ? discoveryCategoryHref(category, params) : "/";
+}
+
+export function facetValuesForCategory(
+  category: CompetitionCategory
+): readonly string[] {
+  return discoveryCategory(category)?.facets.map((facet) => facet.value) ?? [];
 }
 
 export function facetBelongsToCategory(
@@ -270,5 +324,5 @@ export function facetBelongsToCategory(
   facet: string
 ): boolean {
   if (!category) return false;
-  return discoveryCategory(category)?.facets.some((option) => option.value === facet) ?? false;
+  return facetValuesForCategory(category).includes(facet);
 }

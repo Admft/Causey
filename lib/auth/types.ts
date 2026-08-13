@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  PublicCompetitionCategorySchema,
+  type PublicCompetitionCategory,
+} from "@/lib/schemas";
 
 export const AccountRoleSchema = z.enum(["student", "coach", "parent"]);
 export type AccountRole = z.infer<typeof AccountRoleSchema>;
@@ -52,7 +56,23 @@ export type Profile = {
   state: string | null;
   zip: string | null;
   interests: string[];
+  preferred_competition_category: PublicCompetitionCategory | null;
   role_unlocked: boolean;
   created_at: string;
   updated_at: string;
 };
+
+export const ProfileEditableFieldsSchema = z.object({
+  display_name: z.string().trim().min(1).max(120),
+  date_of_birth: z.string().date().nullable(),
+  age_band: AgeBandSchema.nullable(),
+  state: z.string().length(2).nullable(),
+  zip: z.string().regex(/^\d{5}$/).nullable(),
+  interests: z.array(PublicCompetitionCategorySchema).max(5),
+  preferred_competition_category: PublicCompetitionCategorySchema.nullable(),
+  updated_at: z.string().datetime({ offset: true }),
+});
+
+export type ProfileEditableFields = z.infer<
+  typeof ProfileEditableFieldsSchema
+>;

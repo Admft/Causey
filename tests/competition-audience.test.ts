@@ -31,7 +31,7 @@ const adminActions = readFileSync(
 const migration = readFileSync(
   resolve(
     process.cwd(),
-    "supabase/migrations/0053_district_audience_requires_hierarchy.sql"
+    "supabase/migrations/0057_district_audience_requires_hierarchy.sql"
   ),
   "utf8"
 );

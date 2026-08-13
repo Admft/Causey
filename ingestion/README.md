@@ -35,6 +35,8 @@ Run these in the Supabase SQL editor if not already applied:
 13. **`0053_purple_comet_source.sql`** — Purple Comet! Math Meet source id
 14. **`0054_uil_music_marching_source.sql`** — UIL state open-class marching band source id
 15. **`0055_txsef_source.sql`** — Texas Science and Engineering Fair source id
+16. **`0056_profile_competition_category.sql`** — nullable account discovery shortcut; no chess default
+17. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
 
 ## Provenance
 
@@ -281,17 +283,23 @@ the twice-weekly cadence, and use `SCRAPE_MAX_EVENTS` for local checks. Do not
 increase request concurrency or bypass access controls. A blocked or changed
 page should produce no fabricated fixture or event.
 
-## Twice-weekly automation (recommended: GitHub Actions)
+## Manual automation pending production release approval
 
 **Primary:** `.github/workflows/ingest.yml`
 
-- Cron: Mondays + Thursdays **11:00 UTC**
+- Schedule: disabled on `dev`. GitHub schedules execute from the default branch,
+  so cron must not be enabled until the corrected workflow receives a separate
+  production release approval.
 - Runs `npm run scrape:all && npm run scrape:discovery`; the discovery runner
   skips Tabroom pending written NSDA permission and skips VEX while ordinary
   public requests return HTTP 403
-- Manual: Actions → **Ingest tournaments** → choose one source or all
+- Manual: Actions → **Ingest tournaments** on `dev` → choose one permitted
+  source or all
 - Tabroom is intentionally absent from Actions/admin/source-filter choices
   while permission is unresolved; it remains an outbound reference link only
+- VEX is also absent from Actions/admin dispatch while ordinary access is
+  blocked. Source governance, count gates, kill switches, and freshness
+  thresholds live in `lib/ingestion-sources.ts`.
 
 Secrets required:
 
@@ -308,8 +316,8 @@ environment needs:
 
 The token stays server-side. The admin page sends only the selected source to
 GitHub and reads completed/running results from `scrape_runs`. Workflow
-concurrency queues overlapping manual or scheduled requests so two ingestion
-runs do not write at the same time.
+concurrency queues overlapping manual requests so two ingestion runs do not
+write at the same time.
 
 **Optional Docker** (VPS / local, when you do not want GitHub runners):
 
@@ -318,8 +326,8 @@ docker compose -f docker-compose.ingest.yml build
 docker compose -f docker-compose.ingest.yml run --rm ingest
 ```
 
-Host cron (Mon/Thu), or keep using GitHub Actions — do **not** run both against
-the same DB on the same schedule.
+Do not add host cron while GitHub scheduling is disabled for release review.
+When production scheduling is approved, use only one scheduler per database.
 
 ## US Chess (`scrape-tla.ts`)
 

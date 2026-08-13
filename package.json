@@ -38,6 +38,8 @@
     "scrape:uil-music-marching": "tsx ingestion/scrape-uil-music-marching.ts",
     "scrape:txsef": "tsx ingestion/scrape-txsef.ts",
     "scrape:discovery": "tsx ingestion/scrape-discovery.ts",
+    "review:discovery-stage": "tsx scripts/review-staged-discovery.ts",
+    "verify:discovery-live": "tsx scripts/verify-discovery-live.ts",
     "scrape:all": "tsx ingestion/scrape-all.ts",
     "enrich:pathways": "tsx ingestion/enrich-pathways-cli.ts",
     "purge:stale": "tsx ingestion/purge-stale.ts",

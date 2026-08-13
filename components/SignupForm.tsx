@@ -81,7 +81,7 @@ export function SignupForm({
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
-  const [chessInterest, setChessInterest] = useState(true);
+  const [chessInterest, setChessInterest] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
@@ -140,6 +140,7 @@ export function SignupForm({
             state: state || null,
             zip: zip || null,
             interests,
+            preferred_competition_category: null,
           },
         },
       });

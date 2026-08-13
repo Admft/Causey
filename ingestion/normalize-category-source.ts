@@ -1,4 +1,8 @@
-import { CompetitionSchema, type Competition } from "../lib/schemas";
+import {
+  COMPETITION_DETAILS_SCHEMA_VERSION,
+  CompetitionSchema,
+  type Competition,
+} from "../lib/schemas";
 import { NEEDS_REVIEW, slugify } from "./normalize";
 import type { RawCategoryEvent } from "./category-source-types";
 
@@ -115,6 +119,7 @@ export function normalizeCategorySourceEvent(
     org_id: null,
     created_by: null,
     details: {
+      schema_version: COMPETITION_DETAILS_SCHEMA_VERSION,
       facets: raw.facets,
       event_type: raw.eventType,
       ...(raw.classifications
@@ -122,6 +127,7 @@ export function normalizeCategorySourceEvent(
         : {}),
       source_availability: raw.availability,
       source_external_key: raw.externalKey,
+      source_fetched_at: new Date().toISOString(),
       ...(raw.locationSourceUrl
         ? { location_source_url: raw.locationSourceUrl }
         : {}),

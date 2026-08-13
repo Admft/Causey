@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  facetBelongsToCategory,
+  PUBLIC_DISCOVERY_CATEGORY_IDS,
+} from "@/lib/category-discovery";
 
 /**
  * Zod schemas for every record the app touches. Field names are snake_case on
@@ -38,6 +42,10 @@ export const CompetitionCategorySchema = z.enum([
   "writing",
   "other",
 ]);
+
+export const PublicCompetitionCategorySchema = z.enum(
+  PUBLIC_DISCOVERY_CATEGORY_IDS
+);
 
 export const ParticipationModeSchema = z.enum([
   "in_person",
@@ -109,6 +117,50 @@ export const PathwayRelatedSchema = z.object({
   note: z.string().optional(),
 });
 
+export const CompetitionFacetSchema = z.enum([
+  "public_forum",
+  "lincoln_douglas",
+  "policy",
+  "congress",
+  "speech",
+  "world_schools",
+  "robotics",
+  "science_fair",
+  "mathematics",
+  "science_bowl",
+  "visual_arts",
+  "music",
+  "theatre",
+  "essay",
+  "fiction",
+  "poetry",
+  "nonfiction",
+]);
+
+export const COMPETITION_DETAILS_SCHEMA_VERSION = 1 as const;
+
+/**
+ * Versioned common envelope for category-specific metadata. Unknown keys remain
+ * available for legacy chess metadata, while every known field is validated.
+ */
+export const CompetitionDetailsSchema = z
+  .object({
+    schema_version: z
+      .literal(COMPETITION_DETAILS_SCHEMA_VERSION)
+      .optional(),
+    facets: z.array(CompetitionFacetSchema).max(20).optional(),
+    event_type: z.string().trim().min(1).max(500).nullable().optional(),
+    classifications: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
+    source_availability: z.string().trim().min(1).max(500).optional(),
+    source_external_key: z.string().trim().min(1).max(500).optional(),
+    source_fetched_at: z.string().datetime({ offset: true }).optional(),
+    location_source_url: z.string().url().optional(),
+    deadline_source_url: z.string().url().optional(),
+    date_semantics: z.literal("submission_deadline").optional(),
+    geo_precision: z.string().trim().min(1).max(40).optional(),
+  })
+  .passthrough();
+
 export const CompetitionSchema = z.object({
   id: z.string().uuid(),
   slug: z.string().min(1),
@@ -174,9 +226,8 @@ export const CompetitionSchema = z.object({
   audience: CompetitionAudienceSchema.default("public"),
   org_id: z.string().uuid().nullable().optional().default(null),
   created_by: z.string().uuid().nullable().optional().default(null),
-  /** Category-specific extras (STEM/debate later) without new columns. */
-  details: z
-    .record(z.unknown())
+  /** Versioned category-specific extras without one-off database columns. */
+  details: CompetitionDetailsSchema
     .nullish()
     .transform((v) => v ?? {}),
   /** Distinct users who saved or started registering for this tournament. */
@@ -216,6 +267,50 @@ export const CompetitionSchema = z.object({
       path: ["city"],
       message: "In-person and hybrid competitions need a complete location.",
     });
+  }
+  for (const facet of competition.details.facets ?? []) {
+    if (!facetBelongsToCategory(competition.category, facet)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["details", "facets"],
+        message: "A competition detail facet must belong to its category.",
+      });
+    }
+  }
+  if (
+    competition.source !== "manual" &&
+    competition.source !== "organizer" &&
+    !competition.source_url
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["source_url"],
+      message: "Ingested competitions need their canonical upstream URL.",
+    });
+  }
+  if (competition.category !== "chess") {
+    if (
+      competition.rated ||
+      competition.rating_system !== null ||
+      competition.series_id !== null
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["category"],
+        message: "Chess ratings and series cannot be attached to other categories.",
+      });
+    }
+    if (
+      competition.pathway_status !== "none" ||
+      competition.pathway_summary !== null ||
+      competition.pathway_related.length > 0
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["pathway_status"],
+        message: "Qualification pathways are currently chess-only.",
+      });
+    }
   }
 });
 
@@ -260,6 +355,9 @@ export type Series = z.infer<typeof SeriesSchema>;
 export type SeriesLevel = z.infer<typeof SeriesLevel>;
 export type CompetitionAudience = z.infer<typeof CompetitionAudienceSchema>;
 export type CompetitionCategory = z.infer<typeof CompetitionCategorySchema>;
+export type PublicCompetitionCategory = z.infer<
+  typeof PublicCompetitionCategorySchema
+>;
 export type ParticipationMode = z.infer<typeof ParticipationModeSchema>;
 export type Competition = z.infer<typeof CompetitionSchema>;
 export type Section = z.infer<typeof SectionSchema>;
@@ -295,42 +393,6 @@ export type RatingBand = keyof typeof RATING_BANDS;
 
 export const SearchSortSchema = z.enum(["popular", "soonest"]);
 export type SearchSort = z.infer<typeof SearchSortSchema>;
-
-export const CompetitionFacetSchema = z.enum([
-  "public_forum",
-  "lincoln_douglas",
-  "policy",
-  "congress",
-  "speech",
-  "world_schools",
-  "robotics",
-  "science_fair",
-  "mathematics",
-  "science_bowl",
-  "visual_arts",
-  "music",
-  "theatre",
-  "essay",
-  "fiction",
-  "poetry",
-  "nonfiction",
-]);
-
-const CATEGORY_FACETS: Partial<
-  Record<CompetitionCategory, readonly z.infer<typeof CompetitionFacetSchema>[]>
-> = {
-  debate: [
-    "public_forum",
-    "lincoln_douglas",
-    "policy",
-    "congress",
-    "speech",
-    "world_schools",
-  ],
-  stem: ["robotics", "science_fair", "mathematics", "science_bowl"],
-  arts: ["visual_arts", "music", "theatre"],
-  writing: ["essay", "fiction", "poetry", "nonfiction"],
-};
 
 export const SearchFiltersSchema = z.object({
   category: CompetitionCategorySchema.optional(),
@@ -380,7 +442,7 @@ export const SearchFiltersSchema = z.object({
   if (
     filters.facet &&
     (!filters.category ||
-      !CATEGORY_FACETS[filters.category]?.includes(filters.facet))
+      !facetBelongsToCategory(filters.category, filters.facet))
   ) {
     context.addIssue({
       code: z.ZodIssueCode.custom,

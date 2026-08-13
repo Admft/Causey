@@ -63,8 +63,8 @@ These are not missing by accident; they are deliberate early constraints:
 - Self-serve district creation (platform administrators provision districts)
 
 Accounts and district workflows are live — apply every versioned migration
-through the latest file (currently `0044_database_security_remediation.sql`)
-and use `/signup`. Any future `0045+` migration is part of the required sequence.
+through the latest file (currently `0057_district_audience_requires_hierarchy.sql`)
+and use `/signup`. Any later migration is part of the required sequence.
 Coaches create school/club workspaces with join codes,
 district administrators create connected schools, platform administrators
 verify organizations, and staff use expiring claim links instead of shared
@@ -120,7 +120,7 @@ need to be completed or connected.
 What exists already:
 
 - `supabase/migrations/0001_init.sql` through
-  `supabase/migrations/0044_database_security_remediation.sql`
+  `supabase/migrations/0057_district_audience_requires_hierarchy.sql`
 - `lib/data/supabase.ts`
 - `scripts/seed-supabase.ts`
 
@@ -129,8 +129,8 @@ What still needs to happen:
 - Create a real Supabase project.
 - Run `npm run validate:migrations`, link with the Supabase CLI, and inspect
   `supabase migration list`.
-- Apply every versioned SQL file through the latest file (currently `0044`),
-  then continue with each uniquely numbered `0045+` migration as it lands.
+- Apply every versioned SQL file through the latest file (currently `0057`),
+  then continue with each uniquely numbered migration as it lands.
 - `PENDING_SCRAPE.sql` was removed after its ingestion changes were integrated
   into numbered migrations. Do not restore or apply copies of that scratch
   file.
@@ -366,7 +366,7 @@ If you want the simplest summary:
 If someone is taking this from MVP to launch, do the work in this order:
 
 1. Stand up Supabase and apply all versioned migrations through the latest
-   file (currently `0044`, plus future `0045+` files)
+   file (currently `0057`, plus future uniquely numbered files)
 2. Load full zip data (`npm run seed:zips`)
 3. Fill `.env` and switch to `DATA_SOURCE=supabase`
 4. Seed only approved demo/staging environments (`npm run seed:supabase`)

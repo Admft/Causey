@@ -1,6 +1,12 @@
 import "server-only";
 
-import { isCompetitionSourceFilter } from "@/lib/ingestion-sources";
+import {
+  INGESTION_SOURCES,
+  evaluateSourceOperationalHealth,
+  isCompetitionSourceFilter,
+  type IngestionSource,
+  type SourceHealth,
+} from "@/lib/ingestion-sources";
 import { isTournamentPublishReady } from "@/lib/tournament-readiness";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -104,6 +110,12 @@ export type AdminScrapeRunRow = {
   rows_staged: number | null;
   rows_upserted: number | null;
   error: string | null;
+  meta: Record<string, unknown>;
+};
+
+export type AdminIngestionSourceHealth = {
+  source: IngestionSource;
+  health: SourceHealth;
 };
 
 export type AdminModerationQueueRow = {
@@ -388,10 +400,22 @@ export async function getAdminScrapeRuns(
   const { data } = await supabase
     .from("scrape_runs")
     .select(
-      "id, source, started_at, finished_at, status, rows_staged, rows_upserted, error"
+      "id, source, started_at, finished_at, status, rows_staged, rows_upserted, error, meta"
     )
     .order("started_at", { ascending: false })
     .limit(limit);
 
   return (data ?? []) as AdminScrapeRunRow[];
+}
+
+export async function getAdminIngestionSourceHealth(): Promise<
+  AdminIngestionSourceHealth[]
+> {
+  const runs = await getAdminScrapeRuns(250);
+  return INGESTION_SOURCES.filter((source) => source.competitionSource).map(
+    (source) => ({
+      source,
+      health: evaluateSourceOperationalHealth(source, runs),
+    })
+  );
 }
