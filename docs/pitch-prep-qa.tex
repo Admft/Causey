@@ -1,0 +1,115 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue
+}
+
+\onehalfspacing
+\setlength{\parskip}{0.7em}
+\setlength{\parindent}{0pt}
+
+\title{Answers going into the next pitch}
+\author{}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\noindent Answers to the questions that came up going into the next pitch.
+
+\vspace{0.5em}
+\hrule
+\vspace{1em}
+
+\section*{Overview of our stance on / use of AI}
+
+We're pretty intentional about this, and we don't want to oversell it. There are really two different uses, and we try to keep them separate.
+
+\textbf{How we build.} The team uses AI heavily as a coding partner while building Causey---drafting and iterating on features, tests, scrapers, migrations, docs, that kind of thing. It makes a small team move a lot faster. That does \emph{not} mean the product is ``AI-generated'' in the loose sense. We still decide what ships, what the product is allowed to claim, and what stays out of scope. Speed from AI in the workshop; judgment stays with us.
+
+\textbf{How the product uses AI.} Inside Causey itself, AI shows up in a narrow place in the data pipeline. After we pull tournament data in, most events get sorted with simple rules---weekend opens, Swiss, blitz, that kind of thing. Only the ambiguous ones go to a small language-model pass so we can tag whether something looks like it might sit on a qualification pathway (none / uncertain / known). We batch it, cache it, and cap how much we spend per run. It's enrichment, not the product brain.
+
+What we will \emph{not} do is let AI invent tournament listings, fees, qualification rules, or official status. If winning one event unlocks another, that lives in curated data with citations---not something a model writes into the graph. Same for partner counts or anything a parent or district would act on. If we're unsure, the product says we're unsure and sends people to the organizer site.
+
+We're also not building AI that watches how students browse and turns that into district ``insights.'' Reporting is aggregate on purpose. If we ever expand AI into student profiles or automated decisions, that would be a deliberate call with legal review---not something we're casually adding.
+
+So the stance is: AI helps us build faster, and it helps with messy labeling at the edges of competition data. Truth for families and schools still comes from sources, curation, and who has permission to see what.
+
+\vspace{0.5em}
+\hrule
+\vspace{1em}
+
+\section*{How we are collecting all the competition data}
+
+Honestly, there isn't a clean API for this. Scholastic competition data is fragmented across public hubs, so we built scrapers for the sources that actually matter for chess right now:
+
+\begin{itemize}
+  \item US Chess upcoming tournaments
+  \item Continental Chess
+  \item OnlineRegistration.cc
+  \item Chess-Results
+  \item FIDE Calendar
+  \item Texas Chess Association
+\end{itemize}
+
+Each one has its own scraper. We fetch listings and details, normalize them into a consistent shape, keep the source URL, stage the data, upsert into our database, and track every upstream sighting. Then we fingerprint events so the same tournament from two sites doesn't show up twice, try to attach high-confidence series matches, optionally run that pathway enrichment pass mentioned above, and log the scrape run so we know what happened.
+
+We don't publish everything that comes back. We want real location signals before something is searchable. Missing fees show as ``not listed,'' not \$0. If a source page is incomplete, we don't invent sections or rules to fill the gap. Registration stays on the organizer's website---when someone clicks out, that is not us claiming they registered.
+
+Scrapes run on a schedule (GitHub Actions), and we can also trigger them from admin tools. Pathways---the ``what does winning this unlock'' graph---are curated separately. Scrapers are not allowed to invent those edges.
+
+For other competition types: we're not collecting public directories for STEM, debate, arts, etc.\ yet. Schools/orgs can already host and coordinate more than chess inside Causey, but a public directory for another category only makes sense once chess supply is solid, district ops are solid, and that category has real sources and someone owning data quality. We don't want to fake breadth.
+
+\vspace{0.5em}
+\hrule
+\vspace{1em}
+
+\section*{How we are monitoring security}
+
+Security for us starts in the data model, not in a slide.
+
+People have real roles---student, parent, coach, school admin, district admin, and a separate platform-admin side for us. Schools sit under districts. Districts aren't self-serve; we provision them. Staff get expiring claim links instead of shared passwords. Someone can't just mark their own org as verified. Assistant coaches don't get the same mutation powers as operators. The database uses row-level security so tenants stay separated, and sensitive admin actions (like kicking off a scraper) get audit events.
+
+On privacy: district reporting is aggregate by default. We specifically don't want a district-wide feed of what students searched or saved. We have privacy and terms pages up, and they correctly say formal compliance review still needs to happen. We're not going to sit in a pitch and claim FERPA/COPPA certified or SOC~2 if we haven't finished those reviews.
+
+What we're watching day to day and hardening next: scrape health (freshness, row counts, errors---including failing closed if a run comes back empty), auth/email/cron health, application error monitoring, and live tests that prove one school or district can't cross into another. Searchable audit logs, rate limits, incident runbooks, and the rest of the procurement package are on the path from assisted pilot to something we'd sell more broadly.
+
+So: the controls are real and role-scoped. The monitoring and live proof story is something we're actively closing---not something we'd pretend is already done.
+
+\vspace{0.5em}
+\hrule
+\vspace{1em}
+
+\section*{Building timeline (other comps vs.\ district platform)}
+
+Short version: district platform before other public competition directories. Chess first. Trust before breadth.
+
+Near term the team is focused on making chess discovery and school/district workflows solid enough to run one narrow assisted pilot---small cohort, chess only, us helping with provisioning, no pretending it's self-serve. That means proving auth and migrations, email and cron, ingestion health, and getting the pilot legal/data pieces in place (export, deletion, notices).
+
+If that pilot works, next is turning it into a repeatable paid district offering: better audit surfaces, deprovisioning, SSO if a buyer needs it, accessibility and procurement docs, pricing/entitlements, and support that doesn't live only in one person's head.
+
+After that, deepen the chess + school loop so people come back for more than search---results, history, better eligibility, season reporting. Integrations like roster/SIS only when a real district is asking for them.
+
+Other competitions come later. STEM, debate, arts, writing---each one needs sources, taxonomy, eligibility rules, registration semantics, moderation, and a real cohort. Adding category buttons without that is just theater. Org-hosted multi-category coordination can exist before a public directory does; those aren't the same product.
+
+The reason for this order is the wedge: a thin multi-category directory is easy to copy. A school tool with no real competition supply loses the point. Causey only works if discovery, families, schools, and aggregate district visibility stay connected---and that connection has to be trustworthy before we stretch it.
+
+\vspace{0.5em}
+\hrule
+\vspace{1em}
+
+\section*{Best / favorite STEM or software-related accomplishment}
+
+\textbf{FinTeach --- first place, HackUNT.}
+FinTeach is a financial planning and budgeting tool built for Texas teachers. The project was motivated by the everyday costs teachers absorb---classroom celebrations paid out of pocket, and educators taking on side work to make ends meet. The team shipped a React and Tailwind interface with a Node/Express backend, OpenAI-assisted personalized advice, and Plaid for financial data, under hackathon constraints that forced a tight feature set aimed at real teacher needs rather than generic AI finance copy. FinTeach placed first at HackUNT (Devpost listing title: TalkTuahFinance).
+
+\textbf{GroundLM --- four-page archival on faithful RAG evaluation.}
+\emph{When the LLM Judge Silently Fails: A Context-Overflow Failure Mode in Faithful RAG Evaluation} documents a silent failure mode found while ablating a local RAG pipeline: an LLM-as-judge returning schema-valid all-zero scores once judge input exceeded roughly 2{,}500 tokens, producing apparent pipeline collapses that were evaluation artifacts. After capping judge context and re-scoring stored outputs, the affected conditions recovered but still showed real, smaller regressions. The same study surfaced related evaluation pitfalls, including post-reranking sentence filters that discard answer-bearing evidence and document-level Recall@5 that can mask passage-level failures. The work covers 66 ablation runs over 60 hand-written questions on 12 RAG papers, with pre- and post-fix judge traces released in the supplementary archive.
+
+\end{document}

@@ -6,13 +6,18 @@ verified `mail.causey.dev` Resend integration.
 
 ## 1. Prepare the pilot environment
 
-1. Link the intended Supabase project and inspect `supabase migration list`.
-   Apply every SQL migration through
-   `0036_product_email_delivery.sql`, skipping
-   `PENDING_SCRAPE.sql`. This repository currently has duplicate numeric
-   prefixes for `0015` and `0016`; on a fresh project, apply those files in
-   filename order through the SQL editor instead of assuming `db push` can
-   track both files under one version.
+1. Run `npm run validate:migrations`, link the intended Supabase project, and
+   inspect `supabase migration list`. Apply every versioned migration through
+   the latest file (currently
+   `0044_database_security_remediation.sql`), including each uniquely
+   numbered `0045+` migration added later. `PENDING_SCRAPE.sql` was removed
+   after integration; do not restore or apply a copy of that scratch file.
+   Duplicate `0015` and `0016` versions are a historical baseline and must not
+   be renamed after application. For a fresh project, apply both files in each
+   duplicate group in exact filename order using a controlled SQL-editor/psql
+   checklist and record both filenames in the deployment log. For an existing
+   project, verify the schema effects and migration ledger before any
+   `migration repair` or `db push`.
 2. Confirm the platform-admin profiles required by migration `0015` exist
    before applying that migration to a fresh project.
 3. Run the escalation checks against a local Supabase stack:
@@ -38,6 +43,12 @@ verified `mail.causey.dev` Resend integration.
    `/api/cron/product-email` route once before onboarding participants.
    On Hobby the Vercel cron runs once a day (~14:00 UTC); invite/reminder
    mail can wait until that run unless you trigger the route by hand.
+8. Do not run `npm run seed:supabase` against the pilot or production project
+   without explicit data-owner approval. The command upserts fixed demo IDs,
+   illustrative qualification rules, and sample ZIP data.
+9. Before the scheduled retention purge is enabled, take a backup and run
+   `PURGE_DRY_RUN=1 npm run purge:stale` with the target project's credentials.
+   Review the cutoff and candidate count before allowing the destructive run.
 
 ## 2. Provision and verify the district
 
