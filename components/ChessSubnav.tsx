@@ -35,12 +35,12 @@ export function ChessSubnav({ tool = "tournaments" }: { tool?: ChessTool }) {
               return (
                 <span
                   key={cat.id}
-                  title="Organizations can host this type; public search is not ready."
+                  title="Not ready yet"
                   className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-sm font-medium text-muted"
                 >
                   {cat.label}
                   <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                    Not searchable
+                    Soon
                   </span>
                 </span>
               );
