@@ -19,6 +19,22 @@ export const CATEGORY_SOURCE_CONFIG = {
     category: "writing",
     organizer: "Bennington College",
   },
+  doe_science_bowl_scrape: {
+    category: "stem",
+    organizer: "U.S. Department of Energy Office of Science",
+  },
+  afsa_essay_scrape: {
+    category: "writing",
+    organizer: "American Foreign Service Association",
+  },
+  uil_theatre_scrape: {
+    category: "arts",
+    organizer: "University Interscholastic League",
+  },
+  uil_speech_debate_scrape: {
+    category: "debate",
+    organizer: "University Interscholastic League",
+  },
 } as const;
 
 export type CategoryScrapeSource = keyof typeof CATEGORY_SOURCE_CONFIG;
@@ -70,7 +86,8 @@ export function normalizeCategorySourceEvent(
     start_date: raw.startDate,
     end_date: raw.endDate,
     reg_deadline: raw.regDeadline,
-    reg_url: raw.detailUrl,
+    reg_url:
+      raw.registrationUrl === undefined ? raw.detailUrl : raw.registrationUrl,
     entry_fee_cents: raw.entryFeeCents,
     rated: false,
     rating_system: null,
@@ -90,6 +107,13 @@ export function normalizeCategorySourceEvent(
       event_type: raw.eventType,
       source_availability: raw.availability,
       source_external_key: raw.externalKey,
+      ...(raw.locationSourceUrl
+        ? { location_source_url: raw.locationSourceUrl }
+        : {}),
+      ...(raw.deadlineSourceUrl
+        ? { deadline_source_url: raw.deadlineSourceUrl }
+        : {}),
+      ...(raw.dateSemantics ? { date_semantics: raw.dateSemantics } : {}),
       ...(options.geoPrecision ? { geo_precision: options.geoPrecision } : {}),
     },
     interest_count: 0,

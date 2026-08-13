@@ -135,18 +135,62 @@ async function main() {
       .select("category, custom_category_name, participation_mode")
       .limit(1)
   );
-  await probe("multi-category ingest sources (0047)", async () =>
-    client
+  await probe("multi-category ingest sources (0052)", async () => {
+    const r = await client
       .from("ingestion_sources")
-      .select("id, category")
+      .select("id, category", { count: "exact", head: true })
       .in("id", [
         "tabroom_scrape",
         "vex_events_scrape",
         "taea_vase_scrape",
         "bennington_writers_scrape",
-      ])
-      .limit(4)
-  );
+        "doe_science_bowl_scrape",
+        "afsa_essay_scrape",
+        "uil_theatre_scrape",
+        "uil_speech_debate_scrape",
+      ]);
+    if (!r.error && r.count !== 8) {
+      return {
+        error: {
+          message: `found ${r.count ?? 0}/8 category sources — apply migrations through 0052`,
+        },
+        count: r.count,
+      };
+    }
+    return r;
+  });
+  await probe("Tabroom automation pause (0051)", async () => {
+    const r = await client
+      .from("ingestion_sources")
+      .select("id", { count: "exact", head: true })
+      .eq("id", "tabroom_scrape")
+      .eq("status", "soon");
+    if (!r.error && r.count !== 1) {
+      return {
+        error: {
+          message: "Tabroom source is not paused — apply migration 0051",
+        },
+        count: r.count,
+      };
+    }
+    return r;
+  });
+  await probe("Tabroom primary listings archived (0051)", async () => {
+    const r = await client
+      .from("competitions")
+      .select("id", { count: "exact", head: true })
+      .eq("source", "tabroom_scrape")
+      .neq("status", "archived");
+    if (!r.error && r.count !== 0) {
+      return {
+        error: {
+          message: `found ${r.count ?? 0} non-archived primary Tabroom listings — apply migration 0051`,
+        },
+        count: r.count,
+      };
+    }
+    return r;
+  });
   await probe("section replacement fields (0041)", async () =>
     client
       .from("sections")
@@ -175,7 +219,7 @@ async function main() {
 
   if (failed > 0) {
     console.error(
-      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0047), preferably with:`
+      `\n${failed} check(s) failed. Apply the repository's ordered migrations through the current head (0051), preferably with:`
     );
     console.error("  supabase db push");
     console.error(

@@ -1,7 +1,7 @@
 # Twice-weekly tournament ingestion for runnable chess and category sources.
 #
 # Prerequisites:
-#   1. Run Supabase migrations through 0047_multi_category_discovery_sources.sql.
+#   1. Run Supabase migrations through 0052_uil_speech_debate_source.sql.
 #   2. Repo secrets (Settings → Secrets → Actions):
 #        NEXT_PUBLIC_SUPABASE_URL
 #        SUPABASE_SERVICE_ROLE_KEY
@@ -31,10 +31,13 @@ on:
           - chess_results_scrape
           - fide_calendar_scrape
           - tca_scrape
-          - tabroom_scrape
           - vex_events_scrape
           - taea_vase_scrape
           - bennington_writers_scrape
+          - doe_science_bowl_scrape
+          - afsa_essay_scrape
+          - uil_theatre_scrape
+          - uil_speech_debate_scrape
 
 concurrency:
   group: causey-tournament-ingestion
@@ -82,10 +85,13 @@ jobs:
             chess_results_scrape) npm run scrape:chess-results ;;
             fide_calendar_scrape) npm run scrape:fide ;;
             tca_scrape) npm run scrape:tca ;;
-            tabroom_scrape) npm run scrape:tabroom ;;
             vex_events_scrape) npm run scrape:vex ;;
             taea_vase_scrape) npm run scrape:taea-vase ;;
             bennington_writers_scrape) npm run scrape:bennington-writers ;;
+            doe_science_bowl_scrape) npm run scrape:doe-science-bowl ;;
+            afsa_essay_scrape) npm run scrape:afsa-essay ;;
+            uil_theatre_scrape) npm run scrape:uil-theatre ;;
+            uil_speech_debate_scrape) npm run scrape:uil-speech-debate ;;
             *) echo "::error::Unknown scraper source: $SCRAPER_SOURCE"; exit 1 ;;
           esac
       - name: Verify purge dry-run safety

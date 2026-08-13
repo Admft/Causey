@@ -2,6 +2,14 @@ export type RawCategoryEvent = {
   externalKey: string;
   name: string;
   detailUrl: string;
+  /** Undefined uses detailUrl; null means the source offers no direct registration. */
+  registrationUrl?: string | null;
+  /** Separate official page used to support parsed location fields, when needed. */
+  locationSourceUrl?: string;
+  /** Separate official page supporting the parsed registration deadline. */
+  deadlineSourceUrl?: string;
+  /** Clarifies when start/end represent a published deadline rather than an event span. */
+  dateSemantics?: "submission_deadline";
   startDate: string;
   endDate: string | null;
   regDeadline: string | null;
@@ -73,6 +81,18 @@ export function parseNamedDateRange(
   text: string
 ): { start: string; end: string | null } | null {
   const normalized = text.replace(/,/g, " ").replace(/\s+/g, " ").trim();
+  const crossMonthRange = normalized.match(
+    /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)?\s*([A-Za-z]+)\s+(\d{1,2})\s*[–-]\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)?\s*([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})\b/i
+  );
+  if (crossMonthRange) {
+    const startMonth = MONTHS[crossMonthRange[1].toLowerCase()];
+    const endMonth = MONTHS[crossMonthRange[3].toLowerCase()];
+    if (!startMonth || !endMonth) return null;
+    const year = Number(crossMonthRange[5]);
+    const start = isoDate(year, startMonth, Number(crossMonthRange[2]));
+    const end = isoDate(year, endMonth, Number(crossMonthRange[4]));
+    return start && end ? { start, end } : null;
+  }
   const range = normalized.match(
     /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)?\s*([A-Za-z]+)\s+(\d{1,2})\s*[–-]\s*(\d{1,2})\s+(\d{4})\b/i
   );

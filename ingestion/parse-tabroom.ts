@@ -9,31 +9,38 @@ import {
 const BASE_URL = "https://www.tabroom.com";
 
 export function tabroomFacets(eventsText: string): string[] {
-  const tokens = new Set(
+  const tokens = [
+    ...new Set(
     eventsText
       .toUpperCase()
       .split(/[^A-Z]+/)
       .filter(Boolean)
-  );
+    ),
+  ];
+  const hasToken = (pattern: RegExp) => tokens.some((token) => pattern.test(token));
   const facets = new Set<string>();
-  if ([...tokens].some((token) => token === "PF" || token === "NPF" || token === "VPF")) {
+  if (hasToken(/^(?:N|V|JV|C)?PF(?:D|L|CH)?$/)) {
     facets.add("public_forum");
   }
-  if ([...tokens].some((token) => token === "LD" || token === "NLD" || token === "VLD")) {
+  if (hasToken(/^(?:N|V|JV|C)?LD(?:UIL|RR|CH|L)?$/)) {
     facets.add("lincoln_douglas");
   }
-  if ([...tokens].some((token) => token === "CX" || token === "NCX" || token === "VCX")) {
+  if (hasToken(/^(?:N|V|JV|C)?CX(?:RR|CH|L)?$/)) {
     facets.add("policy");
   }
-  if ([...tokens].some((token) => token === "CD" || token === "CON" || token === "CONG")) {
+  if (
+    hasToken(
+      /^(?:CD|NCD|VCD|CON|CONG|NCONG|CONGC|CONGL|NCONL|ACOCON|NACON|SMCD|FFCD|RCD|WCD)$/
+    )
+  ) {
     facets.add("congress");
   }
-  if ([...tokens].some((token) => token === "WSD" || token === "WS")) {
+  if (hasToken(/^(?:[A-Z]{0,3})?WSD(?:C|L|CH)?$|^WS$/)) {
     facets.add("world_schools");
   }
   if (
-    [...tokens].some((token) =>
-      ["DI", "DUO", "HI", "INFO", "IX", "OO", "POI", "PR", "DX"].includes(token)
+    hasToken(
+      /^(?:[A-Z]{0,3})?(?:DI|DUO|DUET|HI|INFO|INF|IX|DX|NX|FX|OO|OI|POI|POE|PO|PR|PRO|DA|IMP|DEC|USX)(?:CH|L|C|M|S)?$/
     )
   ) {
     facets.add("speech");

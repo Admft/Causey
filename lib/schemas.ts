@@ -58,6 +58,10 @@ export const CompetitionSourceSchema = z.enum([
   "vex_events_scrape",
   "taea_vase_scrape",
   "bennington_writers_scrape",
+  "doe_science_bowl_scrape",
+  "afsa_essay_scrape",
+  "uil_theatre_scrape",
+  "uil_speech_debate_scrape",
 ]);
 
 export const TournamentSectionDraftSchema = z.object({
@@ -299,6 +303,7 @@ export const CompetitionFacetSchema = z.enum([
   "robotics",
   "science_fair",
   "mathematics",
+  "science_bowl",
   "visual_arts",
   "music",
   "theatre",
@@ -319,7 +324,7 @@ const CATEGORY_FACETS: Partial<
     "speech",
     "world_schools",
   ],
-  stem: ["robotics", "science_fair", "mathematics"],
+  stem: ["robotics", "science_fair", "mathematics", "science_bowl"],
   arts: ["visual_arts", "music", "theatre"],
   writing: ["essay", "fiction", "poetry", "nonfiction"],
 };

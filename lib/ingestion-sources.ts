@@ -21,7 +21,11 @@ export type IngestionSource = {
     | "tabroom_scrape"
     | "vex_events_scrape"
     | "taea_vase_scrape"
-    | "bennington_writers_scrape";
+    | "bennington_writers_scrape"
+    | "doe_science_bowl_scrape"
+    | "afsa_essay_scrape"
+    | "uil_theatre_scrape"
+    | "uil_speech_debate_scrape";
   category: Exclude<CompetitionCategory, "other">;
   name: string;
   href: string;
@@ -110,8 +114,9 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     name: "Tabroom",
     href: "https://www.tabroom.com/index/index.mhtml",
     logoUrl: "/sources/state-affiliates.svg",
-    blurb: "Official public speech and debate tournament calendars.",
-    status: "live",
+    blurb:
+      "Reference link only. Primary Tabroom listings are archived; automated access and public reuse require written NSDA permission.",
+    status: "soon",
     category: "debate",
   },
   {
@@ -126,6 +131,17 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     category: "stem",
   },
   {
+    id: "doe_science_bowl_scrape",
+    competitionSource: "doe_science_bowl_scrape",
+    name: "DOE National Science Bowl",
+    href: "https://science.osti.gov/wdts/nsb/Key-Dates",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official U.S. Department of Energy national-event dates, published from public-domain Office of Science information without implied endorsement.",
+    status: "live",
+    category: "stem",
+  },
+  {
     id: "taea_vase_scrape",
     competitionSource: "taea_vase_scrape",
     name: "TAEA VASE",
@@ -136,12 +152,45 @@ export const INGESTION_SOURCES: IngestionSource[] = [
     category: "arts",
   },
   {
+    id: "uil_theatre_scrape",
+    competitionSource: "uil_theatre_scrape",
+    name: "UIL Theatre State Meets",
+    href: "https://www.uiltexas.org/theatre/state",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official high-school theatre state-meet dates. Regional, district, zone, and local coverage is not included.",
+    status: "live",
+    category: "arts",
+  },
+  {
+    id: "uil_speech_debate_scrape",
+    competitionSource: "uil_speech_debate_scrape",
+    name: "UIL Speech & Debate Invitationals",
+    href: "https://www.uiltexas.org/academics/invitational-meets-test",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official UIL invitational calendar rows with explicit speech/debate offerings, exact dates, and complete Texas locations.",
+    status: "live",
+    category: "debate",
+  },
+  {
     id: "bennington_writers_scrape",
     competitionSource: "bennington_writers_scrape",
     name: "Bennington Young Writers Awards",
     href: "https://www.bennington.edu/events/young-writers-awards",
     logoUrl: "/sources/state-affiliates.svg",
     blurb: "Official public high-school writing award page.",
+    status: "live",
+    category: "writing",
+  },
+  {
+    id: "afsa_essay_scrape",
+    competitionSource: "afsa_essay_scrape",
+    name: "AFSA National High School Essay Contest",
+    href: "https://afsa.org/essay-contest",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official essay-contest cycles with exact AFSA-published deadlines and open or closed status.",
     status: "live",
     category: "writing",
   },
@@ -162,7 +211,9 @@ export const COMPETITION_SOURCE_FILTER_OPTIONS: {
   value: string;
   label: string;
 }[] = [
-  ...INGESTION_SOURCES.filter((s) => s.competitionSource).map((s) => ({
+  ...INGESTION_SOURCES.filter(
+    (s) => s.competitionSource && s.status === "live"
+  ).map((s) => ({
     value: s.competitionSource as string,
     label: s.name,
   })),
@@ -186,7 +237,10 @@ export function competitionSourceOptionsForCategory(
 ): { value: string; label: string }[] {
   return [
     ...INGESTION_SOURCES.filter(
-      (source) => source.category === category && source.competitionSource
+      (source) =>
+        source.category === category &&
+        source.competitionSource &&
+        source.status === "live"
     ).map((source) => ({
       value: source.competitionSource as string,
       label: source.name,

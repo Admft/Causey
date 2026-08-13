@@ -59,7 +59,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/debate",
     heading: "Speech and debate tournaments.",
     description:
-      "Search the official public listings Causey has indexed so far. Coverage currently relies on a limited set of Tabroom calendars and may omit circuits, events, or late changes.",
+      "Search the official UIL invitational listings Causey has indexed so far. Coverage is limited to Texas rows that explicitly name speech or debate offerings and publish complete locations.",
     searchPlaceholder: "Try public forum, Lincoln-Douglas, or a tournament name",
     facetLabel: "Event type or format",
     facets: [
@@ -72,13 +72,19 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     ],
     activeSources: [
       {
-        name: "Tabroom",
-        href: "https://www.tabroom.com/index/index.mhtml",
-        status: "Active for the configured Texas public circuit",
-        note: "Official public tournament calendars. Causey indexes only configured public circuits and does not claim complete Tabroom coverage.",
+        name: "UIL Speech & Debate Invitationals",
+        href: "https://www.uiltexas.org/academics/invitational-meets-test",
+        status: "Active for explicit 2026–27 Texas listings",
+        note: "Causey indexes only UIL calendar rows with exact dates, complete Texas locations, and explicit speech/debate offerings. Third-party registration pages are not fetched.",
       },
     ],
     referenceSources: [
+      {
+        name: "Tabroom",
+        href: "https://www.tabroom.com/index/index.mhtml",
+        status: "Reference only",
+        note: "NSDA terms apply to Tabroom and prohibit automated access plus commercial/public reuse. Previously indexed primary Tabroom listings are archived by migration 0051; Causey will not refresh or republish them without written permission.",
+      },
       {
         name: "SpeechWire",
         href: "https://www.speechwire.com/",
@@ -92,23 +98,30 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Robotics coverage starts with VEX Events; science fair and mathematics coverage remains limited.",
+      "Search the official public listings Causey has indexed so far. Current coverage starts with U.S. Department of Energy National Science Bowl dates; robotics, science fair, and mathematics coverage remains limited.",
     searchPlaceholder: "Try robotics, science fair, or a competition name",
     facetLabel: "Discipline",
     facets: [
       { value: "robotics", label: "Robotics" },
       { value: "science_fair", label: "Science fair" },
       { value: "mathematics", label: "Mathematics" },
+      { value: "science_bowl", label: "Science bowl" },
     ],
     activeSources: [
       {
-        name: "VEX Events",
-        href: "https://events.vex.com/robot-competitions/vex-robotics-competition",
-        status: "Blocked: repository fetch received HTTP 403 on August 12, 2026",
-        note: "Official public VEX event pages. The parser is covered by a truthful public-page snippet, but automated refresh remains disabled unless normal public access succeeds without a bypass.",
+        name: "U.S. Department of Energy National Science Bowl",
+        href: "https://science.osti.gov/wdts/nsb/Key-Dates",
+        status: "Active for published national-event dates",
+        note: "Official Office of Science dates and program information. DOE identifies the source material as public domain; Causey links to the source and does not imply DOE endorsement.",
       },
     ],
     referenceSources: [
+      {
+        name: "VEX Events",
+        href: "https://events.vex.com/robot-competitions/vex-robotics-competition",
+        status: "Not indexed: repository fetch received HTTP 403 on August 12, 2026",
+        note: "Official public VEX event pages remain link-only unless normal public access succeeds without a bypass.",
+      },
       {
         name: "FIRST",
         href: "https://www.firstinspires.org/",
@@ -119,6 +132,11 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         href: "https://findafair.societyforscience.org/",
         note: "Link only while Causey seeks permission for automated indexing.",
       },
+      {
+        name: "MATHCOUNTS competition search",
+        href: "https://www.mathcounts.org/programs/chapter-state-competition-search",
+        note: "Link only. MATHCOUNTS terms require prior written consent to reproduce or republish site materials.",
+      },
     ],
   },
   {
@@ -127,7 +145,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/arts",
     heading: "Student arts competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Current coverage is limited to published TAEA VASE dates and may not include every regional update.",
+      "Search the official public listings Causey has indexed so far. Current coverage includes published TAEA VASE dates and UIL theatre state meets; regional, district, zone, and local coverage remains incomplete.",
     searchPlaceholder: "Try visual arts, music, theatre, or an event name",
     facetLabel: "Discipline",
     facets: [
@@ -141,6 +159,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         href: "https://www.taea.org/vase/directors-dates.asp",
         status: "Active",
         note: "Official public Visual Arts Scholastic Event dates. Causey indexes only dates with enough published detail to identify an event.",
+      },
+      {
+        name: "UIL Theatre State Meets",
+        href: "https://www.uiltexas.org/theatre/state",
+        status: "Active for published state-meet dates",
+        note: "Official high-school One-Act Play and Theatrical Design state-meet dates. Causey does not imply complete UIL theatre coverage and does not index regional, district, zone, or local events.",
       },
     ],
     referenceSources: [

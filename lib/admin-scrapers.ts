@@ -6,12 +6,27 @@ export const ADMIN_SCRAPER_OPTIONS = [
   { value: "chess_results_scrape", label: "Chess-Results" },
   { value: "fide_calendar_scrape", label: "FIDE calendar" },
   { value: "tca_scrape", label: "Texas Chess Association" },
-  { value: "tabroom_scrape", label: "Tabroom speech and debate" },
   { value: "vex_events_scrape", label: "VEX Events robotics" },
   { value: "taea_vase_scrape", label: "TAEA VASE visual arts" },
   {
     value: "bennington_writers_scrape",
     label: "Bennington Young Writers Awards",
+  },
+  {
+    value: "doe_science_bowl_scrape",
+    label: "DOE National Science Bowl",
+  },
+  {
+    value: "afsa_essay_scrape",
+    label: "AFSA National High School Essay Contest",
+  },
+  {
+    value: "uil_theatre_scrape",
+    label: "UIL theatre state meets",
+  },
+  {
+    value: "uil_speech_debate_scrape",
+    label: "UIL speech & debate invitationals",
   },
 ] as const;
 

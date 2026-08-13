@@ -227,7 +227,11 @@ export async function persistScrapeBatch(
       source === "tabroom_scrape" ||
       source === "vex_events_scrape" ||
       source === "taea_vase_scrape" ||
-      source === "bennington_writers_scrape"
+      source === "bennington_writers_scrape" ||
+      source === "doe_science_bowl_scrape" ||
+      source === "afsa_essay_scrape" ||
+      source === "uil_theatre_scrape" ||
+      source === "uil_speech_debate_scrape"
         ? source
         : "all"),
     opts.meta ?? {}

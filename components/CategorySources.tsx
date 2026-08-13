@@ -18,39 +18,45 @@ function SourceList({
   return (
     <div>
       <h3 className="text-xs font-semibold text-muted-strong">{title}</h3>
-      <ul className="mt-4 space-y-5">
-        {sources.map((source) => {
-          const external = source.href.startsWith("http");
-          return (
-            <li key={source.name} className="border-t border-line pt-4">
-              <a
-                href={source.href}
-                {...(external
-                  ? {
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                      "aria-label": `${source.name} (opens in a new tab)`,
-                    }
-                  : {})}
-                className="group inline-flex items-baseline gap-1.5 text-base font-semibold text-foreground transition-colors hover:text-brand-red"
-              >
-                {source.name}
-                {external ? (
-                  <span aria-hidden="true" className="nudge-x text-sm text-muted">
-                    ↗
-                  </span>
+      {sources.length === 0 ? (
+        <p className="mt-4 max-w-lg text-sm text-muted">
+          No permitted source is currently feeding this category.
+        </p>
+      ) : (
+        <ul className="mt-4 space-y-5">
+          {sources.map((source) => {
+            const external = source.href.startsWith("http");
+            return (
+              <li key={source.name} className="border-t border-line pt-4">
+                <a
+                  href={source.href}
+                  {...(external
+                    ? {
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                        "aria-label": `${source.name} (opens in a new tab)`,
+                      }
+                    : {})}
+                  className="group inline-flex items-baseline gap-1.5 text-base font-semibold text-foreground transition-colors hover:text-brand-red"
+                >
+                  {source.name}
+                  {external ? (
+                    <span aria-hidden="true" className="nudge-x text-sm text-muted">
+                      ↗
+                    </span>
+                  ) : null}
+                </a>
+                {source.status ? (
+                  <p className="mt-1 text-xs font-semibold text-muted-strong">
+                    Status: {source.status}
+                  </p>
                 ) : null}
-              </a>
-              {source.status ? (
-                <p className="mt-1 text-xs font-semibold text-muted-strong">
-                  Status: {source.status}
-                </p>
-              ) : null}
-              <p className="mt-1 max-w-lg text-sm text-muted">{source.note}</p>
-            </li>
-          );
-        })}
-      </ul>
+                <p className="mt-1 max-w-lg text-sm text-muted">{source.note}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
@@ -76,12 +82,15 @@ export function CategorySources({
           Where these tournaments come from
         </h2>
         <p className="mt-3 max-w-2xl text-base text-muted">
-          Active ingest sources can create Causey listings. Reference sources
-          remain outbound links only because permission, terms, or source
-          quality does not support automated indexing.
+          Each ingest source states whether its adapter is active or paused.
+          Reference sources remain outbound links only because permission,
+          terms, or source quality does not support automated indexing.
         </p>
         <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
-          <SourceList title="Ingest source status" sources={definition.activeSources} />
+          <SourceList
+            title="Active indexed sources"
+            sources={definition.activeSources}
+          />
           <SourceList
             title="Reference links, not indexed"
             sources={definition.referenceSources}

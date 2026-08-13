@@ -27,12 +27,17 @@ Run these in the Supabase SQL editor if not already applied:
 5. **`0019_hub_scrape_sources.sql`** — OnlineReg / Chess-Results / FIDE source enums + live `ingestion_sources`
 6. **`0039_admin_tournament_operations.sql`** — admin deletion RPC, scrape-run visibility, and dispatch audit
 7. **`0047_multi_category_discovery_sources.sql`** — Tabroom, VEX Events, TAEA VASE, and Bennington source ids + category metadata
+8. **`0048_doe_science_bowl_source.sql`** — U.S. Department of Energy National Science Bowl source id
+9. **`0049_afsa_essay_source.sql`** — AFSA National High School Essay Contest source id
+10. **`0050_uil_theatre_source.sql`** — UIL high-school theatre state-meet source id
+11. **`0051_pause_tabroom_automation.sql`** — pause Tabroom metadata and archive primary Tabroom listings pending written NSDA permission
+12. **`0052_uil_speech_debate_source.sql`** — UIL invitational speech/debate source id
 
 ## Provenance
 
 | Column / table | Meaning |
 | --- | --- |
-| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, and `bennington_writers_scrape` |
+| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, `bennington_writers_scrape`, `doe_science_bowl_scrape`, `afsa_essay_scrape`, `uil_theatre_scrape`, and `uil_speech_debate_scrape` |
 | `competitions.source_url` | Exact upstream page scraped |
 | `competitions.fingerprint` | Normalized name\|date\|state\|zip for cross-source matching |
 | `competitions.canonical_id` | Set on archived duplicates → points at the surviving row |
@@ -50,10 +55,14 @@ npm run scrape:onlinereg        # OnlineRegistration.cc index
 npm run scrape:chess-results    # Chess-Results USA search
 npm run scrape:fide             # FIDE Calendar tiles
 npm run scrape:tca              # Texas Chess Association events + pictures
-npm run scrape:tabroom          # Configured public Tabroom circuit calendar
+TABROOM_WRITTEN_PERMISSION=1 npm run scrape:tabroom # Only after written NSDA permission
 npm run scrape:vex              # Official public VEX Events directory
 npm run scrape:taea-vase        # Official public TAEA VASE dates
 npm run scrape:bennington-writers # Official Bennington cycle, when year-specific
+npm run scrape:doe-science-bowl # Official DOE national-event dates
+npm run scrape:afsa-essay       # Official AFSA year-specific essay cycle
+npm run scrape:uil-theatre      # Official UIL theatre state-meet dates
+npm run scrape:uil-speech-debate # Official UIL invitationals with explicit speech/debate offerings
 npm run scrape:discovery        # Runnable non-chess adapters in sequence
 SCRAPE_INCLUDE_BLOCKED=1 npm run scrape:discovery # also re-check ordinary VEX access
 npm run scrape:all              # All six chess sources in sequence
@@ -150,9 +159,21 @@ with a similar title. Series matching and pathway enrichment run only for
 
 ## Official non-chess sources
 
-- **Tabroom (`tabroom_scrape`, Debate):** public calendars only. The initial
-  adapter is deliberately configured to one public circuit calendar; it does
-  not claim complete Tabroom coverage.
+- **Tabroom (`tabroom_scrape`, Debate):** paused. Causey previously indexed one
+  Texas public circuit calendar, but current NSDA Terms expressly apply to
+  `tabroom.com`, limit downloads to personal non-commercial viewing, prohibit
+  commercial/public reuse, and prohibit automated access for any purpose.
+  `robots.txt` allows the calendar and tournament landing paths, but that does
+  not override the Terms. Scheduled discovery skips this adapter; direct live
+  runs fail before fetching unless written NSDA permission has been recorded
+  with `TABROOM_WRITTEN_PERMISSION=1`. Fixture-only parser checks are forcibly
+  stage-only, and fixture upsert-only attempts fail without permission.
+  Migration `0051` archives only competitions whose primary
+  `competitions.source` is `tabroom_scrape`; it preserves `competition_sources`
+  and scrape-run audit rows and does not hide organizer/manual competitions
+  merely because they have a secondary Tabroom sighting. With the adapter
+  absent from scheduled/admin dispatch and its live/upsert path permission
+  gated, later runs cannot republish those rows while permission is absent.
 - **VEX Events (`vex_events_scrape`, STEM / `robotics`):** public HTML event
   directory. No private API or token is used. The repository fetcher received
   HTTP 403 on 2026-08-12, so live refresh remains blocked unless ordinary
@@ -162,16 +183,57 @@ with a similar title. Series matching and pathway enrichment run only for
 - **Bennington Young Writers Awards (`bennington_writers_scrape`, Writing):**
   genres come from the official award page. The adapter leaves data unchanged
   when the page gives month/day deadlines without a year.
+- **DOE National Science Bowl (`doe_science_bowl_scrape`, STEM /
+  `science_bowl` + `mathematics`):** official national-event dates from the
+  Office of Science Key Dates page. The adapter requires the separate official
+  program page to confirm Washington, D.C.; it does not infer a venue,
+  registration link, regional dates, fee, or grade band. Office of Science
+  `robots.txt` allows both pages, and its Web Policies identify site materials
+  as public domain while requesting source acknowledgment and prohibiting
+  implied endorsement. Causey uses no DOE or National Science Bowl logo.
+- **AFSA National High School Essay Contest (`afsa_essay_scrape`, Writing /
+  `essay`):** the official contest page must publish the cycle, grade 9–12
+  eligibility, and open/closed status, while the separate official Writer's
+  Checklist must publish a deadline in the cycle's ending year. Causey stores
+  that deadline as both `start_date` and `end_date`, with
+  `details.date_semantics = "submission_deadline"`; it never invents an opening
+  date, fee, or registration link. Closed exact cycles remain published and are
+  found through the Ended/All timing filter. AFSA `robots.txt` allows both
+  pages, and its Conditions of Use contain no automation or commercial-use
+  prohibition; only factual metadata and source links are retained.
+- **UIL Theatre State Meets (`uil_theatre_scrape`, Arts / `theatre`):** the
+  official public state-meet page currently yields the two year-specific
+  One-Act Play conference ranges and the Theatrical Design State Meet. The
+  adapter preserves UIL's tentative status, requires Austin location evidence,
+  and records no registration link, fee, street address, or venue. Coverage is
+  state-meet only: region, area, district, bi-district, zone, and local events
+  are not indexed. UIL `robots.txt` allows `/theatre/state` while disallowing
+  `/files/`; Causey reads only the ordinary HTML page and does not fetch or
+  reproduce those disallowed assets. The public page links a Web Privacy Policy
+  but publishes no applicable automation prohibition; credential-use
+  conditions for accredited event media are not used as an access path.
+- **UIL Speech & Debate Invitationals (`uil_speech_debate_scrape`, Debate):**
+  the official public academic invitational calendar must publish an exact
+  year-specific date, complete Texas location, and explicit speech/debate
+  offering before a row is staged. Facets come only from named LD, CX/policy,
+  Congress, or speech events. Third-party Tabroom and SpeechWire registration
+  pages are never fetched, and fees/deadlines are not inferred. UIL
+  `robots.txt` allows the calendar path while disallowing `/files/`; this
+  adapter reads only ordinary HTML and retains factual metadata with
+  attribution.
 
 Parser fixtures named `*-public-snippet.html` are minimal excerpts derived from
-public pages fetched on 2026-08-12, not complete source snapshots. Never use
+public pages fetched on 2026-08-12 or 2026-08-13, not complete source snapshots. Never use
 them with stale retraction.
 
-Restricted or reference-only sources are not scraped: SpeechWire, Scholastic,
-and YoungArts prohibit automation; Society for Science's fair finder needs
+Restricted or reference-only sources are not scraped: Tabroom and SpeechWire
+prohibit automation; Scholastic and YoungArts also restrict automated use;
+Society for Science's fair finder needs
 permission; FIRST requires an appropriate token/permission; AoPS and NewPages
 are secondary links; Scienteer and zFairs are tenant software rather than
 national directories; RobotEvents is not the official 2026–27 VEX pathway.
+MATHCOUNTS remains link-only because its terms require prior written consent
+to reproduce, retransmit, or republish site materials.
 
 Politeness: use the shared retrying user agent, run sources sequentially, keep
 the twice-weekly cadence, and use `SCRAPE_MAX_EVENTS` for local checks. Do not
@@ -184,8 +246,11 @@ page should produce no fabricated fixture or event.
 
 - Cron: Mondays + Thursdays **11:00 UTC**
 - Runs `npm run scrape:all && npm run scrape:discovery`; the discovery runner
-  skips VEX while normal public requests return HTTP 403
+  skips Tabroom pending written NSDA permission and skips VEX while ordinary
+  public requests return HTTP 403
 - Manual: Actions → **Ingest tournaments** → choose one source or all
+- Tabroom is intentionally absent from Actions/admin/source-filter choices
+  while permission is unresolved; it remains an outbound reference link only
 
 Secrets required:
 

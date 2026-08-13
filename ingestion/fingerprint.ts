@@ -52,6 +52,10 @@ export const SOURCE_PRIORITY: Record<string, number> = {
   vex_events_scrape: 30,
   taea_vase_scrape: 30,
   bennington_writers_scrape: 30,
+  doe_science_bowl_scrape: 30,
+  afsa_essay_scrape: 30,
+  uil_theatre_scrape: 30,
+  uil_speech_debate_scrape: 30,
   organizer: 20,
   manual: 10,
 };
