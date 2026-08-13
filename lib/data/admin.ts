@@ -167,17 +167,29 @@ export async function getAdminOverview() {
 
 export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
   const supabase = await createServerSupabaseClient();
-  const [organizations, memberships, orgCompetitions] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select(
-        "id, name, slug, type, state, parent_org_id, verification_status, verified_at, created_at, parent:organizations!organizations_parent_org_id_fkey(id, name, slug, verification_status), organization_verification_reviews(note, reviewed_at)"
-      )
-      .order("type")
-      .order("name"),
-    supabase.from("org_memberships").select("org_id, status"),
-    supabase.from("competitions").select("org_id").not("org_id", "is", null),
-  ]);
+  // Keep the org list query embed-light: a bad PostgREST relationship hint
+  // (or a review table that is not on the linked project yet) used to fail the
+  // whole select, and callers treated that as an empty directory.
+  const [organizations, memberships, orgCompetitions, reviews] =
+    await Promise.all([
+      supabase
+        .from("organizations")
+        .select(
+          "id, name, slug, type, state, parent_org_id, verification_status, verified_at, created_at, parent:organizations!parent_org_id(id, name, slug, verification_status)"
+        )
+        .order("type")
+        .order("name"),
+      supabase.from("org_memberships").select("org_id, status"),
+      supabase.from("competitions").select("org_id").not("org_id", "is", null),
+      supabase
+        .from("organization_verification_reviews")
+        .select("org_id, note, reviewed_at"),
+    ]);
+
+  if (organizations.error) {
+    console.error("getAdminOrganizations failed", organizations.error);
+    return [];
+  }
 
   const memberCounts = new Map<string, number>();
   if (!memberships.error) {
@@ -196,10 +208,22 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
       );
     }
   }
+  const reviewsByOrgId = new Map<
+    string,
+    AdminOrganizationRow["organization_verification_reviews"]
+  >();
+  if (!reviews.error) {
+    for (const row of reviews.data ?? []) {
+      reviewsByOrgId.set(row.org_id, [
+        { note: row.note, reviewed_at: row.reviewed_at },
+      ]);
+    }
+  }
 
   return (organizations.data ?? []).map((row) => ({
     ...row,
     parent: Array.isArray(row.parent) ? (row.parent[0] ?? null) : row.parent,
+    organization_verification_reviews: reviewsByOrgId.get(row.id) ?? [],
     member_count: memberCounts.get(row.id) ?? 0,
     tournament_count: tournamentCounts.get(row.id) ?? 0,
   })) as unknown as AdminOrganizationRow[];

@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { COMPETITION_TYPES } from "@/lib/competition-types";
+import { DISCOVERY_CATEGORIES, type DiscoveryCategory } from "@/lib/category-discovery";
 
 /**
- * Chess context bar — sits under the sticky header on chess surfaces.
- * Left: competition-type switcher (only Chess is live).
- * Right: in-chess tools (Tournaments search + Pathways).
+ * Discovery context bar. Category links are shared by every public search
+ * surface; chess-only tools appear only in chess context.
  */
 
 const CHESS_TOOLS = [
@@ -20,7 +19,13 @@ function toolClass(active: boolean) {
     : "inline-flex items-center rounded-md px-2.5 py-1 text-sm font-medium text-muted-strong transition-colors hover:bg-white hover:text-foreground";
 }
 
-export function ChessSubnav({ tool = "tournaments" }: { tool?: ChessTool }) {
+export function ChessSubnav({
+  category = "chess",
+  tool = "tournaments",
+}: {
+  category?: DiscoveryCategory;
+  tool?: ChessTool;
+}) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4 sm:gap-y-1.5">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -30,70 +35,75 @@ export function ChessSubnav({ tool = "tournaments" }: { tool?: ChessTool }) {
           aria-label="Competition type"
           className="flex flex-wrap items-center gap-1"
         >
-          {COMPETITION_TYPES.filter((type) => type.id !== "other").map((cat) => {
-            if (!cat.discoveryAvailable) {
+          {DISCOVERY_CATEGORIES.map((cat) => {
+            const active = cat.id === category;
+            if (active) {
               return (
                 <span
                   key={cat.id}
-                  title="Not ready yet"
-                  className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-sm font-medium text-muted"
+                  aria-current="page"
+                  className="inline-flex items-center rounded-md border border-line bg-white px-2.5 py-1 text-sm font-semibold text-foreground"
                 >
                   {cat.label}
-                  <span className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
-                    Soon
-                  </span>
                 </span>
               );
             }
 
-            // Chess is the only live type — show as current category context.
             return (
-              <span
+              <Link
                 key={cat.id}
-                aria-current="page"
-                className="inline-flex items-center rounded-md border border-line bg-white px-2.5 py-1 text-sm font-semibold text-foreground"
+                href={cat.href}
+                className="inline-flex items-center rounded-md px-2.5 py-1 text-sm font-medium text-muted-strong transition-colors hover:bg-white hover:text-foreground"
               >
                 {cat.label}
-              </span>
+              </Link>
             );
           })}
         </div>
       </div>
 
-      <nav
-        aria-label="Chess tools"
-        className="flex flex-wrap items-center gap-1 border-t border-line pt-2 sm:border-t-0 sm:pt-0"
-      >
-        {CHESS_TOOLS.map((item) => {
-          const active = item.id === tool;
-          if (active) {
+      {category === "chess" ? (
+        <nav
+          aria-label="Chess tools"
+          className="flex flex-wrap items-center gap-1 border-t border-line pt-2 sm:border-t-0 sm:pt-0"
+        >
+          {CHESS_TOOLS.map((item) => {
+            const active = item.id === tool;
+            if (active) {
+              return (
+                <span
+                  key={item.id}
+                  aria-current="page"
+                  className={toolClass(true)}
+                >
+                  {item.label}
+                </span>
+              );
+            }
             return (
-              <span
-                key={item.id}
-                aria-current="page"
-                className={toolClass(true)}
-              >
+              <Link key={item.id} href={item.href} className={toolClass(false)}>
                 {item.label}
-              </span>
+              </Link>
             );
-          }
-          return (
-            <Link key={item.id} href={item.href} className={toolClass(false)}>
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+          })}
+        </nav>
+      ) : null}
     </div>
   );
 }
 
-/** Shared chrome wrapper for chess surfaces. */
-export function ChessSubnavBar({ tool }: { tool: ChessTool }) {
+/** Shared chrome wrapper for public discovery surfaces. */
+export function ChessSubnavBar({
+  category = "chess",
+  tool = "tournaments",
+}: {
+  category?: DiscoveryCategory;
+  tool?: ChessTool;
+}) {
   return (
     <div className="border-b border-line bg-surface">
       <div className="mx-auto max-w-6xl px-5 py-2.5 sm:px-8">
-        <ChessSubnav tool={tool} />
+        <ChessSubnav category={category} tool={tool} />
       </div>
     </div>
   );

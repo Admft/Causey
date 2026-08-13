@@ -45,6 +45,21 @@ export const ParticipationModeSchema = z.enum([
   "hybrid",
 ]);
 
+export const CompetitionSourceSchema = z.enum([
+  "manual",
+  "tla_scrape",
+  "cca_scrape",
+  "organizer",
+  "onlinereg_scrape",
+  "chess_results_scrape",
+  "fide_calendar_scrape",
+  "tca_scrape",
+  "tabroom_scrape",
+  "vex_events_scrape",
+  "taea_vase_scrape",
+  "bennington_writers_scrape",
+]);
+
 export const TournamentSectionDraftSchema = z.object({
   name: z.string().trim().min(1).max(80),
   minRating: z.number().int().nonnegative().nullable(),
@@ -120,16 +135,7 @@ export const CompetitionSchema = z.object({
    * - organizer: coach-hosted / partner feeds
    * - onlinereg_scrape | chess_results_scrape | fide_calendar_scrape | tca_scrape: hub scrapers
    */
-  source: z.enum([
-    "manual",
-    "tla_scrape",
-    "cca_scrape",
-    "organizer",
-    "onlinereg_scrape",
-    "chess_results_scrape",
-    "fide_calendar_scrape",
-    "tca_scrape",
-  ]),
+  source: CompetitionSourceSchema,
   /** Exact upstream page the scraper read (null for hand-entered rows). */
   source_url: z.string().url().nullable().default(null),
   /**
@@ -283,6 +289,41 @@ export type RatingBand = keyof typeof RATING_BANDS;
 export const SearchSortSchema = z.enum(["popular", "soonest"]);
 export type SearchSort = z.infer<typeof SearchSortSchema>;
 
+export const CompetitionFacetSchema = z.enum([
+  "public_forum",
+  "lincoln_douglas",
+  "policy",
+  "congress",
+  "speech",
+  "world_schools",
+  "robotics",
+  "science_fair",
+  "mathematics",
+  "visual_arts",
+  "music",
+  "theatre",
+  "essay",
+  "fiction",
+  "poetry",
+  "nonfiction",
+]);
+
+const CATEGORY_FACETS: Partial<
+  Record<CompetitionCategory, readonly z.infer<typeof CompetitionFacetSchema>[]>
+> = {
+  debate: [
+    "public_forum",
+    "lincoln_douglas",
+    "policy",
+    "congress",
+    "speech",
+    "world_schools",
+  ],
+  stem: ["robotics", "science_fair", "mathematics"],
+  arts: ["visual_arts", "music", "theatre"],
+  writing: ["essay", "fiction", "poetry", "nonfiction"],
+};
+
 export const SearchFiltersSchema = z.object({
   category: CompetitionCategorySchema.optional(),
   q: z.string().trim().min(1).max(100).optional(),
@@ -290,18 +331,7 @@ export const SearchFiltersSchema = z.object({
   radius_miles: z.coerce.number().positive().max(3000).optional(),
   state: z.string().length(2).optional(),
   /** Which scrape hub wrote the row — e.g. tla_scrape (US Chess), cca_scrape. */
-  source: z
-    .enum([
-      "manual",
-      "tla_scrape",
-      "cca_scrape",
-      "organizer",
-      "onlinereg_scrape",
-      "chess_results_scrape",
-      "fide_calendar_scrape",
-      "tca_scrape",
-    ])
-    .optional(),
+  source: CompetitionSourceSchema.optional(),
   /** Only national / international / named major opens (award-tier). */
   featured: z
     .union([z.literal("1"), z.literal("true"), z.boolean()])
@@ -309,6 +339,8 @@ export const SearchFiltersSchema = z.object({
     .transform((v) => v === true || v === "1" || v === "true"),
   grade_band: z.enum(["k3", "k6", "k8", "hs"]).optional(),
   rating_band: z.enum(["unrated", "u800", "u1200", "u1600", "open"]).optional(),
+  /** Category-specific normalized value stored in competitions.details.facets. */
+  facet: CompetitionFacetSchema.optional(),
   max_fee_cents: z.coerce.number().int().nonnegative().optional(),
   date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -322,6 +354,25 @@ export const SearchFiltersSchema = z.object({
   /** Page size for tile loading. Defaults to 20; max 2000 (for “load all”). */
   limit: z.coerce.number().int().positive().max(2000).optional(),
   offset: z.coerce.number().int().nonnegative().optional(),
+}).superRefine((filters, context) => {
+  if (filters.rating_band && filters.category && filters.category !== "chess") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["rating_band"],
+      message: "Rating bands are available only for chess.",
+    });
+  }
+  if (
+    filters.facet &&
+    (!filters.category ||
+      !CATEGORY_FACETS[filters.category]?.includes(filters.facet))
+  ) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["facet"],
+      message: "That facet does not belong to the selected competition type.",
+    });
+  }
 });
 export type SearchFilters = z.infer<typeof SearchFiltersSchema>;
 
