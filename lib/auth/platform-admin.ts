@@ -21,3 +21,22 @@ export async function getPlatformAdminUser() {
 export async function isCurrentUserPlatformAdmin(): Promise<boolean> {
   return Boolean(await getPlatformAdminUser());
 }
+
+/**
+ * Super-admin is a protected subset of platform admins. The RPC only
+ * answers for auth.uid().
+ */
+export async function getSuperAdminUser() {
+  const user = await getPlatformAdminUser();
+  if (!user) return null;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("is_super_admin");
+  if (error || data !== true) return null;
+
+  return user;
+}
+
+export async function isCurrentUserSuperAdmin(): Promise<boolean> {
+  return Boolean(await getSuperAdminUser());
+}

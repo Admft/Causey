@@ -4,6 +4,7 @@ import { FormEvent, useState, useTransition } from "react";
 import { adminSearchUsers } from "@/lib/actions/admin";
 import { AdminOrgMembershipForm } from "@/components/AdminOrgMembershipForm";
 import { AdminUserAccessForm } from "@/components/AdminUserAccessForm";
+import { AdminUserDeleteForm } from "@/components/AdminUserDeleteForm";
 
 type AdminUserRow = {
   profile_id: string;
@@ -12,6 +13,7 @@ type AdminUserRow = {
   account_role: "student" | "parent" | "coach";
   role_unlocked: boolean;
   platform_admin: boolean;
+  super_admin: boolean;
   created_at: string;
   total_count: number;
 };
@@ -26,16 +28,24 @@ function formatCreatedAt(value: string): string {
   }).format(new Date(value));
 }
 
+function accessLabel(user: AdminUserRow): string {
+  if (user.super_admin) return "Protected founder account";
+  if (user.platform_admin) return "Platform admin";
+  return "Standard account";
+}
+
 export function AdminUserDirectory({
   initialUsers,
   initialTotal,
   initialError,
   currentAdminId,
+  isSuperAdmin,
 }: {
   initialUsers: AdminUserRow[];
   initialTotal: number;
   initialError: string | null;
   currentAdminId: string;
+  isSuperAdmin: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -91,6 +101,13 @@ export function AdminUserDirectory({
           : user
       )
     );
+  }
+
+  function removeVisibleUser(profileId: string) {
+    setUsers((current) =>
+      current.filter((user) => user.profile_id !== profileId)
+    );
+    setTotal((current) => Math.max(0, current - 1));
   }
 
   return (
@@ -165,9 +182,7 @@ export function AdminUserDirectory({
                         </span>
                       </span>
                       <span className="text-right text-xs text-muted-strong">
-                        {user.platform_admin
-                          ? "Platform admin"
-                          : "Standard account"}
+                        {accessLabel(user)}
                         <span className="mt-0.5 block font-normal text-muted">
                           Joined {formatCreatedAt(user.created_at)}
                         </span>
@@ -176,8 +191,12 @@ export function AdminUserDirectory({
                   </summary>
                   <div className="mt-4 border-l-2 border-line pl-4">
                     <AdminUserAccessForm
-                      user={user}
+                      user={{
+                        ...user,
+                        super_admin: Boolean(user.super_admin),
+                      }}
                       isSelf={user.profile_id === currentAdminId}
+                      canGrantPlatformAdmin={isSuperAdmin}
                       onUpdated={(accountRole, platformAdmin) =>
                         updateVisibleUser(
                           user.profile_id,
@@ -190,6 +209,16 @@ export function AdminUserDirectory({
                       profileId={user.profile_id}
                       displayName={user.display_name || user.email || "account"}
                     />
+                    {isSuperAdmin &&
+                    user.profile_id !== currentAdminId &&
+                    !user.super_admin ? (
+                      <AdminUserDeleteForm
+                        profileId={user.profile_id}
+                        email={user.email}
+                        displayName={user.display_name}
+                        onDeleted={() => removeVisibleUser(user.profile_id)}
+                      />
+                    ) : null}
                   </div>
                 </details>
               </li>

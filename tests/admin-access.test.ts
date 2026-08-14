@@ -4,17 +4,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getPlatformAdminUser: vi.fn(),
+  getSuperAdminUser: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/platform-admin", () => ({
   getPlatformAdminUser: mocks.getPlatformAdminUser,
+  getSuperAdminUser: mocks.getSuperAdminUser,
 }));
 
 describe("platform admin actions", () => {
   beforeEach(() => {
     mocks.getPlatformAdminUser.mockReset();
+    mocks.getSuperAdminUser.mockReset();
   });
 
   it("rejects organization creation before parsing or writing for non-admins", async () => {

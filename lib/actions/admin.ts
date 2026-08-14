@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
-import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
+import {
+  getPlatformAdminUser,
+  getSuperAdminUser,
+} from "@/lib/auth/platform-admin";
 import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
 import {
   DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE,
@@ -240,10 +243,96 @@ export async function adminUpdateUserAccess(input: {
         error: "Causey must keep at least one platform administrator.",
       };
     }
+    if (error.message.includes("cannot_modify_super_admin")) {
+      return {
+        ok: false,
+        error: "Protected founder accounts cannot be changed here.",
+      };
+    }
+    if (error.message.includes("super_admin_required")) {
+      return {
+        ok: false,
+        error: "Only a founder super-admin can grant or remove platform administration.",
+      };
+    }
     if (error.message.includes("profile_not_found")) {
       return { ok: false, error: "That account no longer exists." };
     }
     return { ok: false, error: "Could not update this account’s access." };
+  }
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+const AdminUserDeleteSchema = z.object({
+  profileId: z.string().uuid(),
+  confirmationEmail: z.string().trim().email().max(320),
+});
+
+export async function adminDeleteUser(input: {
+  profileId: string;
+  confirmationEmail: string;
+}): Promise<ActionResult> {
+  const admin = await getSuperAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Founder super-admin access required.",
+    };
+  }
+  const parsed = AdminUserDeleteSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Type the account email exactly to confirm deletion." };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const directory = await getAdminUsers({
+    query: parsed.data.confirmationEmail,
+    limit: 20,
+  });
+  if (directory.error) {
+    return { ok: false, error: directory.error };
+  }
+  const target = directory.users.find(
+    (user) => user.profile_id === parsed.data.profileId
+  );
+  if (!target) {
+    return { ok: false, error: "That account no longer exists." };
+  }
+  if (target.super_admin) {
+    return {
+      ok: false,
+      error: "Protected founder accounts cannot be deleted.",
+    };
+  }
+  if (
+    target.email.trim().toLowerCase() !==
+    parsed.data.confirmationEmail.trim().toLowerCase()
+  ) {
+    return { ok: false, error: "Type the account email exactly to confirm deletion." };
+  }
+
+  const { error } = await supabase.rpc("delete_platform_user", {
+    p_profile_id: parsed.data.profileId,
+  });
+  if (error) {
+    if (error.message.includes("super_admin_required")) {
+      return { ok: false, error: "Founder super-admin access required." };
+    }
+    if (error.message.includes("cannot_delete_own_account")) {
+      return { ok: false, error: "You cannot delete your own account here." };
+    }
+    if (error.message.includes("cannot_modify_super_admin")) {
+      return {
+        ok: false,
+        error: "Protected founder accounts cannot be deleted.",
+      };
+    }
+    if (error.message.includes("profile_not_found")) {
+      return { ok: false, error: "That account no longer exists." };
+    }
+    return { ok: false, error: "Could not delete this account." };
   }
 
   revalidatePath("/admin/users");

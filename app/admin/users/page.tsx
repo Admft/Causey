@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminUserDirectory } from "@/components/AdminUserDirectory";
-import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
+import {
+  getPlatformAdminUser,
+  isCurrentUserSuperAdmin,
+} from "@/lib/auth/platform-admin";
 import { getAdminUsers } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
@@ -12,6 +15,7 @@ export const metadata: Metadata = {
 export default async function AdminUsersPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) return null;
+  const isSuperAdmin = await isCurrentUserSuperAdmin();
   const { users, total, error } = await getAdminUsers({
     limit: 50,
   });
@@ -27,7 +31,8 @@ export default async function AdminUsersPage() {
       <p className="mt-2 max-w-prose text-sm text-muted">
         Search every Causey account by display name or email. Platform access
         changes are confirmed, audited, and cannot be applied to your own
-        account from this page. Organization membership can also be granted or
+        account from this page. Founder super-admins can also delete accounts
+        after typing the email. Organization membership can also be granted or
         repaired here when a claim link is blocked.
       </p>
 
@@ -36,6 +41,7 @@ export default async function AdminUsersPage() {
         initialTotal={total}
         initialError={error}
         currentAdminId={admin.id}
+        isSuperAdmin={isSuperAdmin}
       />
 
       <p className="mt-8 text-xs text-muted">

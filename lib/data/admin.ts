@@ -44,6 +44,7 @@ export type AdminUserDirectoryRow = {
   account_role: "student" | "parent" | "coach";
   role_unlocked: boolean;
   platform_admin: boolean;
+  super_admin: boolean;
   created_at: string;
   total_count: number;
 };
@@ -284,7 +285,11 @@ export async function getAdminUsers({
         : "User search could not be loaded. Check the connection and try again.",
     };
   }
-  const users = (data ?? []) as AdminUserDirectoryRow[];
+  const users = ((data ?? []) as AdminUserDirectoryRow[]).map((user) => ({
+    ...user,
+    super_admin: Boolean(user.super_admin),
+    platform_admin: Boolean(user.platform_admin),
+  }));
   return {
     users,
     total: Number(users[0]?.total_count ?? 0),

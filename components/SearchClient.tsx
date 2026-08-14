@@ -19,7 +19,13 @@ import {
   resultsGridClass,
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
-import { ChessHeroGraphic } from "@/components/ChessHeroGraphic";
+import {
+  ArtsHeroGraphic,
+  ChessHeroGraphic,
+  SpeechDebateHeroGraphic,
+  StemHeroGraphic,
+  WritingHeroGraphic,
+} from "@/components/ChessHeroGraphic";
 import {
   discoveryCategory,
   type DiscoveryCategory,
@@ -32,7 +38,7 @@ import { competitionSourceLabel } from "@/lib/ingestion-sources";
  * fetch goes through /api/competitions — the same endpoint external clients
  * would use. Tiles load in pages (default 20) so the first paint stays fast.
  *
- * Chess graphic size: edit CHESS_GRAPHIC_SCALE in ChessHeroGraphic.tsx
+ * Hero graphic size: edit CHESS_GRAPHIC_SCALE in ChessHeroGraphic.tsx
  */
 
 const RADII = ["10", "25", "50", "100", "250"];
@@ -410,6 +416,10 @@ export function SearchClient({
           </form>
 
           {category === "chess" ? <ChessHeroGraphic /> : null}
+          {category === "debate" ? <SpeechDebateHeroGraphic /> : null}
+          {category === "stem" ? <StemHeroGraphic /> : null}
+          {category === "arts" ? <ArtsHeroGraphic /> : null}
+          {category === "writing" ? <WritingHeroGraphic /> : null}
         </div>
       </section>
 

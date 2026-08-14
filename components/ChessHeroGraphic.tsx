@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { CSSProperties } from "react";
 
 /**
- * Hero chess pieces — size knob.
+ * Hero graphic — size knob for category search heroes.
  * Change CHESS_GRAPHIC_SCALE only. 1 = current default.
  * Examples: 0.9 smaller · 1.05 a bit bigger · 1.1 · 1.2
  */
@@ -21,11 +21,15 @@ function clampWidth(minRem: number, vw: number, maxRem: number, scale: number) {
   return `clamp(${(minRem * scale).toFixed(2)}rem, ${(vw * scale).toFixed(2)}vw, ${(maxRem * scale).toFixed(2)}rem)`;
 }
 
-/**
- * Decorative hero image. Hidden on phones, shown from iPad (md+) up,
- * fuller size on desktop (lg+). Tune size via CHESS_GRAPHIC_SCALE above.
- */
-export function ChessHeroGraphic() {
+function SearchHeroGraphic({
+  src,
+  width,
+  height,
+}: {
+  src: string;
+  width: number;
+  height: number;
+}) {
   const s = CHESS_GRAPHIC_SCALE;
 
   return (
@@ -41,10 +45,10 @@ export function ChessHeroGraphic() {
       }
     >
       <Image
-        src="/chess-pieces.png"
+        src={src}
         alt=""
-        width={2112}
-        height={2016}
+        width={width}
+        height={height}
         priority
         sizes="(min-width: 1280px) 407px, (min-width: 1024px) 375px, (min-width: 768px) 288px, 0px"
         draggable={false}
@@ -52,4 +56,32 @@ export function ChessHeroGraphic() {
       />
     </div>
   );
+}
+
+/**
+ * Decorative hero image. Hidden on phones, shown from iPad (md+) up,
+ * fuller size on desktop (lg+). Tune size via CHESS_GRAPHIC_SCALE above.
+ */
+export function ChessHeroGraphic() {
+  return (
+    <SearchHeroGraphic src="/chess-pieces.png" width={2112} height={2016} />
+  );
+}
+
+export function SpeechDebateHeroGraphic() {
+  return (
+    <SearchHeroGraphic src="/speech-debate.png" width={806} height={703} />
+  );
+}
+
+export function StemHeroGraphic() {
+  return <SearchHeroGraphic src="/stem.png" width={1716} height={1663} />;
+}
+
+export function ArtsHeroGraphic() {
+  return <SearchHeroGraphic src="/arts.png" width={1585} height={1585} />;
+}
+
+export function WritingHeroGraphic() {
+  return <SearchHeroGraphic src="/writing.png" width={2218} height={1630} />;
 }

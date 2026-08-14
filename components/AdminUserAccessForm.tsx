@@ -8,15 +8,18 @@ type AdminUserAccessRecord = {
   account_role: "student" | "parent" | "coach";
   role_unlocked: boolean;
   platform_admin: boolean;
+  super_admin: boolean;
 };
 
 export function AdminUserAccessForm({
   user,
   isSelf,
+  canGrantPlatformAdmin,
   onUpdated,
 }: {
   user: AdminUserAccessRecord;
   isSelf: boolean;
+  canGrantPlatformAdmin: boolean;
   onUpdated?: (
     accountRole: AdminUserAccessRecord["account_role"],
     platformAdmin: boolean
@@ -30,7 +33,7 @@ export function AdminUserAccessForm({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (isSelf) return;
+    if (isSelf || user.super_admin) return;
 
     const privilegeChanged =
       platformAdmin !== user.platform_admin ||
@@ -74,6 +77,14 @@ export function AdminUserAccessForm({
     );
   }
 
+  if (user.super_admin) {
+    return (
+      <p className="text-xs text-muted">
+        Protected founder account. Access cannot be changed or removed here.
+      </p>
+    );
+  }
+
   return (
     <form onSubmit={submit} className="mt-4 grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -104,7 +115,7 @@ export function AdminUserAccessForm({
             type="checkbox"
             checked={platformAdmin}
             onChange={() => setPlatformAdmin((current) => !current)}
-            disabled={isPending}
+            disabled={isPending || !canGrantPlatformAdmin}
             className="mt-1 size-4 accent-[var(--brand-red)]"
           />
           <span>
@@ -112,7 +123,9 @@ export function AdminUserAccessForm({
               Platform administrator
             </span>
             <span className="mt-1 block text-xs text-muted">
-              Full access to users, moderation, organizations, and tournaments.
+              {canGrantPlatformAdmin
+                ? "Full access to users, moderation, organizations, and tournaments."
+                : "Only a founder super-admin can grant or remove this."}
             </span>
           </span>
         </label>
