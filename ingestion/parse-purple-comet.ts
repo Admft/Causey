@@ -82,7 +82,7 @@ export function parsePurpleCometHtml(
       city: null,
       state: null,
       zip: null,
-      facets: ["mathematics"],
+      facets: ["mathematics", "math_team"],
       eventType: "International online team mathematics competition",
       availability:
         "official contest window published; adult supervisor and team registration required",

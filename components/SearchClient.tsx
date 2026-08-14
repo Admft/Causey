@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
 import {
@@ -9,6 +10,7 @@ import {
   type SearchSort,
 } from "@/lib/schemas";
 import { CompetitionCard } from "@/components/CompetitionCard";
+import { DisciplineFacetSwitch } from "@/components/DisciplineFacetSwitch";
 import {
   ActiveFilterChips,
   SearchFilters,
@@ -331,7 +333,13 @@ export function SearchClient({
           grid motif (access shouldn't depend on where you live). */}
       <section className="access-grid section-rule">
         <div className="relative mx-auto min-h-[400px] max-w-6xl px-5 py-14 sm:px-8 sm:py-16 lg:min-h-[440px]">
-          <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+          <Link
+            href="/"
+            className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+          >
+            ← All competition types
+          </Link>
+          <p className="mt-6 text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
             {categoryDefinition.label}
           </p>
           <h1 className="mt-2 max-w-[20ch] font-display text-display-lg font-bold tracking-tight text-foreground">
@@ -441,6 +449,11 @@ export function SearchClient({
           </aside>
 
           <div aria-live="polite">
+            <DisciplineFacetSwitch
+              category={category}
+              filters={filters}
+              onChange={setFilters}
+            />
             <ActiveFilterChips
               filters={filters}
               onChange={setFilters}

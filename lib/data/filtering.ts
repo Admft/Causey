@@ -5,6 +5,7 @@ import {
   type SearchFilters,
   type Section,
 } from "@/lib/schemas";
+import { facetSelectionMatches } from "@/lib/category-discovery";
 import { matchesTimingFilter } from "@/lib/competition-timing";
 
 /**
@@ -89,10 +90,10 @@ export function competitionMatchesFacet(
   filters: SearchFilters
 ): boolean {
   if (!filters.facet) return true;
-  const facets = competition.details.facets;
-  return (
-    Array.isArray(facets) &&
-    facets.some((value) => value === filters.facet)
+  return facetSelectionMatches(
+    competition.category,
+    filters.facet,
+    competition.details.facets
   );
 }
 

@@ -74,6 +74,7 @@ export type AdminTournamentRow = {
   audience: "public" | "district" | "school" | "invite_only";
   source: string;
   status: "draft" | "pending_review" | "published" | "rejected" | "archived";
+  details?: { facets?: string[] };
   org_id: string | null;
   created_at: string;
   updated_at: string;
@@ -363,7 +364,7 @@ export async function getAdminTournament(
   const { data } = await supabase
     .from("competitions")
     .select(
-      "id, slug, name, category, custom_category_name, participation_mode, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, organizations!competitions_org_id_fkey(id, name, slug, state, type, parent_org_id), sections(name, min_rating, max_rating, min_grade, max_grade, entry_fee_cents)"
+      "id, slug, name, category, custom_category_name, participation_mode, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, details, organizations!competitions_org_id_fkey(id, name, slug, state, type, parent_org_id), sections(name, min_rating, max_rating, min_grade, max_grade, entry_fee_cents)"
     )
     .eq("id", id)
     .maybeSingle();

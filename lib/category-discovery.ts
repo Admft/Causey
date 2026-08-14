@@ -15,6 +15,10 @@ export type PreferredCompetitionCategory = DiscoveryCategory | null;
 export type CategoryFacet = {
   value: string;
   label: string;
+  /** Parent facet value; children also match when the parent is selected. */
+  parent?: string;
+  /** UI grouping. Default "discipline". */
+  group?: "discipline" | "math_type" | "format" | "genre";
 };
 
 export type CategorySource = {
@@ -83,12 +87,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     searchPlaceholder: "Try public forum, Lincoln-Douglas, or a tournament name",
     facetLabel: "Event type or format",
     facets: [
-      { value: "public_forum", label: "Public Forum" },
-      { value: "lincoln_douglas", label: "Lincoln-Douglas" },
-      { value: "policy", label: "Policy" },
-      { value: "congress", label: "Congress" },
-      { value: "speech", label: "Speech" },
-      { value: "world_schools", label: "World Schools" },
+      { value: "public_forum", label: "Public Forum", group: "format" },
+      { value: "lincoln_douglas", label: "Lincoln-Douglas", group: "format" },
+      { value: "policy", label: "Policy", group: "format" },
+      { value: "congress", label: "Congress", group: "format" },
+      { value: "speech", label: "Speech", group: "format" },
+      { value: "world_schools", label: "World Schools", group: "format" },
     ],
     activeSources: [
       {
@@ -119,16 +123,39 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Current published coverage includes the Purple Comet team mathematics window and the Texas state science fair; robotics, science bowl, and regional fair coverage remains limited.",
+      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window and the Texas state science fair.",
     emptyDescription:
-      "Published STEM coverage is currently limited to Purple Comet and the Texas state science fair. Try clearing filters or switching Timing to All; the source list below distinguishes indexed rows from reference-only sources.",
-    searchPlaceholder: "Try robotics, science fair, or a competition name",
+      "Published STEM coverage is currently limited to Purple Comet and the Texas state science fair. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
+    searchPlaceholder: "Try mathematics, biology, robotics, or a competition name",
     facetLabel: "Discipline",
     facets: [
-      { value: "robotics", label: "Robotics" },
-      { value: "science_fair", label: "Science fair" },
-      { value: "mathematics", label: "Mathematics" },
-      { value: "science_bowl", label: "Science bowl" },
+      { value: "robotics", label: "Robotics", group: "discipline" },
+      { value: "science_fair", label: "Science fair", group: "discipline" },
+      { value: "mathematics", label: "Mathematics", group: "discipline" },
+      { value: "science_bowl", label: "Science bowl", group: "discipline" },
+      { value: "biology", label: "Biology", group: "discipline" },
+      { value: "chemistry", label: "Chemistry", group: "discipline" },
+      { value: "physics", label: "Physics", group: "discipline" },
+      { value: "engineering", label: "Engineering", group: "discipline" },
+      { value: "computer_science", label: "Computer science", group: "discipline" },
+      {
+        value: "math_team",
+        label: "Team contest",
+        parent: "mathematics",
+        group: "math_type",
+      },
+      {
+        value: "math_contest",
+        label: "Individual contest",
+        parent: "mathematics",
+        group: "math_type",
+      },
+      {
+        value: "math_modeling",
+        label: "Modeling",
+        parent: "mathematics",
+        group: "math_type",
+      },
     ],
     activeSources: [
       {
@@ -193,15 +220,15 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/arts",
     heading: "Student arts competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Current coverage includes published TAEA VASE dates, UIL theatre state meets, and UIL state open-class marching band dates; regional, district, zone, area, local, and other music coverage remains incomplete.",
+      "Search the official public listings Causey has indexed so far. Visual arts, music, and theatre share this directory — use the discipline chips to separate them. Current coverage includes published TAEA VASE dates, UIL theatre state meets, and UIL state open-class marching band dates.",
     emptyDescription:
-      "Arts coverage is currently limited to published TAEA VASE dates plus UIL state theatre and marching band dates. Try clearing filters or switching Timing to All; the source list below shows exactly what is indexed.",
+      "Arts coverage is currently limited to published TAEA VASE dates plus UIL state theatre and marching band dates. Switch to Music or Theatre to hide the other discipline, or try Timing: All.",
     searchPlaceholder: "Try visual arts, music, theatre, or an event name",
     facetLabel: "Discipline",
     facets: [
-      { value: "visual_arts", label: "Visual arts" },
-      { value: "music", label: "Music" },
-      { value: "theatre", label: "Theatre" },
+      { value: "visual_arts", label: "Visual arts", group: "discipline" },
+      { value: "music", label: "Music", group: "discipline" },
+      { value: "theatre", label: "Theatre", group: "discipline" },
     ],
     activeSources: [
       {
@@ -249,10 +276,10 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     searchPlaceholder: "Try poetry, fiction, nonfiction, or an award name",
     facetLabel: "Genre",
     facets: [
-      { value: "essay", label: "Essay" },
-      { value: "fiction", label: "Fiction" },
-      { value: "poetry", label: "Poetry" },
-      { value: "nonfiction", label: "Nonfiction" },
+      { value: "essay", label: "Essay", group: "genre" },
+      { value: "fiction", label: "Fiction", group: "genre" },
+      { value: "poetry", label: "Poetry", group: "genre" },
+      { value: "nonfiction", label: "Nonfiction", group: "genre" },
     ],
     activeSources: [
       {
@@ -350,10 +377,110 @@ export function facetValuesForCategory(
   return discoveryCategory(category)?.facets.map((facet) => facet.value) ?? [];
 }
 
+export function primaryFacetsForCategory(
+  category: CompetitionCategory
+): readonly CategoryFacet[] {
+  return (
+    discoveryCategory(category)?.facets.filter((facet) => !facet.parent) ?? []
+  );
+}
+
+export function childFacetsFor(
+  category: CompetitionCategory,
+  parentValue: string
+): readonly CategoryFacet[] {
+  return (
+    discoveryCategory(category)?.facets.filter(
+      (facet) => facet.parent === parentValue
+    ) ?? []
+  );
+}
+
 export function facetBelongsToCategory(
   category: CompetitionCategory | undefined,
   facet: string
 ): boolean {
   if (!category) return false;
   return facetValuesForCategory(category).includes(facet);
+}
+
+export function facetSelectionMatches(
+  category: CompetitionCategory,
+  selected: string,
+  stored: readonly string[] | undefined
+): boolean {
+  if (!selected) return true;
+  if (!facetBelongsToCategory(category, selected)) return false;
+  const values = stored ?? [];
+  const children = childFacetsFor(category, selected).map((facet) => facet.value);
+  if (children.length === 0) return values.includes(selected);
+  return values.includes(selected) || children.some((child) => values.includes(child));
+}
+
+export function formatCompetitionFacetLabel(
+  category: CompetitionCategory,
+  stored: readonly string[] | undefined
+): string | null {
+  const definition = discoveryCategory(category);
+  if (!definition || !stored?.length) return null;
+  const byValue = new Map(
+    definition.facets.map((facet) => [facet.value, facet])
+  );
+  const ordered = [
+    ...stored.filter((value) => !byValue.get(value)?.parent),
+    ...stored.filter((value) => byValue.get(value)?.parent),
+  ];
+  const labels = ordered
+    .map((value) => byValue.get(value)?.label)
+    .filter((label): label is string => Boolean(label));
+  return labels.length ? [...new Set(labels)].join(" · ") : null;
+}
+
+export function storedFacetsForOrganizer(
+  category: CompetitionCategory,
+  primaryFacet: string,
+  mathTypeFacet: string
+): string[] {
+  if (!primaryFacet || !facetBelongsToCategory(category, primaryFacet)) {
+    return [];
+  }
+  const facets = [primaryFacet];
+  if (
+    mathTypeFacet &&
+    facetBelongsToCategory(category, mathTypeFacet) &&
+    childFacetsFor(category, primaryFacet).some(
+      (facet) => facet.value === mathTypeFacet
+    )
+  ) {
+    facets.push(mathTypeFacet);
+  }
+  return facets;
+}
+
+export function organizerPrimaryFacet(
+  category: CompetitionCategory,
+  stored: readonly string[] | undefined
+): string {
+  const values = stored ?? [];
+  const primary = primaryFacetsForCategory(category).find((facet) =>
+    values.includes(facet.value)
+  );
+  if (primary) return primary.value;
+  const child = discoveryCategory(category)?.facets.find(
+    (facet) => facet.parent && values.includes(facet.value)
+  );
+  return child?.parent ?? "";
+}
+
+export function organizerMathTypeFacet(
+  category: CompetitionCategory,
+  stored: readonly string[] | undefined
+): string {
+  const primary = organizerPrimaryFacet(category, stored);
+  if (!primary) return "";
+  return (
+    childFacetsFor(category, primary).find((facet) =>
+      (stored ?? []).includes(facet.value)
+    )?.value ?? ""
+  );
 }

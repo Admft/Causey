@@ -137,6 +137,7 @@ export default async function EditEventPage({
               visibility: competition.visibility,
               audience: competition.audience,
               rated: competition.rated,
+              facets: competition.details.facets,
               sections: competition.sections.map((section) => ({
                 name: section.name,
                 minRating: section.min_rating,

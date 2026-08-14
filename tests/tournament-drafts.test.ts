@@ -20,6 +20,8 @@ describe("TournamentDraftDataSchema", () => {
       regUrl: "",
       visibility: "private",
       rated: false,
+      primaryFacet: "",
+      mathTypeFacet: "",
     });
   });
 

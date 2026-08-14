@@ -217,4 +217,19 @@ describe("generalized links and return paths", () => {
       '<SearchClient category="chess" />'
     );
   });
+
+  it("returns directory search to the homepage type chooser", () => {
+    expect(searchClient).toContain('href="/"');
+    expect(searchClient).toContain("All competition types");
+  });
+
+  it("puts category discipline chips on search instead of burying them in the rail", () => {
+    expect(searchClient).toContain("DisciplineFacetSwitch");
+    expect(read("components/SearchFilters.tsx")).toContain(
+      "primaryFacetsForCategory(category).length === 0"
+    );
+    expect(read("components/CompetitionCard.tsx")).toContain(
+      "formatCompetitionFacetLabel"
+    );
+  });
 });

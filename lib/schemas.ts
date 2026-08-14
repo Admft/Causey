@@ -107,6 +107,8 @@ export const TournamentDraftDataSchema = z.object({
   audience: CompetitionAudienceSchema.optional(),
   sections: z.array(TournamentSectionDraftSchema).max(20).optional(),
   rated: z.boolean().default(false),
+  primaryFacet: z.string().max(40).default(""),
+  mathTypeFacet: z.string().max(40).default(""),
 });
 
 /** Pathway honesty for scraped events — default majority is none. */
@@ -128,6 +130,14 @@ export const CompetitionFacetSchema = z.enum([
   "science_fair",
   "mathematics",
   "science_bowl",
+  "biology",
+  "chemistry",
+  "physics",
+  "engineering",
+  "computer_science",
+  "math_team",
+  "math_contest",
+  "math_modeling",
   "visual_arts",
   "music",
   "theatre",

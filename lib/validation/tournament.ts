@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { storedFacetsForOrganizer } from "@/lib/category-discovery";
 import {
   CompetitionCategorySchema,
+  CompetitionFacetSchema,
   ParticipationModeSchema,
 } from "@/lib/schemas";
 
@@ -61,6 +63,8 @@ const TournamentFieldsSchema = z
       .optional(),
     sections: z.array(SectionInputSchema).min(1).max(20).optional(),
     rated: z.boolean(),
+    primaryFacet: z.string().max(40).optional().default(""),
+    mathTypeFacet: z.string().max(40).optional().default(""),
   })
   .refine((value) => !value.endDate || value.endDate >= value.startDate, {
     message: "End date can’t be before the start date.",
@@ -103,6 +107,36 @@ const TournamentFieldsSchema = z
   .refine((value) => !value.regDeadline || value.regDeadline <= value.startDate, {
     message: "Registration deadline can’t be after the start date.",
     path: ["regDeadline"],
+  })
+  .superRefine((value, context) => {
+    const facets = storedFacetsForOrganizer(
+      value.category,
+      value.primaryFacet,
+      value.mathTypeFacet
+    );
+    if (value.primaryFacet && facets.length === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["primaryFacet"],
+        message: "Choose a discipline that belongs to this competition type.",
+      });
+    }
+    if (value.mathTypeFacet && !facets.includes(value.mathTypeFacet)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["mathTypeFacet"],
+        message: "Math type applies only after Mathematics is selected.",
+      });
+    }
+    for (const facet of facets) {
+      if (!CompetitionFacetSchema.safeParse(facet).success) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["primaryFacet"],
+          message: "That discipline tag is not recognized.",
+        });
+      }
+    }
   });
 
 export const TournamentCreateSchema = z.intersection(

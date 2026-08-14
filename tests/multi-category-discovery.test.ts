@@ -448,6 +448,128 @@ describe("category facet isolation", () => {
     ).toBe(false);
   });
 
+  it("matches mathematics to team-math children and never infers biology from a science fair", () => {
+    const mathMeet = {
+      ...competition,
+      details: {
+        ...competition.details,
+        facets: ["mathematics", "math_team"],
+      },
+    };
+    const scienceFair = {
+      ...competition,
+      details: {
+        ...competition.details,
+        facets: ["science_fair"],
+      },
+    };
+    const hit = (row: typeof competition, facet: string) =>
+      buildCompetitionResult({
+        competition: row,
+        sections: [],
+        series: null,
+        distance_miles: null,
+        filters: SearchFiltersSchema.parse({
+          category: "stem",
+          facet,
+          timing: "all",
+        }),
+      });
+
+    expect(hit(mathMeet, "mathematics")).not.toBeNull();
+    expect(hit(mathMeet, "math_team")).not.toBeNull();
+    expect(hit(mathMeet, "biology")).toBeNull();
+    expect(hit(scienceFair, "science_fair")).not.toBeNull();
+    expect(hit(scienceFair, "biology")).toBeNull();
+    expect(
+      SearchFiltersSchema.safeParse({
+        category: "stem",
+        facet: "biology",
+      }).success
+    ).toBe(true);
+  });
+
+  it("keeps arts music and theatre on separate filters in one directory", () => {
+    const music = normalizeCategorySourceEvent(
+      {
+        externalKey: "uil-music-test",
+        name: "State marching band",
+        detailUrl: "https://www.uiltexas.org/music/marching-band/state",
+        startDate: "2026-11-03",
+        endDate: null,
+        regDeadline: null,
+        participationMode: "in_person",
+        venueName: "Alamodome",
+        address: null,
+        city: "San Antonio",
+        state: "TX",
+        zip: "78203",
+        facets: ["music"],
+        eventType: "State open class marching band",
+        availability: "official dates published",
+        entryFeeCents: null,
+      },
+      {
+        id: "33333333-3333-4333-8333-333333333333",
+        source: "uil_music_marching_scrape",
+        coords: { lat: 29.4169, lng: -98.4789 },
+        resolvedZip: "78203",
+      }
+    )!;
+    const theatre = normalizeCategorySourceEvent(
+      {
+        externalKey: "uil-theatre-test",
+        name: "One-Act Play state meet",
+        detailUrl: "https://www.uiltexas.org/theatre/state",
+        startDate: "2027-05-01",
+        endDate: null,
+        regDeadline: null,
+        participationMode: "in_person",
+        venueName: null,
+        address: null,
+        city: "Austin",
+        state: "TX",
+        zip: "78701",
+        facets: ["theatre"],
+        eventType: "State theatre meet",
+        availability: "official dates published",
+        entryFeeCents: null,
+      },
+      {
+        id: "44444444-4444-4444-8444-444444444444",
+        source: "uil_theatre_scrape",
+        coords: { lat: 30.2672, lng: -97.7431 },
+        resolvedZip: "78701",
+      }
+    )!;
+    const artsHit = (row: NonNullable<typeof music>, facet: string) =>
+      buildCompetitionResult({
+        competition: row,
+        sections: [],
+        series: null,
+        distance_miles: null,
+        filters: SearchFiltersSchema.parse({
+          category: "arts",
+          facet,
+          timing: "all",
+        }),
+      });
+
+    expect(artsHit(music, "music")).not.toBeNull();
+    expect(artsHit(music, "theatre")).toBeNull();
+    expect(artsHit(theatre, "theatre")).not.toBeNull();
+    expect(artsHit(theatre, "music")).toBeNull();
+  });
+
+  it("lets organizers persist details.facets through the edit RPC in migration 0059", () => {
+    const migration = fixture(
+      "../../supabase/migrations/0059_competition_facet_updates.sql"
+    );
+    expect(migration).toContain("update_competition_with_sections");
+    expect(migration).toContain("p_values->'facets'");
+    expect(migration).toContain("jsonb_set(");
+  });
+
   it("scopes non-chess fingerprints without changing chess identity", () => {
     const base = {
       name: "State Championship",
