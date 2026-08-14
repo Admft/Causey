@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { AdminTournamentListFilters } from "@/lib/admin-tournament-filters";
+import { todayIsoDate } from "@/lib/competition-timing";
 import {
   INGESTION_SOURCES,
   evaluateSourceOperationalHealth,
@@ -7,6 +9,7 @@ import {
   type IngestionSource,
   type SourceHealth,
 } from "@/lib/ingestion-sources";
+import { escapePostgrestLikePattern } from "@/lib/data/supabase";
 import { isTournamentPublishReady } from "@/lib/tournament-readiness";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -289,11 +292,9 @@ export async function getAdminUsers({
   };
 }
 
-export async function getAdminTournaments(filters?: {
-  status?: string;
-  source?: string;
-  ready?: boolean;
-}): Promise<AdminTournamentRow[]> {
+export async function getAdminTournaments(
+  filters?: AdminTournamentListFilters
+): Promise<AdminTournamentRow[]> {
   const supabase = await createServerSupabaseClient();
   let query = supabase
     .from("competitions")
@@ -303,16 +304,37 @@ export async function getAdminTournaments(filters?: {
     .order("start_date", { ascending: false })
     .limit(250);
 
-  if (
-    filters?.status &&
-    ["draft", "pending_review", "published", "rejected", "archived"].includes(
-      filters.status
-    )
-  ) {
+  if (filters?.status) {
     query = query.eq("status", filters.status);
   }
   if (filters?.source && isCompetitionSourceFilter(filters.source)) {
     query = query.eq("source", filters.source);
+  }
+  if (filters?.category) {
+    query = query.eq("category", filters.category);
+  }
+  if (filters?.q) {
+    query = query.ilike("name", `%${escapePostgrestLikePattern(filters.q)}%`);
+  }
+  if (filters?.state) {
+    query = query.eq("state", filters.state);
+  }
+  if (filters?.mode) {
+    query = query.eq("participation_mode", filters.mode);
+  }
+  if (filters?.audience) {
+    query = query.eq("audience", filters.audience);
+  }
+  if (filters?.timing === "upcoming" || filters?.timing === "ended") {
+    const today = todayIsoDate();
+    query =
+      filters.timing === "upcoming"
+        ? query.or(
+            `end_date.gte.${today},and(end_date.is.null,start_date.gte.${today})`
+          )
+        : query.or(
+            `end_date.lt.${today},and(end_date.is.null,start_date.lt.${today})`
+          );
   }
 
   const { data } = await query;

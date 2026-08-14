@@ -19,22 +19,21 @@ export function SiteHeader() {
       return;
     }
 
-    const heroBrand = document.querySelector("[data-home-hero-brand]");
-    if (!heroBrand) {
-      // The observed home-hero element is an external DOM dependency.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHomeHeroBrandIsPast(true);
-      return;
-    }
-
+    // Layout hydrates before streamed home content. Missing hero must stay
+    // centered with no header mark — never treat that as "already scrolled."
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHomeHeroBrandIsPast(false);
 
-    let observer: IntersectionObserver | null = null;
-    const observe = () => {
-      observer?.disconnect();
+    let intersection: IntersectionObserver | null = null;
+    let mutation: MutationObserver | null = null;
+    let heroBrand: Element | null = null;
+
+    const observeHero = () => {
+      if (!heroBrand) return;
+      intersection?.disconnect();
       const chrome = document.querySelector("[data-site-chrome]");
       const topInset = Math.ceil(chrome?.getBoundingClientRect().height ?? 56);
-      observer = new IntersectionObserver(
+      intersection = new IntersectionObserver(
         ([entry]) => {
           const past = !entry.isIntersecting;
           setHomeHeroBrandIsPast((current) => {
@@ -51,14 +50,31 @@ export function SiteHeader() {
         },
         { threshold: 0, rootMargin: `-${topInset}px 0px 0px 0px` }
       );
-      observer.observe(heroBrand);
+      intersection.observe(heroBrand);
     };
 
-    observe();
-    window.addEventListener("resize", observe);
+    const attachHero = () => {
+      const next = document.querySelector("[data-home-hero-brand]");
+      if (!next) return false;
+      heroBrand = next;
+      mutation?.disconnect();
+      mutation = null;
+      observeHero();
+      return true;
+    };
+
+    if (!attachHero()) {
+      mutation = new MutationObserver(() => {
+        attachHero();
+      });
+      mutation.observe(document.body, { childList: true, subtree: true });
+    }
+
+    window.addEventListener("resize", observeHero);
     return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", observe);
+      intersection?.disconnect();
+      mutation?.disconnect();
+      window.removeEventListener("resize", observeHero);
     };
   }, [isHome]);
 

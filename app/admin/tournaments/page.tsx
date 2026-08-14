@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminTournamentBulkList } from "@/components/AdminTournamentBulkList";
+import {
+  ADMIN_TOURNAMENT_AUDIENCE_OPTIONS,
+  ADMIN_TOURNAMENT_MODE_OPTIONS,
+  ADMIN_TOURNAMENT_TYPE_OPTIONS,
+  adminTournamentsHaveFilters,
+  adminTournamentsHref,
+  parseAdminTournamentFilters,
+} from "@/lib/admin-tournament-filters";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
   getAdminTournamentCount,
@@ -10,6 +18,7 @@ import {
 import {
   COMPETITION_SOURCE_FILTER_OPTIONS,
   competitionSourceLabel,
+  competitionSourceOptionsForCategory,
   sourceByCompetitionSource,
 } from "@/lib/ingestion-sources";
 import {
@@ -26,19 +35,26 @@ export const metadata: Metadata = {
 export default async function AdminTournamentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string; ready?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    source?: string;
+    ready?: string;
+    category?: string;
+    timing?: string;
+    q?: string;
+    state?: string;
+    mode?: string;
+    audience?: string;
+  }>;
 }) {
   const admin = await getPlatformAdminUser();
   if (!admin) redirect("/");
 
-  const filters = await searchParams;
-  const readyOnly = filters.ready === "1";
+  const rawFilters = await searchParams;
+  const filters = parseAdminTournamentFilters(rawFilters);
+  const hasFilters = adminTournamentsHaveFilters(filters);
   const [tournaments, totalTournamentCount] = await Promise.all([
-    getAdminTournaments({
-      status: filters.status,
-      source: filters.source,
-      ready: readyOnly,
-    }),
+    getAdminTournaments(filters),
     getAdminTournamentCount(),
   ]);
   const draftSourceGroup =
@@ -51,6 +67,20 @@ export default async function AdminTournamentsPage({
   const sourceDirectory = selectedSource
     ? discoveryCategory(selectedSource.category)
     : null;
+  const sourceOptions = [
+    ...(filters.category
+      ? competitionSourceOptionsForCategory(filters.category)
+      : COMPETITION_SOURCE_FILTER_OPTIONS),
+  ];
+  if (
+    filters.source &&
+    !sourceOptions.some((source) => source.value === filters.source)
+  ) {
+    sourceOptions.push({
+      value: filters.source,
+      label: competitionSourceLabel(filters.source),
+    });
+  }
   const readyDraftCount = tournaments.filter(
     (tournament) =>
       tournament.status === "draft" && isTournamentPublishReady(tournament)
@@ -79,8 +109,8 @@ export default async function AdminTournamentsPage({
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">
             Drafts and rejected records are not public. Organizer submissions
-            awaiting a decision belong in Moderation. Select many records, or
-            filter by scrape source and publish the whole draft group.
+            awaiting a decision belong in Moderation. Narrow by type, source,
+            timing, or place, then publish a complete draft group.
           </p>
         </div>
         <Link href="/admin/tournaments/new" className="cta-enabled">
@@ -90,11 +120,30 @@ export default async function AdminTournamentsPage({
 
       <form
         method="get"
-        className="mt-8 flex flex-wrap items-end gap-3 rounded-xl border border-line bg-surface p-4"
+        className="mt-8 grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4"
       >
-        <label className="flex min-w-40 flex-col gap-1">
+        <label>
+          <span className="text-xs font-semibold text-muted-strong">Type</span>
+          <select
+            className="field mt-1"
+            name="category"
+            defaultValue={filters.category ?? ""}
+          >
+            <option value="">All types</option>
+            {ADMIN_TOURNAMENT_TYPE_OPTIONS.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           <span className="text-xs font-semibold text-muted-strong">Status</span>
-          <select className="field" name="status" defaultValue={filters.status ?? ""}>
+          <select
+            className="field mt-1"
+            name="status"
+            defaultValue={filters.status ?? ""}
+          >
             <option value="">All statuses</option>
             <option value="draft">Draft</option>
             <option value="pending_review">Awaiting review</option>
@@ -103,38 +152,113 @@ export default async function AdminTournamentsPage({
             <option value="archived">Archived</option>
           </select>
         </label>
-        <label className="flex min-w-40 flex-col gap-1">
+        <label>
           <span className="text-xs font-semibold text-muted-strong">Source</span>
-          <select className="field" name="source" defaultValue={filters.source ?? ""}>
+          <select
+            className="field mt-1"
+            name="source"
+            defaultValue={filters.source ?? ""}
+          >
             <option value="">All sources</option>
-            {COMPETITION_SOURCE_FILTER_OPTIONS.map((source) => (
+            {sourceOptions.map((source) => (
               <option key={source.value} value={source.value}>
                 {source.label}
               </option>
             ))}
           </select>
         </label>
-        <label className="flex min-h-11 items-center gap-2 pb-0.5 text-sm font-medium text-muted-strong">
-          <input
-            type="checkbox"
-            name="ready"
-            value="1"
-            defaultChecked={readyOnly}
-            className="size-4 rounded border-line"
-          />
-          Ready to publish
-        </label>
-        <button type="submit" className="cta-enabled">
-          Apply filters
-        </button>
-        {filters.status || filters.source || readyOnly ? (
-          <Link
-            href="/admin/tournaments"
-            className="px-1 py-2 text-sm font-semibold text-muted-strong hover:text-brand-red"
+        <label>
+          <span className="text-xs font-semibold text-muted-strong">Timing</span>
+          <select
+            className="field mt-1"
+            name="timing"
+            defaultValue={filters.timing ?? "all"}
           >
-            Clear
-          </Link>
-        ) : null}
+            <option value="all">Upcoming and ended</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="ended">Ended</option>
+          </select>
+        </label>
+        <label className="sm:col-span-2">
+          <span className="text-xs font-semibold text-muted-strong">Name</span>
+          <input
+            className="field mt-1"
+            type="search"
+            name="q"
+            defaultValue={filters.q ?? ""}
+            placeholder="Search by tournament name"
+            maxLength={80}
+          />
+        </label>
+        <label>
+          <span className="text-xs font-semibold text-muted-strong">State</span>
+          <input
+            className="field mt-1"
+            type="text"
+            name="state"
+            defaultValue={filters.state ?? ""}
+            placeholder="TX"
+            maxLength={2}
+            autoComplete="address-level1"
+            aria-describedby="admin-tournament-state-hint"
+          />
+          <span id="admin-tournament-state-hint" className="sr-only">
+            Two-letter state abbreviation
+          </span>
+        </label>
+        <label>
+          <span className="text-xs font-semibold text-muted-strong">Format</span>
+          <select
+            className="field mt-1"
+            name="mode"
+            defaultValue={filters.mode ?? ""}
+          >
+            <option value="">Any format</option>
+            {ADMIN_TOURNAMENT_MODE_OPTIONS.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span className="text-xs font-semibold text-muted-strong">Audience</span>
+          <select
+            className="field mt-1"
+            name="audience"
+            defaultValue={filters.audience ?? ""}
+          >
+            <option value="">Any audience</option>
+            {ADMIN_TOURNAMENT_AUDIENCE_OPTIONS.map((audience) => (
+              <option key={audience.value} value={audience.value}>
+                {audience.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex flex-wrap items-end gap-3 sm:col-span-2 lg:col-span-3">
+          <label className="flex min-h-11 items-center gap-2 pb-0.5 text-sm font-medium text-muted-strong">
+            <input
+              type="checkbox"
+              name="ready"
+              value="1"
+              defaultChecked={Boolean(filters.ready)}
+              className="size-4 rounded border-line"
+            />
+            Ready to publish
+          </label>
+          <button type="submit" className="cta-enabled">
+            Apply filters
+          </button>
+          {hasFilters ? (
+            <Link
+              href="/admin/tournaments"
+              className="px-1 py-2 text-sm font-semibold text-muted-strong hover:text-brand-red"
+            >
+              Clear
+            </Link>
+          ) : null}
+        </div>
       </form>
 
       {draftSourceGroup ? (
@@ -156,18 +280,14 @@ export default async function AdminTournamentsPage({
           {publishedCount} {competitionSourceLabel(filters.source)} listing
           {publishedCount === 1 ? " is" : "s are"} already published. Filter to{" "}
           <Link
-            href={`/admin/tournaments?status=published&source=${encodeURIComponent(
-              filters.source
-            )}`}
+            href={adminTournamentsHref(filters, { status: "published" })}
             className="font-semibold text-brand-red hover:underline"
           >
             Published
           </Link>{" "}
           or remaining{" "}
           <Link
-            href={`/admin/tournaments?status=draft&source=${encodeURIComponent(
-              filters.source
-            )}`}
+            href={adminTournamentsHref(filters, { status: "draft" })}
             className="font-semibold text-brand-red hover:underline"
           >
             Drafts
@@ -212,14 +332,10 @@ export default async function AdminTournamentsPage({
           <div className="mt-4 text-sm text-muted">
             <p>No tournaments match these filters.</p>
             <Link
-              href={
-                filters.status || filters.source || readyOnly
-                  ? "/admin/tournaments"
-                  : "/admin/tournaments/new"
-              }
+              href={hasFilters ? "/admin/tournaments" : "/admin/tournaments/new"}
               className="mt-2 inline-block font-semibold text-brand-red hover:underline"
             >
-              {filters.status || filters.source || readyOnly
+              {hasFilters
                 ? "Clear filters and show all records"
                 : "Add the first tournament draft"}
             </Link>
