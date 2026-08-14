@@ -9,7 +9,10 @@ import {
   type RatingBand,
 } from "@/lib/schemas";
 import { competitionSourceOptionsForCategory } from "@/lib/ingestion-sources";
-import { discoveryCategory } from "@/lib/category-discovery";
+import {
+  discoveryCategory,
+  primaryFacetsForCategory,
+} from "@/lib/category-discovery";
 import { formatDate } from "@/lib/format";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import type { TimingFilter } from "@/lib/competition-timing";
@@ -228,7 +231,8 @@ export function SearchFilters({
         </select>
       </Field>
 
-      {categoryDefinition?.facetLabel ? (
+      {categoryDefinition?.facetLabel &&
+      primaryFacetsForCategory(category).length === 0 ? (
         <Field id={id("facet")} label={categoryDefinition.facetLabel}>
           <select
             id={id("facet")}

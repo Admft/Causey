@@ -12,6 +12,7 @@ import {
   formatFeeCents,
 } from "@/lib/format";
 import { formatMiles } from "@/lib/geo";
+import { formatCompetitionFacetLabel } from "@/lib/category-discovery";
 import { sourceByCompetitionSource } from "@/lib/ingestion-sources";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
@@ -101,6 +102,10 @@ export function CompetitionCard({
       ? "Your organization"
       : "Organization hosted"
     : null;
+  const facetLabel = formatCompetitionFacetLabel(
+    result.category,
+    result.details.facets
+  );
   // List rows have no footer — deadline / pathway / filter-match ride the level line.
   const listTail = [
     anyFilterActive
@@ -122,6 +127,11 @@ export function CompetitionCard({
         {standing.label}
       </span>
       {ended ? <span className="text-muted">· Ended</span> : null}
+      {facetLabel ? (
+        <span className="font-medium normal-case tracking-normal text-muted-strong">
+          · {facetLabel}
+        </span>
+      ) : null}
     </>
   );
 

@@ -20,7 +20,10 @@ import {
 } from "@/components/AccountCompetitionActions";
 import { isCompetitionEnded } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
-import { discoveryCategory } from "@/lib/category-discovery";
+import {
+  discoveryCategory,
+  formatCompetitionFacetLabel,
+} from "@/lib/category-discovery";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
 import { RecommendEventPanel } from "@/components/RecommendEventPanel";
@@ -115,10 +118,18 @@ export default async function EventPage({ params }: Params) {
     details: competition.details,
   });
   const featuredStanding = isChess && isFeaturedStanding(standing);
-  const typeLabel = competitionTypeLabel({
-    category: competition.category,
-    customCategoryName: competition.custom_category_name,
-  });
+  const typeLabel = [
+    competitionTypeLabel({
+      category: competition.category,
+      customCategoryName: competition.custom_category_name,
+    }),
+    formatCompetitionFacetLabel(
+      competition.category,
+      competition.details.facets
+    ),
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const ended = isCompetitionEnded(competition);
 
   const user = await getSessionUser();

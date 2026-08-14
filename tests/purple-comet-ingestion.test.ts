@@ -24,7 +24,7 @@ describe("Purple Comet official source adapter", () => {
       registrationUrl: null,
       city: null,
       state: null,
-      facets: ["mathematics"],
+      facets: ["mathematics", "math_team"],
       entryFeeCents: 0,
     });
     expect(parsePurpleCometHtml(html, "<main>Rules pending</main>")).toEqual([]);
@@ -55,7 +55,7 @@ describe("Purple Comet official source adapter", () => {
       entry_fee_cents: 0,
     });
     expect(competition?.details).toMatchObject({
-      facets: ["mathematics"],
+      facets: ["mathematics", "math_team"],
       source_availability:
         "official contest window published; adult supervisor and team registration required",
     });

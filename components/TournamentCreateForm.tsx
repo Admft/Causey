@@ -18,6 +18,14 @@ import {
   resolveCompetitionAudience,
 } from "@/lib/competition-audience";
 import {
+  childFacetsFor,
+  discoveryCategory,
+  isDiscoveryCategory,
+  organizerMathTypeFacet,
+  organizerPrimaryFacet,
+  primaryFacetsForCategory,
+} from "@/lib/category-discovery";
+import {
   CREATABLE_COMPETITION_TYPES,
   competitionTypeLabel,
 } from "@/lib/competition-types";
@@ -77,6 +85,7 @@ export type TournamentFormInitial = {
   visibility: "public" | "private";
   audience?: CompetitionAudience;
   rated: boolean;
+  facets?: string[];
   sections?: TournamentSectionDraft[];
 };
 
@@ -194,6 +203,20 @@ export function TournamentCreateForm({
   const [rated, setRated] = useState(
     savedDraft?.rated ?? initial?.rated ?? false
   );
+  const [primaryFacet, setPrimaryFacet] = useState(
+    savedDraft?.primaryFacet ??
+      organizerPrimaryFacet(
+        savedDraft?.category ?? initial?.category ?? "chess",
+        initial?.facets
+      )
+  );
+  const [mathTypeFacet, setMathTypeFacet] = useState(
+    savedDraft?.mathTypeFacet ??
+      organizerMathTypeFacet(
+        savedDraft?.category ?? initial?.category ?? "chess",
+        initial?.facets
+      )
+  );
   const [coverImageUrl, setCoverImageUrl] = useState(
     initialDraft?.cover_image_url ?? null
   );
@@ -236,6 +259,8 @@ export function TournamentCreateForm({
       audience,
       sections,
       rated,
+      primaryFacet,
+      mathTypeFacet,
     };
   }
 
@@ -335,6 +360,8 @@ export function TournamentCreateForm({
     audience,
     sections,
     rated,
+    primaryFacet,
+    mathTypeFacet,
     edit,
     pending,
     resolvedDraftId,
@@ -486,6 +513,8 @@ export function TournamentCreateForm({
         audience,
         sections,
         rated,
+        primaryFacet,
+        mathTypeFacet,
       };
       if (
         edit &&
@@ -807,6 +836,8 @@ export function TournamentCreateForm({
                       setCategory(type.id);
                       if (type.id !== "other") setCustomCategoryName("");
                       if (type.id !== "chess") setRated(false);
+                      setPrimaryFacet("");
+                      setMathTypeFacet("");
                     }}
                     className={`rounded-xl border px-3 py-3 text-left transition-colors ${
                       selected
@@ -824,12 +855,65 @@ export function TournamentCreateForm({
                 );
               })}
             </div>
-            {category !== "chess" ? (
+            {isDiscoveryCategory(category) && category !== "chess" ? (
               <p className="mt-3 border-l-2 border-brand-blue pl-3 text-xs text-muted-strong">
-                Organizations can coordinate this type now, but it is not
-                searchable in a public Causey directory. Approved public
+                Approved public listings join the{" "}
+                {competitionTypeLabel({ category, customCategoryName: null })}{" "}
+                directory. Tag the discipline so families can filter — for
+                arts, that keeps music and theatre from sharing one unfiltered
+                list.
+              </p>
+            ) : category === "other" ? (
+              <p className="mt-3 border-l-2 border-brand-blue pl-3 text-xs text-muted-strong">
+                Custom types stay off the public directories. Approved public
                 listings are shared by direct link.
               </p>
+            ) : null}
+            {primaryFacetsForCategory(category).length > 0 ? (
+              <div className="mt-4 grid max-w-lg gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-semibold text-muted-strong">
+                    {discoveryCategory(category)?.facetLabel ?? "Discipline"}{" "}
+                    (optional)
+                  </span>
+                  <select
+                    className="field mt-1"
+                    value={primaryFacet}
+                    onChange={(event) => {
+                      setPrimaryFacet(event.target.value);
+                      setMathTypeFacet("");
+                    }}
+                  >
+                    <option value="">Not tagged yet</option>
+                    {primaryFacetsForCategory(category).map((facet) => (
+                      <option key={facet.value} value={facet.value}>
+                        {facet.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {childFacetsFor(category, primaryFacet).length > 0 ? (
+                  <label className="block">
+                    <span className="text-xs font-semibold text-muted-strong">
+                      Type of math (optional)
+                    </span>
+                    <select
+                      className="field mt-1"
+                      value={mathTypeFacet}
+                      onChange={(event) =>
+                        setMathTypeFacet(event.target.value)
+                      }
+                    >
+                      <option value="">All math types</option>
+                      {childFacetsFor(category, primaryFacet).map((facet) => (
+                        <option key={facet.value} value={facet.value}>
+                          {facet.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+              </div>
             ) : null}
             {category === "other" ? (
               <label className="mt-4 block max-w-lg">

@@ -78,6 +78,7 @@ export default async function AdminEditTournamentPage({
             visibility: tournament.visibility,
             audience: tournament.audience,
             rated: tournament.rated,
+            facets: tournament.details?.facets,
             sections: tournament.sections?.map((section) => ({
               name: section.name,
               minRating: section.min_rating,

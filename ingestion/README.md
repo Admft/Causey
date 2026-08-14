@@ -37,6 +37,7 @@ Run these in the Supabase SQL editor if not already applied:
 15. **`0055_txsef_source.sql`** — Texas Science and Engineering Fair source id
 16. **`0056_profile_competition_category.sql`** — nullable account discovery shortcut; no chess default
 17. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
+18. **`0059_competition_facet_updates.sql`** — organizer edits persist `details.facets` without replacing other details
 
 ## Provenance
 

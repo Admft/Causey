@@ -11,6 +11,7 @@ import {
 import {
   discoveryCategoryHref,
   isDiscoveryCategory,
+  storedFacetsForOrganizer,
 } from "@/lib/category-discovery";
 import {
   getTournamentZip,
@@ -508,6 +509,8 @@ export async function publishTournamentDraft(
       (draftData.data.visibility === "public" ? "public" : "school"),
     sections: draftData.data.sections,
     rated: draftData.data.rated,
+    primaryFacet: draftData.data.primaryFacet,
+    mathTypeFacet: draftData.data.mathTypeFacet,
   });
   if (!tournament.success) {
     return {
@@ -602,7 +605,11 @@ async function insertWithSlugRetry(
         source: "organizer",
         details: {
           schema_version: COMPETITION_DETAILS_SCHEMA_VERSION,
-          facets: [],
+          facets: storedFacetsForOrganizer(
+            values.category,
+            values.primaryFacet,
+            values.mathTypeFacet
+          ),
         },
         image_url: imageUrl,
         status: "published",

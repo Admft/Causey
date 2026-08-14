@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ActionResult } from "@/lib/actions/result";
+import { storedFacetsForOrganizer } from "@/lib/category-discovery";
 import { COMPETITION_DETAILS_SCHEMA_VERSION } from "@/lib/schemas";
 import { slugify, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -71,7 +72,11 @@ export async function insertTournamentRecord(input: {
         source: "organizer",
         details: {
           schema_version: COMPETITION_DETAILS_SCHEMA_VERSION,
-          facets: [],
+          facets: storedFacetsForOrganizer(
+            values.category,
+            values.primaryFacet,
+            values.mathTypeFacet
+          ),
         },
         status,
         visibility: values.visibility,
@@ -174,6 +179,11 @@ export async function updateTournamentRecord(input: {
         audience:
           values.audience ??
           (values.visibility === "public" ? "public" : "school"),
+        facets: storedFacetsForOrganizer(
+          values.category,
+          values.primaryFacet,
+          values.mathTypeFacet
+        ),
       },
       p_sections: sections,
     }
