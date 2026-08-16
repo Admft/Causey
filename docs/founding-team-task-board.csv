@@ -1,0 +1,10 @@
+Status,Owner,Workstream,Task,Audience,Next action,Due,Notes
+Not started,Myshay,Audience,Club waitlist form (name, org, city, contact, chess program size),Clubs,Create a Google Form; do not list clubs on the public site until paperwork exists,,No public partner names or logos
+Not started,Myshay,Audience,Talk track for clubs: chess search is usable; fees/venues can be missing; confirm on organizer site,Clubs,One paragraph + link to https://app.causey.dev/chess,,Early-build honesty
+Not started,Adam,Audience,Club onboarding path: create club org, join link, first tournament,Clubs,Write 5-step internal checklist,,Clubs are orgs/teams, not districts
+Not started,Myshay,Audience,District conversation packet (this feature overview + /districts + privacy),Districts,PDF or print docs/district-feature-overview.md,,No pricing in the packet
+Not started,Both,Legal,Written approval before any named school or district appears in the product,Districts,Keep zero public partner names,,Existing product rule
+Not started,Adam,Trust,Confirm production migrations, zip table, and email cron on the live project,Ops,Check SETUP.md + district-pilot-runbook.md,,Required before a real cohort
+Not started,Adam,Trust,One live club smoke: signup → join → RSVP → attendance,Clubs,Do it on a throwaway club first,,Do not use a real student roster for the first pass
+Not started,Both,Product,Decide waitlist tool (Form vs Tally) and who replies,Ops,Pick one; put the link in the sheet tab Waitlist,,Keep it off the homepage until you want inbound
+Not started,Myshay,Ops,Weekly 20-minute stand-up using this sheet,Ops,Add a repeating calendar hold,,Sheet is the shared system; GitHub stays engineering-only
