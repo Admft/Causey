@@ -19,7 +19,7 @@ import { parseUilSpeechDebateHtml } from "@/ingestion/parse-uil-speech-debate";
 import { normalizeCategorySourceEvent } from "@/ingestion/normalize-category-source";
 import { eventFingerprint } from "@/ingestion/fingerprint";
 import { buildCompetitionResult } from "@/lib/data/search";
-import { SearchFiltersSchema } from "@/lib/schemas";
+import { SearchFiltersSchema, type Competition } from "@/lib/schemas";
 import { discoveryCategory } from "@/lib/category-discovery";
 import {
   competitionSourceOptionsForCategory,
@@ -449,21 +449,21 @@ describe("category facet isolation", () => {
   });
 
   it("matches mathematics to team-math children and never infers biology from a science fair", () => {
-    const mathMeet = {
+    const mathMeet: Competition = {
       ...competition,
       details: {
         ...competition.details,
         facets: ["mathematics", "math_team"],
       },
     };
-    const scienceFair = {
+    const scienceFair: Competition = {
       ...competition,
       details: {
         ...competition.details,
         facets: ["science_fair"],
       },
     };
-    const hit = (row: typeof competition, facet: string) =>
+    const hit = (row: Competition, facet: string) =>
       buildCompetitionResult({
         competition: row,
         sections: [],
