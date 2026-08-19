@@ -14,8 +14,10 @@ the verified `mail.causey.dev` Resend integration.
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0046_district_hosted_reporting.sql` (including
-   `0045_atomic_district_school_creation.sql`). A clean filename check alone
+   `0060_district_admin_activity.sql` (including
+   `0045_atomic_district_school_creation.sql`,
+   `0046_district_hosted_reporting.sql`, and the multi-category source
+   migrations that follow). A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch
    file.

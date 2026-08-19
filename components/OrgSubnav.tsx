@@ -31,6 +31,7 @@ const DISTRICT_TABS = [
   { id: "schools", label: "Schools", path: "/settings#schools", access: "admin" },
   { id: "people", label: "District staff", path: "/people", access: "admin" },
   { id: "reports", label: "Reports", path: "/reports", access: "admin" },
+  { id: "activity", label: "Activity", path: "/activity", access: "admin" },
   { id: "settings", label: "Settings", path: "/settings", access: "admin" },
 ] as const;
 

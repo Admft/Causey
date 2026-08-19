@@ -34,6 +34,32 @@ export type DistrictParticipationReport = {
   districtHosted: DistrictHostedRollup;
 };
 
+export type DistrictAdminActivitySummary = {
+  role?: string;
+  verification_from?: string;
+  verification_to?: string;
+  from?: string;
+  to?: string;
+  visibility?: string;
+  title?: string;
+  name?: string;
+  type?: string;
+  status?: string;
+  owner_changed?: boolean;
+  parent_changed?: boolean;
+};
+
+export type DistrictAdminActivityRow = {
+  id: number;
+  occurred_at: string;
+  action: string;
+  scope_org_id: string;
+  scope_org_name: string;
+  scope_org_type: string;
+  actor_display_name: string | null;
+  summary: DistrictAdminActivitySummary;
+};
+
 export type OrgInvitationRow = {
   id: string;
   org_id: string;
@@ -135,6 +161,25 @@ export async function getDistrictParticipationReport(
       schools: (schoolsResult.data ?? []) as DistrictSchoolRollup[],
       districtHosted,
     },
+  };
+}
+
+export async function getDistrictAdminActivity(
+  districtId: string,
+  limit = 50
+): Promise<DistrictReadResult<DistrictAdminActivityRow[]>> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_district_admin_activity", {
+    p_district_id: districtId,
+    p_limit: limit,
+  });
+  if (error) return { ok: false };
+  return {
+    ok: true,
+    data: ((data ?? []) as DistrictAdminActivityRow[]).map((row) => ({
+      ...row,
+      summary: (row.summary ?? {}) as DistrictAdminActivitySummary,
+    })),
   };
 }
 

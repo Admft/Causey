@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] District-readable admin activity: district admins get a scoped Activity feed (`0060` RPC) for school creates, staff invitations, verification/ownership settings changes, announcements, and competition status changes on their district and child schools only; raw `audit_events` stays revoked, invitation emails and profile-role noise stay out, and the district subnav / empty / retry states name the next step — 2026-08-19
 - [x] Arts/STEM discipline tags: Arts stays one `/arts` directory with Visual arts / Music / Theatre chips; STEM adds Biology and math types (team/individual/modeling) without inventing listings; Purple Comet is mathematics + team contest; TXSEF stays science fair only; directory search returns to `/` with “All competition types” — 2026-08-13
 - [x] Founder super-admin tier: `adam.mophat@gmail.com` and `mcausey.th@gmail.com` are protected `platform_admins.super_admin` accounts (`0058`) that cannot be demoted or deleted in-app; only they can grant/revoke platform admin or permanently delete users (type-to-confirm email on `/admin/users`); coach/parent/student remains the account workspace — 2026-08-13
 - [x] Pass 3 category integration: live schema/API smoke confirms profile shortcut column `0056`, explicit-category API enforcement, 638/766 chess, 23/23 debate, 2/2 STEM, 9/10 arts, and 0/1 writing Upcoming/All totals, zero Tabroom primaries, and zero non-chess pathway leakage. Frontend/backend drift was corrected for blocked DOE metadata, ended AFSA writing coverage, no-preference role links, auth-nav failure recovery, category-aware moderation/admin links, and explicit search category props; `0057` still requires database-owner application — 2026-08-13
@@ -190,6 +191,7 @@ Pick these before polish. One major end-to-end win per tick.
 - [x] Multi-section tournaments at create time
 - [x] Tournament change history → notify trackers
 - [x] Platform moderation for public org events
+- [x] District-readable admin activity (scoped RPC; no raw `audit_events` SELECT) — 2026-08-19
 - [ ] Consistent empty/error/success “what’s next” + nav terms
 
 ## Already looks intentional (do not re-polish unless regressing)

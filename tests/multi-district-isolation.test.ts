@@ -52,10 +52,13 @@ describe("two-district tenant isolation", () => {
     );
   });
 
-  it("scopes readiness, report rollups, and CSV export to one district id", () => {
+  it("scopes readiness, report rollups, activity, and CSV export to one district id", () => {
     expect(districtData).toContain('.eq("parent_org_id", districtId)');
     expect(districtData).toContain(
       'p_district_id: districtId'
+    );
+    expect(districtData).toContain(
+      'rpc("get_district_admin_activity"'
     );
     expect(rollupSql).toContain(
       "public.is_district_admin(p_district_id, auth.uid())"
