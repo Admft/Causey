@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-21 — **Parent first-child separate-device handoff clarity**: signed-in parents opening `/signup?role=student` (or join-student signup) see a session-safe gate back to Family instead of a form that would replace the parent session; empty Family mission leads with student setup; handoff/link copy names stay-signed-in, other-device/private-window, and student-email ownership.
 - 2026-08-19 — **District-readable admin activity**: scoped `get_district_admin_activity` RPC (`0060`) plus `/orgs/[slug]/activity` for district admins; allowlisted district/school actions only; no raw `audit_events` SELECT; invitation emails excluded.
 - 2026-08-13 — **Audience-chooser honesty**: District-only appears only for district hosts and connected schools; create/edit/admin paths clamp and reject unsupported district audience; migration `0057` enforces the hierarchy at insert/update; club/team labels stop saying “School only.”
 - 2026-08-08 — **Product email live path**: verified `mail.causey.dev` with Resend; protected Vercel worker claims the service-role outbox with idempotent retries; invitations, reminders, stored updates, and active-guardian copies respect email and per-kind preferences (`0036`).
@@ -86,7 +87,7 @@ _(none — ready for next audit tick)_
 - README/product-state truth cleanup
 - Apply pending migrations through `0060` in each environment
 - Consistent empty/error/success “what’s next” + nav terms
-- Parent first-child separate-account handoff clarity
+- Roster / manage still feel like admin tables, not school-safe tools
 
 ### Tick 16 audit
 - Platform admin · organizations · verification status exists but `/admin/organizations` neither shows nor changes it · operators cannot complete the trust workflow that moderation already references · **P1 · done**

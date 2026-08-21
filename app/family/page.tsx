@@ -129,18 +129,18 @@ export default async function FamilyPage() {
   if (!children.length) {
     missionTitle = pendingCount
       ? "Waiting for your student"
-      : "Link your first student";
+      : "Set up your student’s account";
     missionDescription = pendingCount
       ? "Your request is pending. Ask your student to open Plan, then accept the Family request."
-      : "Your student needs their own Causey account first. Then send a link request so invitations appear here.";
+      : "Students need their own Causey login on their device. Stay signed in here as the parent, then link after they confirm.";
     missionAction = pendingCount
       ? { href: "#tell-student", label: "What to tell your student" }
-      : { href: "#link-student", label: "Link a student" };
+      : { href: "#student-account-setup", label: "Set up student account" };
     missionSecondary = pendingCount
       ? undefined
       : {
-          href: "#student-account-setup",
-          label: "Set up student account",
+          href: "#link-student",
+          label: "Student already has an account",
         };
   } else if (totalActionsNeeded) {
     const parts: string[] = [];
@@ -186,8 +186,8 @@ export default async function FamilyPage() {
       </h2>
       {!children.length && !pendingCount ? (
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Once the student has confirmed their own account, enter that account
-          email below.
+          After the student confirms their own account, enter that account email
+          below — not your parent email.
         </p>
       ) : null}
       <div className="mt-3 max-w-lg">

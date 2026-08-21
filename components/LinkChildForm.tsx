@@ -59,8 +59,9 @@ export function LinkChildForm() {
         </button>
       </div>
       <p className="text-xs text-muted">
-        Your child needs a student account first, then confirms the link from{" "}
-        <span className="font-medium text-foreground">Plan</span> — nothing is
+        Use the student&rsquo;s account email — not your parent email. They
+        confirm the link from{" "}
+        <span className="font-medium text-foreground">Plan</span>; nothing is
         shared until they accept.
       </p>
       {message ? (

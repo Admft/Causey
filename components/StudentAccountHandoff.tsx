@@ -10,7 +10,7 @@ export function StudentAccountHandoff() {
     try {
       await navigator.clipboard.writeText(signupUrl.toString());
       setStatus(
-        "Student signup link copied. Send it to the student or open it on their device."
+        "Student signup link copied. Send it to the student, or open it on their phone or in a private window — not this tab."
       );
     } catch {
       setStatus(
@@ -32,15 +32,30 @@ export function StudentAccountHandoff() {
         Set up the student on their device
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Keep this parent session signed in. Send the student signup link to the
-        student, or open it in a separate browser profile on their device. They
-        should use their own email. After they confirm the account, return here
-        and request the family link with that email.
+        Students need their own Causey login. Stay signed in here as the parent.
+        Do not open the student signup link in this browser — that would switch
+        you out of your parent session. Use the student’s email, not yours.
       </p>
+      <div className="mt-4 rounded-xl border border-accent/25 bg-accent-soft/40 p-4">
+        <p className="text-sm font-semibold text-foreground">
+          Keep this parent session
+        </p>
+        <p className="mt-1 text-sm text-muted-strong">
+          This device stays on Family. The student creates and confirms their
+          account on another device or in a private window, then you link with
+          their account email below.
+        </p>
+      </div>
       <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-muted-strong">
-        <li>Copy and send the student signup link.</li>
-        <li>The student creates and confirms their account on their device.</li>
-        <li>Use “Link a student” below with the student&rsquo;s account email.</li>
+        <li>Copy and send the student signup link (or open it on their device).</li>
+        <li>
+          The student creates and confirms their account with{" "}
+          <span className="font-semibold text-foreground">their</span> email.
+        </li>
+        <li>
+          Return here (still signed in as the parent) and use “Link a student”
+          with that email.
+        </li>
         <li>The student accepts the Family request from Plan.</li>
       </ol>
       <button

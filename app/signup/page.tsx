@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { AlreadySignedInSignup } from "@/components/AlreadySignedInSignup";
+import { ParentStudentSignupGate } from "@/components/ParentStudentSignupGate";
 import { SignupForm } from "@/components/SignupForm";
 import { sanitizeNextPath } from "@/lib/auth/next-path";
+import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { AccountRoleSchema } from "@/lib/auth/types";
 import {
   accountRoleForOrgInvitationRole,
@@ -42,6 +46,38 @@ export default async function SignupPage({
     ? accountRoleForOrgInvitationRole(invitation.member_role)
     : "student";
 
+  const user = await getSessionUser();
+  if (user) {
+    // Claim acceptance belongs on /claim with the matching signed-in email.
+    if (claimToken && invitation) {
+      redirect(`/claim/${claimToken}`);
+    }
+
+    const profile = await getCurrentProfile();
+    if (profile) {
+      const requestedSignupRole = invitation
+        ? invitationAccountRole
+        : isJoiningOrganization
+          ? "student"
+          : parsedRole.success
+            ? parsedRole.data
+            : "student";
+
+      // Parent + student signup in the same browser would replace the parent session.
+      if (
+        profile.role === "parent" &&
+        requestedSignupRole === "student" &&
+        !invitation
+      ) {
+        return (
+          <ParentStudentSignupGate joiningOrganization={isJoiningOrganization} />
+        );
+      }
+
+      return <AlreadySignedInSignup role={profile.role} />;
+    }
+  }
+
   return (
     <div className="mx-auto max-w-xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Account</p>
@@ -52,7 +88,7 @@ export default async function SignupPage({
             ? `Create a ${
                 invitationAccountRole === "coach" ? "staff" : "student"
               } account for ${invitation.org_name}`
-          : "Create your Causey account"}
+            : "Create your Causey account"}
       </h1>
       <p className="mt-3 text-sm text-muted">
         {isJoiningOrganization
