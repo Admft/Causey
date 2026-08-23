@@ -10,6 +10,7 @@ import {
   parseDiscoveryCategory,
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
+import { organizationNavLabels } from "@/lib/portal-copy";
 
 /**
  * Sign in / Account controls for the primary nav. A signed-in user gets at
@@ -177,8 +178,7 @@ export function AuthNav() {
 
   const organizationLink = {
     href: "/orgs",
-    label: hasDistrictAccess ? "Districts & schools" : "My organizations",
-    shortLabel: hasDistrictAccess ? "District" : "Orgs",
+    ...organizationNavLabels({ hasDistrictAccess }),
   };
   const portalLinks =
     role === "parent"

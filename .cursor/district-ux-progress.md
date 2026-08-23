@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Consistent empty/error/success “what’s next” + nav terms: shared `lib/portal-copy` vocabulary + `PortalErrorState` so Family / Plan / My organizations / Districts & schools CTAs match AuthNav; district activity, reports, and readiness failures reuse one fail-closed retry pattern; roster-ready and school reports point to Competitions (not vague workspace back-links); Account empty Family/Orgs states name the next action — 2026-08-23
 - [x] Parent first-child separate-device handoff clarity: signed-in parents who open student signup in the same browser get a Family setup gate instead of a form that would replace their session; empty Family mission leads with “Set up student account”; handoff and link copy name parent-session stay-signed-in, private-window/other-device, and student-email (not parent) ownership — 2026-08-21
 - [x] District-readable admin activity: district admins get a scoped Activity feed (`0060` RPC) for school creates, staff invitations, verification/ownership settings changes, announcements, and competition status changes on their district and child schools only; raw `audit_events` stays revoked, invitation emails and profile-role noise stay out, and the district subnav / empty / retry states name the next step — 2026-08-19
 - [x] Arts/STEM discipline tags: Arts stays one `/arts` directory with Visual arts / Music / Theatre chips; STEM adds Biology and math types (team/individual/modeling) without inventing listings; Purple Comet is mathematics + team contest; TXSEF stays science fair only; directory search returns to `/` with “All competition types” — 2026-08-13
@@ -171,8 +172,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Tournament create flow: required image + persisted drafts — completed 2026-08-05 with cover upload, autosave/resume, preview, audience review, and publish validation
 - [x] Signup / join-org copy + flow: student join links preserve invitations; generic signup now carries student, parent, and coach intent through account creation and confirmation
 - [x] Search: org-member tournaments receive a bounded interest boost; stronger public interest and explicit soonest sorting still win
-- [ ] Empty/error/success states that always name the next action
-- [ ] Navigation consistency: same terms for org and event across pages (RSVP vs. organizer registration aligned 2026-08-05)
+- [x] Empty/error/success states that always name the next action — shared portal vocabulary + PortalErrorState on district fail-closed loads; Account/Alerts/home/signup gates aligned with AuthNav — 2026-08-23
+- [x] Navigation consistency: same terms for org and event across pages (RSVP vs. organizer registration aligned 2026-08-05; Family / Plan / My organizations / Districts & schools / Competitions aligned 2026-08-23)
 
 ## Must have for a real district pilot (UX — gpt-5.6-sol-xhigh)
 Pick these before polish. One major end-to-end win per tick.
@@ -193,7 +194,7 @@ Pick these before polish. One major end-to-end win per tick.
 - [x] Tournament change history → notify trackers
 - [x] Platform moderation for public org events
 - [x] District-readable admin activity (scoped RPC; no raw `audit_events` SELECT) — 2026-08-19
-- [ ] Consistent empty/error/success “what’s next” + nav terms
+- [x] Consistent empty/error/success “what’s next” + nav terms — 2026-08-23
 
 ## Already looks intentional (do not re-polish unless regressing)
 - Home + `/chess` search (hierarchy, chips, mobile filters)

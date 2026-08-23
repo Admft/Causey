@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
-import { PortalEmptyState } from "@/components/PortalPrimitives";
+import {
+  PortalEmptyState,
+  PortalErrorState,
+} from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDistrictAdminActivity } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
@@ -59,22 +62,14 @@ export default async function DistrictActivityPage({
         </p>
 
         {loadFailed ? (
-          <section className="section-rule mt-8 pt-8" role="alert">
-            <h2 className="font-display text-xl font-bold text-foreground">
-              Activity could not load
-            </h2>
-            <p className="mt-2 max-w-prose text-sm text-muted">
-              No activity rows were shown. Retry before treating the feed as
-              empty.{" "}
-              <Link
-                href={`/orgs/${view.org.slug}/activity?retry=activity`}
-                className="font-semibold text-brand-red hover:underline"
-              >
-                Retry district activity
-              </Link>
-              .
-            </p>
-          </section>
+          <PortalErrorState
+            title="Activity could not load"
+            description="No activity rows were shown. Retry before treating the feed as empty."
+            action={{
+              href: `/orgs/${view.org.slug}/activity?retry=activity`,
+              label: "Retry district activity",
+            }}
+          />
         ) : !rows.length ? (
           <section className="section-rule mt-8 pt-8">
             <PortalEmptyState

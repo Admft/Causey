@@ -98,9 +98,9 @@ const ROLE_NEXT_ACTION: Record<
   coach: {
     title: "Run your next team task",
     description:
-      "Open your organization workspace to manage rosters, invitations, and tournaments.",
+      "Open your organization workspace to manage rosters, invitations, and competitions.",
     href: "/orgs",
-    label: "Manage organizations",
+    label: "Open my organizations",
   },
 };
 

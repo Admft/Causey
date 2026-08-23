@@ -47,7 +47,7 @@ describe("parent → student separate-device handoff", () => {
 
   it("tells already-signed-in visitors not to replace their session", () => {
     expect(alreadySignedIn).toContain("You’re already signed in");
-    expect(alreadySignedIn).toContain("homePathForRole");
+    expect(alreadySignedIn).toContain("workspaceOpenCta");
     expect(alreadySignedIn).toContain("one account per person");
   });
 

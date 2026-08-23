@@ -6,6 +6,7 @@ import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import {
   PortalEmptyState,
+  PortalErrorState,
   PortalListRow,
   PortalMission,
 } from "@/components/PortalPrimitives";
@@ -471,22 +472,14 @@ export default async function OrgPage({
         ) : null}
 
         {org.type === "district" && isAdmin && districtReadinessError ? (
-          <section className="section-rule mt-8 pt-8" role="alert">
-            <h2 className="font-display text-xl font-bold text-foreground">
-              School readiness could not load
-            </h2>
-            <p className="mt-2 max-w-prose text-sm text-muted">
-              Retry this workspace before adding schools or changing setup, so
-              you do not act on incomplete information.{" "}
-              <Link
-                href={`/orgs/${org.slug}?retry=readiness`}
-                className="font-semibold text-brand-red hover:underline"
-              >
-                Retry school readiness
-              </Link>
-              .
-            </p>
-          </section>
+          <PortalErrorState
+            title="School readiness could not load"
+            description="Retry this workspace before adding schools or changing setup, so you do not act on incomplete information."
+            action={{
+              href: `/orgs/${org.slug}?retry=readiness`,
+              label: "Retry school readiness",
+            }}
+          />
         ) : null}
 
         {org.type === "district" && isAdmin && districtAction ? (

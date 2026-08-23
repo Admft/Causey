@@ -7,18 +7,18 @@ import {
 } from "@/components/NotificationInboxActions";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
-import { homePathForRole } from "@/lib/auth/home-path";
 import {
   getAttentionSourceEvents,
   getNotificationPreferences,
   getNotifications,
 } from "@/lib/data/district";
-import { getChildrenWithEvents } from "@/lib/data/portal";
+import { getChildrenWithEvents, getMyOrgs } from "@/lib/data/portal";
 import {
   buildAttentionItems,
   buildLinkedChildAttentionItems,
   sortAttentionItems,
 } from "@/lib/notifications";
+import { workspaceOpenCta } from "@/lib/portal-copy";
 
 export const metadata: Metadata = {
   title: "Alerts",
@@ -29,7 +29,7 @@ export default async function NotificationsPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/me/notifications");
   const profile = await getCurrentProfile();
-  const [notifications, preferences, ownAttentionSources, children] =
+  const [notifications, preferences, ownAttentionSources, children, myOrgs] =
     await Promise.all([
       getNotifications(user.id),
       getNotificationPreferences(user.id),
@@ -37,6 +37,7 @@ export default async function NotificationsPage() {
       profile?.role === "parent"
         ? getChildrenWithEvents(user.id)
         : Promise.resolve([]),
+      profile?.role === "coach" ? getMyOrgs(user.id) : Promise.resolve([]),
     ]);
   const today = new Date().toISOString().slice(0, 10);
   const attention = sortAttentionItems([
@@ -44,19 +45,17 @@ export default async function NotificationsPage() {
     ...buildAttentionItems(ownAttentionSources, preferences, today),
   ]);
   const unreadCount = notifications.filter((row) => !row.read_at).length;
-  const workspaceHref = homePathForRole(profile?.role);
-  const workspaceLabel =
-    profile?.role === "parent"
-      ? "Open family desk"
-      : profile?.role === "coach"
-        ? "Open organizations"
-        : "Open my tournaments";
+  const hasDistrictAccess = myOrgs.some(
+    (row) =>
+      row.org.type === "district" || row.memberRole === "district_admin"
+  );
+  const workspace = workspaceOpenCta(profile?.role, { hasDistrictAccess });
   const hasAnything = attention.length > 0 || notifications.length > 0;
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
       <Link
-        href={workspaceHref}
+        href={workspace.href}
         className="text-sm font-semibold text-muted-strong hover:text-brand-red"
       >
         ← Back to workspace
@@ -109,7 +108,7 @@ export default async function NotificationsPage() {
                     ? "Review what needs attention"
                     : "Review updates",
                 }
-              : { href: workspaceHref, label: workspaceLabel }
+              : { href: workspace.href, label: workspace.label }
           }
           secondary={{ href: "/account#alerts", label: "Alert preferences" }}
         />

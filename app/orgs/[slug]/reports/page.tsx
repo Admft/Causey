@@ -2,13 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
-import { PortalEmptyState } from "@/components/PortalPrimitives";
+import {
+  PortalEmptyState,
+  PortalErrorState,
+} from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   getDistrictParticipationReport,
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
+import {
+  OPEN_COMPETITIONS_LABEL,
+  orgCompetitionsHref,
+} from "@/lib/portal-copy";
 
 export const metadata: Metadata = {
   title: "Organization reporting",
@@ -89,22 +96,14 @@ export default async function OrganizationReportsPage({
 
         {view.isDistrictAdmin ? (
           districtReportError ? (
-            <section className="section-rule mt-8 pt-8" role="alert">
-              <h2 className="font-display text-xl font-bold text-foreground">
-                District reporting could not load
-              </h2>
-              <p className="mt-2 max-w-prose text-sm text-muted">
-                No totals or CSV were generated. Retry the report before using
-                participation numbers.{" "}
-                <Link
-                  href={`/orgs/${view.org.slug}/reports?retry=report`}
-                  className="font-semibold text-brand-red hover:underline"
-                >
-                  Retry district reporting
-                </Link>
-                .
-              </p>
-            </section>
+            <PortalErrorState
+              title="District reporting could not load"
+              description="No totals or CSV were generated. Retry the report before using participation numbers."
+              action={{
+                href: `/orgs/${view.org.slug}/reports?retry=report`,
+                label: "Retry district reporting",
+              }}
+            />
           ) : (
             <>
               <section className="section-rule mt-8 pt-8">
@@ -238,10 +237,10 @@ export default async function OrganizationReportsPage({
               {!attendance.length ? (
                 <PortalEmptyState
                   title="No attendance has been recorded"
-                  description="Attendance appears here after a coach marks outcomes on a past hosted tournament."
+                  description="Attendance appears here after a coach marks outcomes on a past hosted competition."
                   action={{
-                    href: `/orgs/${view.org.slug}`,
-                    label: "Open hosted tournaments",
+                    href: orgCompetitionsHref(view.org.slug),
+                    label: OPEN_COMPETITIONS_LABEL,
                   }}
                 />
               ) : (

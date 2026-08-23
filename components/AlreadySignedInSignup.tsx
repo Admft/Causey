@@ -1,19 +1,13 @@
 import Link from "next/link";
-import { homePathForRole } from "@/lib/auth/home-path";
 import type { AccountRole } from "@/lib/auth/types";
+import { workspaceOpenCta } from "@/lib/portal-copy";
 
 /**
  * Generic gate when someone who already has a Causey session opens /signup.
  * Avoids replacing the current session with a second account.
  */
 export function AlreadySignedInSignup({ role }: { role: AccountRole }) {
-  const homeHref = homePathForRole(role);
-  const workspaceLabel =
-    role === "parent"
-      ? "Open Family"
-      : role === "coach"
-        ? "Open organizations"
-        : "Open Plan";
+  const workspace = workspaceOpenCta(role);
 
   return (
     <div className="mx-auto max-w-xl px-5 py-10 sm:px-8">
@@ -27,8 +21,8 @@ export function AlreadySignedInSignup({ role }: { role: AccountRole }) {
         or sign out first if you meant to use a different email.
       </p>
       <div className="section-rule mt-8 flex flex-wrap items-center gap-4 pt-8">
-        <Link href={homeHref} className="cta-enabled inline-flex">
-          {workspaceLabel}
+        <Link href={workspace.href} className="cta-enabled inline-flex">
+          {workspace.label}
         </Link>
         <Link
           href="/account"

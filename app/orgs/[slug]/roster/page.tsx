@@ -16,6 +16,10 @@ import {
   isSupabaseConfigured,
 } from "@/lib/data/portal";
 import { formatDate } from "@/lib/format";
+import {
+  OPEN_COMPETITIONS_LABEL,
+  orgCompetitionsHref,
+} from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -89,17 +93,17 @@ export default async function RosterPage({
             : undefined,
         }
         : {
-          title: "Roster is ready for tournaments",
+          title: "Roster is ready for competitions",
           description: `${students.length} ${
             students.length === 1 ? "student" : "students"
           } on the roster${
             groups.length
               ? ` · ${groups.length} ${groups.length === 1 ? "group" : "groups"}`
               : ""
-          }. Open a tournament to invite them.`,
+          }. Open competitions to invite them.`,
           action: {
-            href: `/orgs/${org.slug}`,
-            label: "Back to workspace",
+            href: orgCompetitionsHref(org.slug),
+            label: OPEN_COMPETITIONS_LABEL,
           },
           secondary: org.join_code
             ? { href: "#add-students", label: "Invite more students" }
@@ -166,7 +170,20 @@ export default async function RosterPage({
               {canOperate && org.join_code
                 ? "No students yet. Copy the join link above and send it to families."
                 : canOperate
-                  ? "No students have joined yet."
+                  ? view.isAdmin
+                    ? (
+                        <>
+                          No students have joined yet.{" "}
+                          <Link
+                            href={`/orgs/${org.slug}/people`}
+                            className="font-semibold text-brand-red hover:underline"
+                          >
+                            Open invites &amp; staff
+                          </Link>{" "}
+                          to create a join link or send claim invitations.
+                        </>
+                      )
+                    : "No students have joined yet. Ask an administrator for a join link."
                   : "No students have joined yet. A coach or administrator shares the join link when it is ready."}
             </p>
           ) : (

@@ -2,6 +2,10 @@ import Link from "next/link";
 import type { AccountRole } from "@/lib/auth/types";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { preferredDiscoveryHref } from "@/lib/category-discovery";
+import {
+  SEARCH_TOURNAMENTS_LABEL,
+  workspaceOpenCta,
+} from "@/lib/portal-copy";
 
 /**
  * Conversion band for signed-out visitors. Searching works without an account,
@@ -20,65 +24,70 @@ const SIGNED_IN_NEXT = (
     primary: { href: string; label: string };
     secondary: { href: string; label: string; description: string }[];
   }
-> => ({
-  student: {
-    heading: "You are signed in as a student",
-    blurb:
-      "Save events you are still deciding on, RSVP when you are going, and keep your schedule in one place.",
-    primary: { href: "/me", label: "Open my tournaments" },
-    secondary: [
-      {
-        href: searchHref,
-        label: "Search tournaments",
-        description:
-          "Indexed feeds and club-published events in one search.",
-      },
-      {
-        href: "/account",
-        label: "Account settings",
-        description: "Profile, alerts, family, and sign-in.",
-      },
-    ],
-  },
-  parent: {
-    heading: "You are signed in as a parent",
-    blurb:
-      "See which student needs an RSVP or organizer registration, then act from your family desk.",
-    primary: { href: "/family", label: "Open family desk" },
-    secondary: [
-      {
-        href: searchHref,
-        label: "Search tournaments",
-        description:
-          "Indexed feeds and club-published events in one search.",
-      },
-      {
-        href: "/account",
-        label: "Account settings",
-        description: "Profile, alerts, family, and sign-in.",
-      },
-    ],
-  },
-  coach: {
-    heading: "You are signed in as a coach or organizer",
-    blurb:
-      "Invite students with a join code, publish club tournaments, and track who is going.",
-    primary: { href: "/orgs", label: "Open my organizations" },
-    secondary: [
-      {
-        href: searchHref,
-        label: "Search tournaments",
-        description:
-          "Indexed feeds and club-published events in one search.",
-      },
-      {
-        href: "/account",
-        label: "Account settings",
-        description: "Profile, alerts, and sign-in.",
-      },
-    ],
-  },
-});
+> => {
+  const studentWorkspace = workspaceOpenCta("student");
+  const parentWorkspace = workspaceOpenCta("parent");
+  const coachWorkspace = workspaceOpenCta("coach");
+  return {
+    student: {
+      heading: "You are signed in as a student",
+      blurb:
+        "Save events you are still deciding on, RSVP when you are going, and keep your schedule in one place.",
+      primary: studentWorkspace,
+      secondary: [
+        {
+          href: searchHref,
+          label: SEARCH_TOURNAMENTS_LABEL,
+          description:
+            "Indexed feeds and club-published events in one search.",
+        },
+        {
+          href: "/account",
+          label: "Account settings",
+          description: "Profile, alerts, family, and sign-in.",
+        },
+      ],
+    },
+    parent: {
+      heading: "You are signed in as a parent",
+      blurb:
+        "See which student needs an RSVP or organizer registration, then act from your family desk.",
+      primary: parentWorkspace,
+      secondary: [
+        {
+          href: searchHref,
+          label: SEARCH_TOURNAMENTS_LABEL,
+          description:
+            "Indexed feeds and club-published events in one search.",
+        },
+        {
+          href: "/account",
+          label: "Account settings",
+          description: "Profile, alerts, family, and sign-in.",
+        },
+      ],
+    },
+    coach: {
+      heading: "You are signed in as a coach or organizer",
+      blurb:
+        "Invite students with a join code, publish club tournaments, and track who is going.",
+      primary: coachWorkspace,
+      secondary: [
+        {
+          href: searchHref,
+          label: SEARCH_TOURNAMENTS_LABEL,
+          description:
+            "Indexed feeds and club-published events in one search.",
+        },
+        {
+          href: "/account",
+          label: "Account settings",
+          description: "Profile, alerts, and sign-in.",
+        },
+      ],
+    },
+  };
+};
 
 export async function HomeAccountPitch() {
   const profile = await getCurrentProfile();

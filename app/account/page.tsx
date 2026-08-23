@@ -5,9 +5,9 @@ import { AccountSecurityForm } from "@/components/AccountSecurityForm";
 import { AccountSettingsShell } from "@/components/AccountSettingsShell";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { NotificationPreferencesForm } from "@/components/NotificationPreferencesForm";
+import { PortalEmptyState } from "@/components/PortalPrimitives";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
-import { homePathForRole } from "@/lib/auth/home-path";
 import { isCurrentUserPlatformAdmin } from "@/lib/auth/platform-admin";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import type { AccountRole } from "@/lib/auth/types";
@@ -21,6 +21,11 @@ import {
   type MyOrgRow,
 } from "@/lib/data/portal";
 import { canCreateOrg, isOrgAdmin } from "@/lib/org-permissions";
+import {
+  SEARCH_TOURNAMENTS_LABEL,
+  accountOrganizationsEmptyCta,
+  workspaceOpenCta,
+} from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -99,13 +104,16 @@ export default async function AccountPage() {
   ]);
 
   const roleLabel = ROLE_LABEL[profile.role];
-  const workspaceHref = homePathForRole(profile.role);
-  const workspaceLabel =
-    profile.role === "parent"
-      ? "Open family desk"
-      : profile.role === "coach"
-        ? "Open organizations"
-        : "Open my tournaments";
+  const hasDistrictAccess = myOrgs.some(
+    (row) =>
+      row.org.type === "district" || row.memberRole === "district_admin"
+  );
+  const workspace = workspaceOpenCta(profile.role, { hasDistrictAccess });
+  const organizationsEmpty = accountOrganizationsEmptyCta({
+    role: profile.role,
+    canCreate: canCreateOrg(profile),
+    hasDistrictAccess,
+  });
   const showFamily = profile.role === "student" || profile.role === "parent";
   const emailConfirmed = Boolean(user.email_confirmed_at);
   const pendingEmail =
@@ -149,7 +157,7 @@ export default async function AccountPage() {
         >
           {profile.zip
             ? `Search tournaments near ${profile.zip}`
-            : "Search tournaments"}
+            : SEARCH_TOURNAMENTS_LABEL}
         </Link>
       </p>
     </div>
@@ -258,7 +266,11 @@ export default async function AccountPage() {
             with clubs and RSVPs.
           </p>
           {!parentLinks.length ? (
-            <p className="mt-4 text-sm text-muted">No parent links yet.</p>
+            <PortalEmptyState
+              title="No parent links yet"
+              description="A parent starts the link from Family. When their request arrives, accept it here or on Plan."
+              action={workspaceOpenCta("student")}
+            />
           ) : (
             <ul className="mt-4 divide-y divide-line border-y border-line">
               {parentLinks.map((link) => (
@@ -298,39 +310,23 @@ export default async function AccountPage() {
         Rename, ownership, and staff invites live on each org&rsquo;s Settings.
       </p>
       {!myOrgs.length ? (
-        <p className="mt-4 text-sm text-muted">
-          {profile.role === "student" ? (
-            <>
-              Not on a club yet.{" "}
-              <Link
-                href="/orgs"
-                className="font-semibold text-brand-red hover:underline"
-              >
-                Open my clubs
-              </Link>
-            </>
-          ) : canCreateOrg(profile) ? (
-            <>
-              No organizations yet.{" "}
-              <Link
-                href="/orgs/new"
-                className="font-semibold text-brand-red hover:underline"
-              >
-                Create one
-              </Link>
-            </>
-          ) : (
-            <>
-              No organizations yet.{" "}
-              <Link
-                href="/orgs"
-                className="font-semibold text-brand-red hover:underline"
-              >
-                Open organizations
-              </Link>
-            </>
-          )}
-        </p>
+        <PortalEmptyState
+          title={
+            profile.role === "student"
+              ? "Not on a club yet"
+              : "No organizations yet"
+          }
+          description={
+            profile.role === "student"
+              ? "Ask your coach for a join link, then open My clubs to finish joining."
+              : hasDistrictAccess
+                ? "District and school workspaces you administer appear here."
+                : canCreateOrg(profile)
+                  ? "Create a club or team workspace, or wait for a staff invitation claim link."
+                  : "Organization workspaces appear here after you join or claim a staff invitation."
+          }
+          action={organizationsEmpty}
+        />
       ) : (
         <ul className="mt-4 divide-y divide-line border-y border-line">
           {myOrgs.map((row) => {
@@ -427,10 +423,10 @@ export default async function AccountPage() {
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <Link
-          href={workspaceHref}
+          href={workspace.href}
           className="text-sm font-semibold text-muted-strong hover:text-brand-red"
         >
-          ← {workspaceLabel}
+          ← {workspace.label}
         </Link>
         <Link
           href="/me"

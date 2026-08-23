@@ -166,3 +166,33 @@ export function PortalEmptyState({
     </div>
   );
 }
+
+/**
+ * Fail-closed load state. Never imply an empty result — name retry first.
+ * Use the same vocabulary as nearby empty/success CTAs.
+ */
+export function PortalErrorState({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action: { href: string; label: string };
+}) {
+  return (
+    <section className="section-rule mt-8 pt-8" role="alert">
+      <h2 className="font-display text-xl font-bold text-foreground">{title}</h2>
+      <p className="mt-2 max-w-prose text-sm text-muted">
+        {description}{" "}
+        <Link
+          href={action.href}
+          className="font-semibold text-brand-red hover:underline"
+        >
+          {action.label}
+        </Link>
+        .
+      </p>
+    </section>
+  );
+}

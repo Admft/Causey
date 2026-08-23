@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-23 — **Consistent empty/error/success “what’s next” + nav terms**: `lib/portal-copy` + `PortalErrorState`; AuthNav/Account/Alerts/home/signup gates share Family / Plan / My organizations / Districts & schools; district activity/reports/readiness reuse one fail-closed retry pattern; roster-ready and school reports CTA to Competitions.
 - 2026-08-21 — **Parent first-child separate-device handoff clarity**: signed-in parents opening `/signup?role=student` (or join-student signup) see a session-safe gate back to Family instead of a form that would replace the parent session; empty Family mission leads with student setup; handoff/link copy names stay-signed-in, other-device/private-window, and student-email ownership.
 - 2026-08-19 — **District-readable admin activity**: scoped `get_district_admin_activity` RPC (`0060`) plus `/orgs/[slug]/activity` for district admins; allowlisted district/school actions only; no raw `audit_events` SELECT; invitation emails excluded.
 - 2026-08-13 — **Audience-chooser honesty**: District-only appears only for district hosts and connected schools; create/edit/admin paths clamp and reject unsupported district audience; migration `0057` enforces the hierarchy at insert/update; club/team labels stop saying “School only.”
@@ -86,7 +87,6 @@ _(none — ready for next audit tick)_
 - For-profit packaging and school/district buyer journey (pricing/go-to-market)
 - README/product-state truth cleanup
 - Apply pending migrations through `0060` in each environment
-- Consistent empty/error/success “what’s next” + nav terms
 - Roster / manage still feel like admin tables, not school-safe tools
 
 ### Tick 16 audit
