@@ -6,23 +6,26 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AuthNav } from "@/components/AuthNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
 
+/** Pages whose hero already shows the Causey lockup — header brand waits. */
+const HERO_BRAND_PATHS = new Set(["/", "/districts", "/clubs"]);
+
 export function SiteHeader() {
   const pathname = usePathname();
-  const isHome = pathname === "/";
-  const [homeHeroBrandIsPast, setHomeHeroBrandIsPast] = useState(false);
-  const showHeaderBrand = !isHome || homeHeroBrandIsPast;
+  const usesHeroBrand = HERO_BRAND_PATHS.has(pathname);
+  const [heroBrandIsPast, setHeroBrandIsPast] = useState(false);
+  const showHeaderBrand = !usesHeroBrand || heroBrandIsPast;
   const navRef = useRef<HTMLElement>(null);
   const flipFromLeft = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!isHome) {
+    if (!usesHeroBrand) {
       return;
     }
 
-    // Layout hydrates before streamed home content. Missing hero must stay
+    // Layout hydrates before streamed hero content. Missing hero must stay
     // centered with no header mark — never treat that as "already scrolled."
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHomeHeroBrandIsPast(false);
+    setHeroBrandIsPast(false);
 
     let intersection: IntersectionObserver | null = null;
     let mutation: MutationObserver | null = null;
@@ -36,7 +39,7 @@ export function SiteHeader() {
       intersection = new IntersectionObserver(
         ([entry]) => {
           const past = !entry.isIntersecting;
-          setHomeHeroBrandIsPast((current) => {
+          setHeroBrandIsPast((current) => {
             if (current === past) return current;
             const nav = navRef.current;
             if (
@@ -54,7 +57,7 @@ export function SiteHeader() {
     };
 
     const attachHero = () => {
-      const next = document.querySelector("[data-home-hero-brand]");
+      const next = document.querySelector("[data-hero-brand]");
       if (!next) return false;
       heroBrand = next;
       mutation?.disconnect();
@@ -76,7 +79,7 @@ export function SiteHeader() {
       mutation?.disconnect();
       window.removeEventListener("resize", observeHero);
     };
-  }, [isHome]);
+  }, [usesHeroBrand, pathname]);
 
   useLayoutEffect(() => {
     const nav = navRef.current;

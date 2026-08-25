@@ -56,9 +56,9 @@ export default function DistrictsPage() {
   return (
     <>
       <section className="access-grid overflow-x-clip">
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
           <div className="relative z-10 min-w-0">
-            <div className="animate-rise">
+            <div className="animate-rise" data-hero-brand>
               <CauseyLogo size="hero" />
             </div>
             <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[16ch] font-display text-display-xl tracking-tight text-foreground sm:mt-6">
@@ -95,7 +95,7 @@ export default function DistrictsPage() {
           </div>
 
           <ScrollReveal className="relative z-10 min-w-0">
-            <div className="flex h-full flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+            <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-red">
                 What setup looks like
               </p>
@@ -103,7 +103,7 @@ export default function DistrictsPage() {
                 There is no instant district signup. Causey does not list a
                 school, a coach, or a student before the district signs.
               </p>
-              <ol className="mt-4 flex-1 divide-y divide-line border-y border-line">
+              <ol className="mt-4 divide-y divide-line border-y border-line">
                 {pilotSteps.map((step, index) => (
                   <li
                     key={step.title}
@@ -148,11 +148,11 @@ export default function DistrictsPage() {
             </div>
           </ScrollReveal>
           <ScrollReveal delay={60}>
-            <div className="flex h-full flex-col rounded-2xl border border-line bg-surface p-5 sm:p-6">
+            <div className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
               <h2 className="font-display text-display tracking-tight text-foreground">
                 What we have not finished
               </h2>
-              <p className="mt-3 flex-1 text-sm text-muted">
+              <p className="mt-3 text-sm text-muted">
                 Before a paid student rollout, Causey and the district still
                 have to settle price, support, privacy, how long data is kept,
                 and security, and Causey has to prove its email delivery at

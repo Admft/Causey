@@ -43,4 +43,21 @@ describe("club and district public pitches", () => {
     expect(layout).toContain("Clubs and teams");
     expect(proxy).toContain('"/clubs"');
   });
+
+  it("hands the header brand off on home, clubs, and districts heroes", () => {
+    const header = read("components/SiteHeader.tsx");
+    expect(header).toContain('"/districts"');
+    expect(header).toContain('"/clubs"');
+    expect(header).toContain("[data-hero-brand]");
+    expect(homePage).toContain("data-hero-brand");
+    expect(clubsPage).toContain("data-hero-brand");
+    expect(districtsPage).toContain("data-hero-brand");
+  });
+
+  it("keeps sign-in as sign-in, not a role chooser", () => {
+    const loginPage = read("app/login/page.tsx");
+    expect(loginPage).not.toContain("/signup?role=");
+    expect(loginPage).toContain("Create staff account");
+    expect(read("components/LoginForm.tsx")).toContain("Create an account");
+  });
 });

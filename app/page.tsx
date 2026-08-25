@@ -43,9 +43,9 @@ export default async function CompetitionTypesPage() {
   return (
     <>
       <section className="access-grid overflow-x-clip">
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-8 px-5 py-8 sm:px-8 sm:py-10 md:grid-cols-[minmax(0,1.05fr)_minmax(0,24rem)] md:gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 md:grid-cols-[minmax(0,1.05fr)_minmax(0,24rem)] md:gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
           <div className="relative z-10 flex min-w-0 flex-col">
-            <div className="animate-rise" data-home-hero-brand>
+            <div className="animate-rise" data-hero-brand>
               <CauseyLogo size="hero" />
             </div>
             <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[16ch] font-display text-display-xl tracking-tight text-foreground sm:mt-6">

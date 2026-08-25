@@ -64,9 +64,9 @@ export default function ClubsPage() {
   return (
     <>
       <section className="access-grid overflow-x-clip">
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
           <div className="relative z-10 min-w-0">
-            <div className="animate-rise">
+            <div className="animate-rise" data-hero-brand>
               <CauseyLogo size="hero" />
             </div>
             <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[16ch] font-display text-display-xl tracking-tight text-foreground sm:mt-6">
@@ -94,11 +94,11 @@ export default function ClubsPage() {
           </div>
 
           <ScrollReveal className="relative z-10 min-w-0">
-            <div className="flex h-full flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+            <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-red">
                 How a club season runs
               </p>
-              <ol className="mt-4 flex-1 divide-y divide-line border-y border-line">
+              <ol className="mt-4 divide-y divide-line border-y border-line">
                 {seasonSteps.map((step, index) => (
                   <li
                     key={step.title}
@@ -143,14 +143,14 @@ export default function ClubsPage() {
             </div>
           </ScrollReveal>
           <ScrollReveal delay={60}>
-            <div className="flex h-full flex-col rounded-2xl border border-line bg-background p-5 sm:p-6">
+            <div className="rounded-2xl border border-line bg-background p-5 sm:p-6">
               <h2 className="font-display text-display tracking-tight text-foreground">
                 Needs for a professional club
               </h2>
               <p className="mt-2 text-sm text-muted">
                 Not building unless you ask.
               </p>
-              <ul className="mt-4 flex-1 divide-y divide-line border-y border-line">
+              <ul className="mt-4 divide-y divide-line border-y border-line">
                 {notIncluded.map((item) => (
                   <li key={item} className="py-3 text-sm text-muted">
                     {item}

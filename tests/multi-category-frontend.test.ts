@@ -53,6 +53,9 @@ describe("hero search requires an explicit category", () => {
     expect(heroSearch).toContain("categoryError");
     expect(heroSearch).toContain('aria-describedby={categoryError ? "hero-category-error" : undefined}');
     expect(heroSearch).toContain('role="alert"');
+    expect(heroSearch).toContain('role="radiogroup"');
+    expect(heroSearch).toContain("CategoryGlyph");
+    expect(heroSearch).not.toContain("<option value=\"\">Choose a competition type</option>");
     expect(heroSearch).toContain("discoveryCategoryHref(");
     expect(heroSearch).toContain("Search tournaments");
     expect(heroSearch).toContain("optionally narrow by zip and distance");

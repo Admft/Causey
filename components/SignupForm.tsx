@@ -16,6 +16,7 @@ import {
   DISCOVERY_CATEGORIES,
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
+import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { PasswordField } from "@/components/PasswordField";
 
 const STATES = [
@@ -268,13 +269,15 @@ export function SignupForm({
       ) : (
         <fieldset className="flex flex-col gap-2">
           <legend className="text-xs font-semibold text-muted-strong">Account type</legend>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2">
             {ROLE_OPTIONS.map((opt) => {
               const selected = role === opt.value;
+              const shortLabel =
+                opt.value === "coach" ? "Coach" : opt.label;
               return (
                 <label
                   key={opt.value}
-                  className={`cursor-pointer rounded-xl border px-3 py-3 text-left transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
+                  className={`flex min-h-11 cursor-pointer touch-manipulation items-center justify-center rounded-xl border px-2 py-2 text-center transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
                     selected
                       ? "border-brand-red/40 bg-accent-soft"
                       : "border-line bg-white hover:border-brand-red/30"
@@ -288,14 +291,14 @@ export function SignupForm({
                     onChange={() => setRole(opt.value)}
                     className="sr-only"
                   />
-                  <span className="block text-sm font-semibold text-foreground">
-                    {opt.label}
+                  <span className="text-sm font-bold text-foreground">
+                    {shortLabel}
                   </span>
-                  <span className="mt-1 block text-2xs text-muted">{opt.description}</span>
                 </label>
               );
             })}
           </div>
+          <p className="text-xs text-muted">{roleOption.description}</p>
         </fieldset>
       )}
 
@@ -407,30 +410,46 @@ export function SignupForm({
           Choose any you follow. You can change these later in Account
           settings.
         </p>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {DISCOVERY_CATEGORIES.map((category) => (
-            <label
-              key={category.id}
-              className="flex items-center gap-2 text-sm text-foreground"
-            >
-              <input
-                type="checkbox"
-                checked={interests.has(category.id)}
-                onChange={(e) =>
-                  setInterests((current) => {
-                    const next = new Set(current);
-                    if (e.target.checked) {
-                      next.add(category.id);
-                    } else {
-                      next.delete(category.id);
-                    }
-                    return next;
-                  })
-                }
-              />
-              {category.label}
-            </label>
-          ))}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {DISCOVERY_CATEGORIES.map((category) => {
+            const selected = interests.has(category.id);
+            return (
+              <label
+                key={category.id}
+                className={`flex min-h-11 cursor-pointer touch-manipulation items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${
+                  selected
+                    ? "border-brand-red/40 bg-accent-soft text-foreground"
+                    : "border-line bg-white text-foreground hover:border-brand-red/30"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={selected}
+                  onChange={(e) =>
+                    setInterests((current) => {
+                      const next = new Set(current);
+                      if (e.target.checked) {
+                        next.add(category.id);
+                      } else {
+                        next.delete(category.id);
+                      }
+                      return next;
+                    })
+                  }
+                />
+                <CategoryGlyph
+                  category={category.id}
+                  className={`h-5 w-5 shrink-0 ${
+                    selected ? "text-brand-red" : "text-muted-strong"
+                  }`}
+                />
+                <span className="font-semibold leading-tight">
+                  {category.shortLabel}
+                </span>
+              </label>
+            );
+          })}
         </div>
       </fieldset>
 

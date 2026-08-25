@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useRef, useState } from "react";
+import { CategoryGlyph } from "@/components/CategoryGlyph";
 import {
   DISCOVERY_CATEGORIES,
   discoveryCategoryHref,
@@ -33,7 +34,7 @@ export function HomeHeroSearch({
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const categoryRef = useRef<HTMLSelectElement>(null);
+  const categoryRef = useRef<HTMLDivElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
 
   function validateZip(value: string): boolean {
@@ -50,7 +51,7 @@ export function HomeHeroSearch({
     event.preventDefault();
     if (!category) {
       setCategoryError("Choose a competition type to search.");
-      categoryRef.current?.focus();
+      categoryRef.current?.querySelector("button")?.focus();
       return;
     }
     setCategoryError(null);
@@ -74,7 +75,7 @@ export function HomeHeroSearch({
     <form
       id="search"
       onSubmit={onSubmit}
-      className="flex h-full w-full min-w-0 flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
+      className="flex w-full min-w-0 flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
     >
       <h2 className="font-display text-display-sm font-bold tracking-tight text-foreground">
         Find tournaments
@@ -84,33 +85,52 @@ export function HomeHeroSearch({
         Each directory also has name and category-specific filters.
       </p>
 
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-5 flex flex-col gap-4">
         <div className="min-w-0">
-          <label
-            htmlFor="hero-category"
+          <p
+            id="hero-category-label"
             className="text-xs font-semibold text-muted-strong"
           >
             Competition type
-          </label>
-          <select
-            id="hero-category"
+          </p>
+          <div
             ref={categoryRef}
-            className="field mt-1 w-full"
-            value={category}
-            onChange={(event) => {
-              setCategory(event.target.value as DiscoveryCategory | "");
-              setCategoryError(null);
-            }}
+            role="radiogroup"
+            aria-labelledby="hero-category-label"
             aria-invalid={categoryError !== null}
             aria-describedby={categoryError ? "hero-category-error" : undefined}
+            className="mt-2 grid grid-cols-5 gap-1.5 sm:gap-2"
           >
-            <option value="">Choose a competition type</option>
-            {DISCOVERY_CATEGORIES.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            {DISCOVERY_CATEGORIES.map((option) => {
+              const selected = category === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={option.label}
+                  onClick={() => {
+                    setCategory(option.id);
+                    setCategoryError(null);
+                  }}
+                  className={`flex min-h-14 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-center transition-colors sm:min-h-16 ${
+                    selected
+                      ? "border-brand-red/45 bg-accent-soft text-brand-red"
+                      : "border-line bg-white text-foreground hover:border-brand-red/35 hover:text-brand-red"
+                  }`}
+                >
+                  <CategoryGlyph
+                    category={option.id}
+                    className="h-6 w-6 shrink-0 sm:h-7 sm:w-7"
+                  />
+                  <span className="max-w-full text-2xs font-bold leading-tight">
+                    {option.shortLabel}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
           {categoryError ? (
             <p
               id="hero-category-error"
@@ -121,56 +141,58 @@ export function HomeHeroSearch({
             </p>
           ) : null}
         </div>
-        <div className="min-w-0">
-          <label
-            htmlFor="hero-zip"
-            className="text-xs font-semibold text-muted-strong"
-          >
-            Zip code
-          </label>
-          <input
-            id="hero-zip"
-            ref={zipRef}
-            className="field mt-1"
-            inputMode="numeric"
-            autoComplete="postal-code"
-            maxLength={5}
-            placeholder="75201"
-            value={zip}
-            onChange={(event) => setZip(event.target.value)}
-            onBlur={(event) => validateZip(event.target.value)}
-            aria-invalid={zipError !== null}
-            aria-describedby={zipError ? "hero-zip-error" : undefined}
-          />
-          {zipError ? (
-            <p id="hero-zip-error" role="alert" className="mt-1 text-2xs text-error">
-              {zipError}
-            </p>
-          ) : null}
-        </div>
-        <div className="min-w-0">
-          <label
-            htmlFor="hero-radius"
-            className="text-xs font-semibold text-muted-strong"
-          >
-            Distance
-          </label>
-          <select
-            id="hero-radius"
-            className="field mt-1 w-full"
-            value={radius}
-            onChange={(event) => setRadius(event.target.value)}
-          >
-            {RADII.map((value) => (
-              <option key={value} value={value}>
-                within {value} mi
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_8.5rem]">
+          <div className="min-w-0">
+            <label
+              htmlFor="hero-zip"
+              className="text-xs font-semibold text-muted-strong"
+            >
+              Zip code
+            </label>
+            <input
+              id="hero-zip"
+              ref={zipRef}
+              className="field mt-1"
+              inputMode="numeric"
+              autoComplete="postal-code"
+              maxLength={5}
+              placeholder="75201"
+              value={zip}
+              onChange={(event) => setZip(event.target.value)}
+              onBlur={(event) => validateZip(event.target.value)}
+              aria-invalid={zipError !== null}
+              aria-describedby={zipError ? "hero-zip-error" : undefined}
+            />
+            {zipError ? (
+              <p id="hero-zip-error" role="alert" className="mt-1 text-2xs text-error">
+                {zipError}
+              </p>
+            ) : null}
+          </div>
+          <div className="min-w-0">
+            <label
+              htmlFor="hero-radius"
+              className="text-xs font-semibold text-muted-strong"
+            >
+              Distance
+            </label>
+            <select
+              id="hero-radius"
+              className="field mt-1 w-full"
+              value={radius}
+              onChange={(event) => setRadius(event.target.value)}
+            >
+              {RADII.map((value) => (
+                <option key={value} value={value}>
+                  {value} mi
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="mt-auto pt-5">
+      <div className="mt-5">
         <button
           type="submit"
           disabled={pending}
@@ -179,7 +201,7 @@ export function HomeHeroSearch({
           {pending ? "Searching…" : "Search tournaments"}
         </button>
 
-        <p className="mt-4 text-2xs text-muted">
+        <p className="mt-3 text-2xs text-muted">
           {category ? (
             <Link
               href={discoveryCategoryHref(category)}
