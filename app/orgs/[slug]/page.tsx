@@ -18,6 +18,7 @@ import {
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
 import {
+  getChildSchoolsForDistrict,
   getMyEntrantRows,
   getOrgAttendedEvents,
   getOrgBySlugForViewer,
@@ -129,6 +130,7 @@ export default async function OrgPage({
     districtReadinessResult,
     competitionWorkspace,
     seasonAttendance,
+    connectedSchools,
   ] =
     await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
@@ -144,6 +146,9 @@ export default async function OrgPage({
       : Promise.resolve(null),
     isCoach && org.type !== "district"
       ? getOrgSeasonAttendance(org.id)
+      : Promise.resolve([]),
+    org.type === "district" && canManageTournaments
+      ? getChildSchoolsForDistrict(org.id)
       : Promise.resolve([]),
   ]);
   const events = competitionWorkspace?.events ?? directEvents;
@@ -1093,14 +1098,22 @@ export default async function OrgPage({
             <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
               <div>
                 <h2 className="font-display text-xl font-bold text-foreground">
-                  Coach announcement
+                  {org.type === "district"
+                    ? "District announcement"
+                    : "Coach announcement"}
                 </h2>
                 <p className="mt-2 text-sm text-muted">
-                  Share one clear operational update with members and linked
-                  parents. Avoid student-specific information.
+                  {org.type === "district"
+                    ? "Share one clear operational update with connected schools — or keep it on district staff only. Avoid student-specific information."
+                    : "Share one clear operational update with members and linked parents. Avoid student-specific information."}
                 </p>
               </div>
-              <AnnouncementForm orgId={org.id} orgSlug={org.slug} />
+              <AnnouncementForm
+                orgId={org.id}
+                orgSlug={org.slug}
+                orgType={org.type}
+                connectedSchoolCount={connectedSchools.length}
+              />
             </div>
           </section>
         ) : null}

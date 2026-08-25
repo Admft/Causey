@@ -21,5 +21,7 @@ describe("organization announcement operator access", () => {
     expect(actions).toContain(
       "Only a coach or organization administrator can publish announcements."
     );
+    expect(actions).toContain('audience === "connected_schools"');
+    expect(actions).toContain("assertCanOperate");
   });
 });

@@ -23,7 +23,7 @@ Chess is the working surface. Other competition types exist in the product but a
 - Open **Reports** for school-level totals: students on roster, upcoming events, pending RSVPs, going, and attendance.
 - Export those totals as **CSV**.
 - See **district-hosted** events separately from **school-hosted** events, so a district tournament is not counted as if every school ran it.
-- Publish **announcements** that can reach connected schools.
+- Publish **announcements** that can reach connected schools in one district-office action (or stay on district staff only).
 - Host a **district-wide competition** when that is the real host, or leave hosting with a school.
 - After schools are provisioned, open a **competitions calendar** of district-hosted and school-hosted events (host name on each row) instead of stopping at empty totals.
 - On a district-hosted event, **invite students from connected school rosters** (or every connected school at once). Districts have no student roster of their own.
@@ -75,7 +75,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | RSVP and attendance | Going / not going, attendance on the day, season view | Yes |
 | Organizer registration tracking | Families mark when they finished the external registration | Yes |
 | Family follow-through | Parent inbox of named child actions | Yes |
-| Announcements | Short notes from district or school staff | Yes |
+| Announcements | Short notes from district or school staff; district overview can post once to every connected school | Yes |
 | Alerts | Invites, deadlines, 7-day and 1-day reminders, changes, cancel | In-app yes; email is configured but not yet proven at school volume |
 | Aggregate reports + CSV | School-level counts, not student browsing | Yes |
 | Privacy and terms pages | Public disclosures of what student data is stored | Published; legal review still required before a paid student rollout |

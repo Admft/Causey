@@ -2,9 +2,9 @@
 
 Living backlog for the school-district buyer. Club/team work lives in `club-readiness.md`. Catalog: `docs/district-feature-overview.md`.
 
-## Verdict (2026-08-24)
+## Verdict (2026-08-25)
 
-Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events. It is not self-serve procurement and not a finished FERPA/price package.
+Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events, and district-office announcements that fan out to connected schools. It is not self-serve procurement and not a finished FERPA/price package.
 
 ## Have (ready enough for a chess pilot with Causey ops)
 
@@ -22,6 +22,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Command center shows **upcoming district + school events** with host names — 2026-08-24
 - [x] Guided multi-school invite to a district-hosted event — 2026-08-24
 - [x] `/districts` hero filled with setup steps; home organizer band pairs club + district without empty lanes — 2026-08-24
+- [x] District announcement fan-out to connected schools from the district overview — 2026-08-25
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -58,7 +59,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
 | Family RSVP + organizer registration | **works** (club-worded copy) | `/family` |
 | District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters` |
-| District announcement one-shot to all child schools | **partial** | operator can publish *on* a school (`0043`); district overview form only targets district `org.id` members |
+| District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; action inserts per school + district copy (`0043` operator access) |
 | Email at school volume | **ops / not proven** | backlog; not a UI claim on `/districts` |
 | `/districts` pitch honesty | **works** | assisted pilot; book conversation; no partner names |
 
@@ -67,9 +68,8 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 1. **P0 · District-hosted manage cannot invite school students · L · shipped 2026-08-24**  
    Surface: `/event/[slug]/manage` + `inviteConnectedSchoolRosters`. Connected-school rosters/groups load; “Invite every connected school” fans out.  
 2. **P1 · Family desk still says “Club RSVPs” · S · shipped 2026-08-24**
-
-3. **P1 · District announcement form does not fan out to child schools · M**  
-   Surface: district overview `AnnouncementForm` posts to district org only; recipients = that org’s members (staff). Catalog “district → child schools” means open each school (or operate on school `org_id`), not one district-office blast.
+3. **P1 · District announcement form does not fan out to child schools · M · shipped 2026-08-25**  
+   Surface: district overview audience chooser; default posts to every connected school + district staff copy.
 
 4. **Ops · Email volume + live dual-district smoke · —**  
    Not product UI. Keep as Legal/Ops; do not invent compliance UI.
@@ -79,7 +79,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 
 ### Recommended next shippable win
 
-**District announcement fan-out to child schools**, or ops proof of email at school volume. Multi-school invite shipped.
+**School-safe roster/manage composition**, or ops proof of email at school volume. Announcement fan-out shipped.
 
 ### Out-of-scope refusals this pass
 

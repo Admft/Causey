@@ -57,6 +57,8 @@ const AnnouncementSchema = z.object({
   orgSlug: z.string().min(1),
   title: z.string().trim().min(2).max(100),
   body: z.string().trim().min(2).max(2000),
+  /** District overview only: fan out to each connected school workspace. */
+  audience: z.enum(["org", "connected_schools"]).default("org"),
 });
 
 const NotificationPreferencesSchema = z.object({
@@ -688,7 +690,8 @@ export async function publishOrganizationAnnouncement(input: {
   orgSlug: string;
   title: string;
   body: string;
-}): Promise<ActionResult> {
+  audience?: "org" | "connected_schools";
+}): Promise<ActionResult<{ schoolCount?: number }>> {
   const parsed = AnnouncementSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the announcement." };
@@ -697,82 +700,188 @@ export async function publishOrganizationAnnouncement(input: {
   if (!profile) return { ok: false, error: "Sign in to continue." };
   const supabase = await createServerSupabaseClient();
 
-  const { data: canOperate, error: permissionError } = await supabase.rpc(
-    "can_operate_org_competitions",
-    {
-      p_org_id: parsed.data.orgId,
-      p_profile_id: profile.id,
+  async function assertCanOperate(orgId: string): Promise<ActionResult> {
+    const { data: canOperate, error: permissionError } = await supabase.rpc(
+      "can_operate_org_competitions",
+      {
+        p_org_id: orgId,
+        p_profile_id: profile!.id,
+      }
+    );
+    if (permissionError) {
+      return {
+        ok: false,
+        error: actionErrorMessage(
+          permissionError,
+          "Could not verify announcement access."
+        ),
+      };
     }
-  );
-  if (permissionError) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        permissionError,
-        "Could not verify announcement access."
-      ),
-    };
-  }
-  if (canOperate !== true) {
-    return {
-      ok: false,
-      error:
-        "Only a coach or organization administrator can publish announcements.",
-    };
+    if (canOperate !== true) {
+      return {
+        ok: false,
+        error:
+          "Only a coach or organization administrator can publish announcements.",
+      };
+    }
+    return { ok: true };
   }
 
-  const { data: announcement, error } = await supabase
-    .from("org_announcements")
-    .insert({
-      org_id: parsed.data.orgId,
-      title: parsed.data.title,
-      body: parsed.data.body,
-      created_by: profile.id,
-    })
-    .select("id")
-    .maybeSingle();
-  if (error || !announcement?.id) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        error,
-        "Could not publish the announcement. Try again.",
-        "You don’t have permission to publish announcements for this organization."
-      ),
-    };
+  const operatorCheck = await assertCanOperate(parsed.data.orgId);
+  if (!operatorCheck.ok) return operatorCheck;
+
+  type PublishTarget = { id: string; slug: string };
+  const targets: PublishTarget[] = [
+    { id: parsed.data.orgId, slug: parsed.data.orgSlug },
+  ];
+  let schoolCount = 0;
+
+  if (parsed.data.audience === "connected_schools") {
+    const { data: host, error: hostError } = await supabase
+      .from("organizations")
+      .select("id, type")
+      .eq("id", parsed.data.orgId)
+      .maybeSingle();
+    if (hostError || !host) {
+      return {
+        ok: false,
+        error: "Could not verify this district before publishing.",
+      };
+    }
+    if (host.type !== "district") {
+      return {
+        ok: false,
+        error: "Connected-school announcements are only available on a district workspace.",
+      };
+    }
+
+    const { data: schools, error: schoolsError } = await supabase
+      .from("organizations")
+      .select("id, slug")
+      .eq("parent_org_id", parsed.data.orgId)
+      .eq("type", "school")
+      .order("name");
+    if (schoolsError) {
+      return {
+        ok: false,
+        error: "Could not load connected schools. Try again.",
+      };
+    }
+    const childSchools = (schools ?? []) as PublishTarget[];
+    if (!childSchools.length) {
+      return {
+        ok: false,
+        error: "Add a school, then publish to connected schools.",
+      };
+    }
+
+    for (const school of childSchools) {
+      const schoolCheck = await assertCanOperate(school.id);
+      if (!schoolCheck.ok) {
+        return {
+          ok: false,
+          error:
+            "You don’t have permission to publish announcements for every connected school.",
+        };
+      }
+    }
+
+    // District office keeps a copy; each school workspace gets the same note
+    // so members and linked parents see it without opening the district page.
+    targets.push(...childSchools);
+    schoolCount = childSchools.length;
   }
 
-  const { data: members, error: membersError } = await supabase
-    .from("org_memberships")
-    .select("profile_id")
-    .eq("org_id", parsed.data.orgId)
-    .eq("status", "active");
-  if (membersError) {
-    revalidatePath(`/orgs/${parsed.data.orgSlug}`);
-    return {
-      ok: false,
-      error:
-        "The announcement was published, but recipients could not be loaded for in-app updates.",
-    };
+  const published: { id: string; orgId: string; slug: string }[] = [];
+  for (const target of targets) {
+    const { data: announcement, error } = await supabase
+      .from("org_announcements")
+      .insert({
+        org_id: target.id,
+        title: parsed.data.title,
+        body: parsed.data.body,
+        created_by: profile.id,
+      })
+      .select("id")
+      .maybeSingle();
+    if (error || !announcement?.id) {
+      for (const slug of [
+        parsed.data.orgSlug,
+        ...published.map((row) => row.slug),
+      ]) {
+        revalidatePath(`/orgs/${slug}`);
+      }
+      return {
+        ok: false,
+        error: actionErrorMessage(
+          error,
+          published.length
+            ? "Part of the announcement published, but at least one school copy failed. Check each school overview and try again."
+            : "Could not publish the announcement. Try again.",
+          "You don’t have permission to publish announcements for this organization."
+        ),
+      };
+    }
+    published.push({
+      id: String(announcement.id),
+      orgId: target.id,
+      slug: target.slug,
+    });
   }
-  const recipients = (members ?? [])
-    .map((row) => row.profile_id as string)
-    .filter((id) => id !== profile.id);
-  if (recipients.length) {
-    const notifications = await createInAppNotifications(
-      recipients.map((recipientId) => ({
+
+  const notificationInputs: {
+    recipientId: string;
+    kind: "announcement";
+    title: string;
+    body: string;
+    href: string;
+    entityType: string;
+    entityId: string;
+    dedupeKey: string;
+  }[] = [];
+  const seenRecipients = new Set<string>();
+
+  for (const row of published) {
+    const { data: members, error: membersError } = await supabase
+      .from("org_memberships")
+      .select("profile_id")
+      .eq("org_id", row.orgId)
+      .eq("status", "active");
+    if (membersError) {
+      for (const item of published) {
+        revalidatePath(`/orgs/${item.slug}`);
+      }
+      revalidatePath("/me/notifications");
+      return {
+        ok: false,
+        error:
+          "The announcement was published, but recipients could not be loaded for in-app updates.",
+      };
+    }
+    for (const member of members ?? []) {
+      const recipientId = member.profile_id as string;
+      if (!recipientId || recipientId === profile.id) continue;
+      if (seenRecipients.has(recipientId)) continue;
+      seenRecipients.add(recipientId);
+      notificationInputs.push({
         recipientId,
-        kind: "announcement" as const,
+        kind: "announcement",
         title: parsed.data.title,
         body: parsed.data.body.slice(0, 240),
-        href: `/orgs/${parsed.data.orgSlug}`,
+        href: `/orgs/${row.slug}`,
         entityType: "org_announcement",
-        entityId: String(announcement.id),
-        dedupeKey: `announcement:${announcement.id}:${recipientId}`,
-      }))
-    );
+        entityId: row.id,
+        dedupeKey: `announcement:${row.id}:${recipientId}`,
+      });
+    }
+  }
+
+  if (notificationInputs.length) {
+    const notifications = await createInAppNotifications(notificationInputs);
     if (notifications.failures.length) {
-      revalidatePath(`/orgs/${parsed.data.orgSlug}`);
+      for (const item of published) {
+        revalidatePath(`/orgs/${item.slug}`);
+      }
       revalidatePath("/me/notifications");
       return {
         ok: false,
@@ -785,9 +894,13 @@ export async function publishOrganizationAnnouncement(input: {
     }
   }
 
-  revalidatePath(`/orgs/${parsed.data.orgSlug}`);
+  for (const item of published) {
+    revalidatePath(`/orgs/${item.slug}`);
+  }
   revalidatePath("/me/notifications");
-  return { ok: true };
+  return schoolCount
+    ? { ok: true, schoolCount }
+    : { ok: true };
 }
 
 export async function saveNotificationPreferences(
