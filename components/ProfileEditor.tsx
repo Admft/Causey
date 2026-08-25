@@ -55,6 +55,12 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   const [shortcut, setShortcut] = useState<DiscoveryCategory | "">(
     parseDiscoveryCategory(profile.preferred_competition_category) ?? ""
   );
+  const [grade, setGrade] = useState(
+    typeof profile.grade === "number" ? String(profile.grade) : ""
+  );
+  const [uscfId, setUscfId] = useState(profile.credential_ids.uscf ?? "");
+  const [nsdaId, setNsdaId] = useState(profile.credential_ids.nsda ?? "");
+  const [otherId, setOtherId] = useState(profile.credential_ids.other ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
@@ -94,6 +100,17 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       if (dateOfBirth) {
         ageBand = ageBandFromDateOfBirth(dateOfBirth);
       }
+      const credential_ids: Profile["credential_ids"] = {};
+      if (uscfId.trim()) credential_ids.uscf = uscfId.trim();
+      if (nsdaId.trim()) credential_ids.nsda = nsdaId.trim();
+      if (otherId.trim()) credential_ids.other = otherId.trim();
+      const parsedGrade = grade === "" ? null : Number(grade);
+      if (
+        parsedGrade !== null &&
+        (!Number.isInteger(parsedGrade) || parsedGrade < 0 || parsedGrade > 12)
+      ) {
+        throw new Error("Grade must be K through 12.");
+      }
       const update = ProfileEditableFieldsSchema.parse({
         display_name: displayName,
         date_of_birth: dateOfBirth || null,
@@ -104,6 +121,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           interests.has(category.id)
         ).map((category) => category.id),
         preferred_competition_category: shortcut || null,
+        grade: parsedGrade,
+        credential_ids,
         updated_at: new Date().toISOString(),
       });
       const supabase = createBrowserSupabaseClient();
@@ -158,6 +177,28 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             to keep it accurate.
           </span>
         ) : null}
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-semibold text-muted-strong">Grade</span>
+        <select
+          className="field"
+          value={grade}
+          onChange={(e) => {
+            setGrade(e.target.value);
+            setSaved(false);
+          }}
+        >
+          <option value="">Not set</option>
+          {Array.from({ length: 13 }, (_, n) => (
+            <option key={n} value={String(n)}>
+              {n === 0 ? "K" : `Grade ${n}`}
+            </option>
+          ))}
+        </select>
+        <span className="text-2xs text-muted">
+          Optional. Coaches in your clubs can see this on the roster. It is
+          not a live eligibility lookup.
+        </span>
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
@@ -234,6 +275,58 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           in. Separate from interests; choose None for no shortcut.
         </span>
       </label>
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-xs font-semibold text-muted-strong">
+          Membership numbers
+        </legend>
+        <p className="text-2xs text-muted">
+          Typed IDs only — Causey does not look up ratings or Tabroom records.
+        </p>
+        <label className="flex flex-col gap-1">
+          <span className="text-2xs font-semibold text-muted-strong">
+            US Chess ID
+          </span>
+          <input
+            className="field"
+            value={uscfId}
+            maxLength={40}
+            onChange={(e) => {
+              setUscfId(e.target.value);
+              setSaved(false);
+            }}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-2xs font-semibold text-muted-strong">
+            NSDA ID
+          </span>
+          <input
+            className="field"
+            value={nsdaId}
+            maxLength={40}
+            onChange={(e) => {
+              setNsdaId(e.target.value);
+              setSaved(false);
+            }}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-2xs font-semibold text-muted-strong">
+            Other ID
+          </span>
+          <input
+            className="field"
+            value={otherId}
+            maxLength={40}
+            placeholder="VEX, TAEA, school ID…"
+            onChange={(e) => {
+              setOtherId(e.target.value);
+              setSaved(false);
+            }}
+          />
+        </label>
+      </fieldset>
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">

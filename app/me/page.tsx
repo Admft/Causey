@@ -14,7 +14,7 @@ import {
   isUpcomingEvent,
 } from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { formatDateRange } from "@/lib/format";
+import { formatDateRange, formatRecordedResult } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -193,6 +193,18 @@ export default async function MePage() {
   const plans = new Map<string, TournamentPlan>();
   for (const row of entrantRows) {
     if (row.status === "going" && row.competition) {
+      addTournamentPlan(
+        plans,
+        row.competition_id,
+        row.competition,
+        "going"
+      );
+    }
+    if (
+      row.status === "attended" &&
+      row.competition &&
+      !isUpcomingEvent(row.competition, today)
+    ) {
       addTournamentPlan(
         plans,
         row.competition_id,
@@ -503,7 +515,16 @@ export default async function MePage() {
                   or payment.
                 </p>
                 <ul className="mt-2">
-                  {pastPlans.map((plan) => (
+                  {pastPlans.map((plan) => {
+                    const row = entrantRows.find(
+                      (entrant) => entrant.competition_id === plan.competitionId
+                    );
+                    const recorded = formatRecordedResult({
+                      placement: row?.placement,
+                      awardLabel: row?.award_label,
+                      sectionName: row?.section_name,
+                    });
+                    return (
                     <PortalListRow
                       key={plan.competitionId}
                       href={`/event/${plan.competition.slug}`}
@@ -511,9 +532,16 @@ export default async function MePage() {
                       meta={`${formatTournamentMeta(plan.competition)} · ${planStatus(
                         plan,
                         true
-                      )}`}
+                      )}${
+                        recorded
+                          ? ` · ${recorded}`
+                          : row?.status === "attended"
+                            ? " · result not recorded"
+                            : ""
+                      }`}
                     />
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             ) : null}

@@ -123,6 +123,21 @@ export class SupabaseDataSource implements DataSource {
     return directIds;
   }
 
+  private async clubGoingCompetitionIds(
+    client: SupabaseClient,
+    orgIds: Set<string>
+  ): Promise<Set<string>> {
+    if (!orgIds.size) return new Set();
+    const { data, error } = await client
+      .from("org_competition_attendance")
+      .select("competition_id")
+      .in("org_id", [...orgIds]);
+    if (error) return new Set();
+    return new Set(
+      (data ?? []).map((row) => row.competition_id as string)
+    );
+  }
+
   async searchCompetitions(filters: SearchFilters): Promise<CompetitionSearchPage> {
     const client = this.client();
     const limit = filters.limit ?? DEFAULT_SEARCH_LIMIT;
@@ -131,6 +146,12 @@ export class SupabaseDataSource implements DataSource {
       filters.zip ? this.getZip(filters.zip) : Promise.resolve(null),
       this.preferredOrgIds(client),
     ]);
+    const clubGoingIds = filters.club_going
+      ? await this.clubGoingCompetitionIds(client, preferredOrgIds)
+      : null;
+    if (clubGoingIds && clubGoingIds.size === 0) {
+      return { results: [], total: 0, limit, offset };
+    }
 
     if (origin) {
       return this.searchByRadius({
@@ -141,13 +162,17 @@ export class SupabaseDataSource implements DataSource {
         limit,
         offset,
         preferredOrgIds,
+        clubGoingIds,
       });
     }
 
     // Fast path: no geo sort needed — page in SQL using the requested rank.
     // Skip when JS filters need the full set (sections, name, featured).
     const canPageInSql =
-      !hasSectionFilters(filters) && !filters.q && !filters.featured;
+      !hasSectionFilters(filters) &&
+      !filters.q &&
+      !filters.featured &&
+      !filters.club_going;
     const shouldBoostMemberOrgs =
       canPageInSql &&
       preferredOrgIds.size > 0 &&
@@ -242,6 +267,10 @@ export class SupabaseDataSource implements DataSource {
       if (!parsed || seen.has(parsed.competition.id)) continue;
       seen.add(parsed.competition.id);
 
+      if (clubGoingIds && !clubGoingIds.has(parsed.competition.id)) {
+        continue;
+      }
+
       if (filters.featured) {
         const series =
           parsed.series && typeof parsed.series === "object"
@@ -306,12 +335,22 @@ export class SupabaseDataSource implements DataSource {
     limit: number;
     offset: number;
     preferredOrgIds: Set<string>;
+    clubGoingIds: Set<string> | null;
   }): Promise<CompetitionSearchPage> {
-    const { client, origin, radius, filters, limit, offset, preferredOrgIds } =
-      input;
+    const {
+      client,
+      origin,
+      radius,
+      filters,
+      limit,
+      offset,
+      preferredOrgIds,
+      clubGoingIds,
+    } = input;
     const needsJsWindow =
       hasSectionFilters(filters) ||
       Boolean(filters.featured) ||
+      Boolean(filters.club_going) ||
       preferredOrgIds.size > 0;
     const rpcLimit = needsJsWindow ? RADIUS_SCAN_CAP : Math.min(limit, RADIUS_SCAN_CAP);
     const rpcOffset = needsJsWindow ? 0 : offset;
@@ -368,6 +407,10 @@ export class SupabaseDataSource implements DataSource {
       if (!row) continue;
       const parsed = parseCompetitionRow(row);
       if (!parsed) continue;
+
+      if (clubGoingIds && !clubGoingIds.has(parsed.competition.id)) {
+        continue;
+      }
 
       if (filters.featured) {
         const series =

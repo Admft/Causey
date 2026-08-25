@@ -37,6 +37,7 @@ export interface FilterState {
   max_fee_dollars: string;
   date_from: string;
   date_to: string;
+  club_going: boolean;
 }
 
 export const EMPTY_FILTERS: FilterState = {
@@ -50,6 +51,7 @@ export const EMPTY_FILTERS: FilterState = {
   max_fee_dollars: "",
   date_from: "",
   date_to: "",
+  club_going: false,
 };
 
 // States with seeded events. Swap for a full state list once live data
@@ -94,11 +96,13 @@ export function SearchFilters({
   onChange,
   category = "chess",
   idPrefix = "filter",
+  clubGoingAvailable = false,
 }: {
   filters: FilterState;
   onChange: (next: FilterState) => void;
   category?: CompetitionCategory;
   idPrefix?: string;
+  clubGoingAvailable?: boolean;
 }) {
   const set = (key: keyof FilterState) => (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) =>
     onChange({ ...filters, [key]: e.target.value });
@@ -110,9 +114,14 @@ export function SearchFilters({
 
   const activeCount =
     (filters.featured ? 1 : 0) +
+    (filters.club_going ? 1 : 0) +
     (filters.timing !== "upcoming" ? 1 : 0) +
     Object.entries(filters).filter(
-      ([key, v]) => key !== "featured" && key !== "timing" && v !== ""
+      ([key, v]) =>
+        key !== "featured" &&
+        key !== "club_going" &&
+        key !== "timing" &&
+        v !== ""
     ).length;
   const active = activeCount > 0;
 
@@ -217,6 +226,23 @@ export function SearchFilters({
         >
           <FeaturedAwardMark className="h-5 w-5" />
           Featured only
+        </button>
+      ) : null}
+
+      {clubGoingAvailable ? (
+        <button
+          type="button"
+          aria-pressed={filters.club_going}
+          onClick={() =>
+            onChange({ ...filters, club_going: !filters.club_going })
+          }
+          className={`col-span-2 inline-flex items-center justify-center rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors lg:col-span-1 ${
+            filters.club_going
+              ? "border-brand-red/40 bg-accent-soft text-brand-red"
+              : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
+          }`}
+        >
+          My club is going
         </button>
       ) : null}
 
@@ -343,6 +369,9 @@ function activeChips(
   if (filters.featured) {
     chips.push({ key: "featured", label: "Featured only", value: "" });
   }
+  if (filters.club_going) {
+    chips.push({ key: "club_going", label: "My club is going", value: "" });
+  }
   const source = competitionSourceOptionsForCategory(category).find(
     (s) => s.value === filters.source
   );
@@ -400,7 +429,13 @@ export function ActiveFilterChips({
   if (chips.length === 0) return null;
 
   const remove = (chip: Chip) =>
-    onChange({ ...filters, [chip.key]: chip.value } as FilterState);
+    onChange({
+      ...filters,
+      [chip.key]:
+        chip.key === "featured" || chip.key === "club_going"
+          ? false
+          : chip.value,
+    } as FilterState);
 
   return (
     <div className="mb-5 flex flex-wrap items-center gap-2" aria-label="Active filters">

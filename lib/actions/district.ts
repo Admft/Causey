@@ -40,6 +40,16 @@ const OrgSettingsSchema = z.object({
   orgSlug: z.string().min(1),
   name: z.string().trim().min(2).max(80),
   state: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+  websiteUrl: z
+    .string()
+    .trim()
+    .max(200)
+    .refine(
+      (value) => value === "" || /^https?:\/\/.+/i.test(value),
+      "Website must start with http:// or https://."
+    )
+    .optional(),
+  meetingNote: z.string().trim().max(280).optional(),
 });
 
 const AnnouncementSchema = z.object({
@@ -154,6 +164,8 @@ export async function updateOrganizationSettings(input: {
   orgSlug: string;
   name: string;
   state: string;
+  websiteUrl?: string;
+  meetingNote?: string;
 }): Promise<ActionResult> {
   const parsed = OrgSettingsSchema.safeParse(input);
   if (!parsed.success) {
@@ -187,6 +199,20 @@ export async function updateOrganizationSettings(input: {
       {
         name: parsed.data.name,
         state: parsed.data.state,
+        ...(parsed.data.websiteUrl !== undefined
+          ? {
+              website_url: parsed.data.websiteUrl
+                ? parsed.data.websiteUrl
+                : null,
+            }
+          : {}),
+        ...(parsed.data.meetingNote !== undefined
+          ? {
+              meeting_note: parsed.data.meetingNote
+                ? parsed.data.meetingNote
+                : null,
+            }
+          : {}),
       },
       { count: "exact" }
     )
@@ -862,5 +888,95 @@ export async function markEntrantAttendance(input: {
     };
   }
   revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
+  return { ok: true };
+}
+
+export async function recordEntrantResult(input: {
+  competitionId: string;
+  profileId: string;
+  eventSlug: string;
+  sectionId: string | null;
+  placement: number | null;
+  awardLabel: string | null;
+}): Promise<ActionResult> {
+  const parsed = z
+    .object({
+      competitionId: z.string().uuid(),
+      profileId: z.string().uuid(),
+      eventSlug: z.string().min(1),
+      sectionId: z.string().uuid().nullable(),
+      placement: z.number().int().min(1).max(999).nullable(),
+      awardLabel: z.string().trim().max(80).nullable(),
+    })
+    .safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Check the division, place, or award." };
+  }
+  const user = await currentUserOrError();
+  if (!user.ok) return user;
+  const supabase = await createServerSupabaseClient();
+  const [managementCheck, entrantCheck] = await Promise.all([
+    supabase.rpc("can_manage_competition", {
+      p_competition_id: parsed.data.competitionId,
+      p_profile_id: user.id,
+    }),
+    supabase.rpc("can_invite_to_competition", {
+      p_competition_id: parsed.data.competitionId,
+      p_entrant_id: parsed.data.profileId,
+      p_inviter_id: user.id,
+    }),
+  ]);
+  const canManage = managementCheck.data === true || entrantCheck.data === true;
+  if (!canManage && managementCheck.error && entrantCheck.error) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        managementCheck.error,
+        "Could not verify result recording access."
+      ),
+    };
+  }
+  if (!canManage) {
+    return {
+      ok: false,
+      error: "Only competition staff can record a result.",
+    };
+  }
+
+  const award =
+    parsed.data.awardLabel && parsed.data.awardLabel.length
+      ? parsed.data.awardLabel
+      : null;
+  const hasPayload =
+    parsed.data.sectionId !== null ||
+    parsed.data.placement !== null ||
+    award !== null;
+  const { count, error } = await supabase
+    .from("competition_entrants")
+    .update(
+      {
+        section_id: parsed.data.sectionId,
+        placement: parsed.data.placement,
+        award_label: award,
+        result_marked_by: hasPayload ? user.id : null,
+        result_marked_at: hasPayload ? new Date().toISOString() : null,
+      },
+      { count: "exact" }
+    )
+    .eq("competition_id", parsed.data.competitionId)
+    .eq("profile_id", parsed.data.profileId);
+  if (error || count !== 1) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "That result could not be saved.",
+        "You don’t have permission to record a result for this student."
+      ),
+    };
+  }
+  revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
+  revalidatePath("/me");
+  revalidatePath("/family");
   return { ok: true };
 }

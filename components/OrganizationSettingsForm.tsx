@@ -28,6 +28,8 @@ export function OrganizationSettingsForm({
   const router = useRouter();
   const [name, setName] = useState(org.name);
   const [state, setState] = useState(org.state ?? "");
+  const [websiteUrl, setWebsiteUrl] = useState(org.website_url ?? "");
+  const [meetingNote, setMeetingNote] = useState(org.meeting_note ?? "");
   const [nextOwner, setNextOwner] = useState("");
   const [pending, setPending] = useState<"settings" | "owner" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -63,6 +65,8 @@ export function OrganizationSettingsForm({
         orgSlug: org.slug,
         name,
         state,
+        websiteUrl,
+        meetingNote,
       });
       if (!result.ok) {
         setError(result.error);
@@ -147,6 +151,35 @@ export function OrganizationSettingsForm({
               }
               required
               pattern="[A-Z]{2}"
+            />
+          </label>
+          <label>
+            <span className="text-xs font-semibold text-muted-strong">
+              Website
+            </span>
+            <input
+              className="field mt-1"
+              type="url"
+              value={websiteUrl}
+              onChange={(event) => setWebsiteUrl(event.target.value)}
+              placeholder="https://"
+              maxLength={200}
+            />
+            <span className="mt-1 block text-xs text-muted">
+              Members see this on the club overview. It is not a public
+              directory listing.
+            </span>
+          </label>
+          <label>
+            <span className="text-xs font-semibold text-muted-strong">
+              Meeting note
+            </span>
+            <textarea
+              className="field mt-1 min-h-20"
+              value={meetingNote}
+              onChange={(event) => setMeetingNote(event.target.value)}
+              maxLength={280}
+              placeholder="Tuesdays 4pm, room 12"
             />
           </label>
           <button

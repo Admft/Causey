@@ -4,6 +4,7 @@ import type {
   CompetitionAudience,
   CompetitionEntrant,
   EntrantStatus,
+  MemberCompetitionHistoryRow,
   Organization,
   OrgGroup,
   OrgMemberRole,
@@ -171,6 +172,9 @@ export type EntrantWithEvent = {
   profile_id: string;
   status: EntrantStatus;
   responded_by: string | null;
+  placement: number | null;
+  award_label: string | null;
+  section_name: string | null;
   competition: (Pick<
     OrgEventRow,
     "slug" | "name" | "city" | "state" | "start_date" | "end_date"
@@ -480,7 +484,7 @@ export async function getMyEntrantRows(
   const { data } = await supabase
     .from("competition_entrants")
     .select(
-      "competition_id, profile_id, status, responded_by, competitions(slug, name, city, state, start_date, end_date)"
+      "competition_id, profile_id, status, responded_by, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date)"
     )
     .eq("profile_id", userId);
 
@@ -489,6 +493,10 @@ export async function getMyEntrantRows(
     profile_id: row.profile_id as string,
     status: row.status as EntrantStatus,
     responded_by: row.responded_by as string | null,
+    placement: (row.placement as number | null) ?? null,
+    award_label: (row.award_label as string | null) ?? null,
+    section_name:
+      ((row.sections as unknown as { name: string } | null)?.name ?? null),
     competition:
       (row.competitions as unknown as EntrantWithEvent["competition"]) ?? null,
     registration_status: null as EntrantWithEvent["registration_status"],
@@ -555,7 +563,13 @@ export async function getEventAttendance(
     p_competition_id: competitionId,
   });
   if (error) return [];
-  return (data ?? []) as AttendanceRow[];
+  return ((data ?? []) as AttendanceRow[]).map((row) => ({
+    ...row,
+    section_id: row.section_id ?? null,
+    section_name: row.section_name ?? null,
+    placement: row.placement ?? null,
+    award_label: row.award_label ?? null,
+  }));
 }
 
 /** Actively linked children with their display names (parent viewers). */
@@ -592,8 +606,8 @@ export async function getEntrantsForCompetition(
 }
 
 /**
- * Roster via the get_org_roster RPC — the only roster path, so coaches
- * never see more than display_name + age_band (no DOB/zip/email).
+ * Roster via the get_org_roster RPC — display_name, age band, grade, and
+ * typed credential IDs only (no DOB/zip/email).
  */
 export async function getOrgRoster(orgId: string): Promise<RosterRow[]> {
   const supabase = await createServerSupabaseClient();
@@ -601,7 +615,32 @@ export async function getOrgRoster(orgId: string): Promise<RosterRow[]> {
     p_org_id: orgId,
   });
   if (error) return [];
-  return (data ?? []) as RosterRow[];
+  return ((data ?? []) as RosterRow[]).map((row) => ({
+    ...row,
+    grade: typeof row.grade === "number" ? row.grade : null,
+    credential_ids:
+      row.credential_ids &&
+      typeof row.credential_ids === "object" &&
+      !Array.isArray(row.credential_ids)
+        ? row.credential_ids
+        : {},
+  }));
+}
+
+export async function getOrgMemberCompetitionHistory(
+  orgId: string,
+  profileId: string
+): Promise<MemberCompetitionHistoryRow[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc(
+    "get_org_member_competition_history",
+    {
+      p_org_id: orgId,
+      p_profile_id: profileId,
+    }
+  );
+  if (error) return [];
+  return (data ?? []) as MemberCompetitionHistoryRow[];
 }
 
 export type RecommendTarget = {
@@ -823,7 +862,7 @@ export async function getChildrenWithEvents(
     supabase
       .from("competition_entrants")
       .select(
-        "competition_id, profile_id, status, responded_by, competitions(slug, name, city, state, start_date, end_date, reg_url)"
+        "competition_id, profile_id, status, responded_by, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date, reg_url)"
       )
       .in("profile_id", childIds),
     supabase
@@ -863,6 +902,11 @@ export async function getChildrenWithEvents(
           profile_id: row.profile_id as string,
           status: row.status as EntrantStatus,
           responded_by: row.responded_by as string | null,
+          placement: (row.placement as number | null) ?? null,
+          award_label: (row.award_label as string | null) ?? null,
+          section_name:
+            ((row.sections as unknown as { name: string } | null)?.name ??
+              null),
           competition,
           registration_status:
             registrationByKey.get(

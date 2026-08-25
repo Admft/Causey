@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { getDistrictParticipationReport } from "@/lib/data/district";
+import {
+  getDistrictParticipationReport,
+  getOrgSeasonAttendance,
+} from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
 
 export const dynamic = "force-dynamic";
@@ -26,9 +29,54 @@ export async function GET(
 
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) {
-    return NextResponse.json({ error: "District not found." }, { status: 404 });
+    return NextResponse.json({ error: "Organization not found." }, { status: 404 });
   }
-  if (view.org.type !== "district" || !view.isDistrictAdmin) {
+  if (!view.isAdmin) {
+    return NextResponse.json(
+      { error: "Only organization administrators can export this report." },
+      { status: 403 }
+    );
+  }
+
+  if (view.org.type !== "district") {
+    const attendance = await getOrgSeasonAttendance(view.org.id);
+    const header = [
+      "Student",
+      "Event",
+      "Date",
+      "Hosted or travel",
+      "Attendance",
+      "Division",
+      "Place",
+      "Award",
+    ];
+    const csv = [
+      header.map(csvCell).join(","),
+      ...attendance.map((row) =>
+        [
+          row.display_name || "Student",
+          row.name,
+          row.start_date,
+          row.hosted ? "Hosted" : "Travel",
+          row.status === "attended" ? "Attended" : "Did not attend",
+          row.section_name ?? "",
+          row.placement ?? "",
+          row.award_label ?? "",
+        ]
+          .map(csvCell)
+          .join(",")
+      ),
+    ].join("\r\n");
+    return new NextResponse(`\uFEFF${csv}\r\n`, {
+      headers: {
+        "Cache-Control": "private, no-store",
+        "Content-Disposition": `attachment; filename="${slug}-attendance.csv"`,
+        "Content-Type": "text/csv; charset=utf-8",
+      },
+    });
+  }
+
+  if (!view.isDistrictAdmin) {
     return NextResponse.json(
       { error: "Only district administrators can export this report." },
       { status: 403 }

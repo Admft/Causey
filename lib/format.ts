@@ -62,6 +62,38 @@ export function formatDateRangeWithWeekday(start: string, end: string | null): s
   return `${ws}, ${formatDate(start)} – ${we}, ${formatDate(end)}`;
 }
 
+function ordinalPlace(n: number): string {
+  const teens = n % 100;
+  if (teens >= 11 && teens <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
+/**
+ * Club-recorded outcome. Null means nothing was saved — not “did not place.”
+ */
+export function formatRecordedResult(input: {
+  placement?: number | null;
+  awardLabel?: string | null;
+  sectionName?: string | null;
+}): string | null {
+  const parts: string[] = [];
+  if (input.sectionName) parts.push(input.sectionName);
+  if (input.placement && input.placement >= 1) {
+    parts.push(`${ordinalPlace(input.placement)} place`);
+  }
+  if (input.awardLabel?.trim()) parts.push(input.awardLabel.trim());
+  return parts.length ? parts.join(" · ") : null;
+}
+
 /** Month + day pair for the card date chip. The start day anchors the range. */
 export function dateChipParts(start: string): { month: string; day: string } {
   const month = parseIsoDay(start)

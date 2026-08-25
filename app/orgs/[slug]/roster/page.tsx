@@ -15,7 +15,7 @@ import {
   getOrgRoster,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
-import { formatDate } from "@/lib/format";
+import { formatDate, gradeLabel } from "@/lib/format";
 import {
   OPEN_COMPETITIONS_LABEL,
   orgCompetitionsHref,
@@ -195,12 +195,20 @@ export default async function RosterPage({
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">
-                      {row.display_name || "Unnamed student"}
+                      <Link
+                        href={`/orgs/${org.slug}/roster/${row.profile_id}`}
+                        className="hover:text-brand-red"
+                      >
+                        {row.display_name || "Unnamed student"}
+                      </Link>
                     </p>
                     <p className="mt-0.5 text-xs text-muted">
                       {row.age_band
                         ? ageBandLabel(row.age_band as AgeBand)
                         : "Age not set"}
+                      {typeof row.grade === "number"
+                        ? ` · Grade ${gradeLabel(row.grade)}`
+                        : ""}
                       {` · joined ${formatDate(row.joined_at.slice(0, 10))}`}
                     </p>
                   </div>

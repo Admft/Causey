@@ -42,7 +42,12 @@ function staffRoleLabel(
   return null;
 }
 
-export default async function OrgsPage() {
+export default async function OrgsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ left?: string }>;
+}) {
+  const leftClub = (await searchParams)?.left === "1";
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
@@ -178,6 +183,18 @@ export default async function OrgsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
+      {leftClub ? (
+        <p
+          className="mb-6 rounded-xl border border-accent/25 bg-accent-soft p-4 text-sm text-foreground"
+          role="status"
+        >
+          You left that club. Join another with a code below, or{" "}
+          <Link href="/me" className="font-semibold text-brand-red hover:underline">
+            open Plan
+          </Link>
+          .
+        </p>
+      ) : null}
       {isStaffWorkspace ? (
         <>
           <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">

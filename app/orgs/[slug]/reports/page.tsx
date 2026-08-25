@@ -12,6 +12,7 @@ import {
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
+import { formatDateRange, formatRecordedResult } from "@/lib/format";
 import {
   OPEN_COMPETITIONS_LABEL,
   orgCompetitionsHref,
@@ -81,7 +82,7 @@ export default async function OrganizationReportsPage({
         <p className="mt-2 max-w-2xl text-sm text-muted">
           {view.isDistrictAdmin
             ? "School-hosted and district-hosted activity stay separate. This aggregate view does not expose students’ private searches, saves, or browsing activity."
-            : "Review attendance outcomes for organization-hosted tournaments this calendar year."}
+            : "Review who attended events this club hosted or marked as attending this calendar year, plus any place or award a coach recorded."}
         </p>
         {view.isDistrictAdmin &&
         !districtReportError &&
@@ -91,6 +92,13 @@ export default async function OrganizationReportsPage({
             className="mt-5 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
           >
             Download participation CSV
+          </a>
+        ) : !view.isDistrictAdmin && attendance.length ? (
+          <a
+            href={`/orgs/${view.org.slug}/reports/export`}
+            className="mt-5 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+          >
+            Download attendance CSV
           </a>
         ) : null}
 
@@ -237,7 +245,7 @@ export default async function OrganizationReportsPage({
               {!attendance.length ? (
                 <PortalEmptyState
                   title="No attendance has been recorded"
-                  description="Attendance appears here after a coach marks outcomes on a past hosted competition."
+                  description="Attendance appears here after a coach marks outcomes on a past hosted event or a public event this club marked as attending."
                   action={{
                     href: orgCompetitionsHref(view.org.slug),
                     label: OPEN_COMPETITIONS_LABEL,
@@ -245,22 +253,38 @@ export default async function OrganizationReportsPage({
                 />
               ) : (
                 <ul className="mt-4 divide-y divide-line border-y border-line">
-                  {attendance.map((row) => (
+                  {attendance.map((row) => {
+                    const recorded = formatRecordedResult({
+                      placement: row.placement,
+                      awardLabel: row.award_label,
+                      sectionName: row.section_name,
+                    });
+                    return (
                     <li
                       key={`${row.competition_id}-${row.profile_id}`}
                       className="flex flex-wrap items-baseline justify-between gap-3 py-3"
                     >
                       <span className="text-sm text-foreground">
                         <strong className="font-semibold">
-                          {row.profiles?.display_name ?? "Student"}
+                          {row.display_name || "Student"}
                         </strong>{" "}
-                        · {row.competitions?.name ?? "Tournament"}
+                        · {row.name}
+                        {row.hosted ? "" : " · travel"}
+                        {row.start_date
+                          ? ` · ${formatDateRange(row.start_date, null)}`
+                          : ""}
                       </span>
                       <span className="text-xs font-semibold text-muted-strong">
                         {row.status === "attended" ? "Attended" : "Did not attend"}
+                        {recorded
+                          ? ` · ${recorded}`
+                          : row.status === "attended"
+                            ? " · result not recorded"
+                            : ""}
                       </span>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               )}
             </section>

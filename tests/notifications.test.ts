@@ -152,6 +152,9 @@ function childSummary(
         profile_id: profileId,
         status: options?.status ?? "invited",
         responded_by: null,
+        placement: null,
+        award_label: null,
+        section_name: null,
         registration_status: options?.registrationStatus ?? null,
         competition: {
           slug: "spring-open",

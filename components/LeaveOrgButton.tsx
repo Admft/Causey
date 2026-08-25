@@ -19,7 +19,7 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
         setError(result.error);
         return;
       }
-      router.push("/orgs");
+      router.push("/orgs?left=1");
       router.refresh();
     } finally {
       setPending(false);
@@ -28,7 +28,7 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
 
   if (confirming) {
     return (
-      <span className="flex items-center gap-2 text-sm">
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <button
           type="button"
           onClick={onLeave}
@@ -46,9 +46,14 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
         </button>
         {error ? (
           <span className="font-medium text-brand-red" role="alert">
-            {error}
+            {error} You’re still a member.
           </span>
-        ) : null}
+        ) : (
+          <span className="basis-full text-xs text-muted">
+            You’ll return to My organizations. Join another club from there, or
+            open Plan.
+          </span>
+        )}
       </span>
     );
   }

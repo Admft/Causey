@@ -426,6 +426,23 @@ export default async function OrgPage({
             ? " · part of a district"
             : ""}
         </p>
+        {org.website_url || org.meeting_note ? (
+          <p className="mt-3 max-w-prose text-sm text-muted">
+            {org.meeting_note ? org.meeting_note : null}
+            {org.meeting_note && org.website_url ? " · " : null}
+            {org.website_url ? (
+              <a
+                href={org.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open club website (opens in a new tab)"
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Club website
+              </a>
+            ) : null}
+          </p>
+        ) : null}
 
         {isAdmin && org.verification_status === "pending" ? (
           <p

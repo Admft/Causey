@@ -69,9 +69,8 @@ describe("two-district tenant isolation", () => {
     expect(districtHostedSql).toContain(
       "where competition.org_id = p_district_id"
     );
-    expect(exportRoute).toContain(
-      "view.org.type !== \"district\" || !view.isDistrictAdmin"
-    );
+    expect(exportRoute).toContain("if (view.org.type !== \"district\")");
+    expect(exportRoute).toContain("if (!view.isDistrictAdmin)");
     expect(exportRoute).toContain(
       "getDistrictParticipationReport(view.org.id)"
     );

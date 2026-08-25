@@ -57,10 +57,26 @@ export type Profile = {
   zip: string | null;
   interests: string[];
   preferred_competition_category: PublicCompetitionCategory | null;
+  grade: number | null;
+  credential_ids: {
+    uscf?: string;
+    nsda?: string;
+    other?: string;
+  };
   role_unlocked: boolean;
   created_at: string;
   updated_at: string;
 };
+
+const CredentialIdValueSchema = z.string().trim().max(40);
+
+export const CredentialIdsSchema = z
+  .object({
+    uscf: CredentialIdValueSchema.optional(),
+    nsda: CredentialIdValueSchema.optional(),
+    other: CredentialIdValueSchema.optional(),
+  })
+  .strict();
 
 export const ProfileEditableFieldsSchema = z.object({
   display_name: z.string().trim().min(1).max(120),
@@ -70,6 +86,8 @@ export const ProfileEditableFieldsSchema = z.object({
   zip: z.string().regex(/^\d{5}$/).nullable(),
   interests: z.array(PublicCompetitionCategorySchema).max(5),
   preferred_competition_category: PublicCompetitionCategorySchema.nullable(),
+  grade: z.number().int().min(0).max(12).nullable(),
+  credential_ids: CredentialIdsSchema,
   updated_at: z.string().datetime({ offset: true }),
 });
 

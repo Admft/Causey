@@ -83,6 +83,7 @@ function readParams(params: URLSearchParams): SearchInputState {
       state: params.get("state") ?? "",
       source: params.get("source") ?? "",
       featured: params.get("featured") === "1",
+      club_going: params.get("club_going") === "1",
       timing: parseTiming(params.get("timing")),
       grade_band: params.get("grade_band") ?? "",
       rating_band: params.get("rating_band") ?? "",
@@ -108,6 +109,7 @@ function queryFromState(
   if (state.filters.state) p.set("state", state.filters.state);
   if (state.filters.source) p.set("source", state.filters.source);
   if (state.filters.featured) p.set("featured", "1");
+  if (state.filters.club_going) p.set("club_going", "1");
   if (state.filters.timing !== "upcoming") {
     p.set("timing", state.filters.timing);
   }
@@ -134,8 +136,10 @@ function parseTiming(raw: string | null): FilterState["timing"] {
 
 export function SearchClient({
   category,
+  clubGoingAvailable = false,
 }: {
   category: DiscoveryCategory;
+  clubGoingAvailable?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -353,6 +357,7 @@ export function SearchClient({
               onChange={setFilters}
               category={category}
               idPrefix="mobile-filter"
+              clubGoingAvailable={clubGoingAvailable}
             />
           </div>
           {/* One search cluster: name it, or place it. Keyword applies as you
@@ -443,6 +448,7 @@ export function SearchClient({
                 onChange={setFilters}
                 category={category}
                 idPrefix="desktop-filter"
+                clubGoingAvailable={clubGoingAvailable}
               />
             </div>
           </aside>

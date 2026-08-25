@@ -18,7 +18,7 @@ import {
   isUpcomingEvent,
   type EntrantWithEvent,
 } from "@/lib/data/portal";
-import { formatDateRange } from "@/lib/format";
+import { formatDateRange, formatRecordedResult } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -381,10 +381,14 @@ export default async function FamilyPage() {
             </section>
           ) : null}
 
-          {childrenByPriority.map((child) => {
+              {childrenByPriority.map((child) => {
             const answered = child.upcoming.filter(
               (row) =>
                 row.status !== "invited" && !needsOrganizerRegistration(row)
+            );
+            const past = child.entrants.filter(
+              (row) =>
+                row.competition && !isUpcomingEvent(row.competition, today)
             );
             return (
               <section
@@ -417,11 +421,11 @@ export default async function FamilyPage() {
                     : "Not in any club yet."}
                 </p>
 
-                {!child.upcoming.length ? (
+                {!child.upcoming.length && !past.length ? (
                   <p className="mt-4 text-sm text-muted">
                     No upcoming tournament invites.
                   </p>
-                ) : answered.length ? (
+                ) : !child.upcoming.length ? null : answered.length ? (
                   <div className="mt-4">
                     <h3 className="text-xs font-semibold text-muted-strong">
                       Settled upcoming
@@ -456,6 +460,46 @@ export default async function FamilyPage() {
                           }
                         />
                       ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {past.length ? (
+                  <div className="mt-6">
+                    <h3 className="text-xs font-semibold text-muted-strong">
+                      Past
+                    </h3>
+                    <ul className="mt-1">
+                      {past.map((row) => {
+                        const recorded = formatRecordedResult({
+                          placement: row.placement,
+                          awardLabel: row.award_label,
+                          sectionName: row.section_name,
+                        });
+                        return (
+                          <PortalListRow
+                            key={row.competition_id}
+                            href={`/event/${row.competition!.slug}`}
+                            title={row.competition!.name}
+                            meta={`${formatDateRange(
+                              row.competition!.start_date,
+                              row.competition!.end_date
+                            )} · ${
+                              row.status === "attended"
+                                ? "Attended"
+                                : row.status === "did_not_attend"
+                                  ? "Did not attend"
+                                  : "Planned"
+                            }${
+                              recorded
+                                ? ` · ${recorded}`
+                                : row.status === "attended"
+                                  ? " · result not recorded"
+                                  : ""
+                            }`}
+                          />
+                        );
+                      })}
                     </ul>
                   </div>
                 ) : null}

@@ -429,6 +429,14 @@ export const SearchFiltersSchema = z.object({
    * all = both. End date is end_date ?? start_date.
    */
   timing: z.enum(["upcoming", "ended", "all"]).optional().default("upcoming"),
+  /**
+   * Signed-in filter: events any of the viewer’s clubs marked as attending.
+   * Unsigned or mock search ignores this.
+   */
+  club_going: z
+    .union([z.literal("1"), z.literal("true"), z.boolean()])
+    .optional()
+    .transform((v) => v === true || v === "1" || v === "true"),
   /** Popular defaults to real saved/registration interest; soonest is explicit. */
   sort: SearchSortSchema.optional().default("popular"),
   /** Page size for tile loading. Defaults to 20; max 100. */

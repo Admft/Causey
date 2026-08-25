@@ -88,17 +88,17 @@ export type NotificationPreferenceRow = {
 
 export type OrgSeasonAttendanceRow = {
   competition_id: string;
+  slug: string;
+  name: string;
+  start_date: string;
+  hosted: boolean;
   profile_id: string;
+  display_name: string;
   status: "attended" | "did_not_attend";
   attendance_marked_at: string | null;
-  competitions: {
-    slug: string;
-    name: string;
-    start_date: string;
-  } | null;
-  profiles: {
-    display_name: string;
-  } | null;
+  section_name: string | null;
+  placement: number | null;
+  award_label: string | null;
 };
 
 export type NotificationRow = {
@@ -354,17 +354,11 @@ export async function getOrgSeasonAttendance(
   orgId: string
 ): Promise<OrgSeasonAttendanceRow[]> {
   const supabase = await createServerSupabaseClient();
-  const startOfYear = `${new Date().getFullYear()}-01-01`;
-  const { data } = await supabase
-    .from("competition_entrants")
-    .select(
-      "competition_id, profile_id, status, attendance_marked_at, competitions!inner(slug, name, start_date, org_id), profiles(display_name)"
-    )
-    .eq("competitions.org_id", orgId)
-    .gte("competitions.start_date", startOfYear)
-    .in("status", ["attended", "did_not_attend"])
-    .order("attendance_marked_at", { ascending: false });
-  return (data ?? []) as unknown as OrgSeasonAttendanceRow[];
+  const { data, error } = await supabase.rpc("get_org_season_attendance", {
+    p_org_id: orgId,
+  });
+  if (error) return [];
+  return (data ?? []) as OrgSeasonAttendanceRow[];
 }
 
 export async function getNotificationPreferences(

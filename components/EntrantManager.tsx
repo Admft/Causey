@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { inviteEntrants, inviteGroup, removeEntrant } from "@/lib/actions/entrants";
-import { markEntrantAttendance } from "@/lib/actions/district";
+import {
+  markEntrantAttendance,
+  recordEntrantResult,
+} from "@/lib/actions/district";
+import { formatRecordedResult } from "@/lib/format";
 
 type Candidate = { profile_id: string; display_name: string };
 type GroupOption = { id: string; name: string; memberCount: number };
@@ -327,6 +331,155 @@ export function AttendanceButtons({
         >
           Did not attend
         </button>
+      </div>
+      {error ? (
+        <span className="text-xs font-medium text-brand-red" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+type ResultSection = { id: string; name: string };
+
+export function ResultForm({
+  competitionId,
+  eventSlug,
+  profileId,
+  sections,
+  sectionId,
+  placement,
+  awardLabel,
+}: {
+  competitionId: string;
+  eventSlug: string;
+  profileId: string;
+  sections: ResultSection[];
+  sectionId: string | null;
+  placement: number | null;
+  awardLabel: string | null;
+}) {
+  const router = useRouter();
+  const [division, setDivision] = useState(sectionId ?? "");
+  const [place, setPlace] = useState(placement ? String(placement) : "");
+  const [award, setAward] = useState(awardLabel ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const recorded = formatRecordedResult({
+    placement,
+    awardLabel,
+    sectionName: sections.find((section) => section.id === sectionId)?.name ?? null,
+  });
+
+  function save() {
+    setError(null);
+    const parsedPlace = place.trim() ? Number(place.trim()) : null;
+    if (place.trim() && (!Number.isInteger(parsedPlace) || (parsedPlace ?? 0) < 1)) {
+      setError("Place must be a whole number starting at 1.");
+      return;
+    }
+    startTransition(async () => {
+      const result = await recordEntrantResult({
+        competitionId,
+        eventSlug,
+        profileId,
+        sectionId: division || null,
+        placement: parsedPlace,
+        awardLabel: award.trim() ? award.trim() : null,
+      });
+      if (!result.ok) setError(result.error);
+      router.refresh();
+    });
+  }
+
+  function clearResult() {
+    setError(null);
+    setDivision("");
+    setPlace("");
+    setAward("");
+    startTransition(async () => {
+      const result = await recordEntrantResult({
+        competitionId,
+        eventSlug,
+        profileId,
+        sectionId: null,
+        placement: null,
+        awardLabel: null,
+      });
+      if (!result.ok) setError(result.error);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="mt-2 flex flex-col gap-2 sm:items-end">
+      {recorded ? (
+        <p className="text-xs text-muted">{recorded}</p>
+      ) : (
+        <p className="text-xs text-muted">Result not recorded</p>
+      )}
+      <div className="flex flex-wrap items-end gap-2">
+        {sections.length ? (
+          <label className="flex min-w-32 flex-col gap-1">
+            <span className="text-2xs font-semibold text-muted-strong">
+              Division
+            </span>
+            <select
+              className="field"
+              value={division}
+              disabled={isPending}
+              onChange={(event) => setDivision(event.target.value)}
+            >
+              <option value="">Not set</option>
+              {sections.map((section) => (
+                <option key={section.id} value={section.id}>
+                  {section.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <label className="flex w-20 flex-col gap-1">
+          <span className="text-2xs font-semibold text-muted-strong">Place</span>
+          <input
+            className="field"
+            inputMode="numeric"
+            value={place}
+            disabled={isPending}
+            placeholder="2"
+            onChange={(event) => setPlace(event.target.value)}
+          />
+        </label>
+        <label className="flex min-w-36 flex-1 flex-col gap-1">
+          <span className="text-2xs font-semibold text-muted-strong">Award</span>
+          <input
+            className="field"
+            value={award}
+            disabled={isPending}
+            maxLength={80}
+            placeholder="Broke to elims"
+            onChange={(event) => setAward(event.target.value)}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={save}
+          disabled={isPending}
+          className="cta-enabled min-h-10 disabled:opacity-60"
+        >
+          {isPending ? "Saving…" : "Record a result"}
+        </button>
+        {recorded ? (
+          <button
+            type="button"
+            onClick={clearResult}
+            disabled={isPending}
+            className="min-h-10 text-sm font-medium text-muted-strong hover:text-brand-red disabled:opacity-60"
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
       {error ? (
         <span className="text-xs font-medium text-brand-red" role="alert">

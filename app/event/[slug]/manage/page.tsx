@@ -5,6 +5,7 @@ import {
   AttendanceButtons,
   EntrantManager,
   RemoveEntrantButton,
+  ResultForm,
 } from "@/components/EntrantManager";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PortalMission } from "@/components/PortalPrimitives";
@@ -92,10 +93,21 @@ export default async function ManageEventPage({
   const isDraft = canManage && competition.status === "draft";
   const needsInvite = !isDraft && !attendance.length;
   const needsReplies = !isDraft && summary.awaiting > 0;
+  const missingResults = attendance.filter(
+    (row) =>
+      row.status === "attended" &&
+      row.placement == null &&
+      !row.award_label &&
+      !row.section_id
+  ).length;
   const inviteFirst =
     !isDraft &&
     (needsInvite ||
       (candidates.length > 0 && !needsReplies && !isPast));
+  const resultSections = competition.sections.map((section) => ({
+    id: section.id,
+    name: section.name,
+  }));
 
   // Keep coaches inside the org workspace shell (subnav + roster deep link).
   let orgShell: {
@@ -167,12 +179,21 @@ export default async function ManageEventPage({
       },
       secondary: { href: workspaceHref, label: "Back to workspace" },
     };
+  } else if (isPast && missingResults > 0) {
+    mission = {
+      title: "Record a result",
+      description: `${missingResults} ${
+        missingResults === 1 ? "student attended" : "students attended"
+      } without a place or award yet. Absence here means not recorded, not that they did not place.`,
+      action: { href: "#rsvps", label: "Record a result" },
+      secondary: { href: workspaceHref, label: "Back to workspace" },
+    };
   } else if (isPast) {
     mission = {
       title: "Mark who attended",
       description: `${summary.going} ${
         summary.going === 1 ? "student was" : "students were"
-      } marked going. Record attendance for your season records.`,
+      } marked going. Record attendance, then a place or award if you have one.`,
       action: { href: "#rsvps", label: "Review attendance" },
       secondary: { href: workspaceHref, label: "Back to workspace" },
     };
@@ -280,12 +301,25 @@ export default async function ManageEventPage({
               </div>
               <div className="sm:shrink-0">
                 {isPast ? (
-                  <AttendanceButtons
-                    competitionId={competition.id}
-                    eventSlug={competition.slug}
-                    profileId={row.profile_id}
-                    status={row.status}
-                  />
+                  <div className="flex flex-col items-stretch gap-2 sm:items-end">
+                    <AttendanceButtons
+                      competitionId={competition.id}
+                      eventSlug={competition.slug}
+                      profileId={row.profile_id}
+                      status={row.status}
+                    />
+                    {row.status === "attended" ? (
+                      <ResultForm
+                        competitionId={competition.id}
+                        eventSlug={competition.slug}
+                        profileId={row.profile_id}
+                        sections={resultSections}
+                        sectionId={row.section_id}
+                        placement={row.placement}
+                        awardLabel={row.award_label}
+                      />
+                    ) : null}
+                  </div>
                 ) : (
                   <RemoveEntrantButton
                     competitionId={competition.id}

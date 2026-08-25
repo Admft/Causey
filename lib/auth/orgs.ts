@@ -37,6 +37,8 @@ export type Organization = {
   verified_by: string | null;
   join_code: string | null;
   join_code_rotated_at: string | null;
+  website_url: string | null;
+  meeting_note: string | null;
 };
 
 export type OrgMembership = {
@@ -70,6 +72,11 @@ export type CompetitionEntrant = {
   responded_at: string | null;
   attendance_marked_by: string | null;
   attendance_marked_at: string | null;
+  section_id: string | null;
+  placement: number | null;
+  award_label: string | null;
+  result_marked_by: string | null;
+  result_marked_at: string | null;
   created_at: string;
 };
 
@@ -82,11 +89,19 @@ export type HouseholdLink = {
   created_at: string;
 };
 
+export type CredentialIds = {
+  uscf?: string;
+  nsda?: string;
+  other?: string;
+};
+
 /** Return shape of the get_org_roster RPC (deliberately PII-light). */
 export type RosterRow = {
   profile_id: string;
   display_name: string;
   age_band: string | null;
+  grade: number | null;
+  credential_ids: CredentialIds;
   member_role: OrgMemberRole;
   member_status: OrgMemberStatus;
   joined_at: string;
@@ -99,6 +114,24 @@ export type AttendanceRow = {
   status: EntrantStatus;
   responded_at: string | null;
   member_status: OrgMemberStatus;
+  section_id: string | null;
+  section_name: string | null;
+  placement: number | null;
+  award_label: string | null;
+};
+
+/** Return shape of get_org_member_competition_history. */
+export type MemberCompetitionHistoryRow = {
+  competition_id: string;
+  slug: string;
+  name: string;
+  category: string;
+  start_date: string;
+  end_date: string | null;
+  status: EntrantStatus;
+  section_name: string | null;
+  placement: number | null;
+  award_label: string | null;
 };
 
 export const ORG_TYPE_OPTIONS: { value: OrganizationType; label: string }[] = [

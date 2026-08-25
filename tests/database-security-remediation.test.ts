@@ -137,8 +137,36 @@ describe("effective database security remediation", () => {
     expect(guard.sql).toContain(
       "public.can_invite_to_competition("
     );
+    expect(guard.sql).toContain("entrant_result_update_not_authorized");
+    expect(guard.sql).toContain("entrant_identity_fields_locked");
+    expect(guard.sql).toContain("result_marked_by is distinct from actor");
     expect(remediation).toContain("attendance_marked_by,");
     expect(remediation).toContain("attendance_marked_at");
+  });
+
+  it("lets managers record club-scoped results without opening identity fields", () => {
+    const results = readFileSync(
+      resolve(migrationsDirectory, "0064_entrant_results.sql"),
+      "utf8"
+    );
+    const attendance = effectiveFunction("get_event_attendance");
+    const history = effectiveFunction(
+      "get_org_member_competition_history"
+    );
+    expect(attendance.file).toBe("0064_entrant_results.sql");
+    expect(attendance.sql).toContain(
+      "public.can_operate_org_competitions("
+    );
+    expect(attendance.sql).toContain("entrant.placement");
+    expect(attendance.sql).toContain("entrant.award_label");
+    expect(history.sql).toContain("public.is_parent_of(actor, p_profile_id)");
+    expect(history.sql).not.toContain("date_of_birth");
+    expect(history.sql).not.toContain("email");
+    expect(results).toContain("section_id,");
+    expect(results).toContain("placement,");
+    expect(results).toContain("award_label,");
+    expect(results).toContain("result_marked_by,");
+    expect(results).toContain("result_marked_at");
   });
 
   it("refreshes grants, cover validation, and stale lease recovery", () => {

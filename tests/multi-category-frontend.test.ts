@@ -214,7 +214,7 @@ describe("generalized links and return paths", () => {
     expect(searchClient).toContain("category: DiscoveryCategory");
     expect(searchClient).not.toContain('category = "chess"');
     expect(read("app/chess/page.tsx")).toContain(
-      '<SearchClient category="chess" />'
+      'category="chess"'
     );
   });
 
