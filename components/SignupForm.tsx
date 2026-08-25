@@ -9,8 +9,9 @@ import {
   parseDateOnly,
 } from "@/lib/auth/age-band";
 import { homePathForRole } from "@/lib/auth/home-path";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { ROLE_OPTIONS, type AccountRole, type AgeBand } from "@/lib/auth/types";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { assertSignupAllowed } from "@/lib/actions/signup-guard";
 import {
   DISCOVERY_CATEGORIES,
   type DiscoveryCategory,
@@ -53,6 +54,7 @@ const SAFE_SIGNUP_ERRORS = new Set([
   "Enter a valid date of birth.",
   "Date of birth can’t be in the future.",
   "Zip must be 5 digits.",
+  "That action is happening too often. Wait a minute and try again.",
 ]);
 
 export function SignupForm({
@@ -131,6 +133,10 @@ export function SignupForm({
       const selectedInterests = DISCOVERY_CATEGORIES.filter((category) =>
         interests.has(category.id)
       ).map((category) => category.id);
+      const signupGate = await assertSignupAllowed();
+      if (!signupGate.ok) {
+        throw new Error(signupGate.error);
+      }
       const supabase = createBrowserSupabaseClient();
       const origin = window.location.origin;
       const callbackUrl = new URL("/auth/callback", origin);

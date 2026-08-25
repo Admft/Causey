@@ -119,10 +119,17 @@ export default function PrivacyPage() {
             >
               Account settings
             </Link>
-            . Parents and students can manage family links there. Requests to
-            access, correct, export, or delete account data require direct
-            support while self-service export and deletion are still being
-            built.
+            . Parents and students can manage family links there. Signed-in
+            users can download a JSON copy of their account from{" "}
+            <Link
+              href="/account#data"
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Your data
+            </Link>{" "}
+            and can delete the account after typing their email. Organization
+            owners must transfer ownership first. Founder super-admin accounts
+            cannot be self-deleted.
           </p>
         </section>
 

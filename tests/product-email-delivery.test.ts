@@ -38,6 +38,7 @@ describe("product email delivery", () => {
   it("protects and schedules the product email worker", () => {
     expect(cronRoute).toContain("timingSafeEqual");
     expect(cronRoute).toContain("process.env.CRON_SECRET");
+    expect(cronRoute).toContain("while (Date.now() < deadline)");
     expect(vercelConfig).toContain("/api/cron/product-email");
   });
 });

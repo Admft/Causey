@@ -14,10 +14,8 @@ import {
 } from "@/lib/schemas";
 import {
   buildCompetitionResult,
-  haversineMiles,
   paginateResults,
   parseCompetitionRow,
-  radiusBoundingBox,
   sortCompetitionResults,
 } from "@/lib/data/search";
 import { competitionIsFeatured } from "@/lib/event-standing";
@@ -30,14 +28,25 @@ import type {
   DataSource,
 } from "@/lib/data/types";
 
+let qualificationRulesCache: { at: number; rules: QualificationRule[] } | null =
+  null;
+const QUALIFICATION_RULES_TTL_MS = 5 * 60 * 1000;
+const RADIUS_SCAN_CAP = 200;
+
+type RadiusHit = {
+  id: string;
+  distance_miles: number | null;
+  total_count: number | string;
+};
+
 /**
  * Supabase DataSource. Selected with DATA_SOURCE=supabase; requires
  * NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.
  *
- * Coarse predicates (status, state, date, optional lat/lng box) are pushed
- * into SQL. Without a zip we page in SQL (limit/offset). With a zip we bound
- * the box then sort by distance in JS and page. Section eligibility matching
- * is shared with mock mode via lib/data/filtering.ts.
+ * Coarse predicates (status, state, date) are pushed into SQL. Zip search
+ * uses search_competitions_in_radius (earthdistance). Without a zip we page
+ * in SQL. Section eligibility matching is shared with mock mode via
+ * lib/data/filtering.ts.
  */
 
 function requireClient() {
@@ -122,12 +131,23 @@ export class SupabaseDataSource implements DataSource {
       filters.zip ? this.getZip(filters.zip) : Promise.resolve(null),
       this.preferredOrgIds(client),
     ]);
-    const radius = filters.radius_miles ?? 50;
+
+    if (origin) {
+      return this.searchByRadius({
+        client,
+        origin,
+        radius: filters.radius_miles ?? 50,
+        filters,
+        limit,
+        offset,
+        preferredOrgIds,
+      });
+    }
 
     // Fast path: no geo sort needed — page in SQL using the requested rank.
     // Skip when JS filters need the full set (sections, name, featured).
     const canPageInSql =
-      !origin && !hasSectionFilters(filters) && !filters.q && !filters.featured;
+      !hasSectionFilters(filters) && !filters.q && !filters.featured;
     const shouldBoostMemberOrgs =
       canPageInSql &&
       preferredOrgIds.size > 0 &&
@@ -159,15 +179,6 @@ export class SupabaseDataSource implements DataSource {
       query = query.or(
         `end_date.lt.${today},and(end_date.is.null,start_date.lt.${today})`
       );
-    }
-
-    if (origin) {
-      const box = radiusBoundingBox(origin.lat, origin.lng, radius);
-      query = query
-        .gte("lat", box.minLat)
-        .lte("lat", box.maxLat)
-        .gte("lng", box.minLng)
-        .lte("lng", box.maxLng);
     }
 
     if (canPageInSql) {
@@ -248,29 +259,11 @@ export class SupabaseDataSource implements DataSource {
         }
       }
 
-      let distance_miles: number | null = null;
-      if (origin) {
-        if (
-          parsed.competition.lat !== null &&
-          parsed.competition.lng !== null
-        ) {
-          distance_miles = haversineMiles(
-            origin.lat,
-            origin.lng,
-            parsed.competition.lat,
-            parsed.competition.lng
-          );
-          if (distance_miles > radius) continue;
-        } else if (parsed.competition.participation_mode !== "online") {
-          continue;
-        }
-      }
-
       const hit = buildCompetitionResult({
         competition: parsed.competition,
         sections: parsed.sections,
         series: parsed.series,
-        distance_miles,
+        distance_miles: null,
         filters,
       });
       if (hit) {
@@ -303,6 +296,125 @@ export class SupabaseDataSource implements DataSource {
 
     sortCompetitionResults(results, filters, preferredOrgIds);
     return paginateResults(results, { ...filters, limit, offset });
+  }
+
+  private async searchByRadius(input: {
+    client: SupabaseClient;
+    origin: ZipRow;
+    radius: number;
+    filters: SearchFilters;
+    limit: number;
+    offset: number;
+    preferredOrgIds: Set<string>;
+  }): Promise<CompetitionSearchPage> {
+    const { client, origin, radius, filters, limit, offset, preferredOrgIds } =
+      input;
+    const needsJsWindow =
+      hasSectionFilters(filters) ||
+      Boolean(filters.featured) ||
+      preferredOrgIds.size > 0;
+    const rpcLimit = needsJsWindow ? RADIUS_SCAN_CAP : Math.min(limit, RADIUS_SCAN_CAP);
+    const rpcOffset = needsJsWindow ? 0 : offset;
+
+    const { data: hits, error: rpcError } = await client.rpc(
+      "search_competitions_in_radius",
+      {
+        p_lat: origin.lat,
+        p_lng: origin.lng,
+        p_radius_miles: radius,
+        p_category: filters.category ?? null,
+        p_q: filters.q ?? null,
+        p_state: filters.state ?? null,
+        p_source: filters.source ?? null,
+        p_date_from: filters.date_from ?? null,
+        p_date_to: filters.date_to ?? null,
+        p_timing: filters.timing ?? "upcoming",
+        p_sort: filters.sort ?? "popular",
+        p_limit: rpcLimit,
+        p_offset: rpcOffset,
+      }
+    );
+    if (rpcError) {
+      throw new Error(`Supabase radius search failed: ${rpcError.message}`);
+    }
+
+    const radiusHits = (hits ?? []) as RadiusHit[];
+    const totalFromRpc = Number(radiusHits[0]?.total_count ?? 0);
+    if (!radiusHits.length) {
+      return { results: [], total: 0, limit, offset };
+    }
+
+    const distanceById = new Map(
+      radiusHits.map((hit) => [
+        hit.id,
+        hit.distance_miles === null ? null : Number(hit.distance_miles),
+      ])
+    );
+    const { data, error } = await client
+      .from("competitions")
+      .select("*, sections(*), series(*)")
+      .in(
+        "id",
+        radiusHits.map((hit) => hit.id)
+      );
+    if (error) throw new Error(`Supabase search failed: ${error.message}`);
+
+    const byId = new Map(
+      (data ?? []).map((row) => [row.id as string, row as Record<string, unknown>])
+    );
+    const results: CompetitionResult[] = [];
+    for (const hit of radiusHits) {
+      const row = byId.get(hit.id);
+      if (!row) continue;
+      const parsed = parseCompetitionRow(row);
+      if (!parsed) continue;
+
+      if (filters.featured) {
+        const series =
+          parsed.series && typeof parsed.series === "object"
+            ? (parsed.series as {
+                level: "local" | "state" | "national" | "international";
+                name: string;
+              })
+            : null;
+        if (
+          !competitionIsFeatured({
+            name: parsed.competition.name,
+            source: parsed.competition.source,
+            series,
+            details: parsed.competition.details,
+          })
+        ) {
+          continue;
+        }
+      }
+
+      const built = buildCompetitionResult({
+        competition: parsed.competition,
+        sections: parsed.sections,
+        series: parsed.series,
+        distance_miles: distanceById.get(hit.id) ?? null,
+        filters,
+      });
+      if (built) {
+        built.viewer_org_match = Boolean(
+          built.org_id && preferredOrgIds.has(built.org_id)
+        );
+        results.push(built);
+      }
+    }
+
+    if (needsJsWindow) {
+      sortCompetitionResults(results, filters, preferredOrgIds);
+      return paginateResults(results, { ...filters, limit, offset });
+    }
+
+    return {
+      results,
+      total: totalFromRpc,
+      limit,
+      offset,
+    };
   }
 
   async getCompetitionBySlug(slug: string): Promise<CompetitionDetail | null> {
@@ -358,6 +470,55 @@ export class SupabaseDataSource implements DataSource {
       }));
   }
 
+  async listPathwayCompetitionRefs(): Promise<CompetitionRef[]> {
+    const client = this.client();
+    const rules = await this.listQualificationRules();
+    const seriesIds = [
+      ...new Set(
+        rules
+          .filter((rule) => rule.required_placement >= 1 && rule.from_series_id)
+          .map((rule) => rule.from_series_id as string)
+      ),
+    ];
+    const competitionIds = [
+      ...new Set(
+        rules
+          .filter((rule) => rule.required_placement >= 1 && rule.from_competition_id)
+          .map((rule) => rule.from_competition_id as string)
+      ),
+    ];
+    if (!seriesIds.length && !competitionIds.length) return [];
+
+    let query = client
+      .from("competitions")
+      .select("id, slug, name, series_id, state, start_date, canonical_id")
+      .eq("status", "published")
+      .eq("category", "chess")
+      .order("name");
+    if (seriesIds.length && competitionIds.length) {
+      query = query.or(
+        `id.in.(${competitionIds.join(",")}),series_id.in.(${seriesIds.join(",")})`
+      );
+    } else if (competitionIds.length) {
+      query = query.in("id", competitionIds);
+    } else {
+      query = query.in("series_id", seriesIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw new Error(`Supabase pathway list failed: ${error.message}`);
+    return ((data ?? []) as (CompetitionRef & { canonical_id?: string | null })[])
+      .filter((row) => !row.canonical_id)
+      .map(({ id, slug, name, series_id, state, start_date }) => ({
+        id,
+        slug,
+        name,
+        series_id,
+        state,
+        start_date,
+      }));
+  }
+
   async listSeries(): Promise<Series[]> {
     const client = this.client();
     const { data, error } = await client.from("series").select("*").order("name");
@@ -366,10 +527,18 @@ export class SupabaseDataSource implements DataSource {
   }
 
   async listQualificationRules(): Promise<QualificationRule[]> {
+    if (
+      qualificationRulesCache &&
+      Date.now() - qualificationRulesCache.at < QUALIFICATION_RULES_TTL_MS
+    ) {
+      return qualificationRulesCache.rules;
+    }
     const client = this.client();
     const { data, error } = await client.from("qualification_rules").select("*");
     if (error) throw new Error(`Supabase rules list failed: ${error.message}`);
-    return (data ?? []).map((r) => QualificationRuleSchema.parse(r));
+    const rules = (data ?? []).map((r) => QualificationRuleSchema.parse(r));
+    qualificationRulesCache = { at: Date.now(), rules };
+    return rules;
   }
 
   async getZip(zip: string): Promise<ZipRow | null> {

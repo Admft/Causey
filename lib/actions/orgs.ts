@@ -9,6 +9,11 @@ import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 import { actionErrorMessage } from "@/lib/actions/errors";
+import {
+  RATE_LIMIT_MESSAGE,
+  consumeRateLimit,
+  hashedRequestActorKey,
+} from "@/lib/rate-limit";
 
 const OrgCreateSchema = z.object({
   name: z.string().trim().min(2, "Name your organization.").max(80),
@@ -95,6 +100,12 @@ export async function joinOrgWithCode(
   if (!isValidJoinCode(code)) {
     return { ok: false, error: "That code didn’t match an organization." };
   }
+
+  const allowed = await consumeRateLimit(
+    "join_code",
+    await hashedRequestActorKey(user.id)
+  );
+  if (!allowed) return { ok: false, error: RATE_LIMIT_MESSAGE };
 
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.rpc("join_org_with_code", {

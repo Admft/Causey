@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
 import {
-  SEARCH_LOAD_ALL_LIMIT,
+  SEARCH_PUBLIC_MAX_LIMIT,
   type CompetitionCategory,
   type SearchSort,
 } from "@/lib/schemas";
@@ -48,11 +48,10 @@ const PAGE_SIZES = [
   { value: 20, label: "20" },
   { value: 50, label: "50" },
   { value: 100, label: "100" },
-  { value: "all", label: "All" },
 ] as const;
 const DEFAULT_PAGE_SIZE = 20;
 
-type PageSize = number | "all";
+type PageSize = (typeof PAGE_SIZES)[number]["value"];
 type SearchInputState = {
   keyword: string;
   zip: string;
@@ -62,7 +61,7 @@ type SearchInputState = {
 };
 
 function resolvePageLimit(size: PageSize): number {
-  return size === "all" ? SEARCH_LOAD_ALL_LIMIT : size;
+  return Math.min(size, SEARCH_PUBLIC_MAX_LIMIT);
 }
 
 type Status =
@@ -567,8 +566,7 @@ export function SearchClient({
                         className="field h-9 w-auto min-w-[4.5rem] py-0 pr-8 text-sm"
                         value={String(pageSize)}
                         onChange={(e) => {
-                          const v = e.target.value;
-                          setPageSize(v === "all" ? "all" : Number(v));
+                          setPageSize(Number(e.target.value) as PageSize);
                         }}
                       >
                         {PAGE_SIZES.map((size) => (
@@ -590,9 +588,7 @@ export function SearchClient({
                       >
                         {loadingMore
                           ? "Loading…"
-                          : pageSize === "all"
-                            ? `Load remaining ${total - shown}`
-                            : `Load ${Math.min(resolvePageLimit(pageSize), total - shown)} more`}
+                          : `Load ${Math.min(resolvePageLimit(pageSize), total - shown)} more`}
                       </button>
                     ) : null}
                   </div>

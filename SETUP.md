@@ -66,7 +66,7 @@ These are not missing by accident; they are deliberate early constraints:
 - Self-serve district creation (platform administrators provision districts)
 
 Accounts and district workflows are live — apply every versioned migration
-through the latest file (currently `0057_district_audience_requires_hierarchy.sql`)
+through the latest file (currently `0063_delete_own_account.sql`)
 and use `/signup`. Any later migration is part of the required sequence.
 Coaches create school/club workspaces with join codes,
 district administrators create connected schools, platform administrators
@@ -123,7 +123,7 @@ need to be completed or connected.
 What exists already:
 
 - `supabase/migrations/0001_init.sql` through
-  `supabase/migrations/0057_district_audience_requires_hierarchy.sql`
+  `supabase/migrations/0063_delete_own_account.sql`
 - `lib/data/supabase.ts`
 - `scripts/seed-supabase.ts`
 
@@ -132,7 +132,7 @@ What still needs to happen:
 - Create a real Supabase project.
 - Run `npm run validate:migrations`, link with the Supabase CLI, and inspect
   `supabase migration list`.
-- Apply every versioned SQL file through the latest file (currently `0057`),
+- Apply every versioned SQL file through the latest file (currently `0063`),
   then continue with each uniquely numbered migration as it lands.
 - `PENDING_SCRAPE.sql` was removed after its ingestion changes were integrated
   into numbered migrations. Do not restore or apply copies of that scratch
@@ -308,7 +308,7 @@ What exists already:
 What still needs to happen:
 
 - Deploy the app to the chosen host.
-- Point `app.causey.com` to the deployment.
+- Point `app.causey.dev` to the deployment.
 - Wire the main marketing site CTA on `causey.dev` to the app.
 - Verify nav and footer links between marketing and product surfaces.
 
@@ -369,12 +369,12 @@ If you want the simplest summary:
 If someone is taking this from MVP to launch, do the work in this order:
 
 1. Stand up Supabase and apply all versioned migrations through the latest
-   file (currently `0057`, plus future uniquely numbered files)
+   file (currently `0063`, plus future uniquely numbered files)
 2. Load full zip data (`npm run seed:zips`)
 3. Fill `.env` and switch to `DATA_SOURCE=supabase`
 4. Seed only approved demo/staging environments (`npm run seed:supabase`)
 5. Follow `docs/district-pilot-runbook.md` for one assisted district
 6. Verify scraper and ingestion workflow
 7. Replace seeded qualification rules with verified ones
-8. Deploy and connect `app.causey.com`
+8. Deploy and connect `app.causey.dev`
 9. Complete legal, observability, email, and operational rollout gates

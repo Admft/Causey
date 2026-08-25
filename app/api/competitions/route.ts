@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestDataSource } from "@/lib/data";
 import { isDiscoveryCategory } from "@/lib/category-discovery";
+import {
+  RATE_LIMIT_MESSAGE,
+  consumeRateLimit,
+  hashedRequestActorKey,
+} from "@/lib/rate-limit";
 import { DEFAULT_SEARCH_LIMIT, SearchFiltersSchema } from "@/lib/schemas";
+import { reportError } from "@/lib/observability";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +48,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const allowed = await consumeRateLimit(
+    "search",
+    await hashedRequestActorKey()
+  );
+  if (!allowed) {
+    return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
+  }
+
   const data = await getRequestDataSource();
   const filters = {
     ...parsed.data,
@@ -65,15 +79,27 @@ export async function GET(request: NextRequest) {
 
   try {
     const page = await data.searchCompetitions(filters);
-    return NextResponse.json({
-      results: page.results,
-      total: page.total,
-      limit: page.limit,
-      offset: page.offset,
-      count: page.results.length,
-    });
+    const hasSession = request.cookies
+      .getAll()
+      .some((cookie) => cookie.name.includes("-auth-token"));
+    return NextResponse.json(
+      {
+        results: page.results,
+        total: page.total,
+        limit: page.limit,
+        offset: page.offset,
+        count: page.results.length,
+      },
+      {
+        headers: {
+          "Cache-Control": hasSession
+            ? "private, no-store"
+            : "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (err) {
-    console.error("GET /api/competitions", err);
+    reportError(err, "GET /api/competitions");
     return NextResponse.json(
       {
         error: "We couldn’t run that search. Try again in a moment.",

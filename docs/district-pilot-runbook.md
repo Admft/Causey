@@ -14,10 +14,12 @@ the verified `mail.causey.dev` Resend integration.
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0060_district_admin_activity.sql` (including
+   `0063_delete_own_account.sql` (including
    `0045_atomic_district_school_creation.sql`,
-   `0046_district_hosted_reporting.sql`, and the multi-category source
-   migrations that follow). A clean filename check alone
+   `0046_district_hosted_reporting.sql`,
+   `0060_district_admin_activity.sql`,
+   `0061_search_competitions_radius.sql`, and
+   `0062_rate_limits.sql`). A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch
    file.
@@ -196,6 +198,33 @@ Tell pilot participants before onboarding:
   fallback claim links when delivery is delayed or suppressed.
 - Registration on scraped events remains on the organizer's website.
 - Causey does not provide payments or student-to-student messaging.
-- Account deletion/export, legal agreements for student data, production
-  observability, and live-RLS automation remain rollout gates beyond this
-  assisted pilot.
+## 9. Backup restore drill
+
+Before a paid student cohort:
+
+1. In the Supabase dashboard, take a backup of the target project (or confirm
+   PITR is on if the plan includes it).
+2. Restore that backup into a throwaway project, not production.
+3. Confirm a platform admin can sign in, a district report CSV still opens, and
+   `search_competitions_in_radius` returns a zip search.
+4. Record the date, operator, source project, restore project, and pass/fail
+   in the private deployment log. Do not copy student rows into chat or git.
+
+## 10. Production hostname and observability
+
+- Use one public hostname: `https://app.causey.dev`. Do not advertise
+  `app.causey.com` unless that domain is attached to the Vercel project.
+- Production must be a green deploy. A failed `main` promotion is not a
+  launch. Preview SSO can stay on for `*.vercel.app` URLs.
+- Set optional `SENTRY_DSN` in Vercel production. Empty local `.env` stays
+  silent. After a test 500, confirm the event arrives.
+- Custom SMTP and Auth rate limits are still required before a school signup
+  burst. Hobby cron still runs the product-email worker once a day; trigger
+  `/api/cron/product-email` by hand after a large invite if mail cannot wait.
+
+## 11. Live RLS smoke is ops, not a unit test
+
+Section 7 must be executed against the migration-current Supabase project with
+two real admin sessions. Static `tests/multi-district-isolation.test.ts`
+coverage does not replace that run. Record pass/fail privately before
+onboarding the second district.

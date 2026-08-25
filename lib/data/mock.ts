@@ -19,10 +19,10 @@ import {
 } from "@/lib/schemas";
 import {
   buildCompetitionResult,
+  competitionMatchesRadius,
   paginateResults,
   sortCompetitionResults,
 } from "@/lib/data/search";
-import { haversineMiles } from "@/lib/geo";
 import { competitionIsFeatured } from "@/lib/event-standing";
 import type {
   CompetitionDetail,
@@ -81,12 +81,16 @@ export class MockDataSource implements DataSource {
 
       let distance_miles: number | null = null;
       if (origin) {
-        if (c.lat !== null && c.lng !== null) {
-          distance_miles = haversineMiles(origin.lat, origin.lng, c.lat, c.lng);
-          if (distance_miles > radius) continue;
-        } else if (c.participation_mode !== "online") {
-          continue;
-        }
+        const radiusHit = competitionMatchesRadius({
+          lat: c.lat,
+          lng: c.lng,
+          participation_mode: c.participation_mode,
+          originLat: origin.lat,
+          originLng: origin.lng,
+          radiusMiles: radius,
+        });
+        if (!radiusHit.included) continue;
+        distance_miles = radiusHit.distance_miles;
       }
 
       const hit = buildCompetitionResult({
@@ -125,6 +129,24 @@ export class MockDataSource implements DataSource {
         start_date,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async listPathwayCompetitionRefs(): Promise<CompetitionRef[]> {
+    const seriesWithRules = new Set(
+      rules
+        .filter((rule) => rule.required_placement >= 1 && rule.from_series_id)
+        .map((rule) => rule.from_series_id as string)
+    );
+    const competitionIds = new Set(
+      rules
+        .filter((rule) => rule.required_placement >= 1 && rule.from_competition_id)
+        .map((rule) => rule.from_competition_id as string)
+    );
+    return (await this.listCompetitionRefs()).filter(
+      (competition) =>
+        competitionIds.has(competition.id) ||
+        (competition.series_id && seriesWithRules.has(competition.series_id))
+    );
   }
 
   async listSeries(): Promise<Series[]> {

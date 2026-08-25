@@ -8,7 +8,8 @@ export type AccountSettingsPanelId =
   | "signin"
   | "alerts"
   | "family"
-  | "organizations";
+  | "organizations"
+  | "data";
 
 type Panel = {
   id: AccountSettingsPanelId;

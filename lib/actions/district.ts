@@ -13,6 +13,11 @@ import {
 } from "@/lib/invitations/claim-path";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  RATE_LIMIT_MESSAGE,
+  consumeRateLimit,
+  hashedRequestActorKey,
+} from "@/lib/rate-limit";
 
 const InvitationRoleSchema = z.enum([
   "student",
@@ -402,6 +407,11 @@ export async function bulkInviteOrganizationMembers(input: {
   if (!parsed.success) return { ok: false, error: "Choose a valid CSV file." };
   const user = await currentUserOrError();
   if (!user.ok) return user;
+  const allowed = await consumeRateLimit(
+    "csv_import",
+    await hashedRequestActorKey(user.id)
+  );
+  if (!allowed) return { ok: false, error: RATE_LIMIT_MESSAGE };
   const orgType = await getOrganizationType(parsed.data.orgId);
   if (!orgType) {
     return { ok: false, error: "Could not identify this organization." };
@@ -453,6 +463,12 @@ export async function bulkInviteOrganizationMembers(input: {
   let invited = 0;
   const failed: { row: number; email: string; error: string }[] = [];
   const claims: BulkInviteClaimRow[] = [];
+  const pending: {
+    row: number;
+    email: string;
+    displayName: string;
+    role: z.infer<typeof InvitationRoleSchema>;
+  }[] = [];
   for (let index = 1; index < lines.length; index += 1) {
     const values = parseCsvLine(lines[index]);
     const email = values[emailIndex] ?? "";
@@ -477,22 +493,46 @@ export async function bulkInviteOrganizationMembers(input: {
       });
       continue;
     }
-    const result = await createInvitationRecord({
-      orgId: parsed.data.orgId,
+    pending.push({
+      row: index + 1,
       email: emailParsed.data,
       displayName,
       role: roleParsed.data,
-      batchId: batch.id,
     });
-    if (result.ok) {
-      invited += 1;
-      claims.push({
-        email: emailParsed.data,
-        role: roleParsed.data,
-        claimPath: result.claimPath,
-        expiresAt: result.expiresAt,
-      });
-    } else failed.push({ row: index + 1, email, error: result.error });
+  }
+
+  const INVITE_CONCURRENCY = 20;
+  for (let start = 0; start < pending.length; start += INVITE_CONCURRENCY) {
+    const chunk = pending.slice(start, start + INVITE_CONCURRENCY);
+    const outcomes = await Promise.all(
+      chunk.map(async (row) => {
+        const result = await createInvitationRecord({
+          orgId: parsed.data.orgId,
+          email: row.email,
+          displayName: row.displayName,
+          role: row.role,
+          batchId: batch.id,
+        });
+        return { row, result };
+      })
+    );
+    for (const outcome of outcomes) {
+      if (outcome.result.ok) {
+        invited += 1;
+        claims.push({
+          email: outcome.row.email,
+          role: outcome.row.role,
+          claimPath: outcome.result.claimPath,
+          expiresAt: outcome.result.expiresAt,
+        });
+      } else {
+        failed.push({
+          row: outcome.row.row,
+          email: outcome.row.email,
+          error: outcome.result.error,
+        });
+      }
+    }
   }
 
   const { count: batchUpdateCount, error: batchUpdateError } = await supabase
@@ -598,6 +638,11 @@ export async function claimOrganizationInvitation(
   }
   const user = await currentUserOrError();
   if (!user.ok) return user;
+  const allowed = await consumeRateLimit(
+    "claim",
+    await hashedRequestActorKey(user.id)
+  );
+  if (!allowed) return { ok: false, error: RATE_LIMIT_MESSAGE };
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.rpc("claim_org_invitation", {
     p_token: token,

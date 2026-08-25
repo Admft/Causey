@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AccountSecurityForm } from "@/components/AccountSecurityForm";
+import { AccountDataControls } from "@/components/AccountDataControls";
 import { AccountSettingsShell } from "@/components/AccountSettingsShell";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { NotificationPreferencesForm } from "@/components/NotificationPreferencesForm";
@@ -178,6 +179,20 @@ export default async function AccountPage() {
           emailConfirmed={emailConfirmed}
           pendingEmail={pendingEmail}
         />
+      </div>
+    </div>
+  );
+
+  const dataPanel = (
+    <div>
+      <h2 className="font-display text-xl font-bold text-foreground">
+        Your data
+      </h2>
+      <p className="mt-2 max-w-prose text-sm text-muted">
+        Download a copy or permanently delete this account.
+      </p>
+      <div className="mt-6">
+        <AccountDataControls email={user.email ?? ""} />
       </div>
     </div>
   );
@@ -417,6 +432,7 @@ export default async function AccountPage() {
       label: "Organizations",
       content: orgsPanel,
     },
+    { id: "data" as const, label: "Your data", content: dataPanel },
   ];
 
   return (

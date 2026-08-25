@@ -58,6 +58,8 @@ export interface DataSource {
   getCompetitionBySlug(slug: string): Promise<CompetitionDetail | null>;
   /** Lightweight list for pickers (pathway explorer). */
   listCompetitionRefs(): Promise<CompetitionRef[]>;
+  /** Chess events that actually start a qualification hop. */
+  listPathwayCompetitionRefs(): Promise<CompetitionRef[]>;
   listSeries(): Promise<Series[]>;
   listQualificationRules(): Promise<QualificationRule[]>;
   /** null when the zip isn't in the zips table. */

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   if (!parsed.data.source) {
     const [series, competitions, rules] = await Promise.all([
       data.listSeries(),
-      data.listCompetitionRefs(),
+      data.listPathwayCompetitionRefs(),
       data.listQualificationRules(),
     ]);
     const seriesById = new Map(series.map((s) => [s.id, s]));
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   const [rules, seriesList, competitions] = await Promise.all([
     data.listQualificationRules(),
     data.listSeries(),
-    data.listCompetitionRefs(),
+    data.listPathwayCompetitionRefs(),
   ]);
   const seriesById = new Map(seriesList.map((s) => [s.id, s]));
 

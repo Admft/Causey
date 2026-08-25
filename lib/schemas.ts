@@ -431,8 +431,8 @@ export const SearchFiltersSchema = z.object({
   timing: z.enum(["upcoming", "ended", "all"]).optional().default("upcoming"),
   /** Popular defaults to real saved/registration interest; soonest is explicit. */
   sort: SearchSortSchema.optional().default("popular"),
-  /** Page size for tile loading. Defaults to 20; max 2000 (for “load all”). */
-  limit: z.coerce.number().int().positive().max(2000).optional(),
+  /** Page size for tile loading. Defaults to 20; max 100. */
+  limit: z.coerce.number().int().positive().max(100).optional(),
   offset: z.coerce.number().int().nonnegative().optional(),
 }).superRefine((filters, context) => {
   if (filters.rating_band && filters.category && filters.category !== "chess") {
@@ -464,5 +464,7 @@ export const SearchFiltersSchema = z.object({
 export type SearchFilters = z.infer<typeof SearchFiltersSchema>;
 
 export const DEFAULT_SEARCH_LIMIT = 20;
-/** Cap used when the UI asks for every matching row. */
-export const SEARCH_LOAD_ALL_LIMIT = 2000;
+/** Public directory page size cap. Larger requests are rejected by the schema. */
+export const SEARCH_PUBLIC_MAX_LIMIT = 100;
+/** @deprecated Use SEARCH_PUBLIC_MAX_LIMIT. Kept so older UI imports keep working. */
+export const SEARCH_LOAD_ALL_LIMIT = SEARCH_PUBLIC_MAX_LIMIT;

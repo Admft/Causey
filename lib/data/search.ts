@@ -130,6 +130,37 @@ export function parseCompetitionRow(row: Record<string, unknown>): {
   };
 }
 
+/**
+ * True-radius membership used by SQL earth_distance and mock haversine.
+ * Online events without coordinates stay in the set; in-person events without
+ * coordinates are excluded.
+ */
+export function competitionMatchesRadius(input: {
+  lat: number | null;
+  lng: number | null;
+  participation_mode: string | null | undefined;
+  originLat: number;
+  originLng: number;
+  radiusMiles: number;
+}): { included: boolean; distance_miles: number | null } {
+  if (input.lat !== null && input.lng !== null) {
+    const distance_miles = haversineMiles(
+      input.originLat,
+      input.originLng,
+      input.lat,
+      input.lng
+    );
+    return {
+      included: distance_miles <= input.radiusMiles,
+      distance_miles,
+    };
+  }
+  if (input.participation_mode === "online") {
+    return { included: true, distance_miles: null };
+  }
+  return { included: false, distance_miles: null };
+}
+
 /** Rough lat/lng window so zip searches don't download the whole country. */
 export function radiusBoundingBox(
   lat: number,
