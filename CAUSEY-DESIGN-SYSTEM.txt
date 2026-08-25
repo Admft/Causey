@@ -42,17 +42,25 @@ Brand first
 
 One job per section
   • One purpose, one headline, usually one short supporting sentence.
-  • Do not pack stats, schedules, promo strips, and secondary CTAs into the
-    first viewport of a marketing page.
+  • The first viewport is full of the product object (search, roster, path),
+    not padding around a headline. Do not leave a vacant column “for breathing.”
 
 Honesty over decoration
   • No fake numbers, fake ranks, fake deadlines, or placeholder bios.
   • If something looks modern but has no Causey-specific reason, cut it.
+  • Unjustified emptiness is as bad as unjustified decoration.
 
 Meaning before effect
   • Visual motifs should mean something (e.g. coordinate grid = access /
     zip-code / opportunity shouldn't depend on where you live).
   • Decorative blur blobs, purple glows, and generic gradient washes are banned.
+
+Filled panels, not bubbles with air
+  • Any card/panel/band must be composed so its content fills it.
+  • If a card has fewer than about four content rows, use a list row or a
+    left-rule strip instead of a bordered bubble.
+  • Two-column layouts need comparable visual mass, or they stack, or the
+    page narrows.
 
 Cards
   • Cards are allowed for interactive elements, repeating units, and discrete
@@ -62,6 +70,12 @@ Cards
 
 Clarity over clutter
   • Avoid pill clusters, icon-feature grids, stat strips, emoji, glow stacks.
+
+Dual-buyer temperature
+  • One token system. District surfaces: dense, calm, School/District copy.
+  • Club/student surfaces: same tokens, tighter packing, athletic cues
+    (date chips, roster density), Club/Team copy.
+  • Do not split into two palettes or a toy “youth” look.
 
 ================================================================================
 2. BRAND VOICE & COPY RULES
@@ -161,15 +175,15 @@ Organization gold rule
 
 --- 4.1 Fonts ---
 Sans (UI + body):   Source Sans 3
-  weights: 400, 500, 600, 700
+  weights: 400, 500, 600, 700, 800
   CSS var: --font-source → --font-sans
 
 Display / wordmark: Source Serif 4
-  weights: 600, 700
+  weights: 600, 700, 800
   CSS var: --font-serif → --font-display
-  Utility: font-display
+  Utility: font-display (weight 800)
 
-Body default: sans, antialiased.
+Body default: sans, medium (500), antialiased.
 Do NOT use Inter, Roboto, Arial, or system-only stacks as the brand face.
 
 --- 4.2 Type scale (use named tokens — no text-[13px] inventing) ---
@@ -179,7 +193,7 @@ Token          Size        Line-height   Typical use
 text-2xs       12px        1.4           tiny captions, error under fields
 text-xs        13px        1.5           helper text, footer meta, labels
 text-sm        14px        1.5           nav links, secondary buttons, body small
-text-base      15px        1.6           form fields, default UI text
+text-base      16px        1.55          form fields, default UI text
 text-md        16px        1.6           supporting body
 text-lg        17px        1.6           section subheads
 text-lead      18px        1.35          card titles / lead lines
@@ -193,10 +207,11 @@ text-display-lg   clamp(1.9rem, 3.8vw, 2.75rem)  lh 1.1   section H2s
 text-display-xl   clamp(2.1rem, 5vw, 3.25rem)    lh 1.12  hero H1
 
 Weights
-  • Regular 400 — body when needed
-  • Medium 500 — quiet emphasis
-  • Semibold 600 — buttons, labels, logo
-  • Bold 700 — headlines
+  • Regular 400 — rare (captions that must recede)
+  • Medium 500 — default body
+  • Semibold 600 — labels, quiet emphasis
+  • Bold 700 — buttons, UI titles
+  • Extra-bold 800 — display headlines (font-display)
 
 Tracking
   • Headlines: tracking-tight
@@ -210,6 +225,8 @@ Uppercase
 Reading width
   • Body / step copy: max ~55–65ch (max-w-prose or max-w-sm / max-w-lg as fits)
   • Hero headline break: max-w-[15ch] when you want 2 strong lines
+  • max-w-prose inside max-w-6xl is a leftover lane unless the other lane
+    is occupied.
 
 ================================================================================
 5. SPACING, RADIUS, SHADOWS, BORDERS
@@ -218,7 +235,9 @@ Reading width
 --- 5.1 Spacing rhythm ---
 Use Tailwind scale. Common values on this site:
   gap-1 / 1.5 / 2 / 2.5 / 3 / 5 / 6 / 8 / 10
-  Section vertical: py-16 sm:py-20/24
+Section vertical: py-8 sm:py-10 (max py-12). A band with short copy must
+  not use ceremonial py-16/20 — fill the viewport with a product object
+  instead, or cut the padding.
   Page horizontal padding: px-5 sm:px-8
   Form field stack gap: gap-2.5
   Header height: h-16
@@ -227,15 +246,16 @@ Avoid arbitrary half-steps like px-3.5 only when matching an established
 control (nav button / field already uses px-3.5). Prefer the shared pattern.
 
 --- 5.2 Radius ---
-System radius language (match buttons/cards — NOT rounded-full by default):
-  rounded-lg     → buttons, inputs, small controls
-  rounded-xl     → success panels, medium containers
-  rounded-2xl    → primary cards / form shells / large panels
+3-step radius language (warmer than 8px boxes, still not pills):
+  rounded-xl     → buttons, inputs, small controls, date chips
+  rounded-2xl    → cards, forms, medium containers
+  rounded-3xl    → hero shells / large product frames
   Logo mark:     rx ≈ 7 on a 32×32 viewBox (~22% of mark)
 
 Banned by default:
   rounded-full pills for status/eyebrows
   (Exception: circular avatar/check icons that are literally circles)
+  rounded-lg on primary controls (too squared for this product)
 
 --- 5.3 Borders ---
   border-line                 default hairline
@@ -321,8 +341,9 @@ CauseyLogo: red rounded square + white “C” path + serif “Causey” wordmar
 
 --- 8.2 Primary button (waitlist / destructive-of-emptiness actions) ---
 Class pattern: .cta-enabled
-  bg brand-red, text white, rounded-lg, h-11, font-semibold
+  bg brand-red, text white, rounded-xl, h-12, font-bold
   hover: brand-red-hover + soft lift (-1px) + red soft shadow
+  active: 1px press (translateY 1px), no extra shadow
 Disabled: .cta-disabled
   bg accent-soft, text brand-red, soft red border
   NO opacity wash on the whole control (looks grey/transparent)
@@ -333,9 +354,9 @@ Disabled: .cta-disabled
   Keep visually lighter than primary red so waitlist wins
 
 --- 8.4 Nav outline button (Book a meeting in header) ---
-  border-line, bg-white, text-foreground, rounded-lg, text-sm font-semibold
+  border-line, bg-white, text-foreground, rounded-xl, text-sm font-semibold
   hover: border-brand-red/40, text-brand-red
-  Include external-link mark (↗) always visible
+  Include external-link mark (↗) always visible on meeting links
 
 --- 8.5 Text links ---
   text-muted-strong → hover:text-brand-red (or foreground in header)
@@ -343,7 +364,7 @@ Disabled: .cta-disabled
 
 --- 8.6 Form fields ---
 Shared field class:
-  h-11 w-full rounded-lg
+  h-12 w-full rounded-xl
   border border-field-border bg-field
   px-3.5 text-base text-foreground
   placeholder:text-muted
@@ -431,6 +452,13 @@ Allowed motions (coordinated — one system per page, not a hard count)
   • Scroll cue bob + fade-out on scroll/click
   • Subtle nudge-x on arrows / external marks
   • card-lift hover (−4px) only on interactive cards
+  • 1px press on primary CTA :active
+  • Slow ambient grid drift on .access-grid::before only (killed by
+    prefers-reduced-motion). Linear is OK for this continuous loop.
+
+Marketing pages and role landings must have one signature motion moment.
+Product chrome (org, search, family) uses the same scroll-reveal on the
+first major band — not a second animation language.
 
 Banned / limited
   • A different entrance pattern per block (one reveal system per page)
@@ -584,9 +612,10 @@ Easing:
 
 Primary CTA: red filled
 Secondary CTA: blue outline/ghost
-Radius: rounded-lg controls, rounded-2xl large panels
-Type: Source Sans 3 UI / Source Serif 4 display
+Radius: rounded-xl controls, rounded-2xl cards, rounded-3xl hero shells
+Type: Source Sans 3 UI (500 body / 800 display) / Source Serif 4 display
 Motif: 46px coordinate grid on access-themed surfaces only
+Density: filled panels; no empty bubbles; first viewport is the product
 
 ================================================================================
 END OF DESIGN SYSTEM

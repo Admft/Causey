@@ -294,23 +294,19 @@ export default async function EventPage({ params }: Params) {
 
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
         <div>
-          {competition.image_url ? (
-            <div className="relative mb-6 max-w-2xl">
-              {featuredStanding ? (
-                <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-9 w-9" />
-              ) : null}
-              <CompetitionCoverImage
-                src={competition.image_url}
-                alt=""
-                aspectClass="aspect-[2/1]"
-                className="rounded-2xl"
-              />
-            </div>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-3">
-            {featuredStanding && !competition.image_url ? (
-              <FeaturedAwardMark className="h-4 w-4" />
+          <div className="relative mb-6 max-w-2xl">
+            {featuredStanding ? (
+              <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-9 w-9" />
             ) : null}
+            <CompetitionCoverImage
+              src={competition.image_url}
+              source={competition.source}
+              alt=""
+              aspectClass="aspect-[2/1]"
+              className="rounded-2xl"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
               {typeLabel}
               {isChess && competition.series

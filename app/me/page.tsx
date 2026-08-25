@@ -331,7 +331,7 @@ export default async function MePage() {
         Your plan
       </h1>
       <p className="mt-2 text-sm text-muted">
-        {profile.display_name || "Your profile"} · {user.email}. Club RSVPs and
+        {profile.display_name || "Your profile"} · {user.email}. RSVPs and
         organizer registration follow-through live here. Profile and alert
         preferences live in{" "}
         <Link

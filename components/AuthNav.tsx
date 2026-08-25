@@ -161,7 +161,7 @@ export function AuthNav() {
         </Link>
         <Link
           href="/signup"
-          className="shrink-0 whitespace-nowrap rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red"
+          className="shrink-0 whitespace-nowrap rounded-xl border border-line bg-white px-3 py-1.5 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red"
         >
           Sign up
         </Link>

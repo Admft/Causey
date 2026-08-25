@@ -49,7 +49,7 @@ export function RoleRouteCards({
         <li key={option.role}>
           <Link
             href={`/signup?role=${option.role}`}
-            className="card-lift group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5"
+            className="card-lift group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface px-4 py-3"
           >
             <div className="min-w-0">
               <p className="text-base font-semibold text-foreground">

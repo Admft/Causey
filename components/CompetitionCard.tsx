@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { ReactNode } from "react";
 import type { CompetitionResult } from "@/lib/data/types";
 import type { Section } from "@/lib/schemas";
@@ -13,7 +12,6 @@ import {
 } from "@/lib/format";
 import { formatMiles } from "@/lib/geo";
 import { formatCompetitionFacetLabel } from "@/lib/category-discovery";
-import { sourceByCompetitionSource } from "@/lib/ingestion-sources";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import { isCompetitionEnded } from "@/lib/competition-timing";
@@ -23,8 +21,8 @@ import { SourceBadge } from "@/components/SourceBadge";
  * Search-result card. Scans in three beats: standing + fee on the eyebrow
  * row, then a date chip anchoring when / where / who-can-play lines.
  * Entry fee stays on the top line — cost is an equity feature.
- * No empty image chrome: events without a cover or source logo go
- * text-first (schema contract), with the featured mark inline instead.
+ * Every grid card keeps a cover slot: organizer photo, or the source mark
+ * when the photo is missing or fails, so mixed rows do not stretch.
  */
 
 /** Section names are the level language chess parents scan for (U900, K-8). */
@@ -51,7 +49,7 @@ function DateChip({ start, small }: { start: string; small?: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className={`flex shrink-0 flex-col items-center justify-center rounded-lg border border-line bg-surface-soft ${
+      className={`flex shrink-0 flex-col items-center justify-center rounded-xl border border-line bg-surface-soft ${
         small ? "h-10 w-10" : "h-11 w-11"
       }`}
     >
@@ -80,8 +78,6 @@ export function CompetitionCard({
   const compact = layout === "grid3";
   const list = layout === "list";
   const cover = result.image_url;
-  const sourceMeta = sourceByCompetitionSource(result.source);
-  const hasVisual = Boolean(cover) || Boolean(sourceMeta);
   const standing = eventStanding({
     name: result.name,
     source: result.source,
@@ -122,7 +118,6 @@ export function CompetitionCard({
       {organizationLabel ? (
         <span className="text-org-gold-strong">{organizationLabel}</span>
       ) : null}
-      {featured && !hasVisual ? <FeaturedAwardMark className="h-4 w-4" /> : null}
       <span className={organizationLabel ? "text-muted-strong" : "text-brand-red"}>
         {standing.label}
       </span>
@@ -143,26 +138,17 @@ export function CompetitionCard({
           organizationLabel ? "border-org-gold" : "border-line"
         }`}
       >
-        {featured && hasVisual ? (
+        {featured ? (
           <FeaturedAwardMark className="absolute left-2.5 top-2.5 z-10 h-7 w-7" />
         ) : null}
-        {cover ? (
-          <CompetitionCoverImage
-            src={cover}
-            alt=""
-            aspectClass="aspect-[4/3] sm:aspect-auto"
-            className="w-full shrink-0 rounded-lg sm:h-16 sm:w-24"
-          />
-        ) : sourceMeta ? (
-          <Image
-            src={sourceMeta.logoUrl}
-            alt=""
-            width={64}
-            height={64}
-            unoptimized
-            className="hidden h-16 w-16 shrink-0 rounded-lg sm:block"
-          />
-        ) : null}
+        <CompetitionCoverImage
+          src={cover}
+          source={result.source}
+          alt=""
+          compact
+          aspectClass="aspect-[4/3] sm:aspect-auto"
+          className="w-full shrink-0 rounded-lg sm:h-16 sm:w-24"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-2xs font-semibold uppercase tracking-[0.06em]">
             {eyebrow}
@@ -217,40 +203,21 @@ export function CompetitionCard({
   return (
     <Link
       href={`/event/${result.slug}`}
-      className={`card-lift relative block overflow-hidden rounded-2xl border bg-surface shadow-[var(--shadow-card)] ${
+      className={`card-lift relative flex h-full flex-col overflow-hidden rounded-2xl border bg-surface shadow-[var(--shadow-card)] ${
         organizationLabel ? "border-org-gold" : "border-line"
       }`}
     >
-      {hasVisual && (
-        <>
-          {featured ? (
-            <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-8 w-8" />
-          ) : null}
-          {cover ? (
-            <CompetitionCoverImage
-              src={cover}
-              alt=""
-              aspectClass={compact ? "aspect-[16/9]" : "aspect-[16/10]"}
-            />
-          ) : sourceMeta ? (
-            <div
-              className={`flex items-center justify-center bg-surface-soft ${
-                compact ? "aspect-[16/9]" : "aspect-[16/10]"
-              }`}
-            >
-              <Image
-                src={sourceMeta.logoUrl}
-                alt=""
-                width={72}
-                height={72}
-                unoptimized
-                className="h-[4.5rem] w-[4.5rem] rounded-xl"
-              />
-            </div>
-          ) : null}
-        </>
-      )}
-      <div className={compact ? "p-4" : "p-5"}>
+      {featured ? (
+        <FeaturedAwardMark className="absolute left-3 top-3 z-10 h-8 w-8" />
+      ) : null}
+      <CompetitionCoverImage
+        src={cover}
+        source={result.source}
+        alt=""
+        compact={compact}
+        aspectClass={compact ? "aspect-[16/9]" : "aspect-[16/10]"}
+      />
+      <div className={`flex flex-1 flex-col ${compact ? "p-4" : "p-5"}`}>
         <div className="flex items-center justify-between gap-3 text-2xs font-semibold uppercase tracking-[0.06em]">
           <p className="flex min-w-0 items-center gap-1.5">{eyebrow}</p>
           <span
@@ -290,19 +257,21 @@ export function CompetitionCard({
             ) : null}
           </div>
         </div>
-        <div
-          className={`flex flex-wrap items-center gap-x-2 border-t border-line text-2xs text-muted ${
-            compact ? "mt-2.5 pt-2" : "mt-3 pt-3"
-          }`}
-        >
-          <SourceBadge source={result.source} showLogo={false} />
-          {footerParts.length > 0 ? <span aria-hidden="true">·</span> : null}
-          {footerParts.map((part, i): ReactNode => (
-            <span key={part.text} className={part.strong ? "text-muted-strong" : undefined}>
-              {i > 0 ? " · " : ""}
-              {part.text}
-            </span>
-          ))}
+        <div className="mt-auto">
+          <div
+            className={`flex flex-wrap items-center gap-x-2 border-t border-line text-2xs text-muted ${
+              compact ? "mt-2.5 pt-2" : "mt-3 pt-3"
+            }`}
+          >
+            <SourceBadge source={result.source} showLogo={false} />
+            {footerParts.length > 0 ? <span aria-hidden="true">·</span> : null}
+            {footerParts.map((part, i): ReactNode => (
+              <span key={part.text} className={part.strong ? "text-muted-strong" : undefined}>
+                {i > 0 ? " · " : ""}
+                {part.text}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </Link>

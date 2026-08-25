@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { formatRecordedResult } from "@/lib/format";
+import { organizationKindLabel } from "@/lib/portal-copy";
 import { SearchFiltersSchema } from "@/lib/schemas";
 
 function source(path: string) {
@@ -37,6 +38,9 @@ describe("club-ready results and history", () => {
       "2nd place · VASE gold"
     );
     expect(formatRecordedResult({})).toBeNull();
+    expect(organizationKindLabel("team")).toBe("team");
+    expect(organizationKindLabel("club")).toBe("club");
+    expect(organizationKindLabel("school")).toBe("school");
   });
 
   it("filters signed-in search to events a club marked as attending", () => {
@@ -70,5 +74,18 @@ describe("club-ready results and history", () => {
     expect(overview).toContain("Open season report");
     expect(competitions).toContain("Club events");
     expect(competitions).toContain("Team events");
+  });
+
+  it("shows a season trophy board on overview and does not call a mid-season club the first competition", () => {
+    const overview = source("app/orgs/[slug]/page.tsx");
+    const reports = source("app/orgs/[slug]/reports/page.tsx");
+    const create = source("components/TournamentCreateForm.tsx");
+    expect(overview).toContain("This season");
+    expect(overview).toContain("seasonPlacements");
+    expect(overview).toContain("Season is underway");
+    expect(overview).toContain("Host a competition");
+    expect(reports).toContain("organizationKindLabel");
+    expect(reports).toContain("this ${orgKind} hosted");
+    expect(create).toContain('orgType === "school" || orgType === "district"');
   });
 });

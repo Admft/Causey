@@ -707,7 +707,8 @@ export function TournamentCreateForm({
           );
         })}
       </div>
-      {!districtAudienceAvailable ? (
+      {!districtAudienceAvailable &&
+      (orgType === "school" || orgType === "district") ? (
         <p className="text-2xs text-muted">
           District-only is available after this organization is connected to a
           district.
@@ -783,13 +784,14 @@ export function TournamentCreateForm({
                 Cover image <span className="text-brand-red">Required</span>
               </legend>
               <p className="-mt-2 text-xs text-muted">
-                Use a landscape JPG, PNG, or WebP up to 5 MB. The preview shows
-                the crop families will see.
+                Required. Search cards always show a picture — this is the one
+                families see. Use a landscape JPG, PNG, or WebP up to 5 MB.
               </p>
               {coverImageUrl ? (
                 <CompetitionCoverImage
                   key={coverImageUrl}
                   src={coverImageUrl}
+                  source="organizer"
                   alt={`Cover for ${name.trim() || "this competition"}`}
                   aspectClass="aspect-[2/1]"
                   className="max-w-2xl rounded-2xl"
@@ -1272,6 +1274,7 @@ export function TournamentCreateForm({
           <section aria-labelledby="tournament-review-heading">
             <CompetitionCoverImage
               src={coverImageUrl}
+              source="organizer"
               alt={`Cover for ${name}`}
               aspectClass="aspect-[2/1]"
               className="mb-5 max-w-2xl rounded-2xl"

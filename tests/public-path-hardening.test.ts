@@ -26,8 +26,14 @@ describe("abuse controls and public-path cost", () => {
   });
 
   it("sends a Content-Security-Policy and skips session refresh on anonymous public GETs", () => {
-    expect(read("next.config.ts")).toContain("Content-Security-Policy");
-    expect(read("next.config.ts")).toContain("frame-ancestors 'none'");
+    const nextConfig = read("next.config.ts");
+    expect(nextConfig).toContain("Content-Security-Policy");
+    expect(nextConfig).toContain("frame-ancestors 'none'");
+    // Organizer cover photos are arbitrary HTTPS URLs, not only Supabase storage.
+    expect(nextConfig).toContain("img-src 'self' data: blob: https:");
+    expect(nextConfig).not.toMatch(
+      /img-src 'self' data: blob: https:\/\/\*\.supabase\.co"/
+    );
     const proxy = read("proxy.ts");
     expect(proxy).toContain("isAnonymousPublicGet");
     expect(proxy).toContain('cookie.name.includes("-auth-token")');

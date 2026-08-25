@@ -3,14 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { inviteEntrants, inviteGroup, removeEntrant } from "@/lib/actions/entrants";
+import { inviteConnectedSchoolRosters, inviteEntrants, inviteGroup, removeEntrant } from "@/lib/actions/entrants";
 import {
   markEntrantAttendance,
   recordEntrantResult,
 } from "@/lib/actions/district";
 import { formatRecordedResult } from "@/lib/format";
 
-type Candidate = { profile_id: string; display_name: string };
+type Candidate = {
+  profile_id: string;
+  display_name: string;
+  orgName?: string | null;
+};
 type GroupOption = { id: string; name: string; memberCount: number };
 
 /** Coach tool on /event/[slug]/manage: invite students or whole groups. */
@@ -21,6 +25,9 @@ export function EntrantManager({
   groups,
   hasActiveRoster,
   rosterHref = "/orgs#organizations",
+  rosterLinkLabel = "Open the roster",
+  inviteAllConnected = null,
+  isDistrictHosted = false,
 }: {
   competitionId: string;
   eventSlug: string;
@@ -29,6 +36,9 @@ export function EntrantManager({
   hasActiveRoster: boolean;
   /** Prefer this org's roster when invites have nobody to pick. */
   rosterHref?: string;
+  rosterLinkLabel?: string;
+  inviteAllConnected?: { studentCount: number; schoolCount: number } | null;
+  isDistrictHosted?: boolean;
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -60,6 +70,31 @@ export function EntrantManager({
               } from ${group.name}.`
             : `Everyone in ${group.name} was already invited.`
         );
+      }
+      router.refresh();
+    });
+  }
+
+  function onInviteAllConnected() {
+    if (!inviteAllConnected) return;
+    setError(null);
+    setMessage(null);
+    startTransition(async () => {
+      const result = await inviteConnectedSchoolRosters(
+        competitionId,
+        eventSlug
+      );
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setMessage(
+          result.invited
+            ? `Invited ${result.invited} ${
+                result.invited === 1 ? "student" : "students"
+              } from connected schools.`
+            : "Those students were already invited."
+        );
+        setSelected(new Set());
       }
       router.refresh();
     });
@@ -110,23 +145,54 @@ export function EntrantManager({
         </div>
       ) : groups.length ? (
         <p className="text-sm text-muted">
-          Your groups have no students yet.{" "}
+          Groups on these rosters have no students yet.{" "}
           <Link
             href={rosterHref}
             className="font-semibold text-brand-red hover:underline"
           >
-            Open the roster
+            {rosterLinkLabel}
           </Link>{" "}
           to add students to a group.
         </p>
       ) : null}
 
+      {inviteAllConnected ? (
+        <div>
+          <h3 className="text-xs font-semibold text-muted-strong">
+            Invite every connected school
+          </h3>
+          <p className="mt-1 max-w-prose text-sm text-muted">
+            {inviteAllConnected.studentCount}{" "}
+            {inviteAllConnected.studentCount === 1 ? "student" : "students"}{" "}
+            across {inviteAllConnected.schoolCount}{" "}
+            {inviteAllConnected.schoolCount === 1 ? "school" : "schools"} are
+            not invited yet.
+          </p>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={onInviteAllConnected}
+            className="cta-enabled mt-3 w-full justify-center sm:w-auto disabled:opacity-60"
+          >
+            {isPending
+              ? "Inviting…"
+              : `Invite ${inviteAllConnected.studentCount} ${
+                  inviteAllConnected.studentCount === 1 ? "student" : "students"
+                }`}
+          </button>
+        </div>
+      ) : null}
+
       <div>
-        <h3 className="text-xs font-semibold text-muted-strong">Invite students</h3>
+        <h3 className="text-xs font-semibold text-muted-strong">
+          {inviteAllConnected ? "Or invite selected students" : "Invite students"}
+        </h3>
         {!candidates.length ? (
           hasActiveRoster ? (
             <p className="mt-2 text-sm text-muted">
-              Everyone on your active roster is already invited.{" "}
+              {isDistrictHosted
+                ? "Everyone from connected schools is already invited. "
+                : "Everyone on your active roster is already invited. "}
               <a
                 href="#rsvps"
                 className="font-semibold text-brand-red hover:underline"
@@ -137,14 +203,15 @@ export function EntrantManager({
           ) : (
             <div className="mt-2">
               <p className="max-w-prose text-sm text-muted">
-                No active students to invite yet. Share a join link on your
-                roster, then return here.
+                {isDistrictHosted
+                  ? "No active students to invite yet. Share a join link on a school roster, then return here."
+                  : "No active students to invite yet. Share a join link on your roster, then return here."}
               </p>
               <Link
                 href={rosterHref}
                 className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
               >
-                Open roster
+                {rosterLinkLabel}
               </Link>
             </div>
           )
@@ -163,7 +230,12 @@ export function EntrantManager({
                     checked={selected.has(candidate.profile_id)}
                     onChange={() => toggle(candidate.profile_id)}
                   />
-                  {candidate.display_name || "Unnamed student"}
+                  <span>
+                    {candidate.display_name || "Unnamed student"}
+                    {candidate.orgName ? (
+                      <span className="text-muted"> · {candidate.orgName}</span>
+                    ) : null}
+                  </span>
                 </label>
               ))}
             </div>

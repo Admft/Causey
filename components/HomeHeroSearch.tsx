@@ -74,7 +74,7 @@ export function HomeHeroSearch({
     <form
       id="search"
       onSubmit={onSubmit}
-      className="w-full min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
+      className="flex h-full w-full min-w-0 flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
     >
       <h2 className="font-display text-display-sm font-bold tracking-tight text-foreground">
         Find tournaments
@@ -170,26 +170,28 @@ export function HomeHeroSearch({
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="cta-enabled mt-5 w-full disabled:opacity-60"
-      >
-        {pending ? "Searching…" : "Search tournaments"}
-      </button>
+      <div className="mt-auto pt-5">
+        <button
+          type="submit"
+          disabled={pending}
+          className="cta-enabled w-full disabled:opacity-60"
+        >
+          {pending ? "Searching…" : "Search tournaments"}
+        </button>
 
-      <p className="mt-4 text-2xs text-muted">
-        {category ? (
-          <Link
-            href={discoveryCategoryHref(category)}
-            className="font-semibold text-brand-red hover:underline"
-          >
-            Browse {discoveryCategoryLabel(category)} without a zip
-          </Link>
-        ) : (
-          "Every directory lists the official sources it indexes, including the ones still link-only."
-        )}
-      </p>
+        <p className="mt-4 text-2xs text-muted">
+          {category ? (
+            <Link
+              href={discoveryCategoryHref(category)}
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Browse {discoveryCategoryLabel(category)} without a zip
+            </Link>
+          ) : (
+            "Every directory lists the official sources it indexes, including the ones still link-only."
+          )}
+        </p>
+      </div>
     </form>
   );
 }

@@ -93,9 +93,9 @@ export function resultsGridClass(layout: ResultsLayout): string {
     case "list":
       return "grid grid-cols-1 gap-3";
     case "grid3":
-      return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
+      return "grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3";
     case "grid2":
     default:
-      return "grid grid-cols-1 gap-5 md:grid-cols-2";
+      return "grid grid-cols-1 items-stretch gap-5 md:grid-cols-2";
   }
 }

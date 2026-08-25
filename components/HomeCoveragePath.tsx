@@ -81,7 +81,7 @@ export function HomeCoveragePath() {
           stay reference links until their organizers permit indexing.
         </p>
 
-        <ol ref={pathRef} className="coverage-path mt-10">
+        <ol ref={pathRef} className="coverage-path mt-6">
           <li className="coverage-step coverage-step--reached">
             <span
               aria-hidden="true"

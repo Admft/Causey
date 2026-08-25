@@ -1,5 +1,7 @@
 # Club-owner out of scope
 
+Needs for a professional club (not building unless you ask): recurring practice nights, a public club directory, live USCF/NSDA lookup, pairings/ballots, dues, coach–parent DMs.
+
 Do not start these unless the user explicitly asks in this chat.
 
 | Ask | Why not |

@@ -9,13 +9,13 @@ import "./globals.css";
 
 const sourceSans = Source_Sans_3({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-source",
 });
 
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["600", "700", "800"],
   variable: "--font-serif",
 });
 
@@ -48,7 +48,7 @@ function ExternalMark() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
-      <body className="flex min-h-screen flex-col overflow-x-clip">
+      <body className="flex min-h-screen flex-col overflow-x-clip font-medium">
         <div className="sticky top-0 z-50" data-site-chrome>
           <EarlyBuildBanner />
           <SiteHeader />
@@ -82,6 +82,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className="font-medium text-muted-strong transition-colors hover:text-brand-red"
               >
                 Chess qualification pathways
+              </Link>
+              <Link
+                href="/clubs"
+                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+              >
+                Clubs and teams
               </Link>
               <Link
                 href="/districts"

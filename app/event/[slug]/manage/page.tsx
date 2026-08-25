@@ -13,6 +13,7 @@ import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   canManageCompetitionAsViewer,
+  getChildSchoolsForDistrict,
   getCoachOrgsWithAttendance,
   getCompetitionBySlugAuthed,
   getEventAttendance,
@@ -45,6 +46,41 @@ export default async function ManageEventPage({
   const competition = await getCompetitionBySlugAuthed(slug);
   if (!competition) notFound();
   const canManage = await canManageCompetitionAsViewer(competition, user.id);
+
+  let hostOrg: {
+    id: string;
+    slug: string;
+    name: string;
+    type: "school" | "district" | "club" | "team";
+  } | null = null;
+  if (competition.org_id) {
+    const supabase = await createServerSupabaseClient();
+    const { data: orgRow } = await supabase
+      .from("organizations")
+      .select("id, slug, name, type")
+      .eq("id", competition.org_id)
+      .maybeSingle();
+    if (
+      orgRow &&
+      (orgRow.type === "school" ||
+        orgRow.type === "district" ||
+        orgRow.type === "club" ||
+        orgRow.type === "team")
+    ) {
+      hostOrg = {
+        id: orgRow.id,
+        slug: orgRow.slug,
+        name: orgRow.name,
+        type: orgRow.type,
+      };
+    }
+  }
+  const isDistrictHost = hostOrg?.type === "district";
+  const childSchools =
+    canManage && isDistrictHost && hostOrg
+      ? await getChildSchoolsForDistrict(hostOrg.id)
+      : [];
+
   // Coaches whose org "attends" this public event can also invite their roster.
   const attendingOrgs =
     competition.visibility === "public"
@@ -59,16 +95,35 @@ export default async function ManageEventPage({
   if (!canManage && !attendingOrgs.length) redirect(`/event/${slug}`);
 
   const attendance = await getEventAttendance(competition.id);
-  const rosterOrgIds = [
-    ...(canManage && competition.org_id ? [competition.org_id] : []),
-    ...attendingOrgs.map((entry) => entry.org.id),
+  const rosterSources = [
+    ...(canManage && hostOrg && !isDistrictHost ? [hostOrg] : []),
+    ...childSchools,
+    ...attendingOrgs.map((entry) => entry.org),
   ];
+  const rosterOrgIds = [...new Set(rosterSources.map((org) => org.id))];
+  const orgNameById = new Map(
+    rosterSources.map((org) => [org.id, org.name] as const)
+  );
   const [rosterLists, groupLists] = await Promise.all([
     Promise.all(rosterOrgIds.map((orgId) => getOrgRoster(orgId))),
     Promise.all(rosterOrgIds.map((orgId) => getOrgGroups(orgId))),
   ]);
-  const roster = rosterLists.flat();
-  const groups = groupLists.flat();
+  const roster = rosterLists.flatMap((rows, index) => {
+    const orgId = rosterOrgIds[index];
+    const orgName = orgNameById.get(orgId) ?? null;
+    return rows.map((row) => ({ ...row, orgName }));
+  });
+  const groups = groupLists.flatMap((rows, index) => {
+    const orgId = rosterOrgIds[index];
+    const orgName = orgNameById.get(orgId);
+    return rows.map((group) => ({
+      ...group,
+      name:
+        isDistrictHost && orgName && childSchools.length > 1
+          ? `${orgName} · ${group.name}`
+          : group.name,
+    }));
+  });
 
   const invitedIds = new Set(attendance.map((row) => row.profile_id));
   const seenCandidates = new Set<string>();
@@ -85,6 +140,7 @@ export default async function ManageEventPage({
     .map((row) => ({
       profile_id: row.profile_id,
       display_name: row.display_name,
+      orgName: isDistrictHost ? row.orgName : null,
     }));
   const summary = summarizeAttendance(attendance);
   const isPast =
@@ -153,9 +209,15 @@ export default async function ManageEventPage({
       }
     }
   }
-  const rosterHref = orgShell
-    ? `/orgs/${orgShell.slug}/roster`
-    : "/orgs#organizations";
+  const rosterHref = isDistrictHost
+    ? childSchools[0]
+      ? `/orgs/${childSchools[0].slug}/roster#add-students`
+      : orgShell
+        ? `/orgs/${orgShell.slug}/settings#schools`
+        : "/orgs"
+    : orgShell
+      ? `/orgs/${orgShell.slug}/roster`
+      : "/orgs#organizations";
   const workspaceHref = orgShell ? `/orgs/${orgShell.slug}` : "/orgs";
 
   let mission: {
@@ -198,20 +260,47 @@ export default async function ManageEventPage({
       secondary: { href: workspaceHref, label: "Back to workspace" },
     };
   } else if (needsInvite) {
-    mission = {
-      title: activeStudents.length
-        ? "Invite students or a group"
-        : "Add students, then invite",
-      description: activeStudents.length
-        ? "Nobody is invited yet. Invite a group in one tap, or pick students from your roster."
-        : "Your roster has no active students. Share a join link, then come back to invite them.",
-      action: activeStudents.length
-        ? { href: "#invite", label: "Invite students" }
-        : { href: rosterHref, label: "Open roster" },
-      secondary: activeStudents.length
-        ? { href: rosterHref, label: "Open roster" }
-        : { href: workspaceHref, label: "Back to workspace" },
-    };
+    mission = isDistrictHost
+      ? {
+          title: activeStudents.length
+            ? "Invite connected schools"
+            : childSchools.length
+              ? "Add students at a school, then invite"
+              : "Add a school, then invite",
+          description: activeStudents.length
+            ? "This district event has no district student roster. Invite every connected school at once, or pick students and groups below."
+            : childSchools.length
+              ? "Connected schools have no students on roster yet. Share a school join link, then come back to invite."
+              : "Create a school workspace, provision students, then invite them to this district event.",
+          action: activeStudents.length
+            ? { href: "#invite", label: "Invite students" }
+            : {
+                href: rosterHref,
+                label: childSchools.length
+                  ? "Open a school roster"
+                  : "Add a school",
+              },
+          secondary: activeStudents.length
+            ? {
+                href: rosterHref,
+                label: "Open a school roster",
+              }
+            : { href: workspaceHref, label: "Back to workspace" },
+        }
+      : {
+          title: activeStudents.length
+            ? "Invite students or a group"
+            : "Add students, then invite",
+          description: activeStudents.length
+            ? "Nobody is invited yet. Invite a group in one tap, or pick students from your roster."
+            : "Your roster has no active students. Share a join link, then come back to invite them.",
+          action: activeStudents.length
+            ? { href: "#invite", label: "Invite students" }
+            : { href: rosterHref, label: "Open roster" },
+          secondary: activeStudents.length
+            ? { href: rosterHref, label: "Open roster" }
+            : { href: workspaceHref, label: "Back to workspace" },
+        };
   } else if (needsReplies) {
     mission = {
       title: `${summary.awaiting} ${
@@ -240,8 +329,9 @@ export default async function ManageEventPage({
     <section id="invite" className="section-rule mt-10 scroll-mt-24 pt-8">
       <h2 className="text-sm font-semibold text-foreground">Invite</h2>
       <p className="mt-1 text-sm text-muted">
-        Groups invite in one step. Individual picks work when you only need a
-        few students.
+        {isDistrictHost
+          ? "Invite students from connected schools. Groups stay with the school that created them."
+          : "Groups invite in one step. Individual picks work when you only need a few students."}
       </p>
       <div className="mt-4">
         <EntrantManager
@@ -255,6 +345,22 @@ export default async function ManageEventPage({
           }))}
           hasActiveRoster={activeStudents.length > 0}
           rosterHref={rosterHref}
+          rosterLinkLabel={
+            isDistrictHost
+              ? childSchools.length
+                ? "Open a school roster"
+                : "Add a school"
+              : "Open the roster"
+          }
+          inviteAllConnected={
+            isDistrictHost && canManage && candidates.length
+              ? {
+                  studentCount: candidates.length,
+                  schoolCount: childSchools.length,
+                }
+              : null
+          }
+          isDistrictHosted={isDistrictHost}
         />
       </div>
     </section>

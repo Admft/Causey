@@ -62,112 +62,130 @@ export default async function LoginPage({
 
   return (
     <section className="access-grid">
-      {/*
-        One centered task column on the coordinate-grid motif (§7): signing in
-        is the access moment, so the page does exactly one thing. Invitees see
-        the create-account panel before the form; the default view keeps role
-        routing as a quiet line under the card instead of competing cards.
-      */}
-      <div className="relative mx-auto max-w-md px-5 py-12 sm:py-16 lg:py-20">
-        <div className="animate-rise">
+      <div
+        className={`relative mx-auto grid items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:py-12 ${
+          isJoiningOrganization || isClaimingInvitation || claimUnavailable
+            ? "max-w-3xl"
+            : "max-w-5xl md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:gap-10"
+        }`}
+      >
+        <div className="animate-rise min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
             Account
           </p>
-          <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+          <h1 className="mt-2 font-display text-display-lg tracking-tight text-foreground">
             {heading}
           </h1>
           <p className="mt-3 text-md text-muted">{supporting}</p>
+          {!isJoiningOrganization &&
+          !isClaimingInvitation &&
+          !claimUnavailable ? (
+            <ul className="mt-6 divide-y divide-line border-y border-line">
+              {(
+                [
+                  ["student", "Student", "Save events, RSVP, and keep a plan."],
+                  ["parent", "Parent", "Link a child and finish RSVPs from one desk."],
+                  [
+                    "coach",
+                    "Coach or organizer",
+                    "Create a club or team and run a season.",
+                  ],
+                ] as const
+              ).map(([role, title, description]) => (
+                <li key={role}>
+                  <Link
+                    href={roleSignupHref(role)}
+                    className="group flex items-start justify-between gap-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
+                        {title}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">{description}</p>
+                    </div>
+                    <span
+                      aria-hidden="true"
+                      className="nudge-x shrink-0 text-lg font-bold text-brand-red"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
-        {isJoiningOrganization || isClaimingInvitation ? (
-          <div className="animate-rise animate-rise-delay-1 mt-8 rounded-2xl border border-brand-blue/45 bg-brand-blue-soft p-5 sm:p-6">
-            <h2 className="font-display text-lg font-bold text-foreground">
-              {isStaffClaim ? "New staff member?" : "New student?"}
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              {isStaffClaim
-                ? "Create a coach or organizer account with your own password. Staff invites do not need a student date of birth."
-                : isJoiningOrganization
-                  ? "Most people opening a coach invite need to create an account first."
-                  : "Create the matching account type, then you’ll return here to accept."}
-            </p>
-            <Link href={signupHref} className="cta-enabled mt-4 inline-flex">
-              {isStaffClaim ? "Create staff account" : "Create student account"}
-            </Link>
-          </div>
-        ) : null}
-
-        <div className="animate-rise animate-rise-delay-1 mt-8">
-          {claimUnavailable ? (
-            <Link
-              href="/#search"
-              className="card-lift group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6"
-            >
-              <div className="min-w-0">
-                <p className="text-base font-semibold text-foreground">
-                  Search tournaments
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  Indexed feeds and club-published events, open without an
-                  account.
-                </p>
-              </div>
-              <span
-                aria-hidden="true"
-                className="nudge-x shrink-0 text-xl text-brand-red"
-              >
-                →
-              </span>
-            </Link>
-          ) : (
-            <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6">
-              {isJoiningOrganization || isClaimingInvitation ? (
-                <p className="mb-4 text-sm font-semibold text-foreground">
-                  {isStaffClaim
-                    ? "Already have a staff account?"
-                    : "Already have a student account?"}
-                </p>
-              ) : null}
-              <LoginForm
-                next={
-                  invitation ? next : isClaimNextPath(next) ? undefined : next
-                }
-                joiningOrganization={isJoiningOrganization}
-                claimingInvitation={isClaimingInvitation}
-                claimAccountRole={claimAccountRole}
-              />
+        <div className="min-w-0">
+          {isJoiningOrganization || isClaimingInvitation ? (
+            <div className="animate-rise animate-rise-delay-1 rounded-2xl border border-brand-blue/45 bg-brand-blue-soft p-5 sm:p-6">
+              <h2 className="font-display text-lg text-foreground">
+                {isStaffClaim ? "New staff member?" : "New student?"}
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                {isStaffClaim
+                  ? "Create a coach or organizer account with your own password. Staff invites do not need a student date of birth."
+                  : isJoiningOrganization
+                    ? "Most people opening a coach invite need to create an account first."
+                    : "Create the matching account type, then you’ll return here to accept."}
+              </p>
+              <Link href={signupHref} className="cta-enabled mt-4 inline-flex">
+                {isStaffClaim ? "Create staff account" : "Create student account"}
+              </Link>
             </div>
-          )}
-        </div>
+          ) : null}
 
-        {!isJoiningOrganization &&
-        !isClaimingInvitation &&
-        !claimUnavailable ? (
-          <p className="animate-rise animate-rise-delay-2 mt-6 text-sm text-muted">
-            New to Causey? Start as{" "}
-            <Link
-              href={roleSignupHref("student")}
-              className="font-semibold text-muted-strong hover:text-brand-red"
-            >
-              a student
-            </Link>
-            {", "}
-            <Link
-              href={roleSignupHref("parent")}
-              className="font-semibold text-muted-strong hover:text-brand-red"
-            >
-              a parent
-            </Link>
-            {", or "}
-            <Link
-              href={roleSignupHref("coach")}
-              className="font-semibold text-muted-strong hover:text-brand-red"
-            >
-              a coach or organizer
-            </Link>
-            .
-          </p>
-        ) : null}
+          <div
+            className={`animate-rise animate-rise-delay-1 ${
+              isJoiningOrganization || isClaimingInvitation ? "mt-6" : ""
+            }`}
+          >
+            {claimUnavailable ? (
+              <Link
+                href="/#search"
+                className="group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)]"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground">
+                    Search tournaments
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    Indexed feeds and club-published events, open without an
+                    account.
+                  </p>
+                </div>
+                <span
+                  aria-hidden="true"
+                  className="nudge-x shrink-0 text-lg font-bold text-brand-red"
+                >
+                  →
+                </span>
+              </Link>
+            ) : (
+              <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6">
+                {isJoiningOrganization || isClaimingInvitation ? (
+                  <p className="mb-4 text-sm font-bold text-foreground">
+                    {isStaffClaim
+                      ? "Already have a staff account?"
+                      : "Already have a student account?"}
+                  </p>
+                ) : (
+                  <p className="mb-4 text-sm font-bold text-foreground">
+                    Sign in with email
+                  </p>
+                )}
+                <LoginForm
+                  next={
+                    invitation ? next : isClaimNextPath(next) ? undefined : next
+                  }
+                  joiningOrganization={isJoiningOrganization}
+                  claimingInvitation={isClaimingInvitation}
+                  claimAccountRole={claimAccountRole}
+                />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

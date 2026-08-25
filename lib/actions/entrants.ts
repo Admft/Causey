@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { actionErrorMessage } from "@/lib/actions/errors";
 import { createInAppNotifications } from "@/lib/actions/in-app-notifications";
+import {
+  getChildSchoolsForDistrict,
+  getOrgRoster,
+} from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 
@@ -183,6 +187,86 @@ export async function inviteGroup(
     eventSlug,
     (members ?? []).map((m) => m.profile_id)
   );
+}
+
+export async function inviteConnectedSchoolRosters(
+  competitionId: string,
+  eventSlug: string
+): Promise<ActionResult<{ invited: number }>> {
+  const user = await getSessionUser();
+  if (!user) return { ok: false, error: "Sign in to continue." };
+
+  const supabase = await createServerSupabaseClient();
+  const { data: canManage, error: manageError } = await supabase.rpc(
+    "can_manage_competition",
+    {
+      p_competition_id: competitionId,
+      p_profile_id: user.id,
+    }
+  );
+  if (manageError || canManage !== true) {
+    return {
+      ok: false,
+      error: "You don’t have permission to invite students to this competition.",
+    };
+  }
+
+  const { data: competition } = await supabase
+    .from("competitions")
+    .select("org_id")
+    .eq("id", competitionId)
+    .maybeSingle();
+  if (!competition?.org_id) {
+    return {
+      ok: false,
+      error: "This competition is not hosted by a district.",
+    };
+  }
+
+  const { data: host } = await supabase
+    .from("organizations")
+    .select("id, type")
+    .eq("id", competition.org_id)
+    .maybeSingle();
+  if (host?.type !== "district") {
+    return {
+      ok: false,
+      error: "Invite connected schools only works on a district-hosted event.",
+    };
+  }
+
+  const schools = await getChildSchoolsForDistrict(host.id);
+  if (!schools.length) {
+    return {
+      ok: false,
+      error: "Add a school, then invite its roster.",
+    };
+  }
+
+  const rosters = await Promise.all(
+    schools.map((school) => getOrgRoster(school.id))
+  );
+  const profileIds = [
+    ...new Set(
+      rosters.flatMap((roster) =>
+        roster
+          .filter(
+            (row) =>
+              row.member_status === "active" && row.member_role === "student"
+          )
+          .map((row) => row.profile_id)
+      )
+    ),
+  ];
+  if (!profileIds.length) {
+    return {
+      ok: false,
+      error:
+        "Connected schools have no students on roster yet. Share a school join link, then invite.",
+    };
+  }
+
+  return inviteEntrants(competitionId, eventSlug, profileIds);
 }
 
 export async function removeEntrant(

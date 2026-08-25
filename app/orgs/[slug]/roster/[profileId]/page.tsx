@@ -13,6 +13,7 @@ import {
   isUpcomingEvent,
 } from "@/lib/data/portal";
 import { formatDateRange, formatRecordedResult, gradeLabel } from "@/lib/format";
+import { organizationKindLabel } from "@/lib/portal-copy";
 import { rsvpLabel } from "@/lib/rsvp";
 import { CompetitionCategorySchema } from "@/lib/schemas";
 
@@ -48,6 +49,7 @@ export default async function RosterMemberHistoryPage({
   if (!view.isCoach && user.id !== profileId) redirect(`/orgs/${slug}`);
 
   const { org } = view;
+  const orgKind = organizationKindLabel(org.type);
   const [roster, history] = await Promise.all([
     getOrgRoster(org.id),
     getOrgMemberCompetitionHistory(org.id, profileId),
@@ -88,10 +90,10 @@ export default async function RosterMemberHistoryPage({
       }
     : {
         title: history.length
-          ? "Club competition history"
-          : "No club events yet",
+          ? `${orgKind === "team" ? "Team" : orgKind === "school" ? "School" : "Club"} competition history`
+          : `No ${orgKind} events yet`,
         description: history.length
-          ? "Events this club hosted or marked as attending. Results appear when a coach records them."
+          ? `Events this ${orgKind} hosted or marked as attending. Results appear when a coach records them.`
           : "Invite this student to a competition, then attendance and results show up here.",
         action: history.length
           ? { href: `/orgs/${org.slug}/roster`, label: "Back to roster" }

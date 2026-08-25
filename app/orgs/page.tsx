@@ -277,7 +277,7 @@ export default async function OrgsPage({
             Your clubs
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
-            Join with the code your coach shared. Club RSVPs and organizer
+            Join with the code your coach shared. RSVPs and organizer
             registration follow-through live on{" "}
             <Link
               href="/me"

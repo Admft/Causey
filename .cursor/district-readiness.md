@@ -18,9 +18,10 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 
 ## Need for a district that wants school tournaments (priority)
 
-- [ ] After schools are ready, next action is **run/review competitions**, not “stare at empty reports”
-- [ ] Command center shows **upcoming district + school events** with host names
-- [ ] Guided multi-school invite to a district-hosted event (today: per-school manage)
+- [x] After schools are ready, next action is **run/review competitions**, not “stare at empty reports” — 2026-08-24
+- [x] Command center shows **upcoming district + school events** with host names — 2026-08-24
+- [x] Guided multi-school invite to a district-hosted event — 2026-08-24
+- [x] `/districts` hero filled with setup steps; home organizer band pairs club + district without empty lanes — 2026-08-24
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -34,3 +35,52 @@ Self-serve district signup, in-app payments, central-office student browsing, co
 - District admin · setup-complete mission · `review_reporting` sends to Reports before any event exists · **M · shipping this tick**
 - District admin · district-hosted invite-all-schools · still per-roster · **L · later**
 - Buyer · `/districts` · honest assisted-pilot pitch · keep
+
+## Findings — 2026-08-24 agent pass
+
+Source walk as district athletics coordinator (chess pilot). No app code edited.
+
+### Workflow checklist (source)
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Platform provisions district; coach cannot self-serve | **works** | `0025` + `/admin/organizations`; `tests/district-lifecycle-guardrails.test.ts` |
+| Add school → invite named admin → claim → ownership; district retains authority | **works** | `createDistrictSchool` / `0045`; `/orgs/[slug]/settings#schools`; `/people`; ownership settings; effective-org authority tests |
+| Command center: one next action + per-school readiness | **works** | `lib/district-readiness.ts` → `run_competitions`; `/orgs/[slug]` school list |
+| N=2 isolation (readiness/reports/CSV/activity) | **works** in repo; live env still ops-gated | `tests/multi-district-isolation.test.ts`; runbook §7 |
+| School chrome says School account | **works** | `components/OrgSubnav.tsx` |
+| School roster / groups / CSV / join link; assistants read-only | **works** | `/orgs/[slug]/roster`, `/people`; coach mission read-only branch |
+| District can host district-wide or leave host with a school | **works** | `/orgs/[slug]/competitions/new` host chooser |
+| Competitions inventory + host filter across district + schools | **works** | `getOrgCompetitionWorkspace`; `/orgs/[slug]/competitions` |
+| District-only audience hierarchy + public review | **works** | `0057` + `lib/competition-audience.ts`; publish/review panels |
+| Overview calendar of school + district events | **works** | `/orgs/[slug]` “Upcoming across the district” (prior tick) |
+| Reports + CSV school- vs district-hosted; fail closed | **works** | `/orgs/[slug]/reports` + `export/route.ts`; `0046` |
+| Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
+| Family RSVP + organizer registration | **works** (club-worded copy) | `/family` |
+| District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters` |
+| District announcement one-shot to all child schools | **partial** | operator can publish *on* a school (`0043`); district overview form only targets district `org.id` members |
+| Email at school volume | **ops / not proven** | backlog; not a UI claim on `/districts` |
+| `/districts` pitch honesty | **works** | assisted pilot; book conversation; no partner names |
+
+### Ranked friction (district chess program)
+
+1. **P0 · District-hosted manage cannot invite school students · L · shipped 2026-08-24**  
+   Surface: `/event/[slug]/manage` + `inviteConnectedSchoolRosters`. Connected-school rosters/groups load; “Invite every connected school” fans out.  
+2. **P1 · Family desk still says “Club RSVPs” · S · shipped 2026-08-24**
+
+3. **P1 · District announcement form does not fan out to child schools · M**  
+   Surface: district overview `AnnouncementForm` posts to district org only; recipients = that org’s members (staff). Catalog “district → child schools” means open each school (or operate on school `org_id`), not one district-office blast.
+
+4. **Ops · Email volume + live dual-district smoke · —**  
+   Not product UI. Keep as Legal/Ops; do not invent compliance UI.
+
+5. **Legal · Price / FERPA / retention / public school directory · —**  
+   Out of scope for build; refuse.
+
+### Recommended next shippable win
+
+**District announcement fan-out to child schools**, or ops proof of email at school volume. Multi-school invite shipped.
+
+### Out-of-scope refusals this pass
+
+Self-serve district signup; FERPA/state-privacy certification; in-app payments / replacing organizer registration; central-office student browsing history; complete non-chess indexes as the pitch; messaging; pairing.

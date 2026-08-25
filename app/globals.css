@@ -28,6 +28,9 @@
   --accent-soft: #f8e8e6;
   --field: #ffffff;
   --field-border: rgba(20, 24, 28, 0.14);
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
 }
 
 @theme {
@@ -63,8 +66,8 @@
   --text-xs--line-height: 1.5;
   --text-sm: 0.875rem;
   --text-sm--line-height: 1.5;
-  --text-base: 0.9375rem;
-  --text-base--line-height: 1.6;
+  --text-base: 1rem;
+  --text-base--line-height: 1.55;
   --text-md: 1rem;
   --text-md--line-height: 1.6;
   --text-lg: 1.0625rem;
@@ -91,6 +94,10 @@
   --shadow-card-hover: 0 18px 44px rgba(27, 33, 32, 0.1);
   --shadow-cta: 0 6px 20px rgba(194, 59, 50, 0.28);
 
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+
   /* Brand easing curves — §10. */
   --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-structured: cubic-bezier(0.4, 0, 0.2, 1);
@@ -102,10 +109,17 @@
   --font-display: var(--font-serif), ui-serif, Georgia, serif;
 }
 
+h1.font-display,
+h2.font-display,
+h3.font-display {
+  font-weight: 800;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-source), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -117,9 +131,9 @@ body {
 
 /* Shared field styling — §8.6. One class, reused by every input/select. */
 .field {
-  height: 2.75rem;
+  height: 3rem;
   width: 100%;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--field-border);
   background: var(--field);
   padding-inline: 0.875rem;
@@ -146,6 +160,9 @@ select.field {
   background-position: right 0.75rem center;
   padding-right: 2.25rem;
 }
+.field.field-password {
+  padding-right: 2.75rem;
+}
 
 /* Primary CTA — §8.2. */
 .cta-enabled {
@@ -153,12 +170,12 @@ select.field {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  height: 2.75rem;
+  height: 3rem;
   padding-inline: 1.25rem;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--brand-red);
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--text-base);
   transition: background-color 200ms var(--ease-brand), transform 200ms var(--ease-brand),
     box-shadow 200ms var(--ease-brand);
@@ -168,18 +185,43 @@ select.field {
   transform: translateY(-1px);
   box-shadow: var(--shadow-cta);
 }
+.cta-enabled:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+.cta-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: var(--foreground);
+  font-weight: 700;
+  font-size: var(--text-base);
+  transition: border-color 200ms var(--ease-brand), color 200ms var(--ease-brand),
+    background-color 200ms var(--ease-brand);
+}
+.cta-outline:hover {
+  border-color: color-mix(in srgb, var(--brand-red) 40%, transparent);
+  color: var(--brand-red);
+}
+
 .cta-disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  height: 2.75rem;
+  height: 3rem;
   padding-inline: 1.25rem;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--accent-soft);
   color: var(--brand-red);
   border: 1px solid color-mix(in srgb, var(--brand-red) 25%, transparent);
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--text-base);
   cursor: not-allowed;
 }
@@ -196,11 +238,11 @@ select.field {
  * *incoming* surface so the eye reads a deliberate change, not an accidental
  * slap. */
 .home-band {
-  padding-block: 3rem;
+  padding-block: 2rem;
 }
 @media (min-width: 640px) {
   .home-band {
-    padding-block: 3.5rem;
+    padding-block: 2.5rem;
   }
 }
 .band-join {
@@ -333,8 +375,17 @@ select.field {
   background-image: linear-gradient(to right, rgba(20, 24, 28, 0.05) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(20, 24, 28, 0.05) 1px, transparent 1px);
   background-size: 46px 46px;
+  animation: grid-drift 48s linear infinite;
   -webkit-mask-image: radial-gradient(ellipse 80% 90% at 50% 20%, black 40%, transparent 100%);
   mask-image: radial-gradient(ellipse 80% 90% at 50% 20%, black 40%, transparent 100%);
+}
+@keyframes grid-drift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 46px 23px, 23px 46px;
+  }
 }
 
 /* Skeleton shimmer for result loading — one job: show data is on its way. */
@@ -453,6 +504,7 @@ select.field {
 
 @media (prefers-reduced-motion: reduce) {
   .cta-enabled,
+  .cta-outline,
   .card-lift,
   .nudge-x,
   .field,
@@ -462,6 +514,7 @@ select.field {
     transition: none;
   }
   .cta-enabled:hover,
+  .cta-enabled:active,
   .card-lift:hover,
   .card-lift:focus-visible,
   .group:hover .nudge-x,
@@ -480,5 +533,8 @@ select.field {
   .coverage-node,
   .scroll-reveal {
     transition: none;
+  }
+  .access-grid::before {
+    animation: none;
   }
 }

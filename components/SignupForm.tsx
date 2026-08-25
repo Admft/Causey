@@ -16,6 +16,7 @@ import {
   DISCOVERY_CATEGORIES,
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
+import { PasswordField } from "@/components/PasswordField";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -50,6 +51,7 @@ const ROLE_SIGNUP_COPY: Record<
 const SAFE_SIGNUP_ERRORS = new Set([
   "Account creation is unavailable in this build.",
   "Password must be at least 8 characters.",
+  "Passwords don’t match.",
   "Enter your date of birth.",
   "Enter a valid date of birth.",
   "Date of birth can’t be in the future.",
@@ -84,6 +86,7 @@ export function SignupForm({
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
@@ -118,6 +121,9 @@ export function SignupForm({
       }
       if (password.length < 8) {
         throw new Error("Password must be at least 8 characters.");
+      }
+      if (password !== confirmPassword) {
+        throw new Error("Passwords don’t match.");
       }
       let ageBand: AgeBand | null = null;
       if (role === "student") {
@@ -219,6 +225,7 @@ export function SignupForm({
             onClick={() => {
               setNeedsConfirm(false);
               setPassword("");
+              setConfirmPassword("");
             }}
             className="text-sm font-semibold text-brand-red hover:underline"
           >
@@ -317,18 +324,26 @@ export function SignupForm({
             autoComplete="email"
           />
         </label>
-        <label className="flex flex-col gap-1 sm:col-span-2">
-          <span className="text-xs font-semibold text-muted-strong">Password</span>
-          <input
-            className="field"
-            type="password"
+        <div className="sm:col-span-2">
+          <PasswordField
+            label="Password"
             required
             minLength={8}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             autoComplete="new-password"
           />
-        </label>
+        </div>
+        <div className="sm:col-span-2">
+          <PasswordField
+            label="Confirm password"
+            required
+            minLength={8}
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            autoComplete="new-password"
+          />
+        </div>
 
         {role === "student" ? (
           <label className="flex flex-col gap-1 sm:col-span-2">

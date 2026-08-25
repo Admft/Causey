@@ -165,6 +165,19 @@ describe("district pilot readiness priority", () => {
   });
 });
 
+describe("district command center competitions calendar", () => {
+  it("lists upcoming district and school events on overview after setup", () => {
+    const overview = readFileSync(
+      resolve(process.cwd(), "app/orgs/[slug]/page.tsx"),
+      "utf8"
+    );
+    expect(overview).toContain("Upcoming across the district");
+    expect(overview).toContain("Create a district-wide competition");
+    expect(overview).toContain("See all competitions");
+    expect(overview).toContain("getOrgCompetitionWorkspace(org)");
+  });
+});
+
 describe("district school bulk verification guardrails", () => {
   const migration = readFileSync(
     resolve(

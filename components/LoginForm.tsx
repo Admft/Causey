@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { homePathForRole } from "@/lib/auth/home-path";
 import type { AccountRole } from "@/lib/auth/types";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { PasswordField } from "@/components/PasswordField";
 
 export function LoginForm({
   next,
@@ -98,17 +99,13 @@ export function LoginForm({
           autoComplete="email"
         />
       </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-muted-strong">Password</span>
-        <input
-          className="field"
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
-      </label>
+      <PasswordField
+        label="Password"
+        required
+        value={password}
+        onChange={setPassword}
+        autoComplete="current-password"
+      />
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">

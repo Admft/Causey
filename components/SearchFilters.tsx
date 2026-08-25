@@ -136,7 +136,7 @@ export function SearchFilters({
           aria-expanded={open}
           aria-controls={id("panel")}
           onClick={() => setOpen((v) => !v)}
-          className="flex h-11 flex-1 items-center justify-between gap-2 rounded-lg border border-line bg-surface px-3.5 text-left text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 lg:hidden"
+          className="flex h-11 flex-1 items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3.5 text-left text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 lg:hidden"
         >
           <span>
             Narrow it down
@@ -190,7 +190,7 @@ export function SearchFilters({
         <div
           role="group"
           aria-labelledby={id("timing-label")}
-          className="flex rounded-lg border border-line bg-surface-soft p-1"
+          className="flex rounded-xl border border-line bg-surface-soft p-1"
         >
           {TIMING_OPTIONS.map((opt) => {
             const selected = filters.timing === opt.value;
@@ -218,7 +218,7 @@ export function SearchFilters({
           type="button"
           aria-pressed={filters.featured}
           onClick={() => onChange({ ...filters, featured: !filters.featured })}
-          className={`col-span-2 inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors lg:col-span-1 ${
+          className={`col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors lg:col-span-1 ${
             filters.featured
               ? "border-brand-red/40 bg-accent-soft text-brand-red"
               : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
@@ -236,7 +236,7 @@ export function SearchFilters({
           onClick={() =>
             onChange({ ...filters, club_going: !filters.club_going })
           }
-          className={`col-span-2 inline-flex items-center justify-center rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors lg:col-span-1 ${
+          className={`col-span-2 inline-flex items-center justify-center rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors lg:col-span-1 ${
             filters.club_going
               ? "border-brand-red/40 bg-accent-soft text-brand-red"
               : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"

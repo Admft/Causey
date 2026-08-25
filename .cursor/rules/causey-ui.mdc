@@ -10,19 +10,30 @@ Before new UI: reuse an existing pattern in this repo. If none fits, follow toke
 
 Every screen must be easy to read and intuitive to use on first view: clear type hierarchy, plain-language labels, one obvious next action. If a layout needs explaining, it is wrong.
 
+Causey is a scholastic competition product for club coaches, district program offices, and students. Alive means density, thicker type, rounder controls, and one coordinated motion system — not empty cards and not a toy palette.
+
 ## Brand
-- Fonts: Source Sans 3 (UI/body), Source Serif 4 (`font-display` for headlines/wordmark). Never Inter/Roboto/system-as-brand.
+- Fonts: Source Sans 3 (UI/body, default weight 500), Source Serif 4 (`font-display` for headlines/wordmark, weight 800). Never Inter/Roboto/system-as-brand.
 - Colors: only CSS tokens (`brand-red`, `brand-blue`, `surface`, `muted`, etc.). Red = primary action; blue = secondary/calm. Never equal-weight red+blue CTAs.
+- Radius: controls `rounded-xl`, cards `rounded-2xl`, hero shells `rounded-3xl`. No `rounded-full` status pills.
 - Banned looks: purple/indigo gradients, cream+terracotta AI default, broadsheet newspaper gimmick, dark mode by default, glow/glass/neon shadows.
 
 ## Layout & components
 - One job per section; one dominant CTA per view.
+- The first viewport is full of the product object (search, roster, path), not padding around a headline.
 - Filled panels, not bubbles with air: any card/panel/band must be composed so its content fills it — no large dead blank areas, and no lopsided two-column layouts where one side runs long while the other sits empty. Rebalance (move or trim content, cap the long column, stack earlier) or cut the container.
+- If a card has fewer than about four content rows, it is a list row or a left-rule strip, not a bordered bubble.
+- Marketing band padding-block: 2–2.5rem default, 3rem max unless the viewport is filled with a product object.
 - Same rule at page scale: no dead blank zones anywhere on a page. A page with a composed panel on one side and an empty expanse on the other was not planned. Plan the whole canvas — fill it, rebalance it, or narrow the layout — so pages ship right the first time instead of needing redesign passes later.
 - Cards for interaction, repeating units, or discrete chunks that benefit from separation. Bento/feature grids OK when content is genuinely grid-shaped — no identical pastel icon cells.
 - No `rounded-full` status pills above heroes. Badges must be functional (real filter/status/category) or deleted.
 - Results layout toggle: desktop (`lg+`) only — mobile stays single column.
 - Chess hero graphic: tune via `CHESS_GRAPHIC_SCALE` in `ChessHeroGraphic.tsx`; hidden on phones, shown md+.
+
+## Dual-buyer surfaces
+- District chrome: School/District copy, dense tables, calm path/progress motion.
+- Club/student chrome: Club/Team copy, same tokens, tighter packing, athletic cues (date chips, roster density).
+- Do not invent a second palette.
 
 ## Copy
 - Direct, specific, student-access focused. Headlines must say something only Causey can say.
@@ -30,7 +41,10 @@ Every screen must be easy to read and intuitive to use on first view: clear type
 - No fake data, no ✨, no placeholder lorem. Empty/error states say what to do next.
 
 ## Motion
-- Motion is encouraged as ONE coordinated system per page: hero entrance, a single shared scroll-reveal pattern, progress/draw moments, short staggers on small groups. Respect `prefers-reduced-motion` (non-negotiable).
+- Motion is required as ONE coordinated system per page: hero entrance, a single shared scroll-reveal pattern, progress/draw moments, short staggers on small groups.
+- Marketing pages and role landings fail review without a signature moment.
+- Ambient motion only on the coordinate-grid `::before` layer. Text, nav, buttons, and fields stay still at rest.
+- Respect `prefers-reduced-motion` (non-negotiable).
 
 ## Full briefs
 - `CAUSEY-DESIGN-SYSTEM.txt`

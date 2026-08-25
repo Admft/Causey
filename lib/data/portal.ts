@@ -454,6 +454,19 @@ export async function getOrgCompetitionWorkspace(
   return { events, drafts, hosts };
 }
 
+export async function getChildSchoolsForDistrict(
+  districtId: string
+): Promise<{ id: string; name: string; slug: string }[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("organizations")
+    .select("id, name, slug")
+    .eq("parent_org_id", districtId)
+    .eq("type", "school")
+    .order("name");
+  return ((data ?? []) as { id: string; name: string; slug: string }[]);
+}
+
 /** One resumable draft, with RLS limiting reads to coaches of its organization. */
 export async function getTournamentDraftForViewer(
   draftId: string,

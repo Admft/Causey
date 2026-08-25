@@ -16,6 +16,7 @@ import { formatDateRange, formatRecordedResult } from "@/lib/format";
 import {
   OPEN_COMPETITIONS_LABEL,
   orgCompetitionsHref,
+  organizationKindLabel,
 } from "@/lib/portal-copy";
 
 export const metadata: Metadata = {
@@ -48,6 +49,7 @@ export default async function OrganizationReportsPage({
   const districtRollup = districtReport?.schools ?? [];
   const districtHosted = districtReport?.districtHosted ?? null;
   const districtReportError = districtReportResult?.ok === false;
+  const orgKind = organizationKindLabel(view.org.type);
   const hasDistrictHostedActivity = districtHosted
     ? districtHosted.upcoming_tournaments +
         districtHosted.invitations_pending +
@@ -84,21 +86,21 @@ export default async function OrganizationReportsPage({
         <p className="mt-2 max-w-2xl text-sm text-muted">
           {view.isDistrictAdmin
             ? "School-hosted and district-hosted activity stay separate. This aggregate view does not expose students’ private searches, saves, or browsing activity."
-            : "Review who attended events this club hosted or marked as attending this calendar year, plus any place or award a coach recorded."}
+            : `Review who attended events this ${orgKind} hosted or marked as attending this calendar year, plus any place or award a coach recorded.`}
         </p>
         {view.isDistrictAdmin &&
         !districtReportError &&
         (districtRollup.length || hasDistrictHostedActivity) ? (
           <a
             href={`/orgs/${view.org.slug}/reports/export`}
-            className="mt-5 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+            className="mt-5 inline-flex rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
           >
             Download participation CSV
           </a>
         ) : !view.isDistrictAdmin && attendance.length ? (
           <a
             href={`/orgs/${view.org.slug}/reports/export`}
-            className="mt-5 inline-flex rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+            className="mt-5 inline-flex rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
           >
             Download attendance CSV
           </a>
@@ -221,20 +223,17 @@ export default async function OrganizationReportsPage({
           )
         ) : (
           <>
-            <dl className="mt-8 grid gap-3 sm:grid-cols-3">
+            <dl className="mt-8 grid gap-x-6 gap-y-3 sm:grid-cols-3">
               {[
                 { label: "Attendance marked", value: attendance.length },
                 { label: "Attended", value: attended },
                 { label: "Did not attend", value: absent },
               ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-xl border border-line bg-surface p-4"
-                >
+                <div key={stat.label} className="border-l-2 border-brand-red pl-3">
                   <dt className="text-xs font-semibold text-muted">
                     {stat.label}
                   </dt>
-                  <dd className="mt-2 font-display text-display-sm font-bold text-foreground">
+                  <dd className="mt-1 font-display text-xl text-foreground">
                     {stat.value}
                   </dd>
                 </div>
@@ -247,7 +246,7 @@ export default async function OrganizationReportsPage({
               {!attendance.length ? (
                 <PortalEmptyState
                   title="No attendance has been recorded"
-                  description="Attendance appears here after a coach marks outcomes on a past hosted event or a public event this club marked as attending."
+                  description={`Attendance appears here after a coach marks outcomes on a past hosted event or a public event this ${orgKind} marked as attending.`}
                   action={{
                     href: orgCompetitionsHref(view.org.slug),
                     label: OPEN_COMPETITIONS_LABEL,

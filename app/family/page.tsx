@@ -229,7 +229,7 @@ export default async function FamilyPage() {
             Who needs you
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
-            Club RSVPs and unfinished organizer registration for each linked
+            RSVPs and unfinished organizer registration for each linked
             student land here. Causey RSVP is not organizer entry or payment.
           </p>
 

@@ -335,7 +335,7 @@ export function SearchClient({
       {/* Zip + radius: the one bold moment on this page, on the coordinate-
           grid motif (access shouldn't depend on where you live). */}
       <section className="access-grid section-rule">
-        <div className="relative mx-auto min-h-[400px] max-w-6xl px-5 py-14 sm:px-8 sm:py-16 lg:min-h-[440px]">
+        <div className="relative mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10 md:min-h-[400px] lg:min-h-[440px] lg:py-12">
           <Link
             href="/"
             className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
@@ -345,7 +345,7 @@ export function SearchClient({
           <p className="mt-6 text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
             {categoryDefinition.label}
           </p>
-          <h1 className="mt-2 max-w-[20ch] font-display text-display-lg font-bold tracking-tight text-foreground">
+          <h1 className="animate-rise mt-2 max-w-[20ch] font-display text-display-lg tracking-tight text-foreground">
             {categoryDefinition.heading}
           </h1>
           <p className="mt-3 max-w-lg text-md text-muted">

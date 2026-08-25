@@ -10,12 +10,17 @@ CORE PRINCIPLE
 --------------------------------------------------------------------------------
 Every visual, structural, and copy decision must trace back to a reason
 specific to THIS product. "It's the library default," "it looked modern," or
-"other sites do this" are not reasons. If you cannot justify an element in one
-sentence tied to the product's actual purpose, brand, or content — cut it.
+"other sites do this" are not reasons.
+
+Cut unjustified decoration. Also cut unjustified emptiness. A bordered panel,
+band, or two-column grid whose content does not fill it is a defect. Fill it
+with product (search, roster, path, real listing), rebalance the layout, or
+delete the container. "It looked clean" is not a reason for air.
 
 This ruleset guards against generic output, not against ambition. Rich
 visuals, animation, depth, and interactive moments are encouraged when they
 pass the test above. The failure mode to avoid is sameness, not boldness.
+Empty rooms are not a brand.
 
 Before generating any new UI, ask: does a pattern/style for this already exist
 in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
@@ -46,14 +51,15 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
 --------------------------------------------------------------------------------
 2.1  Define ONE type scale at project start (e.g. 12/14/16/18/20/24/32/48).
      Every text size must come from it. No arbitrary values like text-[13px],
-     text-[15px], text-[17px].
+     text-[15px], text-[17px]. Default UI/body size is 16px.
 2.2  Define line-heights per scale step, once. Do not mix leading-[1.1],
      leading-relaxed, leading-snug, leading-[1.65] across similar blocks.
 2.3  Max 2 font families (3 only if one is a monospace doing data/label work).
      The pairing must contrast clearly (serif vs sans, geometric vs humanist).
      Never two near-identical sans-serifs.
-2.4  No extreme weight gaps: do not pair ultra-bold (800-900) headings with
-     thin (100-300) body text.
+2.4  Default body weight is 500 (medium), not 400. Labels and buttons 600–700.
+     Display headings 700–800. Do not pair 800 headings with thin (100–300)
+     body — pair them with 500–600 body. 900 is banned.
 2.5  Body text line length: 60-75 characters (~max-w-prose / 55-65ch). Never
      run paragraphs full-width across a wide container.
 2.6  Don't default to Inter. If Inter (or any font) is used, it must be a
@@ -64,10 +70,13 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
 3.1  Define ONE spacing scale (e.g. 4/8/12/16/24/32/48/64/96). All padding,
      margin, and gap values come from it. No px-3.5, py-1.5, gap-[18px]
      eyeballed one-offs.
-3.2  Border-radius: pick ONE radius value (or a 2-step scale: small/large) for
-     the entire project. Buttons, cards, inputs, badges, images all use it.
-     Never a 9999px pill inside a 4px-radius card.
-33.  Not every section is a centered max-w-* container with symmetric padding.
+3.2  Border-radius: a 3-step scale for the entire project.
+     Controls / buttons / fields: rounded-xl.
+     Cards / forms: rounded-2xl.
+     Hero shells / large product frames: rounded-3xl.
+     Never a 9999px pill inside a tight-radius card. Status pills are not
+     rounded-full.
+3.3  Not every section is a centered max-w-* container with symmetric padding.
      At least one section per page must break the pattern: full-bleed,
      asymmetric columns, offset content, or a different shape entirely.
 3.4  Sections must NOT all follow the same recipe (eyebrow -> headline ->
@@ -78,6 +87,18 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
 3.6  No section that restates a previous section's content in a different
      format (e.g. prose steps followed by icon-cards saying the same thing).
      One argument, made once, made well.
+3.7  DENSITY — filled canvas, not bubbles with air:
+     a. Panel padding must not exceed content mass. If a card has fewer than
+        about four content rows, it is a list row or a left-rule strip, not
+        a bordered bubble.
+     b. Marketing band padding-block: 2–2.5rem default, 3rem maximum unless
+        the viewport is filled with a product object (search, path, roster).
+     c. Two-column layouts need comparable visual mass, or they stack, or
+        the page narrows. No prose column beside an empty grid.
+     d. max-w-prose inside max-w-6xl is a leftover lane unless the other
+        lane is occupied.
+     e. The first viewport is full of the product object, not padding around
+        a headline.
 
 4. COMPONENTS
 --------------------------------------------------------------------------------
@@ -127,15 +148,19 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
      changes, hover feedback, product demos. The test is coordination —
      motion on a page should feel like one choreographed system, not random
      parts moving. If everything moves equally, nothing means anything.
+     Marketing pages and role landings fail review if they have no signature
+     motion moment (hero rise, path draw, or the shared scroll-reveal).
+     Product chrome uses that same reveal — not a second animation language.
 5.2  Scroll-reveal is allowed for major sections and key elements. Pick ONE
      reveal pattern per page (e.g. 12px rise + fade, 400-600ms) and reuse it;
      do not invent a different entrance per block. Trigger once, on entry.
 5.3  Staggered reveals are allowed for small related groups (cards, list
      items, logos) when the stagger reads as a sequence: short steps
      (40-80ms), capped groups, never applied page-wide.
-5.4  Every animation uses a real easing curve (cubic-bezier), never linear or
-     unspecified defaults. Durations 150-400ms for UI state, 400-800ms for
-     entrances and narrative moments.
+5.4  Every animation uses a real easing curve (cubic-bezier), never
+     unspecified defaults. UI state 180–280ms; entrances and narrative
+     moments 400–800ms. Linear is allowed only for continuous ambient loops
+     (e.g. slow grid drift) — never for UI state, hover, or reveals.
 5.5  Scroll-linked values are driven by requestAnimationFrame writing directly
      to the DOM/CSS vars. Never a CSS transition on a scroll-linked property
      (causes rubber-banding), never per-frame React state re-renders.
@@ -225,6 +250,11 @@ in this codebase? If yes, reuse it exactly. Never invent a one-off variant.
 9.6  Give every page at least one signature moment (a hero visual, an
      interactive demo, a progress draw). One or two supporting moments are
      fine. Keep navigation, forms, and body copy quiet so the moments land.
+9.7  Dual-buyer surfaces share one token system. District chrome is dense and
+     calm (School/District copy, path/progress motion). Club/student chrome
+     uses the same tokens with tighter packing and athletic cues (date chips,
+     roster density, Club/Team copy). Do not invent a second palette or a
+     toy language for “younger users.”
 
 10. PROCESS RULES FOR THE AGENT
 --------------------------------------------------------------------------------
@@ -249,6 +279,7 @@ QUICK PRE-SHIP CHECKLIST (run before calling anything done)
 --------------------------------------------------------------------------------
 [ ] No purple gradients, blobs, glows, or sparkle emoji
 [ ] All colors/type/spacing/radius from defined tokens and scales
+[ ] No empty bubbles; every panel’s content fills it
 [ ] No two sections share the same structural recipe
 [ ] One primary CTA wins; labels say what happens
 [ ] Icons: one consistent set; each icon maps to its specific concept

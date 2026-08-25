@@ -1,0 +1,34 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
+
+function source(path: string) {
+  return readFileSync(resolve(process.cwd(), path), "utf8");
+}
+
+describe("district-hosted multi-school invite", () => {
+  it("loads connected school rosters instead of the empty district student list", () => {
+    const manage = source("app/event/[slug]/manage/page.tsx");
+    const action = source("lib/actions/entrants.ts");
+    const portal = source("lib/data/portal.ts");
+    const form = source("components/EntrantManager.tsx");
+
+    expect(portal).toContain("export async function getChildSchoolsForDistrict");
+    expect(manage).toContain("getChildSchoolsForDistrict");
+    expect(manage).toContain("Invite connected schools");
+    expect(manage).toContain("isDistrictHost");
+    expect(action).toContain("export async function inviteConnectedSchoolRosters");
+    expect(action).toContain('host?.type !== "district"');
+    expect(form).toContain("inviteConnectedSchoolRosters");
+    expect(form).toContain("Invite every connected school");
+  });
+
+  it("keeps family follow-through copy org-agnostic", () => {
+    expect(source("app/family/page.tsx")).not.toContain("Club RSVPs");
+    expect(source("app/family/page.tsx")).toContain(
+      "RSVPs and unfinished organizer registration"
+    );
+    expect(source("app/me/page.tsx")).not.toContain("Club RSVPs");
+    expect(source("app/orgs/page.tsx")).not.toContain("Club RSVPs");
+  });
+});

@@ -13,6 +13,14 @@ export const OPEN_COMPETITIONS_LABEL = "Open competitions";
 export const OPEN_MY_CLUBS_LABEL = "Open my clubs";
 export const CREATE_ORGANIZATION_LABEL = "Create an organization";
 
+/** Plain noun for copy: club, team, school, or district. */
+export function organizationKindLabel(
+  type: string
+): "club" | "team" | "school" | "district" {
+  if (type === "team" || type === "school" || type === "district") return type;
+  return "club";
+}
+
 export type OrganizationNavAccess = {
   hasDistrictAccess?: boolean;
 };

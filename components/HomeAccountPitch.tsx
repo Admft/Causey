@@ -126,24 +126,24 @@ export async function HomeAccountPitch() {
             </div>
           </div>
 
-          <ul className="min-w-0 w-full max-w-md space-y-3 md:max-w-none">
+          <ul className="min-w-0 w-full max-w-md divide-y divide-line border-y border-line md:max-w-none">
             {next.secondary.map((action) => (
               <li key={action.href}>
                 <Link
                   href={action.href}
-                  className="card-lift group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5"
+                  className="group flex items-start justify-between gap-4 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-base font-semibold text-foreground">
+                    <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
                       {action.label}
                     </p>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-0.5 text-xs text-muted">
                       {action.description}
                     </p>
                   </div>
                   <span
                     aria-hidden="true"
-                    className="nudge-x shrink-0 text-xl text-brand-red"
+                    className="nudge-x shrink-0 text-lg font-bold text-brand-red"
                   >
                     →
                   </span>
@@ -195,27 +195,27 @@ export async function HomeAccountPitch() {
 
         <div className="min-w-0 w-full max-w-md md:max-w-none md:self-center">
           <div className="rounded-2xl border border-line bg-surface p-5">
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-bold text-foreground">
               Also create an account as
             </p>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-3 divide-y divide-line border-y border-line">
               <li>
                 <Link
                   href="/signup?role=parent"
-                  className="card-lift group flex items-start justify-between gap-4 rounded-xl border border-line bg-surface p-4"
+                  className="group flex items-start justify-between gap-4 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-base font-semibold text-foreground">
+                    <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
                       Parent
                     </p>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-0.5 text-xs text-muted">
                       Link your child’s account, answer RSVPs, and finish
                       organizer registration from one desk.
                     </p>
                   </div>
                   <span
                     aria-hidden="true"
-                    className="nudge-x shrink-0 text-xl text-brand-red"
+                    className="nudge-x shrink-0 text-lg font-bold text-brand-red"
                   >
                     →
                   </span>
@@ -224,20 +224,20 @@ export async function HomeAccountPitch() {
               <li>
                 <Link
                   href="/signup?role=coach"
-                  className="card-lift group flex items-start justify-between gap-4 rounded-xl border border-line bg-surface p-4"
+                  className="group flex items-start justify-between gap-4 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-base font-semibold text-foreground">
+                    <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
                       Coach or organizer
                     </p>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-0.5 text-xs text-muted">
                       Start a club, invite students with a join code, and publish
                       your own tournaments next to the indexed feeds.
                     </p>
                   </div>
                   <span
                     aria-hidden="true"
-                    className="nudge-x shrink-0 text-xl text-brand-red"
+                    className="nudge-x shrink-0 text-lg font-bold text-brand-red"
                   >
                     →
                   </span>

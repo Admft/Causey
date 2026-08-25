@@ -30,7 +30,11 @@ import {
   getDistrictReadinessAction,
   getDistrictSchoolReadinessStatus,
 } from "@/lib/district-readiness";
-import { formatDateRange, formatFeeCents } from "@/lib/format";
+import { formatDateRange, formatFeeCents, formatRecordedResult } from "@/lib/format";
+import {
+  SEARCH_TOURNAMENTS_LABEL,
+  organizationKindLabel,
+} from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +142,7 @@ export default async function OrgPage({
     org.type === "district"
       ? getOrgCompetitionWorkspace(org)
       : Promise.resolve(null),
-    canManageTournaments && org.type !== "district"
+    isCoach && org.type !== "district"
       ? getOrgSeasonAttendance(org.id)
       : Promise.resolve([]),
   ]);
@@ -178,6 +182,9 @@ export default async function OrgPage({
   const today = new Date().toISOString().slice(0, 10);
   const activeEvents = events.filter((event) => event.status !== "archived");
   const upcoming = activeEvents.filter((e) => isUpcomingEvent(e, today));
+  const districtUpcoming = (competitionWorkspace?.events ?? []).filter(
+    (event) => event.status !== "archived" && isUpcomingEvent(event, today)
+  );
   const past = activeEvents.filter((e) => !isUpcomingEvent(e, today));
   const attendingUpcoming = attendedEvents.filter((e) =>
     isUpcomingEvent(e, today)
@@ -375,8 +382,7 @@ export default async function OrgPage({
         !(row.award_label && row.award_label.trim())
     );
     if (needsResult) {
-      const clubKind =
-        org.type === "team" ? "team" : org.type === "school" ? "school" : "club";
+      const clubKind = organizationKindLabel(org.type);
       return {
         title: `Record results for “${needsResult.name}”`,
         description: `Attendance is marked. Add place or award so families and the ${clubKind} season file stay complete. A blank result means not recorded, not a loss.`,
@@ -384,9 +390,30 @@ export default async function OrgPage({
           href: `/event/${needsResult.slug}/manage#rsvps`,
           label: "Record a result",
         },
+        secondary: isAdmin
+          ? {
+              href: `/orgs/${org.slug}/reports`,
+              label: "Open season report",
+            }
+          : {
+              href: `/orgs/${org.slug}/roster/${needsResult.profile_id}`,
+              label: "Open student history",
+            },
+      };
+    }
+    const seasonHasStarted =
+      past.length > 0 ||
+      seasonAttendance.length > 0 ||
+      attendingUpcoming.length > 0;
+    if (seasonHasStarted) {
+      return {
+        title: "Season is underway",
+        description:
+          "No hosted event needs invites right now. Find a public tournament for the roster, or host the next competition here.",
+        action: { href: "/#search", label: SEARCH_TOURNAMENTS_LABEL },
         secondary: {
-          href: `/orgs/${org.slug}/reports`,
-          label: "Open season report",
+          href: `/orgs/${org.slug}/competitions/new`,
+          label: "Host a competition",
         },
       };
     }
@@ -424,6 +451,14 @@ export default async function OrgPage({
       (school) =>
         getDistrictSchoolReadinessStatus(school, org.slug).ready
     ).length ?? 0;
+  const seasonPlacements = seasonAttendance.flatMap((row) => {
+    const recorded = formatRecordedResult({
+      placement: row.placement,
+      awardLabel: row.award_label,
+      sectionName: row.section_name,
+    });
+    return recorded ? [{ ...row, recorded }] : [];
+  });
 
   return (
     <>
@@ -649,7 +684,7 @@ export default async function OrgPage({
                 See all competitions
               </Link>
             </div>
-            {!upcoming.length ? (
+            {!districtUpcoming.length ? (
               <p className="mt-4 max-w-prose text-sm text-muted">
                 No upcoming district or school events yet.{" "}
                 <Link
@@ -662,7 +697,7 @@ export default async function OrgPage({
               </p>
             ) : (
               <ul className="mt-4 divide-y divide-line border-y border-line">
-                {upcoming.slice(0, 8).map((event) => {
+                {districtUpcoming.slice(0, 8).map((event) => {
                   const hostName =
                     event.host?.id && event.host.id !== org.id
                       ? event.host.name
@@ -743,6 +778,64 @@ export default async function OrgPage({
             <p className="mt-2 max-w-2xl whitespace-pre-line text-sm text-muted">
               {announcements[0].body}
             </p>
+          </section>
+        ) : null}
+
+        {isCoach && org.type !== "district" && seasonPlacements.length ? (
+          <section className="mt-10">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  This season
+                </h2>
+                <p className="mt-1 text-xs text-muted">
+                  Places and awards a coach recorded. A missing row means not
+                  recorded, not a loss.
+                </p>
+              </div>
+              {isAdmin ? (
+                <Link
+                  href={`/orgs/${org.slug}/reports`}
+                  className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+                >
+                  Open season report
+                </Link>
+              ) : (
+                <Link
+                  href={`/orgs/${org.slug}/roster`}
+                  className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+                >
+                  Open roster
+                </Link>
+              )}
+            </div>
+            <ul className="mt-4 divide-y divide-line border-y border-line">
+              {seasonPlacements.slice(0, 8).map((row) => (
+                <li
+                  key={`${row.competition_id}-${row.profile_id}`}
+                  className="flex flex-wrap items-baseline justify-between gap-3 py-3"
+                >
+                  <div>
+                    <Link
+                      href={`/orgs/${org.slug}/roster/${row.profile_id}`}
+                      className="text-sm font-semibold text-foreground hover:text-brand-red"
+                    >
+                      {row.display_name || "Student"}
+                    </Link>
+                    <p className="mt-1 text-xs text-muted">
+                      {row.name}
+                      {row.hosted ? "" : " · travel"}
+                      {row.start_date
+                        ? ` · ${formatDateRange(row.start_date, null)}`
+                        : ""}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-muted-strong">
+                    {row.recorded}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </section>
         ) : null}
 

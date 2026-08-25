@@ -30,9 +30,10 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- **Club:** After-event results mission — if attendance is marked and place/award is blank, club/school overview leads with “Record a result.”
-- **District:** After setup, the office’s next action is the competitions calendar (district + school hosts), not an empty report.
+- **Shared visual language:** scholastic competition density — filled panels, rounder controls, heavier type, club `/clubs` peer to `/districts`.
 
 ## Last tick
 
-- 2026-08-24 — Agents created. First ship: club record-results mission + district competitions-next + overview calendar.
+- 2026-08-24 — Visual language: anti-vibecode density/radius/type/motion; `/clubs` pitch; home/districts/login/signup/search packed; reports stats no longer empty bubbles.
+- 2026-08-24 — Club agent pass: season trophy board on overview; mid-season “Season is underway”; team/school copy on reports and history; district-only audience helper hidden for clubs.
+- 2026-08-24 — Agents created. First ship: club record-results mission + club/team chrome; district competitions-next + overview calendar.
