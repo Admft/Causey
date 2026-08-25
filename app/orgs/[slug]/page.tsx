@@ -13,7 +13,10 @@ import {
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
 import { competitionTypeLabel } from "@/lib/competition-types";
-import { getDistrictPilotReadiness } from "@/lib/data/district";
+import {
+  getDistrictPilotReadiness,
+  getOrgSeasonAttendance,
+} from "@/lib/data/district";
 import {
   getMyEntrantRows,
   getOrgAttendedEvents,
@@ -48,6 +51,13 @@ const ADMIN_WORKSPACE_LABEL: Record<string, string> = {
   district: "district administration",
   club: "club administration",
   team: "team administration",
+};
+
+const WEBSITE_LABEL: Record<string, string> = {
+  school: "School website",
+  district: "District website",
+  club: "Club website",
+  team: "Team website",
 };
 
 function formatSavedAt(value: string): string {
@@ -114,6 +124,7 @@ export default async function OrgPage({
     roster,
     districtReadinessResult,
     competitionWorkspace,
+    seasonAttendance,
   ] =
     await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
@@ -127,6 +138,9 @@ export default async function OrgPage({
     org.type === "district"
       ? getOrgCompetitionWorkspace(org)
       : Promise.resolve(null),
+    canManageTournaments && org.type !== "district"
+      ? getOrgSeasonAttendance(org.id)
+      : Promise.resolve([]),
   ]);
   const events = competitionWorkspace?.events ?? directEvents;
   const drafts = competitionWorkspace?.drafts ?? directDrafts;
@@ -354,6 +368,28 @@ export default async function OrgPage({
         },
       };
     }
+    const needsResult = seasonAttendance.find(
+      (row) =>
+        row.status === "attended" &&
+        row.placement == null &&
+        !(row.award_label && row.award_label.trim())
+    );
+    if (needsResult) {
+      const clubKind =
+        org.type === "team" ? "team" : org.type === "school" ? "school" : "club";
+      return {
+        title: `Record results for “${needsResult.name}”`,
+        description: `Attendance is marked. Add place or award so families and the ${clubKind} season file stay complete. A blank result means not recorded, not a loss.`,
+        action: {
+          href: `/event/${needsResult.slug}/manage#rsvps`,
+          label: "Record a result",
+        },
+        secondary: {
+          href: `/orgs/${org.slug}/reports`,
+          label: "Open season report",
+        },
+      };
+    }
     return {
       title: "Create your first competition",
       description:
@@ -435,10 +471,10 @@ export default async function OrgPage({
                 href={org.website_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Open club website (opens in a new tab)"
+                aria-label={`Open ${WEBSITE_LABEL[org.type] ?? "website"} (opens in a new tab)`}
                 className="font-semibold text-brand-red hover:underline"
               >
-                Club website
+                {WEBSITE_LABEL[org.type] ?? "Website"}
               </a>
             ) : null}
           </p>
@@ -594,6 +630,97 @@ export default async function OrgPage({
           </section>
         ) : null}
 
+        {org.type === "district" && isAdmin ? (
+          <section className="mt-10">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">
+                  Upcoming across the district
+                </h2>
+                <p className="mt-1 text-xs text-muted">
+                  District-hosted and school-hosted events, including drafts
+                  still being prepared.
+                </p>
+              </div>
+              <Link
+                href={`/orgs/${org.slug}/competitions`}
+                className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+              >
+                See all competitions
+              </Link>
+            </div>
+            {!upcoming.length ? (
+              <p className="mt-4 max-w-prose text-sm text-muted">
+                No upcoming district or school events yet.{" "}
+                <Link
+                  href={`/orgs/${org.slug}/competitions/new`}
+                  className="font-semibold text-brand-red hover:underline"
+                >
+                  Create a district-wide competition
+                </Link>{" "}
+                or open a school workspace to host one there.
+              </p>
+            ) : (
+              <ul className="mt-4 divide-y divide-line border-y border-line">
+                {upcoming.slice(0, 8).map((event) => {
+                  const hostName =
+                    event.host?.id && event.host.id !== org.id
+                      ? event.host.name
+                      : "District-hosted";
+                  const statusNote =
+                    event.status === "draft"
+                      ? "draft"
+                      : event.status === "pending_review"
+                        ? "awaiting review"
+                        : event.status === "rejected"
+                          ? "returned for changes"
+                          : null;
+                  const href =
+                    event.status === "rejected"
+                      ? `/event/${event.slug}/edit`
+                      : `/event/${event.slug}/manage`;
+                  return (
+                    <li
+                      key={event.id}
+                      className="flex flex-wrap items-baseline justify-between gap-3 py-3"
+                    >
+                      <div>
+                        <Link
+                          href={href}
+                          className="text-sm font-semibold text-foreground hover:text-brand-red"
+                        >
+                          {event.name}
+                        </Link>
+                        <p className="mt-1 text-xs text-muted">
+                          {hostName}
+                          {" · "}
+                          {competitionTypeLabel({
+                            category: event.category,
+                            customCategoryName: event.custom_category_name,
+                          })}
+                          {" · "}
+                          {formatDateRange(event.start_date, event.end_date)}
+                          {statusNote ? ` · ${statusNote}` : ""}
+                        </p>
+                      </div>
+                      <Link
+                        href={href}
+                        className="text-xs font-semibold text-brand-red hover:underline"
+                      >
+                        {event.status === "rejected"
+                          ? "Fix listing"
+                          : event.status === "draft"
+                            ? "Continue draft"
+                            : "Manage"}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        ) : null}
+
         {coachMission ? (
           <div className="mt-8">
             <PortalMission
@@ -619,7 +746,7 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {canManageTournaments && !coachMission ? (
+        {canManageTournaments && !coachMission && org.type !== "district" ? (
           <section className="mt-8">
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div>

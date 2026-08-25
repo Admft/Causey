@@ -117,7 +117,9 @@ export default async function OrgCompetitionsPage({
                 ? "District and school events"
                 : view.org.type === "school"
                   ? "School events"
-                  : "Organization events"}
+                  : view.org.type === "team"
+                    ? "Team events"
+                    : "Club events"}
             </p>
             <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
               Competitions

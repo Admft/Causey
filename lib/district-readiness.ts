@@ -32,7 +32,7 @@ export type DistrictReadinessAction = {
     | "transfer_ownership"
     | "provision_students"
     | "await_platform_verification"
-    | "review_reporting";
+    | "run_competitions";
   title: string;
   description: string;
   href: string;
@@ -273,12 +273,12 @@ export function getDistrictReadinessAction(
   }
 
   return {
-    stage: "review_reporting",
-    title: "District setup is ready for the pilot",
+    stage: "run_competitions",
+    title: "Review school competitions",
     description:
-      "Every school is verified, delegated, and provisioned. Review participation by school before the first tournament.",
-    href: `/orgs/${readiness.districtSlug}/reports`,
-    label: "Review district reporting",
+      "Every school is verified, delegated, and provisioned. Open the district calendar to host a district-wide event or check what each school has published. Reports stay one click away for totals.",
+    href: `/orgs/${readiness.districtSlug}/competitions`,
+    label: "Open competitions",
     schoolId: null,
   };
 }

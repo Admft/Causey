@@ -1,0 +1,21 @@
+---
+description: Two buyer agents — professional club/team owner and school-district program office. Apply when shipping product UX.
+alwaysApply: true
+---
+
+# Club and district buyer agents
+
+Causey has two institutional buyers. Load the matching skill before changing org/portal UX.
+
+## Club / team owner
+Skill: `.cursor/skills/club-owner-readiness/SKILL.md`  
+Backlog: `.cursor/club-readiness.md`  
+Walk roster → travel/host → attendance → **results** → season report. Copy says Club/Team, never School/District. Do not build pairings, dues, DMs, or a public club directory.
+
+## School district
+Skill: `.cursor/skills/district-program-readiness/SKILL.md`  
+Backlog: `.cursor/district-readiness.md`  
+Walk provision schools → handoff → **school and district tournaments** → family RSVP → aggregate reports. Copy says School/District. No self-serve district signup, no partner names, fail-closed reports.
+
+## Shared
+Playbook: `.cursor/club-district-perfection-loop.md`. One workflow win per tick. `dev` only; never `main`. Update the persona backlog + `.cursor/district-ux-progress.md`.

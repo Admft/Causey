@@ -74,7 +74,9 @@ export default async function OrganizationReportsPage({
             ? "District reporting"
             : view.org.type === "school"
               ? "School reporting"
-              : "Reporting"}
+              : view.org.type === "team"
+                ? "Team reporting"
+                : "Club reporting"}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           {view.isDistrictAdmin ? "District participation" : "Season attendance"}

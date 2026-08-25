@@ -2,8 +2,8 @@
 
 **Audience:** district administrators, school administrators, and program coordinators  
 **Product:** Causey (`https://app.causey.dev`)  
-**Date:** August 16, 2026  
-**Status:** Assisted chess pilot. Not a self-serve district product and not a finished procurement package.
+**Date:** August 24, 2026  
+**Status:** Assisted chess pilot. Not a self-serve district product and not a finished procurement package. Club/team owners use a separate self-serve workspace (`docs/club-feature-overview.md`); this page is district + school only.
 
 Causey helps a district run scholastic competition programs without giving the central office a copy of every student’s browsing history. Families can search public chess tournaments for free. A district pilot adds the school-side work: getting the right people onto the right teams, telling families about events, recording who attended, and giving the district participation totals.
 
@@ -25,6 +25,7 @@ Chess is the working surface. Other competition types exist in the product but a
 - See **district-hosted** events separately from **school-hosted** events, so a district tournament is not counted as if every school ran it.
 - Publish **announcements** that can reach connected schools.
 - Host a **district-wide competition** when that is the real host, or leave hosting with a school.
+- After schools are provisioned, open a **competitions calendar** of district-hosted and school-hosted events (host name on each row) instead of stopping at empty totals.
 
 ### School administrators
 - Receive a **named invitation** and claim a school account. No shared passwords.
@@ -68,7 +69,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Role-based access | District, school, coach, assistant, parent, student each see their own work | Yes |
 | Claim-link provisioning | Email or copyable invite; CSV import/export; reissue | Yes |
 | Rosters and groups | School/club roster, groups for invites and attendance | Yes |
-| Hosted competitions | Draft → preview → publish; public events go through Causey review | Yes |
+| Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts | Yes |
 | Event audiences | Public, district-only, school-only, invite-only | Yes |
 | RSVP and attendance | Going / not going, attendance on the day, season view | Yes |
 | Organizer registration tracking | Families mark when they finished the external registration | Yes |

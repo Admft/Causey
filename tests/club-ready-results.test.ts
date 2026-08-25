@@ -58,5 +58,17 @@ describe("club-ready results and history", () => {
     expect(season).toContain('rpc("get_org_season_attendance"');
     expect(reports).toContain("marked as attending");
     expect(reports).toContain("Download attendance CSV");
+    expect(reports).toContain("Club reporting");
+    expect(reports).toContain("Team reporting");
+  });
+
+  it("asks the club owner to record results after attendance", () => {
+    const overview = source("app/orgs/[slug]/page.tsx");
+    const competitions = source("app/orgs/[slug]/competitions/page.tsx");
+    expect(overview).toContain("getOrgSeasonAttendance");
+    expect(overview).toContain("Record a result");
+    expect(overview).toContain("Open season report");
+    expect(competitions).toContain("Club events");
+    expect(competitions).toContain("Team events");
   });
 });

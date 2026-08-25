@@ -93,10 +93,11 @@ describe("district pilot readiness priority", () => {
     ).toBe("await_platform_verification");
   });
 
-  it("leads with aggregate reporting after every school is ready", () => {
-    expect(getDistrictReadinessAction(readiness(baseSchool)).stage).toBe(
-      "review_reporting"
-    );
+  it("leads with the competitions calendar after every school is ready", () => {
+    const next = getDistrictReadinessAction(readiness(baseSchool));
+    expect(next.stage).toBe("run_competitions");
+    expect(next.href).toBe("/orgs/sample-district/competitions");
+    expect(next.label).toBe("Open competitions");
   });
 
   it("summarizes two districts independently with their next actions", () => {

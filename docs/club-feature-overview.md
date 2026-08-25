@@ -1,0 +1,84 @@
+# Causey for clubs and teams
+
+**Audience:** club owners, team coaches, and volunteer organizers (any competition type Causey lists)  
+**Product:** Causey (`https://app.causey.dev`)  
+**Date:** August 24, 2026  
+**Status:** A coach can run a real season of coordination. Chess search is the densest public index. Causey is not tournament-floor software and not a billing product.
+
+Causey helps a club find events, get students and families to the right ones, record who went and how they finished, and keep a season file. Families still finish paid entry on the organizer’s site. Chess clubs get the most listings; a debate, STEM, arts, or writing club can use the same roster and hosting tools with fewer public events in the directory.
+
+A club is not a school and not a district. Coaches create club or team workspaces themselves. Districts are provisioned separately by Causey.
+
+---
+
+## What people in the club can do
+
+### Club / team owner (administrator)
+- Create a **club** or **team** and keep the type locked.
+- Invite coaches, assistants, and students with join links or CSV claim links.
+- Set a member-visible **website** and **meeting note**.
+- Transfer ownership; post short announcements.
+- Download a **season CSV** of attendance and recorded places/awards (hosted events plus travel events the club marked as attending).
+
+### Coaches
+- Run a **roster** and **groups**.
+- Mark the club as **going** to a public tournament; invite the roster; collect RSVPs and “finished organizer registration.”
+- Host a club event: draft → preview → publish (public listings wait for Causey review).
+- Choose **public**, **club/team only**, or **invite-only** (not district-only).
+- Record **attendance**, then **division / place / award**. Open a student from the roster for club-scoped history.
+
+### Parents
+- Link a child and use the **family desk** for RSVP and unfinished organizer registration.
+- See recorded results when a coach entered them (blank means not recorded).
+
+### Students
+- Search listings (chess is usable; other types can be thin).
+- Save events, RSVP, join with a code, leave the club, keep a **plan**.
+- Filter signed-in search to **events my club is going to**.
+
+---
+
+## Feature list
+
+| Feature | What it does | Ready for a club season? |
+| --- | --- | --- |
+| Create club or team | Self-serve workspace + join code | Yes |
+| Roster, groups, staff/student invites | Claim links; assistants read-only | Yes |
+| Public chess search | Zip/radius/date/grade filters | Yes, coverage incomplete |
+| Other-type directories | Debate, STEM, arts, writing search | Hosting yes; indexes thin |
+| “My club is going” | Signed-in directory chip | Yes (live data, not mock) |
+| Hosted competitions | Draft → review → publish | Yes |
+| RSVP + organizer registration | Distinct from paying the organizer | Yes |
+| Attendance + recorded results | Place/award; blanks are honest | Yes |
+| Family desk + alerts | Per-child actions; in-app alerts | Yes; email not volume-proven |
+| Season report + CSV | Hosted + travel the club attended | Yes |
+| Grade + credential IDs | Typed USCF / NSDA / other | IDs only; no live lookups |
+| Website + meeting note | Members only | Yes |
+| Public club homepage / directory | Find a club by city | No |
+| Pairings, ballots, dues | Floor TD / tab / billing | No — use those products |
+
+---
+
+## What Causey does not do yet
+
+Do not promise these in a club-owner conversation:
+
+- Swiss pairings, boards, clocks, or submitting a US Chess rating report
+- Tabroom/SpeechWire ballots or imported break lists
+- Membership dues, Stripe, or fundraising
+- Coach–parent message threads
+- A public club directory or public student profile
+- Recurring practice night as its own object (meeting note is the stand-in)
+- Live rating or NSDA-point lookup from typed IDs
+
+---
+
+## How a club season runs
+
+1. **Create the club** and share the student join link.
+2. **Find or host events.** Public chess search is the usual travel path; hosting is for the club’s own tournament.
+3. **Invite, RSVP, finish organizer registration** off Causey.
+4. **Mark attendance and record results** so families and the season file stay complete.
+5. **Export the season CSV** when a board or parent asks who went and who placed.
+
+To talk through a school-district program instead, use [app.causey.dev/districts](https://app.causey.dev/districts).

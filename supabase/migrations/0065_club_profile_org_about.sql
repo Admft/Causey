@@ -19,16 +19,27 @@ alter table public.profiles
   add constraint profiles_credential_ids_check
   check (
     jsonb_typeof(credential_ids) = 'object'
-    and not exists (
-      select 1
-      from jsonb_object_keys(credential_ids) as key
-      where key not in ('uscf', 'nsda', 'other')
+    and credential_ids - 'uscf' - 'nsda' - 'other' = '{}'::jsonb
+    and (
+      not credential_ids ? 'uscf'
+      or (
+        jsonb_typeof(credential_ids -> 'uscf') = 'string'
+        and char_length(btrim(credential_ids ->> 'uscf')) between 1 and 40
+      )
     )
-    and not exists (
-      select 1
-      from jsonb_each(credential_ids) as entry
-      where jsonb_typeof(entry.value) <> 'string'
-         or char_length(btrim(entry.value #>> '{}')) > 40
+    and (
+      not credential_ids ? 'nsda'
+      or (
+        jsonb_typeof(credential_ids -> 'nsda') = 'string'
+        and char_length(btrim(credential_ids ->> 'nsda')) between 1 and 40
+      )
+    )
+    and (
+      not credential_ids ? 'other'
+      or (
+        jsonb_typeof(credential_ids -> 'other') = 'string'
+        and char_length(btrim(credential_ids ->> 'other')) between 1 and 40
+      )
     )
   );
 
