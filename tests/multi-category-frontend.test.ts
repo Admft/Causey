@@ -13,6 +13,8 @@ const read = (path: string) =>
 
 const homePage = read("app/page.tsx");
 const heroSearch = read("components/HomeHeroSearch.tsx");
+const heroCard = read("components/HomeHeroCard.tsx");
+const heroMine = read("components/HomeHeroMyTournaments.tsx");
 const coveragePath = read("components/HomeCoveragePath.tsx");
 const authNav = read("components/AuthNav.tsx");
 const siteHeader = read("components/SiteHeader.tsx");
@@ -37,18 +39,20 @@ describe("homepage leads with multi-category discovery", () => {
   it("passes the signed-in preferred category into the hero search", () => {
     expect(homePage).toContain("parseDiscoveryCategory(");
     expect(homePage).toContain(
-      "<HomeHeroSearch initialCategory={initialCategory} />"
+      "initialCategory={initialCategory}"
     );
+    expect(homePage).toContain("<HomeHeroCard");
   });
 
   it("keeps a compact search card beside the copy on desktop", () => {
     expect(homePage).toContain("home-hero-lockup");
     expect(homePage).toContain("home-hero-copy");
     expect(homePage).toContain("home-hero-search-col");
-    expect(heroSearch).toContain("home-hero-search");
+    expect(heroCard).toContain("home-hero-search");
+    expect(heroCard).toContain("md:rounded-3xl");
   });
 
-  it("fills the remaining viewport and scrolls into the coverage band", () => {
+  it("fills the remaining viewport on desktop and scrolls into coverage", () => {
     const globals = read("app/globals.css");
     const cue = read("components/HomeHeroNext.tsx");
     expect(homePage).toContain('className="home-hero access-grid"');
@@ -68,10 +72,10 @@ describe("homepage leads with multi-category discovery", () => {
     expect(homePage).toContain("Chess for a district");
     expect(homePage).toContain('href="/clubs"');
     expect(homePage).toContain('href="/districts"');
-    expect(heroSearch).toContain('id="search"');
-    expect(heroSearch).toContain("is-search-attention");
-    expect(heroSearch).toContain("scrollIntoView");
-    expect(heroSearch).toContain("(max-width: 47.999rem)");
+    expect(heroCard).toContain('id="search"');
+    expect(heroCard).toContain("is-search-attention");
+    expect(heroCard).toContain("scrollIntoView");
+    expect(heroCard).toContain("(max-width: 47.999rem)");
     expect(read("app/globals.css")).toContain("@keyframes search-shine");
     expect(read("app/globals.css")).toContain("@keyframes search-attention");
   });
@@ -79,12 +83,31 @@ describe("homepage leads with multi-category discovery", () => {
   it("simplifies the stacked homepage so search is the first job", () => {
     expect(homePage).toContain("Pick a type, then search by zip.");
     expect(homePage).toContain("hidden flex-wrap gap-2 md:flex");
-    expect(homePage).toContain("mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm md:hidden");
-    expect(heroSearch).toContain("flex flex-col gap-2 md:grid md:grid-cols-5");
-    expect(heroSearch).toContain("{option.label}");
+    expect(homePage).toContain(
+      "home-hero-org-links mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm md:hidden"
+    );
+    expect(homePage).toContain("max-w-[20ch]");
+    expect(heroCard).toContain("rounded-2xl");
+    expect(heroCard).toContain("md:rounded-3xl");
+    expect(heroCard).toContain("shadow-[var(--shadow-panel)]");
+    expect(heroSearch).toContain("home-hero-types");
+    expect(heroSearch).toContain("{option.shortLabel}");
     expect(heroSearch).toContain('placeholder="Optional"');
     expect(heroSearch).toContain("max-md:hidden");
-    expect(read("app/globals.css")).toContain("justify-content: flex-start");
+    expect(read("app/globals.css")).toContain("repeat(6, minmax(0, 1fr))");
+    expect(read("app/globals.css")).toContain("repeat(5, minmax(0, 1fr))");
+    expect(read("app/globals.css")).not.toContain("max-w-[18rem]");
+  });
+
+  it("offers a My tournaments tab that returns after sign-in", () => {
+    expect(heroCard).toContain("My tournaments");
+    expect(heroCard).toContain('HOME_MY_TOURNAMENTS_PATH');
+    expect(heroMine).toContain("HOME_MY_TOURNAMENTS_LOGIN_HREF");
+    expect(heroMine).toContain("Create an account");
+    expect(heroMine).toContain("onSearchInstead");
+    expect(heroMine).not.toMatch(/registered/i);
+    expect(homePage).toContain("isHomeMyTournamentsView");
+    expect(homePage).toContain("getHomeMyTournaments");
   });
 });
 

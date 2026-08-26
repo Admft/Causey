@@ -38,7 +38,10 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
-- [x] Phone discovery is quieter: homepage is pick-type then zip (full-name rows, distance after zip); directory pages search before collapsed filters — 2026-08-26
+- [x] Homepage Find tournaments card adds a My tournaments tab: signed-out sign-in returns to `/?view=mine`; signed-in list is Going / Needs RSVP / traveling / hosted (not organizer registration) — 2026-08-26
+- [x] Phone homepage hero is a content-height form at page width (3+2 type tiles, rounded-2xl, no full-viewport void or 18rem bubble) — 2026-08-26
+- [x] Phone homepage type chooser is a 2×3 tile grid (Writing centered on the last row) so Find + zip + Search stay on the first screen with the My tournaments tab — 2026-08-26
+- [x] Phone discovery is quieter: homepage is pick-type then zip (distance after zip); directory pages search before collapsed filters — 2026-08-26
 - [x] Home hero fills the remaining viewport (`dvh`/`svh` minus sticky header) and a named cue smooth-scrolls into coverage — 2026-08-26
 - [x] Home organizer band numbers only the club season walk; district-ready and planned-next drop 01–04 so the section is not three stacked countdowns — 2026-08-26
 - [x] Home “Find a tournament” sheens the Find tournaments card (one-shot brand-red ring + sweep); stacked/phone layouts also scroll the card under the sticky chrome — 2026-08-26

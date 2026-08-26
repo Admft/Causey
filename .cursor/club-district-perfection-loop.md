@@ -34,6 +34,8 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Last tick
 
+- 2026-08-26 — Phone homepage hero: content-height, page-width form card, 3+2 type tiles (not a full-viewport bubble).
+- 2026-08-26 — Homepage Find card: My tournaments tab previews Going / RSVP / org hosted and traveling events; signed-out sign-in returns to that tab.
 - 2026-08-26 — Phone discovery: homepage search-first (type rows, optional zip); directory search sits above collapsed filters.
 - 2026-08-26 — Home hero fills the remaining viewport (dvh minus header) with a bobbing cue that scrolls to coverage.
 - 2026-08-26 — Home organizer band: keep 01–04 only on club roster→results; district ready-now and planned-next are unnumbered.

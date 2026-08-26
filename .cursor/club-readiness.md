@@ -19,7 +19,9 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 ## Need for a professional club (priority)
 
 - [x] Overview tells the owner to **record results** after attendance (not only invite/create) — 2026-08-24
-- [x] Phone homepage is search-first: type rows, optional zip, club/district as text links — 2026-08-26
+- [x] Homepage Find card has a My tournaments tab: sign-in returns here; signed-in preview of Going / traveling / hosted — 2026-08-26
+- [x] Phone homepage hero is a page-width form (3+2 type tiles) so Find stays on one screen with My tournaments — 2026-08-26
+- [x] Phone homepage is search-first: type tiles, optional zip, club/district as text links — 2026-08-26
 - [x] Homepage hero fills the remaining viewport and a cue scrolls to what Causey indexes — 2026-08-26
 - [x] Public `/clubs` scope ledger is one lifted white card: aligned can-do / not-building rows, display heads, lead/sm type, district note under the pair — 2026-08-26
 - [x] Public `/clubs` and `/districts` pitches include a compact “All competition types” back control to the homepage chooser — 2026-08-26
@@ -37,7 +39,8 @@ Needs for a professional club (not building unless you ask): recurring practice 
 
 ## Findings — 2026-08-26
 
-- Student / coach on a phone · homepage · desktop copy, chips, and five tiny type icons compete with search · first job is unclear · **M · shipping this tick**
+- Student / coach on the homepage · Find tournaments · no way to see Going / club-traveling events without leaving search · **M · shipping this tick**
+- Student / coach on a phone · homepage · desktop copy, chips, and five tiny type icons compete with search · first job is unclear · **M · shipped 2026-08-26**
 - Student on a phone · directory · filters sit above name/zip so the list is a long form before the first tournament · **M · shipping this tick**
 
 ## Findings — 2026-08-24

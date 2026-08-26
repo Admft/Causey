@@ -444,31 +444,32 @@ select.field {
   }
 }
 
-/* Home hero: one viewport below sticky chrome. svh/dvh so mobile URL bars
-   do not leave a gap or clip; the lockup centers in the leftover space. */
+/* Home hero. Stacked: content-height so the search form is the page, not a
+   floating island in leftover viewport. From 48rem up, fill the remaining
+   viewport (svh/dvh for mobile URL bars) and center the lockup. */
 .home-hero {
   position: relative;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  min-height: calc(100vh - var(--home-hero-chrome));
-  min-height: calc(100svh - var(--home-hero-chrome));
-  min-height: calc(100dvh - var(--home-hero-chrome));
 }
 .home-hero-lockup {
   display: flex;
-  flex: 1 1 auto;
+  width: 100%;
   flex-direction: column;
-  justify-content: center;
-  gap: 2rem;
-  padding-block: 1.5rem 1rem;
+  gap: 1rem;
+  padding-block: 1rem 1.25rem;
 }
-@media (width < 48rem) {
-  .home-hero-lockup {
-    justify-content: flex-start;
-    gap: 1.25rem;
-    padding-block: 1rem 0.75rem;
-  }
+.home-hero-types {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.home-hero-types > * {
+  grid-column: span 2;
+}
+.home-hero-types > :nth-child(4) {
+  grid-column: 2 / span 2;
 }
 .home-hero-search {
   position: relative;
@@ -582,17 +583,32 @@ select.field {
   }
 }
 @media (width >= 48rem) {
+  .home-hero {
+    min-height: calc(100vh - var(--home-hero-chrome));
+    min-height: calc(100svh - var(--home-hero-chrome));
+    min-height: calc(100dvh - var(--home-hero-chrome));
+  }
   .home-hero-lockup {
     display: grid;
+    flex: 1 1 auto;
     width: 100%;
     grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
     align-items: center;
+    justify-content: center;
     column-gap: 2.5rem;
     row-gap: 0;
+    padding-block: 1.5rem 1rem;
   }
   .home-hero-search {
     display: flex;
     flex-direction: column;
+  }
+  .home-hero-types {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .home-hero-types > *,
+  .home-hero-types > :nth-child(4) {
+    grid-column: auto;
   }
 }
 @media (width >= 64rem) {

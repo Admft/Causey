@@ -34,75 +34,8 @@ export function HomeHeroSearch({
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
-  const attentionTimer = useRef<number>(0);
-
-  // “Find a tournament” (#search): sheen on the card; on stacked (phone)
-  // layouts also scroll the form into view under the sticky chrome.
-  useEffect(() => {
-    const form = formRef.current;
-    if (!form) return undefined;
-    const searchForm = form;
-
-    const reducedMq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const stackedMq = window.matchMedia("(max-width: 47.999rem)");
-
-    const shine = () => {
-      if (reducedMq.matches) return;
-      searchForm.classList.remove("is-search-attention");
-      void searchForm.offsetWidth;
-      searchForm.classList.add("is-search-attention");
-      window.clearTimeout(attentionTimer.current);
-      attentionTimer.current = window.setTimeout(() => {
-        searchForm.classList.remove("is-search-attention");
-      }, 1100);
-    };
-
-    const goToSearch = () => {
-      const chrome = document.querySelector("[data-site-chrome]");
-      const inset = Math.ceil(
-        (chrome?.getBoundingClientRect().height ?? 96) + 12
-      );
-      searchForm.style.scrollMarginTop = `${inset}px`;
-      if (stackedMq.matches) {
-        searchForm.scrollIntoView({
-          behavior: reducedMq.matches ? "auto" : "smooth",
-          block: "start",
-        });
-      }
-      shine();
-      searchForm.focus({ preventScroll: true });
-    };
-
-    const onClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-        return;
-      }
-      if (!(event.target instanceof Element)) return;
-      const href = event.target.closest("a[href]")?.getAttribute("href");
-      if (href !== "#search" && href !== "/#search") return;
-      if (window.location.pathname !== "/") return;
-      event.preventDefault();
-      if (window.location.hash !== "#search") {
-        window.history.pushState(null, "", "#search");
-      }
-      goToSearch();
-    };
-
-    document.addEventListener("click", onClick, true);
-    let frame = 0;
-    if (window.location.hash === "#search") {
-      frame = window.requestAnimationFrame(() => goToSearch());
-    }
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.removeEventListener("click", onClick, true);
-      window.clearTimeout(attentionTimer.current);
-    };
-  }, []);
 
   useEffect(() => {
     const el = zipRef.current;
@@ -162,21 +95,15 @@ export function HomeHeroSearch({
 
   return (
     <form
-      id="search"
-      ref={formRef}
-      tabIndex={-1}
       onSubmit={onSubmit}
-      className="home-hero-search flex w-full min-w-0 flex-col rounded-3xl border border-line bg-white p-4 shadow-[var(--shadow-card)] md:p-6"
+      className="flex w-full min-w-0 flex-col"
     >
-      <h2 className="font-display text-xl font-bold tracking-tight text-foreground md:text-display-sm">
-        Find tournaments
-      </h2>
-      <p className="mt-2 hidden text-sm text-muted md:block">
+      <p className="hidden text-sm text-muted md:mb-4 md:block">
         Pick a competition type, then optionally narrow by zip and distance.
         Each directory also has name and category-specific filters.
       </p>
 
-      <div className="mt-4 flex flex-col gap-4 md:mt-5">
+      <div className="flex flex-col gap-4">
         <div className="min-w-0">
           <p
             id="hero-category-label"
@@ -190,7 +117,7 @@ export function HomeHeroSearch({
             aria-labelledby="hero-category-label"
             aria-invalid={categoryError !== null}
             aria-describedby={categoryError ? "hero-category-error" : undefined}
-            className="mt-2 flex flex-col gap-2 md:grid md:grid-cols-5 md:gap-2"
+            className="home-hero-types mt-2"
           >
             {DISCOVERY_CATEGORIES.map((option) => {
               const selected = category === option.id;
@@ -205,7 +132,7 @@ export function HomeHeroSearch({
                     setCategory(option.id);
                     setCategoryError(null);
                   }}
-                  className={`flex min-h-12 touch-manipulation items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors md:min-h-16 md:flex-col md:justify-center md:gap-1 md:px-1 md:py-2 md:text-center ${
+                  className={`flex h-14 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-1 text-center transition-colors md:h-16 ${
                     selected
                       ? "border-brand-red/45 bg-accent-soft text-brand-red"
                       : "border-line bg-white text-foreground hover:border-brand-red/35 hover:text-brand-red"
@@ -213,12 +140,9 @@ export function HomeHeroSearch({
                 >
                   <CategoryGlyph
                     category={option.id}
-                    className="h-6 w-6 shrink-0 md:h-7 md:w-7"
+                    className="h-5 w-5 shrink-0 md:h-7 md:w-7"
                   />
-                  <span className="text-sm font-bold md:hidden">
-                    {option.label}
-                  </span>
-                  <span className="hidden max-w-full text-2xs font-bold leading-tight md:block">
+                  <span className="max-w-full text-2xs font-bold leading-tight">
                     {option.shortLabel}
                   </span>
                 </button>
