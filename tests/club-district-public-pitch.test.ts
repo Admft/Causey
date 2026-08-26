@@ -45,8 +45,11 @@ describe("club and district public pitches", () => {
   });
 
   it("exposes both buyer paths from home and the footer", () => {
-    expect(homePage).toContain('href: "/clubs"');
-    expect(homePage).toContain('href: "/districts"');
+    expect(homePage).toContain('href="/clubs"');
+    expect(homePage).toContain('href="/districts"');
+    expect(homePage).toContain("Run a club or team");
+    expect(homePage).toContain("Chess for a district");
+    expect(homePage).not.toContain("Find a tournament");
     expect(layout).toContain('href="/clubs"');
     expect(layout).toContain("Clubs and teams");
     expect(proxy).toContain('"/clubs"');

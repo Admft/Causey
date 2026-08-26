@@ -34,6 +34,8 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Last tick
 
+- 2026-08-26 — Home organizer band: keep 01–04 only on club roster→results; district ready-now and planned-next are unnumbered.
+- 2026-08-26 — Home hero: drop early-build banner and the Find-a-tournament list; club/district sit as chips; search card keeps type icons.
 - 2026-08-26 — Page-back controls are outlined chips with a chevron (not ghost “← text”), shared across public leaves and in-app returns.
 - 2026-08-26 — `/clubs` scope ledger: one white card on a soft band, subgrid-aligned rows, heavier type and padding so the can-do / not-building pair reads as a contract.
 - 2026-08-26 — Public pages get a named back link (`PageBackLink`) so `/clubs`, `/districts`, and account/legal leaves are not a dead end when the header logo is hidden.

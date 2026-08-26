@@ -41,16 +41,19 @@ describe("homepage leads with multi-category discovery", () => {
     );
   });
 
-  it("stretches the search card to the left column on desktop", () => {
+  it("keeps a compact search card beside the copy on desktop", () => {
     expect(homePage).toContain("home-hero-lockup");
     expect(homePage).toContain("home-hero-copy");
     expect(homePage).toContain("home-hero-search-col");
     expect(heroSearch).toContain("home-hero-search");
   });
 
-  it("points Find a tournament at the search card with a sheen and mobile scroll", () => {
-    expect(homePage).toContain('href: "#search"');
-    expect(homePage).toContain("Find a tournament");
+  it("offers club and district as chips and still sheens #search", () => {
+    expect(homePage).not.toContain("Find a tournament");
+    expect(homePage).toContain("Run a club or team");
+    expect(homePage).toContain("Chess for a district");
+    expect(homePage).toContain('href="/clubs"');
+    expect(homePage).toContain('href="/districts"');
     expect(heroSearch).toContain('id="search"');
     expect(heroSearch).toContain("is-search-attention");
     expect(heroSearch).toContain("scrollIntoView");
@@ -83,7 +86,7 @@ describe("hero search requires an explicit category", () => {
   it("offers browse-without-zip only when the zip field is empty", () => {
     expect(heroSearch).toContain("Browse {discoveryCategoryLabel(category)} without a zip");
     expect(heroSearch).toContain("category && !zipTrimmed");
-    expect(heroSearch).toContain("This search");
+    expect(heroSearch).toContain("CategoryGlyph");
   });
 });
 

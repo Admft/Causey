@@ -20,13 +20,15 @@ describe("mobile discovery and private district setup", () => {
 
   it("separates current district readiness from future plans", () => {
     expect(districtPitch).toContain("The district foundation is in place");
-    expect(districtPitch).toContain("what is ready now");
-    expect(districtPitch).toContain("what we plan to");
+    expect(districtPitch).toContain("Planned next");
     expect(districtPitch).toContain("Guided district setup");
     expect(districtPitch).toContain("More competition types");
+    expect(districtPitch).not.toContain("what is ready now");
+    expect(districtPitch).not.toContain("what we plan to");
     expect(districtPitch).not.toContain("aggregate reporting");
     expect(districtPitch).not.toContain("staff handoff");
     expect(districtPitch).not.toContain("Provision and verify");
+    expect((districtPitch.match(/padStart/g) ?? []).length).toBe(1);
   });
 
   it("puts compact filters before the mobile tournament search controls", () => {

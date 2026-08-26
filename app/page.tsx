@@ -14,23 +14,8 @@ export const metadata: Metadata = {
     "Causey indexes official scholastic competition listings across chess, speech and debate, STEM, arts, and writing so students can find events within reach. Coverage varies by category and is still incomplete.",
 };
 
-const HERO_PATHS = [
-  {
-    href: "#search",
-    title: "Find a tournament",
-    description: "Search by type and zip. Chess is the densest directory today.",
-  },
-  {
-    href: "/clubs",
-    title: "Run a club or team",
-    description: "Roster, travel, attendance, and recorded results in one season file.",
-  },
-  {
-    href: "/districts",
-    title: "Chess for a district",
-    description: "Assisted school setup, family follow-through, and school-level totals.",
-  },
-] as const;
+const HERO_CHIP =
+  "inline-flex items-center rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red";
 
 export default async function CompetitionTypesPage() {
   // Signed-in visitors may start from their saved directory shortcut; a
@@ -58,31 +43,14 @@ export default async function CompetitionTypesPage() {
                 by category; chess is the broadest directory today, and every
                 directory is still incomplete.
               </p>
-              <ul className="animate-rise animate-rise-delay-2 mt-6 divide-y divide-line border-y border-line">
-                {HERO_PATHS.map((path) => (
-                  <li key={path.href}>
-                    <Link
-                      href={path.href}
-                      className="group flex items-start justify-between gap-4 py-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
-                          {path.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted">
-                          {path.description}
-                        </p>
-                      </div>
-                      <span
-                        aria-hidden="true"
-                        className="nudge-x shrink-0 text-lg font-bold text-brand-red"
-                      >
-                        →
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <div className="animate-rise animate-rise-delay-2 mt-6 flex flex-wrap gap-2">
+                <Link href="/clubs" className={HERO_CHIP}>
+                  Run a club or team
+                </Link>
+                <Link href="/districts" className={HERO_CHIP}>
+                  Chess for a district
+                </Link>
+              </div>
             </div>
           </div>
           <div className="home-hero-search-col relative z-10">

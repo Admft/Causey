@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
-import { EarlyBuildBanner } from "@/components/EarlyBuildBanner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
 import "./globals.css";
@@ -50,7 +49,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
       <body className="flex min-h-screen flex-col overflow-x-clip font-medium">
         <div className="sticky top-0 z-50" data-site-chrome>
-          <EarlyBuildBanner />
           <SiteHeader />
         </div>
 

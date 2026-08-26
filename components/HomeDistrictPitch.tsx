@@ -5,8 +5,9 @@ import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
 /**
  * Organizer band under discovery: club/team self-serve season on the left,
  * assisted district pilot on the right. Search already owns the page CTA, so
- * these paths use outline buttons. District copy keeps the ready-now /
- * planned-next split used by the public pitch tests.
+ * these paths use outline buttons. Numbering is only on the club season
+ * walk (roster → results). District-ready and planned-next items stay
+ * unnumbered so the band is not three 01–04 stacks.
  */
 const CLUB_SEASON = [
   {
@@ -129,34 +130,24 @@ export function HomeDistrictPitch() {
                 Causey already has the foundation for an assisted district
                 pilot: connected schools, separate access for each role,
                 tournament coordination, and school-level participation totals.
-                The panel shows what is ready now; the four points below are
-                what we plan to build next for districts.
               </p>
               <p className="sr-only">
                 Causey already supports the structure and permissions needed to
                 connect a district with its participating schools.
               </p>
 
-              <ol className="mt-5 divide-y divide-line border-y border-line">
-                {PRIVATE_SETUP_GATES.map((gate, index) => (
-                  <li
-                    key={gate.title}
-                    className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 py-3"
-                  >
-                    <span className="text-xs font-bold tabular-nums text-brand-red">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <p className="text-sm font-bold text-foreground">
-                        {gate.title}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {gate.description}
-                      </p>
-                    </div>
+              <ul className="mt-5 divide-y divide-line border-y border-l-2 border-line border-l-brand-blue/40 pl-4">
+                {PRIVATE_SETUP_GATES.map((gate) => (
+                  <li key={gate.title} className="py-3 pl-3">
+                    <p className="text-sm font-bold text-foreground">
+                      {gate.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {gate.description}
+                    </p>
                   </li>
                 ))}
-              </ol>
+              </ul>
               <div className="mt-5 flex flex-wrap items-center gap-4">
                 <Link href="/districts" className="cta-outline inline-flex">
                   Review the district pilot
@@ -178,21 +169,23 @@ export function HomeDistrictPitch() {
           </ScrollReveal>
         </div>
 
-        <ol className="mt-8 grid grid-cols-1 gap-5 border-t border-line pt-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-          {PILOT_STEPS.map((step, index) => (
-            <li key={step.title}>
-              <ScrollReveal delay={index * 60}>
-                <p className="text-sm font-bold tabular-nums tracking-wider text-brand-red">
-                  {String(index + 1).padStart(2, "0")}
-                </p>
-                <h3 className="mt-2 text-base font-bold text-foreground">
-                  {step.title}
-                </h3>
-                <p className="mt-1 text-sm text-muted">{step.description}</p>
-              </ScrollReveal>
-            </li>
-          ))}
-        </ol>
+        <div className="mt-8 border-t border-line pt-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+            Planned next
+          </p>
+          <ul className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            {PILOT_STEPS.map((step, index) => (
+              <li key={step.title}>
+                <ScrollReveal delay={index * 60}>
+                  <h3 className="text-base font-bold text-foreground">
+                    {step.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted">{step.description}</p>
+                </ScrollReveal>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
