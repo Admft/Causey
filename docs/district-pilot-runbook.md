@@ -14,7 +14,7 @@ the verified `mail.causey.dev` Resend integration.
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0063_delete_own_account.sql` (including
+   `0066_competition_comments_and_home_geo.sql` (including
    `0045_atomic_district_school_creation.sql`,
    `0046_district_hosted_reporting.sql`,
    `0060_district_admin_activity.sql`,

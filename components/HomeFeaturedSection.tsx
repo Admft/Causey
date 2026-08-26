@@ -39,7 +39,15 @@ export function HomeFeaturedSection({
             {featured.copy.searchLabel}
           </Link>
         </div>
-        <ul className="mt-8 grid grid-cols-3 gap-4">
+        <ul
+          className={`mt-8 grid gap-4 ${
+            featured.results.length === 1
+              ? "max-w-sm grid-cols-1"
+              : featured.results.length === 2
+                ? "grid-cols-2"
+                : "grid-cols-3"
+          }`}
+        >
           {featured.results.map((result) => (
             <li key={result.id}>
               <CompetitionCard result={result} layout="grid3" />

@@ -66,7 +66,7 @@ These are not missing by accident; they are deliberate early constraints:
 - Self-serve district creation (platform administrators provision districts)
 
 Accounts and district workflows are live — apply every versioned migration
-through the latest file (currently `0063_delete_own_account.sql`)
+through the latest file (currently `0066_competition_comments_and_home_geo.sql`)
 and use `/signup`. Any later migration is part of the required sequence.
 Coaches create school/club workspaces with join codes,
 district administrators create connected schools, platform administrators
@@ -123,7 +123,7 @@ need to be completed or connected.
 What exists already:
 
 - `supabase/migrations/0001_init.sql` through
-  `supabase/migrations/0063_delete_own_account.sql`
+  `supabase/migrations/0066_competition_comments_and_home_geo.sql`
 - `lib/data/supabase.ts`
 - `scripts/seed-supabase.ts`
 
@@ -132,7 +132,7 @@ What still needs to happen:
 - Create a real Supabase project.
 - Run `npm run validate:migrations`, link with the Supabase CLI, and inspect
   `supabase migration list`.
-- Apply every versioned SQL file through the latest file (currently `0063`),
+- Apply every versioned SQL file through the latest file (currently `0066`),
   then continue with each uniquely numbered migration as it lands.
 - `PENDING_SCRAPE.sql` was removed after its ingestion changes were integrated
   into numbered migrations. Do not restore or apply copies of that scratch

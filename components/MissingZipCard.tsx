@@ -43,6 +43,16 @@ export function MissingZipCard() {
           onChange={setZip}
           disabled={pending}
           helper="Saved on your account, not shown on public event pages."
+          onLocated={async (next) => {
+            setPending(true);
+            setError(null);
+            try {
+              const result = await saveProfileZip(next);
+              if (!result.ok) setError(result.error);
+            } finally {
+              setPending(false);
+            }
+          }}
         />
         {error ? (
           <p className="text-sm font-medium text-brand-red" role="alert">

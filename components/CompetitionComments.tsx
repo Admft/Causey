@@ -142,7 +142,7 @@ export function CompetitionComments({
           </label>
           <textarea
             id="event-comment"
-            className="field min-h-24"
+            className="field"
             maxLength={COMPETITION_COMMENT_MAX_LENGTH}
             value={body}
             disabled={pending}

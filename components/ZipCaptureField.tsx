@@ -10,6 +10,7 @@ export function ZipCaptureField({
   disabled,
   describedBy,
   helper = "Used to show tournaments near you. Optional.",
+  onLocated,
 }: {
   id?: string;
   value: string;
@@ -17,6 +18,7 @@ export function ZipCaptureField({
   disabled?: boolean;
   describedBy?: string;
   helper?: string;
+  onLocated?: (zip: string) => void | Promise<void>;
 }) {
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
@@ -31,6 +33,7 @@ export function ZipCaptureField({
         return;
       }
       onChange(result.zip);
+      await onLocated?.(result.zip);
     } finally {
       setLocating(false);
     }

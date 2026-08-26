@@ -167,6 +167,12 @@ select.field {
   background-position: right 0.75rem center;
   padding-right: 2.25rem;
 }
+textarea.field {
+  height: auto;
+  min-height: 6rem;
+  padding-block: 0.75rem;
+  resize: vertical;
+}
 .field.field-password {
   padding-right: 2.75rem;
 }

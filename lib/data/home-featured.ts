@@ -18,6 +18,7 @@ import {
   type HomeFeaturedMode,
 } from "@/lib/home-featured";
 import { todayIsoDate } from "@/lib/competition-timing";
+import { SearchFiltersSchema } from "@/lib/schemas";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type HomeFeaturedResult = {
@@ -27,11 +28,11 @@ export type HomeFeaturedResult = {
   nearbyEmpty: boolean;
 };
 
-const PHOTO_FILTERS = {
-  timing: "upcoming" as const,
-  sort: "soonest" as const,
+const PHOTO_FILTERS = SearchFiltersSchema.parse({
+  timing: "upcoming",
+  sort: "soonest",
   limit: HOME_FEATURED_POOL,
-};
+});
 
 async function loadPhotoPool(): Promise<CompetitionResult[]> {
   if (!isSupabaseConfigured()) {
@@ -79,13 +80,15 @@ export async function getHomeFeaturedCompetitions(
     const data = await getRequestDataSource();
     const origin = await data.getZip(zip);
     if (origin) {
-      const page = await data.searchCompetitions({
-        zip,
-        radius_miles: HOME_FEATURED_RADIUS_MILES,
-        timing: "upcoming",
-        sort: "soonest",
-        limit: HOME_FEATURED_POOL,
-      });
+      const page = await data.searchCompetitions(
+        SearchFiltersSchema.parse({
+          zip,
+          radius_miles: HOME_FEATURED_RADIUS_MILES,
+          timing: "upcoming",
+          sort: "soonest",
+          limit: HOME_FEATURED_POOL,
+        })
+      );
       const nearby = pickHomeFeatured(page.results, "nearby", dayIso);
       if (nearby.length > 0) {
         return {

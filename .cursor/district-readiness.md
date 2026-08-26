@@ -22,6 +22,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Command center shows **upcoming district + school events** with host names — 2026-08-24
 - [x] Guided multi-school invite to a district-hosted event — 2026-08-24
 - [x] Homepage Find card previews Going / hosted / traveling events (School/District nouns for district staff) — 2026-08-26
+- [x] Desktop home samples real nearby/photo listings; event pages take comments; zip/location capture on signup and landings — 2026-08-26
 - [x] Phone homepage hero is a page-width form (3+2 type tiles) so Find + Search stay on the first screen — 2026-08-26
 - [x] Phone discovery is search-first: directory pages search before filters; home uses type tiles — 2026-08-26
 - [x] Homepage hero fills the remaining viewport; coverage is one scroll from the public pitch — 2026-08-26

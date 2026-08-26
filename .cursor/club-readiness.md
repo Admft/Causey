@@ -20,6 +20,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 - [x] Overview tells the owner to **record results** after attendance (not only invite/create) — 2026-08-24
 - [x] Homepage Find card has a My tournaments tab: sign-in returns here; signed-in preview of Going / traveling / hosted — 2026-08-26
+- [x] Desktop home samples real nearby/photo listings; event pages take comments; zip/location capture on signup and landings — 2026-08-26
 - [x] Phone homepage hero is a page-width form (3+2 type tiles) so Find stays on one screen with My tournaments — 2026-08-26
 - [x] Phone homepage is search-first: type tiles, optional zip, club/district as text links — 2026-08-26
 - [x] Homepage hero fills the remaining viewport and a cue scrolls to what Causey indexes — 2026-08-26
