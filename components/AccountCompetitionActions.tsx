@@ -177,14 +177,14 @@ function DifficultyRatingControl({
       <p className="text-xs font-semibold text-muted-strong">
         Difficulty (1 easy – 10 hard)
       </p>
-      <div className="flex flex-wrap gap-1">
+      <div className="grid w-full grid-cols-5 gap-1">
         {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
           <button
             key={n}
             type="button"
             disabled={pending}
             onClick={() => rate(n)}
-            className={`h-8 w-8 rounded-md border text-xs font-semibold transition-colors disabled:opacity-60 ${
+            className={`min-h-8 rounded-xl border text-xs font-semibold transition-colors disabled:opacity-60 ${
               score === n
                 ? "border-brand-red/40 bg-accent-soft text-brand-red"
                 : "border-line bg-white text-muted-strong hover:border-brand-red/30 hover:text-foreground"

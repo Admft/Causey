@@ -20,6 +20,9 @@ export const metadata: Metadata = {
 const HERO_CHIP =
   "inline-flex items-center rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red";
 
+const HERO_ORG_CHIP =
+  "flex h-full min-h-12 items-center justify-center rounded-2xl border border-brand-blue/45 bg-brand-blue-soft px-3 py-2.5 text-center text-sm font-bold leading-tight text-brand-blue-strong transition-colors hover:border-brand-blue-strong";
+
 export default async function CompetitionTypesPage({
   searchParams,
 }: {
@@ -80,20 +83,17 @@ export default async function CompetitionTypesPage({
               initialTab={isHomeMyTournamentsView(view) ? "mine" : "find"}
               summary={myTournaments}
             />
-            <p className="home-hero-org-links mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm md:hidden">
-              <Link
-                href="/clubs"
-                className="font-semibold text-muted-strong transition-colors hover:text-brand-red"
-              >
+            <nav
+              aria-label="Club and district"
+              className="home-hero-org-links mt-3 grid grid-cols-2 gap-2 md:hidden"
+            >
+              <Link href="/clubs" className={HERO_ORG_CHIP}>
                 Run a club or team
               </Link>
-              <Link
-                href="/districts"
-                className="font-semibold text-muted-strong transition-colors hover:text-brand-red"
-              >
+              <Link href="/districts" className={HERO_ORG_CHIP}>
                 Chess for a district
               </Link>
-            </p>
+            </nav>
           </div>
         </div>
         <HomeHeroNext targetId="coverage" />

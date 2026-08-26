@@ -159,7 +159,7 @@ export function HomeHeroSearch({
             </p>
           ) : null}
         </div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_8.5rem]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="min-w-0">
             <label
               htmlFor="hero-zip"

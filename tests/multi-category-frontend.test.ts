@@ -23,6 +23,7 @@ const signupForm = read("components/SignupForm.tsx");
 const searchClient = read("components/SearchClient.tsx");
 const layout = read("app/layout.tsx");
 const eventPage = read("app/event/[slug]/page.tsx");
+const ratingActions = read("components/AccountCompetitionActions.tsx");
 const homeAccountPitch = read("components/HomeAccountPitch.tsx");
 const adminTournaments = read("app/admin/tournaments/page.tsx");
 
@@ -84,8 +85,10 @@ describe("homepage leads with multi-category discovery", () => {
     expect(homePage).toContain("Pick a type, then search by zip.");
     expect(homePage).toContain("hidden flex-wrap gap-2 md:flex");
     expect(homePage).toContain(
-      "home-hero-org-links mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm md:hidden"
+      "home-hero-org-links mt-3 grid grid-cols-2 gap-2 md:hidden"
     );
+    expect(homePage).toContain("bg-brand-blue-soft");
+    expect(homePage).toContain("HERO_ORG_CHIP");
     expect(homePage).toContain("max-w-[20ch]");
     expect(heroCard).toContain("rounded-2xl");
     expect(heroCard).toContain("md:rounded-3xl");
@@ -93,6 +96,7 @@ describe("homepage leads with multi-category discovery", () => {
     expect(heroSearch).toContain("home-hero-types");
     expect(heroSearch).toContain("{option.shortLabel}");
     expect(heroSearch).toContain('placeholder="Optional"');
+    expect(heroSearch).toContain("md:grid-cols-2");
     expect(heroSearch).toContain("max-md:hidden");
     expect(read("app/globals.css")).toContain("repeat(6, minmax(0, 1fr))");
     expect(read("app/globals.css")).toContain("repeat(5, minmax(0, 1fr))");
@@ -135,6 +139,14 @@ describe("hero search requires an explicit category", () => {
     expect(heroSearch).toContain("Browse {discoveryCategoryLabel(category)} without a zip");
     expect(heroSearch).toContain("category && !zipTrimmed");
     expect(heroSearch).toContain("CategoryGlyph");
+  });
+});
+
+describe("event difficulty rating layout", () => {
+  it("places 1–10 in two rows of five", () => {
+    expect(ratingActions).toContain("grid w-full grid-cols-5 gap-1");
+    expect(ratingActions).not.toContain("flex flex-wrap gap-1");
+    expect(eventPage).toContain("DifficultyRating");
   });
 });
 
