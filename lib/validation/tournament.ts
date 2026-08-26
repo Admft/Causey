@@ -153,6 +153,7 @@ export const TournamentUpdateSchema = z.intersection(
     competitionId: z.string().uuid(),
     eventSlug: z.string().min(1),
     orgSlug: z.string().min(1),
+    imageUrl: z.string().url().nullable().optional(),
   })
 );
 

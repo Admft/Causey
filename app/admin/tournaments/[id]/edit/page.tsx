@@ -74,6 +74,7 @@ export default async function AdminEditTournamentPage({
             audience: tournament.audience,
             rated: tournament.rated,
             facets: tournament.details?.facets,
+            image_url: tournament.image_url,
             sections: tournament.sections?.map((section) => ({
               name: section.name,
               minRating: section.min_rating,

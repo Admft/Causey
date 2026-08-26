@@ -34,6 +34,8 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Last tick
 
+- 2026-08-26 — Platform admin ops stats, organizer event pulse/workspace, parent competition alerts (`0067`).
+
 - 2026-08-26 — Event comments, desktop home featured listings (photos or saved zip), zip/location capture on signup and role landings.
 - 2026-08-26 — Desktop hero zip/distance are equal columns; event difficulty 1–10 is two rows of five.
 - 2026-08-26 — Homepage Find card: My tournaments tab previews Going / RSVP / org hosted and traveling events; signed-out sign-in returns to that tab.

@@ -29,6 +29,7 @@ import {
 } from "@/lib/category-discovery";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
+import { EventPulseStrip } from "@/components/EventPulseStrip";
 import { RecommendEventPanel } from "@/components/RecommendEventPanel";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { ExternalRegistrationPanel } from "@/components/ExternalRegistrationPanel";
@@ -40,6 +41,7 @@ import {
   getCoachOrgsWithAttendance,
   getCompetitionBySlugAuthed,
   getEntrantsForCompetition,
+  getEventAttendance,
   getOrganizationSlugById,
   getRatingSummary,
   getRecommendTargets,
@@ -48,6 +50,8 @@ import {
   type CoachOrgAttendance,
   type RecommendTarget,
 } from "@/lib/data/portal";
+import { buildEventPulse, type EventPulse } from "@/lib/event-pulse";
+import { manageEventTitle } from "@/lib/portal-copy";
 import type { EntrantStatus } from "@/lib/auth/orgs";
 
 export const dynamic = "force-dynamic";
@@ -139,6 +143,7 @@ export default async function EventPage({ params }: Params) {
   let initiallySaved = false;
   let initialScore: number | null = null;
   let canManage = false;
+  let hostPulse: EventPulse | null = null;
   let viewerOrgMatch = false;
   let rsvpTargets: {
     profileId: string;
@@ -167,6 +172,29 @@ export default async function EventPage({ params }: Params) {
         ? viewerHasOrganizationContext(user.id, competition.org_id)
         : Promise.resolve(false),
     ]);
+    if (canManage) {
+      const attendance = await getEventAttendance(competition.id);
+      const supabaseForPulse = await createServerSupabaseClient();
+      const { data: registrations } = competition.reg_url
+        ? await supabaseForPulse
+            .from("external_registrations")
+            .select("user_id, status")
+            .eq("competition_id", competition.id)
+        : { data: [] as { user_id: string; status: string }[] };
+      const registrationByEntrant = new Map(
+        (registrations ?? []).map((row) => [
+          row.user_id as string,
+          row.status as "opened" | "registered" | "not_registered",
+        ])
+      );
+      hostPulse = buildEventPulse(
+        attendance.map((row) => ({
+          ...row,
+          registration_status: registrationByEntrant.get(row.profile_id) ?? null,
+        })),
+        { hasRegUrl: Boolean(competition.reg_url) }
+      );
+    }
     if (competition.visibility === "public") {
       coachOrgs = await getCoachOrgsWithAttendance(
         user.id,
@@ -419,6 +447,21 @@ export default async function EventPage({ params }: Params) {
                   You can still review sections and save it for reference.
                   Registration and new RSVPs are closed.
                 </p>
+                {canManage && hostPulse ? (
+                  <div className="mt-5">
+                    <EventPulseStrip
+                      pulse={hostPulse}
+                      isPast
+                      hasRegUrl={Boolean(competition.reg_url)}
+                    />
+                    <Link
+                      href={`/event/${competition.slug}/manage`}
+                      className="cta-enabled mt-5 inline-flex"
+                    >
+                      {manageEventTitle()}
+                    </Link>
+                  </div>
+                ) : null}
               </>
             ) : null}
 
@@ -435,12 +478,21 @@ export default async function EventPage({ params }: Params) {
                   place. Families finish any organizer-site registration
                   separately when a link is listed.
                 </p>
+                {hostPulse ? (
+                  <div className="mt-5">
+                    <EventPulseStrip
+                      pulse={hostPulse}
+                      isPast={false}
+                      hasRegUrl={Boolean(competition.reg_url)}
+                    />
+                  </div>
+                ) : null}
                 <div className="mt-5 flex flex-wrap items-center gap-4">
                   <Link
                     href={`/event/${competition.slug}/manage`}
                     className="cta-enabled inline-flex"
                   >
-                    Manage entrants
+                    Manage event
                   </Link>
                   <Link
                     href={`/event/${competition.slug}/edit`}
@@ -642,7 +694,7 @@ export default async function EventPage({ params }: Params) {
                 href={`/event/${competition.slug}/manage`}
                 className="mt-2 inline-flex text-sm font-semibold text-brand-red hover:underline"
               >
-                Manage entrants
+                Manage event
               </Link>
             </div>
           ) : null}

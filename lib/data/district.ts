@@ -81,6 +81,7 @@ export type NotificationPreferenceRow = {
   cancellation: boolean;
   rsvp_update: boolean;
   announcement: boolean;
+  result: boolean;
   email_enabled: boolean;
   guardian_routing: boolean;
   timezone: string;
@@ -368,11 +369,13 @@ export async function getNotificationPreferences(
   const { data } = await supabase
     .from("notification_preferences")
     .select(
-      "invitation, registration_deadline, reminder_7_day, reminder_1_day, schedule_change, cancellation, rsvp_update, announcement, email_enabled, guardian_routing, timezone"
+      "invitation, registration_deadline, reminder_7_day, reminder_1_day, schedule_change, cancellation, rsvp_update, announcement, result, email_enabled, guardian_routing, timezone"
     )
     .eq("profile_id", profileId)
     .maybeSingle();
-  return (data as NotificationPreferenceRow | null) ?? null;
+  if (!data) return null;
+  const row = data as NotificationPreferenceRow;
+  return { ...row, result: row.result ?? true };
 }
 
 export async function getNotifications(

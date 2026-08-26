@@ -90,5 +90,11 @@ describe("zip capture from location", () => {
     expect(readFileSync(resolve(process.cwd(), "lib/rate-limit.ts"), "utf8")).toContain(
       '"geo"'
     );
+    expect(readFileSync(resolve(process.cwd(), "lib/browser-zip.ts"), "utf8")).toContain(
+      'allowsFeature?.("geolocation")'
+    );
+    expect(readFileSync(resolve(process.cwd(), "next.config.ts"), "utf8")).toContain(
+      "geolocation=(self)"
+    );
   });
 });

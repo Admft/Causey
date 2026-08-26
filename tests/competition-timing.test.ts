@@ -5,6 +5,7 @@ import {
   isPastRetention,
   matchesTimingFilter,
   retentionCutoffDate,
+  todayIsoInTimeZone,
 } from "../lib/competition-timing";
 
 describe("competition timing", () => {
@@ -40,5 +41,11 @@ describe("competition timing", () => {
     expect(
       isPastRetention({ start_date: "2025-07-27", end_date: null }, "2026-07-27")
     ).toBe(false);
+  });
+
+  it("todayIsoInTimeZone uses the named calendar date", () => {
+    expect(
+      todayIsoInTimeZone("America/Chicago", new Date("2026-08-27T04:30:00.000Z"))
+    ).toBe("2026-08-26");
   });
 });

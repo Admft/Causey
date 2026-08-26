@@ -7,6 +7,8 @@ import {
   RemoveEntrantButton,
   ResultForm,
 } from "@/components/EntrantManager";
+import { EventOrganizerSubnav } from "@/components/EventOrganizerSubnav";
+import { EventPulseStrip } from "@/components/EventPulseStrip";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PageBackLink } from "@/components/PageBackLink";
 import { PortalMission } from "@/components/PortalPrimitives";
@@ -23,15 +25,17 @@ import {
   getOrgRoster,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
+import { buildEventPulse } from "@/lib/event-pulse";
 import { formatDateRange } from "@/lib/format";
+import { manageEventTitle } from "@/lib/portal-copy";
 import { rsvpLabel, summarizeAttendance } from "@/lib/rsvp";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Manage entrants",
-  description: "Invite your roster and track RSVPs for this competition.",
+  title: "Manage event",
+  description: "Invite your roster, watch RSVPs, and keep attendance in one place.",
 };
 
 export default async function ManageEventPage({
@@ -131,6 +135,12 @@ export default async function ManageEventPage({
   const activeStudents = roster.filter(
     (row) => row.member_status === "active" && row.member_role === "student"
   );
+  const travelProfileIds = new Set(
+    activeStudents.map((row) => row.profile_id)
+  );
+  const visibleAttendance = canManage
+    ? attendance
+    : attendance.filter((row) => travelProfileIds.has(row.profile_id));
   const candidates = activeStudents
     .filter((row) => {
       if (invitedIds.has(row.profile_id)) return false;
@@ -143,14 +153,14 @@ export default async function ManageEventPage({
       display_name: row.display_name,
       orgName: isDistrictHost ? row.orgName : null,
     }));
-  const summary = summarizeAttendance(attendance);
+  const summary = summarizeAttendance(visibleAttendance);
   const isPast =
     (competition.end_date ?? competition.start_date) <
     new Date().toISOString().slice(0, 10);
   const isDraft = canManage && competition.status === "draft";
-  const needsInvite = !isDraft && !attendance.length;
+  const needsInvite = !isDraft && !visibleAttendance.length;
   const needsReplies = !isDraft && summary.awaiting > 0;
-  const missingResults = attendance.filter(
+  const missingResults = visibleAttendance.filter(
     (row) =>
       row.status === "attended" &&
       row.placement == null &&
@@ -220,6 +230,34 @@ export default async function ManageEventPage({
       ? `/orgs/${orgShell.slug}/roster`
       : "/orgs#organizations";
   const workspaceHref = orgShell ? `/orgs/${orgShell.slug}` : "/orgs";
+  const workspaceTitle = manageEventTitle(
+    canManage ? hostOrg?.type : orgShell?.orgType
+  );
+
+  let registrationByUser = new Map<
+    string,
+    "opened" | "registered" | "not_registered"
+  >();
+  if (competition.reg_url && visibleAttendance.length) {
+    const supabase = await createServerSupabaseClient();
+    const { data: registrations } = await supabase
+      .from("external_registrations")
+      .select("user_id, status")
+      .eq("competition_id", competition.id);
+    registrationByUser = new Map(
+      (registrations ?? []).map((row) => [
+        row.user_id as string,
+        row.status as "opened" | "registered" | "not_registered",
+      ])
+    );
+  }
+  const pulse = buildEventPulse(
+    visibleAttendance.map((row) => ({
+      ...row,
+      registration_status: registrationByUser.get(row.profile_id) ?? null,
+    })),
+    { hasRegUrl: Boolean(competition.reg_url) }
+  );
 
   let mission: {
     title: string;
@@ -381,14 +419,14 @@ export default async function ManageEventPage({
           {summary.notGoing} can&rsquo;t go · {summary.awaiting} awaiting
         </p>
       </div>
-      {!attendance.length ? (
+      {!visibleAttendance.length ? (
         <p className="mt-3 text-sm text-muted">
           Nobody is invited yet — invite students or a group
           {inviteFirst ? " above" : " below"}.
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-line border-y border-line">
-          {attendance.map((row) => (
+          {visibleAttendance.map((row) => (
             <li
               key={row.profile_id}
               className={`flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
@@ -455,6 +493,11 @@ export default async function ManageEventPage({
           orgType={orgShell.orgType}
         />
       ) : null}
+      <EventOrganizerSubnav
+        slug={competition.slug}
+        tab="people"
+        canEditListing={canManage}
+      />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <div className="flex flex-wrap items-center gap-3">
           {orgShell ? (
@@ -475,8 +518,8 @@ export default async function ManageEventPage({
             </Link>
           ) : null}
         </div>
-        <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
-          Competition
+        <p className="mt-6 text-sm font-semibold text-brand-red">
+          {workspaceTitle}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           {competition.name}
@@ -540,6 +583,16 @@ export default async function ManageEventPage({
             secondary={mission.secondary}
           />
         </div>
+
+        {!isDraft ? (
+          <div className="mt-8">
+            <EventPulseStrip
+              pulse={pulse}
+              isPast={isPast}
+              hasRegUrl={Boolean(competition.reg_url)}
+            />
+          </div>
+        ) : null}
 
         {isDraft ? null : inviteFirst ? (
           <>

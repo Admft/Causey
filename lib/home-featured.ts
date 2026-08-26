@@ -1,3 +1,4 @@
+import { discoveryCategoryHref } from "@/lib/category-discovery";
 import { toDisplayCoverUrl } from "@/lib/cover-url";
 
 export const HOME_FEATURED_LIMIT = 6;
@@ -58,19 +59,23 @@ export function homeFeaturedCopy(
   mode: HomeFeaturedMode,
   zip: string | null
 ): HomeFeaturedCopy {
+  const searchLabel = "See more chess tournaments";
   if (mode === "nearby" && zip) {
     return {
-      heading: `Upcoming near ${zip}`,
-      blurb: `Public listings within about ${HOME_FEATURED_RADIUS_MILES} miles of the zip on your account. Coverage is still incomplete, and chess is denser than other types.`,
-      searchHref: `/#search`,
-      searchLabel: "Search all tournaments",
+      heading: `Browse tournaments near ${zip}`,
+      blurb: `Upcoming chess listings within about ${HOME_FEATURED_RADIUS_MILES} miles of the zip on your account. Coverage is still incomplete.`,
+      searchHref: discoveryCategoryHref("chess", {
+        zip,
+        radius: String(HOME_FEATURED_RADIUS_MILES),
+      }),
+      searchLabel,
     };
   }
   return {
-    heading: "Upcoming listings with photos",
+    heading: "Browse tournaments",
     blurb:
-      "A daily sample of indexed events that include an organizer photo. Not a ranking, and not a complete calendar.",
-    searchHref: "/#search",
-    searchLabel: "Search all tournaments",
+      "A sample of upcoming chess listings. Coverage is still incomplete.",
+    searchHref: discoveryCategoryHref("chess"),
+    searchLabel,
   };
 }

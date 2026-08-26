@@ -26,13 +26,26 @@ describe("homepage featured listings", () => {
     expect(homePage).toContain("getHomeFeaturedCompetitions");
     expect(featuredSection).toContain("hidden");
     expect(featuredSection).toContain("md:block");
+    expect(featuredSection).toContain("section-rule");
+    expect(featuredSection).toContain("{featured.copy.searchLabel}");
     expect(homeFeaturedCopy("nearby", "75201").heading).toBe(
-      "Upcoming near 75201"
+      "Browse tournaments near 75201"
     );
-    expect(homeFeaturedCopy("photos", null).heading).toContain("photos");
+    expect(homeFeaturedCopy("photos", null).heading).toBe("Browse tournaments");
+    expect(homeFeaturedCopy("photos", null).searchHref).toBe("/chess");
+    expect(homeFeaturedCopy("photos", null).searchLabel).toBe(
+      "See more chess tournaments"
+    );
+    expect(homeFeaturedCopy("nearby", "75201").searchHref).toBe(
+      `/chess?zip=75201&radius=${HOME_FEATURED_RADIUS_MILES}`
+    );
     expect(homeFeaturedCopy("nearby", "75201").blurb).toContain(
       String(HOME_FEATURED_RADIUS_MILES)
     );
+    expect(homeFeaturedCopy("photos", null).blurb).not.toMatch(/ranking/i);
+    expect(
+      readFileSync(resolve(process.cwd(), "lib/data/home-featured.ts"), "utf8")
+    ).toContain('category: "chess"');
   });
 
   it("prefers organizer photos and does not invent rows", () => {

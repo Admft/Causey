@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { AdminUserDirectory } from "@/components/AdminUserDirectory";
 import {
   getPlatformAdminUser,
   isCurrentUserSuperAdmin,
 } from "@/lib/auth/platform-admin";
-import { getAdminUsers } from "@/lib/data/admin";
+import { getAdminOpsStats, getAdminUsers } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
   title: "Admin users",
@@ -16,15 +17,16 @@ export default async function AdminUsersPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) return null;
   const isSuperAdmin = await isCurrentUserSuperAdmin();
-  const { users, total, error } = await getAdminUsers({
-    limit: 50,
-  });
+  const [{ users, total, error }, stats] = await Promise.all([
+    getAdminUsers({
+      limit: 50,
+    }),
+    getAdminOpsStats(),
+  ]);
 
   return (
     <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-      <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-        Platform admin
-      </p>
+      <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Users &amp; access
       </h1>
@@ -36,13 +38,33 @@ export default async function AdminUsersPage() {
         repaired here when a claim link is blocked.
       </p>
 
-      <AdminUserDirectory
-        initialUsers={users}
-        initialTotal={total}
-        initialError={error}
-        currentAdminId={admin.id}
-        isSuperAdmin={isSuperAdmin}
-      />
+      <div className="mt-8">
+        <AdminStatStrip
+          label="Accounts"
+          items={[
+            {
+              label: "Total accounts",
+              value: stats.accounts.total,
+              href: "/admin/users",
+            },
+            {
+              label: "Platform admins",
+              value: stats.accounts.platformAdmins,
+              href: "/admin/users",
+            },
+          ]}
+        />
+      </div>
+
+      <div className="mt-8">
+        <AdminUserDirectory
+          initialUsers={users}
+          initialTotal={total}
+          initialError={error}
+          currentAdminId={admin.id}
+          isSuperAdmin={isSuperAdmin}
+        />
+      </div>
 
       <p className="mt-8 text-xs text-muted">
         Prefer organization People invites for day-to-day staffing. Use the

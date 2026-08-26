@@ -193,6 +193,7 @@ describe("buildLinkedChildAttentionItems", () => {
         childSummary("student-1", "Jordan", {
           status: "going",
           registrationStatus: null,
+          startDate: "2026-10-01",
         }),
       ],
       DEFAULT_NOTIFICATION_PREFS,
@@ -213,6 +214,7 @@ describe("buildLinkedChildAttentionItems", () => {
         childSummary("student-1", "Jordan", {
           status: "going",
           registrationStatus: "registered",
+          startDate: "2026-10-01",
         }),
       ],
       DEFAULT_NOTIFICATION_PREFS,
@@ -226,6 +228,36 @@ describe("buildLinkedChildAttentionItems", () => {
 
     expect(registered).toEqual([]);
     expect(invitationsOff).toEqual([]);
+  });
+
+  it("surfaces child 7-day and 1-day reminders on the parent Alerts desk", () => {
+    const week = buildLinkedChildAttentionItems(
+      [
+        childSummary("student-1", "Jordan", {
+          status: "going",
+          registrationStatus: "registered",
+          startDate: "2026-08-14",
+        }),
+      ],
+      DEFAULT_NOTIFICATION_PREFS,
+      "2026-08-07"
+    );
+    const tomorrow = buildLinkedChildAttentionItems(
+      [
+        childSummary("student-1", "Jordan", {
+          status: "going",
+          registrationStatus: "registered",
+          startDate: "2026-08-08",
+        }),
+      ],
+      DEFAULT_NOTIFICATION_PREFS,
+      "2026-08-07"
+    );
+
+    expect(week.map((item) => item.id)).toEqual([
+      "child-remind-7:student-1:c1",
+    ]);
+    expect(tomorrow.map((item) => item.kind)).toEqual(["reminder_1_day"]);
   });
 
   it("keeps the same event actionable for two linked students", () => {

@@ -21,6 +21,16 @@ export function organizationKindLabel(
   return "club";
 }
 
+/** Host workspace title for manage/edit. Club/team stay generic. */
+export function manageEventTitle(
+  orgType?: string | null
+): "Manage event" | "Manage school event" | "Manage district event" {
+  const kind = orgType ? organizationKindLabel(orgType) : "club";
+  if (kind === "school") return "Manage school event";
+  if (kind === "district") return "Manage district event";
+  return "Manage event";
+}
+
 export type OrganizationNavAccess = {
   hasDistrictAccess?: boolean;
 };

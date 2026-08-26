@@ -13,6 +13,7 @@ const DEFAULTS: NotificationPreferenceRow = {
   cancellation: true,
   rsvp_update: true,
   announcement: true,
+  result: true,
   email_enabled: true,
   guardian_routing: true,
   timezone: "America/Chicago",
@@ -50,6 +51,7 @@ export function NotificationPreferencesForm({
         cancellation: values.cancellation,
         rsvpUpdate: values.rsvp_update,
         announcement: values.announcement,
+        result: values.result,
         emailEnabled: values.email_enabled,
         guardianRouting: values.guardian_routing,
         timezone: values.timezone,
@@ -111,6 +113,12 @@ export function NotificationPreferencesForm({
       key: "announcement",
       label: "Coach announcements",
       description: "In-app when your organization posts an update.",
+    },
+    {
+      key: "result",
+      label: "Recorded results",
+      description:
+        "In-app when a coach records a division, place, or award for you or a linked student.",
     },
     {
       key: "email_enabled",

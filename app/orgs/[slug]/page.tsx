@@ -1060,7 +1060,7 @@ export default async function OrgPage({
                           href={`/event/${event.slug}/manage`}
                           className="text-sm font-semibold text-brand-red hover:underline"
                         >
-                          Manage entrants
+                          Manage event
                         </Link>
                       ) : null
                     }

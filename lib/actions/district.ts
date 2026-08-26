@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
 import { actionErrorMessage } from "@/lib/actions/errors";
-import { createInAppNotifications } from "@/lib/actions/in-app-notifications";
+import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/actions/in-app-notifications";
 import type { OrgMemberRole } from "@/lib/auth/orgs";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
@@ -70,6 +70,7 @@ const NotificationPreferencesSchema = z.object({
   cancellation: z.boolean(),
   rsvpUpdate: z.boolean(),
   announcement: z.boolean(),
+  result: z.boolean(),
   emailEnabled: z.boolean(),
   guardianRouting: z.boolean(),
   timezone: z.string().trim().min(1).max(100),
@@ -874,6 +875,36 @@ export async function publishOrganizationAnnouncement(input: {
         dedupeKey: `announcement:${row.id}:${recipientId}`,
       });
     }
+    const studentIds = (members ?? [])
+      .map((member) => member.profile_id as string)
+      .filter(Boolean);
+    const guardians = await getActiveGuardiansForProfiles(studentIds);
+    if (guardians.error) {
+      for (const item of published) {
+        revalidatePath(`/orgs/${item.slug}`);
+      }
+      revalidatePath("/me/notifications");
+      return {
+        ok: false,
+        error:
+          "The announcement was published, but linked parents could not be notified.",
+      };
+    }
+    for (const guardian of guardians.guardians) {
+      if (!guardian.parentId || guardian.parentId === profile.id) continue;
+      if (seenRecipients.has(guardian.parentId)) continue;
+      seenRecipients.add(guardian.parentId);
+      notificationInputs.push({
+        recipientId: guardian.parentId,
+        kind: "announcement",
+        title: parsed.data.title,
+        body: parsed.data.body.slice(0, 240),
+        href: "/family",
+        entityType: "org_announcement",
+        entityId: row.id,
+        dedupeKey: `announcement:${row.id}:parent:${guardian.parentId}`,
+      });
+    }
   }
 
   if (notificationInputs.length) {
@@ -921,6 +952,7 @@ export async function saveNotificationPreferences(
     cancellation: parsed.data.cancellation,
     rsvp_update: parsed.data.rsvpUpdate,
     announcement: parsed.data.announcement,
+    result: parsed.data.result,
     email_enabled: parsed.data.emailEnabled,
     guardian_routing: parsed.data.guardianRouting,
     timezone: parsed.data.timezone,
@@ -1088,6 +1120,78 @@ export async function recordEntrantResult(input: {
       ),
     };
   }
+
+  if (hasPayload) {
+    const { data: competition } = await supabase
+      .from("competitions")
+      .select("name")
+      .eq("id", parsed.data.competitionId)
+      .maybeSingle();
+    const eventName = competition?.name ?? "a tournament";
+    const resultBits = [
+      parsed.data.placement != null ? `Place ${parsed.data.placement}` : null,
+      award,
+    ].filter(Boolean);
+    const resultBody = resultBits.length
+      ? `${resultBits.join(" · ")} is now on Causey.`
+      : "A division was recorded on Causey.";
+    const studentNote =
+      parsed.data.profileId === user.id
+        ? []
+        : [
+            {
+              recipientId: parsed.data.profileId,
+              kind: "result" as const,
+              title: `Result recorded: ${eventName}`,
+              body: resultBody,
+              href: `/event/${parsed.data.eventSlug}`,
+              entityType: "competition",
+              entityId: parsed.data.competitionId,
+              dedupeKey: `result:${parsed.data.competitionId}:${parsed.data.profileId}`,
+            },
+          ];
+    const guardians = await getActiveGuardiansForProfiles([
+      parsed.data.profileId,
+    ]);
+    if (guardians.error) {
+      revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
+      revalidatePath("/me");
+      revalidatePath("/family");
+      return {
+        ok: false,
+        error:
+          "The result was saved, but linked parents could not be notified.",
+      };
+    }
+    const parentNotes = guardians.guardians
+      .filter((guardian) => guardian.parentId !== user.id)
+      .map((guardian) => ({
+        recipientId: guardian.parentId,
+        kind: "result" as const,
+        title: `${guardian.childDisplayName} · Result recorded: ${eventName}`,
+        body: resultBody,
+        href: "/family",
+        entityType: "competition",
+        entityId: parsed.data.competitionId,
+        dedupeKey: `result:${parsed.data.competitionId}:${parsed.data.profileId}:parent:${guardian.parentId}`,
+      }));
+    const notifications = await createInAppNotifications([
+      ...studentNote,
+      ...parentNotes,
+    ]);
+    if (notifications.failures.length) {
+      revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
+      revalidatePath("/me");
+      revalidatePath("/family");
+      return {
+        ok: false,
+        error: `The result was saved, but ${notifications.failures.length} in-app ${
+          notifications.failures.length === 1 ? "update" : "updates"
+        } could not be created.`,
+      };
+    }
+  }
+
   revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
   revalidatePath("/me");
   revalidatePath("/family");

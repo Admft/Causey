@@ -108,3 +108,53 @@ export async function createInAppNotifications(
   if (created) revalidatePath("/me/notifications");
   return { requested: inputs.length, created, failures };
 }
+
+export async function getActiveGuardiansForProfiles(
+  childIds: string[]
+): Promise<{
+  guardians: {
+    childId: string;
+    parentId: string;
+    childDisplayName: string;
+  }[];
+  error: string | null;
+}> {
+  const unique = [...new Set(childIds)];
+  if (!unique.length) return { guardians: [], error: null };
+  const user = await getSessionUser();
+  if (!user) {
+    return { guardians: [], error: "Sign in to continue." };
+  }
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc(
+    "get_active_guardians_for_profiles",
+    { p_child_ids: unique }
+  );
+  if (error) {
+    console.error("Guardian lookup failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      guardians: [],
+      error: actionErrorMessage(
+        error,
+        "Could not load linked parents for in-app updates."
+      ),
+    };
+  }
+  return {
+    guardians: (
+      (data ?? []) as {
+        child_id: string;
+        parent_id: string;
+        child_display_name: string;
+      }[]
+    ).map((row) => ({
+      childId: row.child_id,
+      parentId: row.parent_id,
+      childDisplayName: row.child_display_name,
+    })),
+    error: null,
+  };
+}

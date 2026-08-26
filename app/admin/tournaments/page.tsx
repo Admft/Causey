@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { AdminTournamentBulkList } from "@/components/AdminTournamentBulkList";
 import {
   ADMIN_TOURNAMENT_AUDIENCE_OPTIONS,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/admin-tournament-filters";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
+  getAdminOpsStats,
   getAdminTournamentCount,
   getAdminTournaments,
 } from "@/lib/data/admin";
@@ -53,9 +55,10 @@ export default async function AdminTournamentsPage({
   const rawFilters = await searchParams;
   const filters = parseAdminTournamentFilters(rawFilters);
   const hasFilters = adminTournamentsHaveFilters(filters);
-  const [tournaments, totalTournamentCount] = await Promise.all([
+  const [tournaments, totalTournamentCount, ops] = await Promise.all([
     getAdminTournaments(filters),
     getAdminTournamentCount(),
+    getAdminOpsStats(),
   ]);
   const draftSourceGroup =
     filters.status === "draft" && filters.source
@@ -116,6 +119,39 @@ export default async function AdminTournamentsPage({
         <Link href="/admin/tournaments/new" className="cta-enabled">
           Add a tournament draft
         </Link>
+      </div>
+
+      <div className="mt-8">
+        <AdminStatStrip
+          label="All tournament records"
+          items={[
+            {
+              label: "Published",
+              value: ops.listings.published,
+              href: adminTournamentsHref({ status: "published" }),
+            },
+            {
+              label: "Drafts",
+              value: ops.listings.drafts,
+              href: adminTournamentsHref({ status: "draft" }),
+            },
+            {
+              label: "Pending review",
+              value: ops.listings.pendingReview,
+              href: adminTournamentsHref({ status: "pending_review" }),
+            },
+            {
+              label: "Archived",
+              value: ops.listings.archived,
+              href: adminTournamentsHref({ status: "archived" }),
+            },
+            {
+              label: "Ready to publish",
+              value: ops.listings.readyToPublish,
+              href: adminTournamentsHref({ status: "draft", ready: true }),
+            },
+          ]}
+        />
       </div>
 
       <form

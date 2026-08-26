@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminOpsLedger } from "@/components/AdminStatStrip";
 import { PortalMission } from "@/components/PortalPrimitives";
+import { adminTournamentsHref } from "@/lib/admin-tournament-filters";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
   getAdminAuditLog,
   getAdminModerationQueue,
-  getAdminOverview,
+  getAdminOpsStats,
 } from "@/lib/data/admin";
 import { formatDateRange } from "@/lib/format";
 
@@ -19,58 +21,60 @@ export default async function AdminOverviewPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) redirect("/");
 
-  const [overview, auditRows, moderation] = await Promise.all([
-    getAdminOverview(),
+  const [stats, auditRows, moderation] = await Promise.all([
+    getAdminOpsStats(),
     getAdminAuditLog(8),
     getAdminModerationQueue(),
   ]);
 
-  const pending = overview.pendingReview;
+  const pending = stats.listings.pendingReview;
   const queuePreview = moderation.queue.slice(0, 3);
   const mission =
-    pending > 0
+    pending === null
       ? {
-          title:
-            pending === 1
-              ? "1 public tournament needs review"
-              : `${pending} public tournaments need review`,
+          title: "Review queue is unavailable",
           description:
-            "These organizer listings stay out of discovery until you approve or send them back with a note.",
+            "Listing counts could not be loaded. Open moderation and try again rather than treating the queue as empty.",
           action: { href: "/admin/moderation", label: "Open review queue" },
           secondary: {
             href: "/admin/tournaments?status=pending_review",
             label: "Browse pending records",
           },
         }
-      : {
-          title: "Review queue is clear",
-          description:
-            "When coaches submit public tournaments, they land here first. Use the quieter links below for drafts, orgs, and records.",
-          action: { href: "/admin/moderation", label: "Open moderation" },
-          secondary: {
-            href: "/admin/tournaments?status=draft",
-            label: "Review drafts",
-          },
-        };
+      : pending > 0
+        ? {
+            title:
+              pending === 1
+                ? "1 public tournament needs review"
+                : `${pending} public tournaments need review`,
+            description:
+              "These organizer listings stay out of discovery until you approve or send them back with a note.",
+            action: { href: "/admin/moderation", label: "Open review queue" },
+            secondary: {
+              href: "/admin/tournaments?status=pending_review",
+              label: "Browse pending records",
+            },
+          }
+        : {
+            title: "Review queue is clear",
+            description:
+              "When coaches submit public tournaments, they land here first. Use the quieter links below for drafts, orgs, and records.",
+            action: { href: "/admin/moderation", label: "Open moderation" },
+            secondary: {
+              href: "/admin/tournaments?status=draft",
+              label: "Review drafts",
+            },
+          };
 
-  const stats = [
-    { label: "Awaiting review", value: pending, href: "/admin/moderation" },
-    {
-      label: "Tournament drafts",
-      value: overview.drafts,
-      href: "/admin/tournaments?status=draft",
-    },
-    {
-      label: "Published",
-      value: overview.published,
-      href: "/admin/tournaments?status=published",
-    },
-    {
-      label: "Organizations",
-      value: overview.organizations,
-      href: "/admin/organizations",
-    },
-  ];
+  const lastRunLabel = stats.ingestion.runsUnavailable
+    ? null
+    : stats.ingestion.lastRunStatus
+      ? stats.ingestion.lastRunStatus === "succeeded"
+        ? "Succeeded"
+        : stats.ingestion.lastRunStatus === "failed"
+          ? "Failed"
+          : "Running"
+      : "None yet";
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -92,6 +96,145 @@ export default async function AdminOverviewPage() {
         />
       </div>
 
+      <section className="section-rule mt-10 pt-8" aria-labelledby="ops-ledger-heading">
+        <h2
+          id="ops-ledger-heading"
+          className="font-display text-xl font-bold text-foreground"
+        >
+          Operations
+        </h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted">
+          Counts are global. Unavailable means the query failed — not that the
+          number is zero.
+        </p>
+        <div className="mt-8">
+          <AdminOpsLedger
+            groups={[
+              {
+                title: "Moderation",
+                items: [
+                  {
+                    label: "Awaiting review",
+                    value: stats.listings.pendingReview,
+                    href: "/admin/moderation",
+                  },
+                  {
+                    label: "Rejected listings",
+                    value: stats.listings.rejected,
+                    href: adminTournamentsHref({ status: "rejected" }),
+                  },
+                  {
+                    label: "Published organizer listings",
+                    value: stats.listings.publishedOrganizer,
+                    href: adminTournamentsHref({
+                      status: "published",
+                      source: "organizer",
+                    }),
+                  },
+                ],
+              },
+              {
+                title: "Tournaments",
+                items: [
+                  {
+                    label: "Published",
+                    value: stats.listings.published,
+                    href: adminTournamentsHref({ status: "published" }),
+                  },
+                  {
+                    label: "Drafts",
+                    value: stats.listings.drafts,
+                    href: adminTournamentsHref({ status: "draft" }),
+                  },
+                  {
+                    label: "Pending review",
+                    value: stats.listings.pendingReview,
+                    href: adminTournamentsHref({ status: "pending_review" }),
+                  },
+                  {
+                    label: "Archived",
+                    value: stats.listings.archived,
+                    href: adminTournamentsHref({ status: "archived" }),
+                  },
+                  {
+                    label: "Ready to publish",
+                    value: stats.listings.readyToPublish,
+                    href: adminTournamentsHref({ status: "draft", ready: true }),
+                  },
+                ],
+              },
+              {
+                title: "Organizations",
+                items: [
+                  {
+                    label: "Need review",
+                    value: stats.organizations.pending,
+                    href: "/admin/organizations?status=pending",
+                  },
+                  {
+                    label: "Corrections sent",
+                    value: stats.organizations.rejected,
+                    href: "/admin/organizations?status=rejected",
+                  },
+                  {
+                    label: "Verified",
+                    value: stats.organizations.verified,
+                    href: "/admin/organizations?status=verified",
+                  },
+                  {
+                    label: "Total",
+                    value: stats.organizations.total,
+                    href: "/admin/organizations",
+                  },
+                  {
+                    label: "Districts",
+                    value: stats.organizations.districts,
+                    href: "/admin/organizations",
+                  },
+                ],
+              },
+              {
+                title: "Accounts",
+                items: [
+                  {
+                    label: "Total accounts",
+                    value: stats.accounts.total,
+                    href: "/admin/users",
+                  },
+                  {
+                    label: "Platform admins",
+                    value: stats.accounts.platformAdmins,
+                    href: "/admin/users",
+                  },
+                ],
+              },
+              {
+                title: "Scrapers",
+                items: [
+                  {
+                    label: "Last run",
+                    value: lastRunLabel,
+                    href: "/admin/scrapers",
+                  },
+                  {
+                    label: "Rows upserted last run",
+                    value: stats.ingestion.runsUnavailable
+                      ? null
+                      : stats.ingestion.lastRowsUpserted,
+                    href: "/admin/scrapers",
+                  },
+                  {
+                    label: "Sources with issues",
+                    value: stats.ingestion.issueCount,
+                    href: "/admin/scrapers",
+                  },
+                ],
+              },
+            ]}
+          />
+        </div>
+      </section>
+
       {queuePreview.length > 0 ? (
         <section className="section-rule mt-10 pt-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -102,7 +245,7 @@ export default async function AdminOverviewPage() {
               href="/admin/moderation"
               className="text-sm font-semibold text-brand-red hover:underline"
             >
-              See all {pending}
+              {pending === null ? "See all" : `See all ${pending}`}
             </Link>
           </div>
           <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
@@ -121,21 +264,6 @@ export default async function AdminOverviewPage() {
           </ul>
         </section>
       ) : null}
-
-      <dl className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Link
-            key={stat.label}
-            href={stat.href}
-            className="rounded-xl border border-line bg-surface px-4 py-4 transition-colors hover:border-brand-red/35"
-          >
-            <dt className="text-xs font-semibold text-muted">{stat.label}</dt>
-            <dd className="mt-2 font-display text-display-sm font-bold text-foreground">
-              {stat.value}
-            </dd>
-          </Link>
-        ))}
-      </dl>
 
       <section className="section-rule mt-10 pt-8">
         <h2 className="text-sm font-semibold text-foreground">Other tasks</h2>

@@ -41,10 +41,12 @@ function selectedSummary(selected: AdminRunnableScraperSource[]): string {
 
 export function AdminScraperControls({
   runs,
+  runsUnavailable = false,
   configured,
   workflowUrl,
 }: {
   runs: AdminScrapeRunRow[];
+  runsUnavailable?: boolean;
   configured: boolean;
   workflowUrl: string | null;
 }) {
@@ -281,7 +283,12 @@ export function AdminScraperControls({
             </a>
           ) : null}
         </div>
-        {!runs.length ? (
+        {runsUnavailable ? (
+          <p className="mt-4 text-sm text-muted" role="alert">
+            Recent runs are unavailable. Reload this page and try again — do not
+            treat a missing log as an empty history.
+          </p>
+        ) : !runs.length ? (
           <p className="mt-4 text-sm text-muted">
             No scraper runs are recorded yet. Run one or more sources above to
             start the activity log.

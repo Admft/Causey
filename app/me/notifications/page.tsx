@@ -19,6 +19,7 @@ import {
   buildLinkedChildAttentionItems,
   sortAttentionItems,
 } from "@/lib/notifications";
+import { todayIsoInTimeZone } from "@/lib/competition-timing";
 import { workspaceOpenCta } from "@/lib/portal-copy";
 
 export const metadata: Metadata = {
@@ -40,7 +41,9 @@ export default async function NotificationsPage() {
         : Promise.resolve([]),
       profile?.role === "coach" ? getMyOrgs(user.id) : Promise.resolve([]),
     ]);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIsoInTimeZone(
+    preferences?.timezone ?? "America/Chicago"
+  );
   const attention = sortAttentionItems([
     ...buildLinkedChildAttentionItems(children, preferences, today),
     ...buildAttentionItems(ownAttentionSources, preferences, today),

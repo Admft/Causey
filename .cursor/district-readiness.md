@@ -12,7 +12,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - Role split (district admin, school admin, coach, assistant, parent, student)
 - Audiences: public / district-only / school-only / invite-only
 - Competitions inventory with host filter across district + schools
-- Family desk, alerts (in-app; email configured not volume-proven)
+- Family desk, alerts (in-app; email configured not volume-proven); linked parents get invite/change/result/announcement copies
 - Reports + CSV (school-hosted vs district-hosted split); scoped Activity
 - Announcements including district → child schools
 
@@ -21,7 +21,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] After schools are ready, next action is **run/review competitions**, not “stare at empty reports” — 2026-08-24
 - [x] Command center shows **upcoming district + school events** with host names — 2026-08-24
 - [x] Guided multi-school invite to a district-hosted event — 2026-08-24
-- [x] Homepage Find card previews Going / hosted / traveling events (School/District nouns for district staff) — 2026-08-26
+- [x] Family/Alerts use the parent timezone; stored alerts include child 7-day/1-day and recorded results — 2026-08-26
 - [x] Desktop home samples real nearby/photo listings; event pages take comments; zip/location capture on signup and landings — 2026-08-26
 - [x] Phone homepage hero is a page-width form (3+2 type tiles) so Find + Search stay on the first screen — 2026-08-26
 - [x] Phone discovery is search-first: directory pages search before filters; home uses type tiles — 2026-08-26

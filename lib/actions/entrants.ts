@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { actionErrorMessage } from "@/lib/actions/errors";
-import { createInAppNotifications } from "@/lib/actions/in-app-notifications";
+import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/actions/in-app-notifications";
 import {
   getChildSchoolsForDistrict,
   getOrgRoster,
@@ -155,6 +155,43 @@ export async function inviteEntrants(
           notifications.failures.length === 1 ? "update" : "updates"
         } could not be created.`,
       };
+    }
+
+    const guardians = await getActiveGuardiansForProfiles(invitedIds);
+    if (guardians.error) {
+      revalidateEventSurfaces(eventSlug);
+      return {
+        ok: false,
+        error: `${invitedIds.length} ${
+          invitedIds.length === 1 ? "invitation was" : "invitations were"
+        } saved, but linked parents could not be notified.`,
+      };
+    }
+    const parentInputs = guardians.guardians
+      .filter((guardian) => guardian.parentId !== user.id)
+      .map((guardian) => ({
+        recipientId: guardian.parentId,
+        kind: "invitation" as const,
+        title: `Invitation: ${guardian.childDisplayName} · ${eventName}`,
+        body: `${guardian.childDisplayName} was invited. Open the family desk to answer for them.`,
+        href: "/family#needs-response",
+        entityType: "competition",
+        entityId: competitionId,
+        dedupeKey: `invitation:${competitionId}:${guardian.childId}:parent:${guardian.parentId}`,
+      }));
+    if (parentInputs.length) {
+      const parentNotifications = await createInAppNotifications(parentInputs);
+      if (parentNotifications.failures.length) {
+        revalidateEventSurfaces(eventSlug);
+        return {
+          ok: false,
+          error: `${invitedIds.length} ${
+            invitedIds.length === 1 ? "invitation was" : "invitations were"
+          } saved, but ${parentNotifications.failures.length} parent ${
+            parentNotifications.failures.length === 1 ? "update" : "updates"
+          } could not be created.`,
+        };
+      }
     }
   }
 

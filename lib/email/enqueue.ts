@@ -8,6 +8,7 @@ import {
   type NotificationEmailPrefsLike,
   type NotificationKind,
 } from "@/lib/notifications";
+import { todayIsoInTimeZone } from "@/lib/competition-timing";
 import { getServiceRoleClient } from "@/lib/supabase/client";
 
 type PreferenceColumns = NotificationEmailPrefsLike & {
@@ -75,23 +76,12 @@ function prefsFrom(row: PreferenceColumns): NotificationEmailPrefsLike {
     cancellation: row.cancellation,
     rsvp_update: row.rsvp_update,
     announcement: row.announcement,
+    result: row.result ?? true,
   };
 }
 
 function todayInTimeZone(timeZone: string): string {
-  try {
-    const parts = new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone,
-    }).formatToParts(new Date());
-    const part = (type: Intl.DateTimeFormatPartTypes) =>
-      parts.find((value) => value.type === type)?.value;
-    return `${part("year")}-${part("month")}-${part("day")}`;
-  } catch {
-    return new Date().toISOString().slice(0, 10);
-  }
+  return todayIsoInTimeZone(timeZone);
 }
 
 async function guardiansFor(

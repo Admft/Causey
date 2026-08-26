@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CancelTournamentButton } from "@/components/CancelTournamentButton";
+import { EventOrganizerSubnav } from "@/components/EventOrganizerSubnav";
 import { PageBackLink } from "@/components/PageBackLink";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
@@ -12,12 +13,13 @@ import {
   getOrgBySlugForViewer,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
+import { manageEventTitle } from "@/lib/portal-copy";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Edit competition",
+  title: "Edit listing",
   description: "Change details or cancel a competition you host.",
 };
 
@@ -76,6 +78,11 @@ export default async function EditEventPage({
           </div>
         </div>
       )}
+      <EventOrganizerSubnav
+        slug={competition.slug}
+        tab="listing"
+        canEditListing
+      />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <div className="flex flex-wrap items-center gap-3">
           <PageBackLink href={`/orgs/${org.slug}`}>{org.name}</PageBackLink>
@@ -86,13 +93,15 @@ export default async function EditEventPage({
             Event page
           </Link>
         </div>
-        <p className="mt-6 text-sm font-semibold text-brand-red">Hosting</p>
+        <p className="mt-6 text-sm font-semibold text-brand-red">
+          {manageEventTitle(org.type)}
+        </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-          Edit {competition.name}
+          Edit listing
         </h1>
         <p className="mt-2 text-sm text-muted">
-          The event link stays the same — everyone you&rsquo;ve invited keeps
-          seeing the updated details.
+          {competition.name}. The event link stays the same — everyone
+          you&rsquo;ve invited keeps seeing the updated details.
         </p>
         {moderation?.status === "rejected" ? (
           <section className="mt-6 rounded-2xl border border-brand-red/30 bg-accent-soft p-5">
@@ -134,6 +143,7 @@ export default async function EditEventPage({
               audience: competition.audience,
               rated: competition.rated,
               facets: competition.details.facets,
+              image_url: competition.image_url,
               sections: competition.sections.map((section) => ({
                 name: section.name,
                 minRating: section.min_rating,

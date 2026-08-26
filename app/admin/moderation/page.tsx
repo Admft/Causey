@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminModerationBulkQueue } from "@/components/AdminModerationBulkQueue";
+import { AdminStatStrip } from "@/components/AdminStatStrip";
+import { adminTournamentsHref } from "@/lib/admin-tournament-filters";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
-import { getAdminModerationQueue } from "@/lib/data/admin";
+import {
+  getAdminModerationQueue,
+  getAdminOpsStats,
+} from "@/lib/data/admin";
 
 export const metadata: Metadata = {
   title: "Competition moderation",
@@ -14,7 +19,10 @@ export default async function ModerationPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) redirect("/");
 
-  const { queue, error } = await getAdminModerationQueue();
+  const [{ queue, error }, stats] = await Promise.all([
+    getAdminModerationQueue(),
+    getAdminOpsStats(),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -29,6 +37,32 @@ export default async function ModerationPage() {
         non-chess directory currently has only limited official sources. Select
         several and approve or reject them together.
       </p>
+
+      <div className="mt-8">
+        <AdminStatStrip
+          label="Moderation"
+          items={[
+            {
+              label: "Awaiting review",
+              value: stats.listings.pendingReview,
+              href: "/admin/moderation",
+            },
+            {
+              label: "Rejected listings",
+              value: stats.listings.rejected,
+              href: adminTournamentsHref({ status: "rejected" }),
+            },
+            {
+              label: "Published organizer listings",
+              value: stats.listings.publishedOrganizer,
+              href: adminTournamentsHref({
+                status: "published",
+                source: "organizer",
+              }),
+            },
+          ]}
+        />
+      </div>
 
       {error ? (
         <section className="section-rule mt-10 pt-8">

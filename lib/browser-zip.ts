@@ -1,3 +1,15 @@
+function geolocationAllowedByPolicy(): boolean {
+  if (typeof document === "undefined") return true;
+  const doc = document as Document & {
+    permissionsPolicy?: { allowsFeature?: (feature: string) => boolean };
+    featurePolicy?: { allowsFeature?: (feature: string) => boolean };
+  };
+  const allows =
+    doc.permissionsPolicy?.allowsFeature?.("geolocation") ??
+    doc.featurePolicy?.allowsFeature?.("geolocation");
+  return allows !== false;
+}
+
 export async function requestNearestZip(): Promise<
   { ok: true; zip: string } | { ok: false; error: string }
 > {
@@ -5,6 +17,14 @@ export async function requestNearestZip(): Promise<
     return {
       ok: false,
       error: "This browser cannot share a location. Type a 5-digit zip instead.",
+    };
+  }
+
+  if (!geolocationAllowedByPolicy()) {
+    return {
+      ok: false,
+      error:
+        "This page is not allowed to ask for location. Type a 5-digit zip instead.",
     };
   }
 
@@ -24,7 +44,8 @@ export async function requestNearestZip(): Promise<
     if (code === 1) {
       return {
         ok: false,
-        error: "Location is blocked in this browser. Type a 5-digit zip instead.",
+        error:
+          "Allow location when the browser asks, or type a 5-digit zip instead.",
       };
     }
     return {

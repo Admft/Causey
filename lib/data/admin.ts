@@ -10,7 +10,10 @@ import {
   type SourceHealth,
 } from "@/lib/ingestion-sources";
 import { escapePostgrestLikePattern } from "@/lib/data/supabase";
-import { isTournamentPublishReady } from "@/lib/tournament-readiness";
+import {
+  isTournamentPublishReady,
+  type TournamentReadinessInput,
+} from "@/lib/tournament-readiness";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type AdminOrganizationRow = {
@@ -74,6 +77,7 @@ export type AdminTournamentRow = {
   audience: "public" | "district" | "school" | "invite_only";
   source: string;
   status: "draft" | "pending_review" | "published" | "rejected" | "archived";
+  image_url?: string | null;
   details?: { facets?: string[] };
   org_id: string | null;
   created_at: string;
@@ -123,6 +127,64 @@ export type AdminIngestionSourceHealth = {
   health: SourceHealth;
 };
 
+/** Exact head count, or null when the query failed (never a fake zero). */
+export type AdminCount = number | null;
+
+export type AdminOpsStats = {
+  listings: {
+    pendingReview: AdminCount;
+    rejected: AdminCount;
+    drafts: AdminCount;
+    published: AdminCount;
+    archived: AdminCount;
+    readyToPublish: AdminCount;
+    publishedOrganizer: AdminCount;
+    publishedByCategory: {
+      chess: AdminCount;
+      debate: AdminCount;
+      stem: AdminCount;
+      arts: AdminCount;
+      writing: AdminCount;
+      other: AdminCount;
+    };
+  };
+  organizations: {
+    total: AdminCount;
+    pending: AdminCount;
+    rejected: AdminCount;
+    verified: AdminCount;
+    districts: AdminCount;
+  };
+  accounts: {
+    total: AdminCount;
+    platformAdmins: AdminCount;
+  };
+  ingestion: {
+    lastRunStatus: AdminScrapeRunRow["status"] | null;
+    lastRunAt: string | null;
+    lastRowsUpserted: number | null;
+    issueCount: AdminCount;
+    runsUnavailable: boolean;
+  };
+};
+
+type CountQuery = PromiseLike<{
+  count: number | null;
+  error: { message: string; code?: string } | null;
+}>;
+
+async function exactCount(query: CountQuery): Promise<AdminCount> {
+  const { count, error } = await query;
+  if (error) {
+    console.error("Admin ops count failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return null;
+  }
+  return count ?? 0;
+}
+
 export type AdminModerationQueueRow = {
   id: string;
   slug: string;
@@ -152,35 +214,181 @@ export type AdminModerationQueueRow = {
   } | null;
 };
 
-export async function getAdminOverview() {
+export async function getAdminOpsStats(): Promise<AdminOpsStats> {
   const supabase = await createServerSupabaseClient();
-  const [organizations, drafts, pendingReview, published, archived] =
-    await Promise.all([
-      supabase.from("organizations").select("*", { count: "exact", head: true }),
+  const listing = (status: AdminTournamentRow["status"]) =>
+    exactCount(
       supabase
         .from("competitions")
         .select("*", { count: "exact", head: true })
-        .eq("status", "draft"),
+        .eq("status", status)
+    );
+  const publishedCategory = (
+    category: AdminTournamentRow["category"]
+  ) =>
+    exactCount(
       supabase
         .from("competitions")
         .select("*", { count: "exact", head: true })
-        .eq("status", "pending_review"),
+        .eq("status", "published")
+        .eq("category", category)
+    );
+  const orgStatus = (
+    verificationStatus: AdminOrganizationRow["verification_status"]
+  ) =>
+    exactCount(
+      supabase
+        .from("organizations")
+        .select("*", { count: "exact", head: true })
+        .eq("verification_status", verificationStatus)
+    );
+
+  const [
+    pendingReview,
+    rejected,
+    drafts,
+    published,
+    archived,
+    publishedOrganizer,
+    chess,
+    debate,
+    stem,
+    arts,
+    writing,
+    other,
+    orgTotal,
+    orgPending,
+    orgRejected,
+    orgVerified,
+    districts,
+    platformAdmins,
+    users,
+    draftRows,
+    scrapeRuns,
+  ] = await Promise.all([
+    listing("pending_review"),
+    listing("rejected"),
+    listing("draft"),
+    listing("published"),
+    listing("archived"),
+    exactCount(
       supabase
         .from("competitions")
         .select("*", { count: "exact", head: true })
-        .eq("status", "published"),
+        .eq("status", "published")
+        .eq("source", "organizer")
+    ),
+    publishedCategory("chess"),
+    publishedCategory("debate"),
+    publishedCategory("stem"),
+    publishedCategory("arts"),
+    publishedCategory("writing"),
+    publishedCategory("other"),
+    exactCount(
+      supabase.from("organizations").select("*", { count: "exact", head: true })
+    ),
+    orgStatus("pending"),
+    orgStatus("rejected"),
+    orgStatus("verified"),
+    exactCount(
       supabase
-        .from("competitions")
+        .from("organizations")
         .select("*", { count: "exact", head: true })
-        .eq("status", "archived"),
-    ]);
+        .eq("type", "district")
+    ),
+    exactCount(
+      supabase
+        .from("platform_admins")
+        .select("*", { count: "exact", head: true })
+    ),
+    getAdminUsers({ limit: 1 }),
+    supabase
+      .from("competitions")
+      .select(
+        "name, start_date, city, state, zip, lat, lng, reg_url, participation_mode"
+      )
+      .eq("status", "draft")
+      .limit(1000),
+    supabase
+      .from("scrape_runs")
+      .select(
+        "id, source, started_at, finished_at, status, rows_staged, rows_upserted, error, meta"
+      )
+      .order("started_at", { ascending: false })
+      .limit(250),
+  ]);
+
+  let readyToPublish: AdminCount = null;
+  if (draftRows.error) {
+    console.error("Admin ready-draft count failed:", draftRows.error);
+  } else {
+    readyToPublish = ((draftRows.data ?? []) as TournamentReadinessInput[]).filter(
+      (row) => isTournamentPublishReady(row)
+    ).length;
+  }
+
+  const runsUnavailable = Boolean(scrapeRuns.error);
+  if (scrapeRuns.error) {
+    console.error("Admin scrape runs failed:", scrapeRuns.error);
+  }
+  const runs = (scrapeRuns.data ?? []) as AdminScrapeRunRow[];
+  const lastRun = runs[0] ?? null;
+  const health = runsUnavailable
+    ? null
+    : INGESTION_SOURCES.filter((source) => source.competitionSource).map(
+        (source) => evaluateSourceOperationalHealth(source, runs)
+      );
+  const issueCount = health
+    ? health.filter((row) =>
+        row.state === "failing" ||
+        row.state === "warning" ||
+        row.state === "blocked"
+      ).length
+    : null;
 
   return {
-    organizations: organizations.count ?? 0,
-    drafts: drafts.count ?? 0,
-    pendingReview: pendingReview.count ?? 0,
-    published: published.count ?? 0,
-    archived: archived.count ?? 0,
+    listings: {
+      pendingReview,
+      rejected,
+      drafts,
+      published,
+      archived,
+      readyToPublish,
+      publishedOrganizer,
+      publishedByCategory: { chess, debate, stem, arts, writing, other },
+    },
+    organizations: {
+      total: orgTotal,
+      pending: orgPending,
+      rejected: orgRejected,
+      verified: orgVerified,
+      districts,
+    },
+    accounts: {
+      total: users.error ? null : users.total,
+      platformAdmins,
+    },
+    ingestion: {
+      lastRunStatus: lastRun?.status ?? null,
+      lastRunAt: lastRun?.started_at ?? null,
+      lastRowsUpserted: runsUnavailable
+        ? null
+        : (lastRun?.rows_upserted ?? 0),
+      issueCount,
+      runsUnavailable,
+    },
+  };
+}
+
+/** @deprecated Prefer getAdminOpsStats — kept for a fail-open numeric snapshot. */
+export async function getAdminOverview() {
+  const stats = await getAdminOpsStats();
+  return {
+    organizations: stats.organizations.total ?? 0,
+    drafts: stats.listings.drafts ?? 0,
+    pendingReview: stats.listings.pendingReview ?? 0,
+    published: stats.listings.published ?? 0,
+    archived: stats.listings.archived ?? 0,
   };
 }
 
@@ -364,7 +572,7 @@ export async function getAdminTournament(
   const { data } = await supabase
     .from("competitions")
     .select(
-      "id, slug, name, category, custom_category_name, participation_mode, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, org_id, created_at, updated_at, details, organizations!competitions_org_id_fkey(id, name, slug, state, type, parent_org_id), sections(name, min_rating, max_rating, min_grade, max_grade, entry_fee_cents)"
+      "id, slug, name, category, custom_category_name, participation_mode, organizer_name, venue_name, address, city, state, zip, lat, lng, start_date, end_date, reg_deadline, reg_url, entry_fee_cents, rated, visibility, audience, source, status, image_url, org_id, created_at, updated_at, details, organizations!competitions_org_id_fkey(id, name, slug, state, type, parent_org_id), sections(name, min_rating, max_rating, min_grade, max_grade, entry_fee_cents)"
     )
     .eq("id", id)
     .maybeSingle();
@@ -421,11 +629,12 @@ export async function getAdminAuditLog(limit = 20): Promise<AdminAuditRow[]> {
   return (data ?? []) as AdminAuditRow[];
 }
 
-export async function getAdminScrapeRuns(
-  limit = 20
-): Promise<AdminScrapeRunRow[]> {
+export async function getAdminScrapeRuns(limit = 20): Promise<{
+  runs: AdminScrapeRunRow[];
+  unavailable: boolean;
+}> {
   const supabase = await createServerSupabaseClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("scrape_runs")
     .select(
       "id, source, started_at, finished_at, status, rows_staged, rows_upserted, error, meta"
@@ -433,17 +642,33 @@ export async function getAdminScrapeRuns(
     .order("started_at", { ascending: false })
     .limit(limit);
 
-  return (data ?? []) as AdminScrapeRunRow[];
+  if (error) {
+    console.error("Admin scrape runs failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return { runs: [], unavailable: true };
+  }
+
+  return {
+    runs: (data ?? []) as AdminScrapeRunRow[],
+    unavailable: false,
+  };
 }
 
-export async function getAdminIngestionSourceHealth(): Promise<
-  AdminIngestionSourceHealth[]
-> {
-  const runs = await getAdminScrapeRuns(250);
-  return INGESTION_SOURCES.filter((source) => source.competitionSource).map(
-    (source) => ({
-      source,
-      health: evaluateSourceOperationalHealth(source, runs),
-    })
-  );
+export async function getAdminIngestionSourceHealth(): Promise<{
+  sources: AdminIngestionSourceHealth[];
+  unavailable: boolean;
+}> {
+  const { runs, unavailable } = await getAdminScrapeRuns(250);
+  if (unavailable) return { sources: [], unavailable: true };
+  return {
+    sources: INGESTION_SOURCES.filter((source) => source.competitionSource).map(
+      (source) => ({
+        source,
+        health: evaluateSourceOperationalHealth(source, runs),
+      })
+    ),
+    unavailable: false,
+  };
 }

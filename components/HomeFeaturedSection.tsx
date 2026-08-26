@@ -18,27 +18,17 @@ export function HomeFeaturedSection({
       aria-labelledby="featured-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2
-              id="featured-heading"
-              className="max-w-[24ch] font-display text-display-sm font-bold tracking-tight text-foreground"
-            >
-              {featured.copy.heading}
-            </h2>
-            <p className="mt-3 max-w-2xl text-base text-muted">
-              {featured.nearbyEmpty && zip
-                ? `No upcoming listings within range of ${zip} yet. Showing indexed events with organizer photos instead. ${featured.copy.blurb}`
-                : featured.copy.blurb}
-            </p>
-          </div>
-          <Link
-            href={featured.copy.searchHref}
-            className="text-sm font-semibold text-brand-red hover:underline"
-          >
-            {featured.copy.searchLabel}
-          </Link>
-        </div>
+        <h2
+          id="featured-heading"
+          className="max-w-[24ch] font-display text-display-sm font-bold tracking-tight text-foreground"
+        >
+          {featured.copy.heading}
+        </h2>
+        <p className="mt-3 max-w-2xl text-base text-muted">
+          {featured.nearbyEmpty && zip
+            ? `No upcoming chess listings within range of ${zip} yet. Showing a sample instead.`
+            : featured.copy.blurb}
+        </p>
         <ul
           className={`mt-8 grid gap-4 ${
             featured.results.length === 1
@@ -54,6 +44,14 @@ export function HomeFeaturedSection({
             </li>
           ))}
         </ul>
+        <p className="section-rule mt-8 pt-6">
+          <Link
+            href={featured.copy.searchHref}
+            className="text-sm font-semibold text-brand-red hover:underline"
+          >
+            {featured.copy.searchLabel}
+          </Link>
+        </p>
       </div>
     </section>
   );

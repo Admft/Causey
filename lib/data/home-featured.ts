@@ -29,6 +29,7 @@ export type HomeFeaturedResult = {
 };
 
 const PHOTO_FILTERS = SearchFiltersSchema.parse({
+  category: "chess",
   timing: "upcoming",
   sort: "soonest",
   limit: HOME_FEATURED_POOL,
@@ -47,6 +48,7 @@ async function loadPhotoPool(): Promise<CompetitionResult[]> {
     .from("competitions")
     .select("*, sections(*), series(*)")
     .eq("status", "published")
+    .eq("category", "chess")
     .is("canonical_id", null)
     .not("image_url", "is", null)
     .or(`end_date.gte.${today},and(end_date.is.null,start_date.gte.${today})`)
@@ -82,6 +84,7 @@ export async function getHomeFeaturedCompetitions(
     if (origin) {
       const page = await data.searchCompetitions(
         SearchFiltersSchema.parse({
+          category: "chess",
           zip,
           radius_miles: HOME_FEATURED_RADIUS_MILES,
           timing: "upcoming",

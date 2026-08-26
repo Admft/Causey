@@ -11,14 +11,9 @@ import { StudentAccountHandoff } from "@/components/StudentAccountHandoff";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { preferredDiscoveryHref } from "@/lib/category-discovery";
-import {
-  getChildrenWithEvents,
-  getMyRecommendations,
-  getPendingChildRequestCount,
-  isSupabaseConfigured,
-  isUpcomingEvent,
-  type EntrantWithEvent,
-} from "@/lib/data/portal";
+import { getNotificationPreferences } from "@/lib/data/district";
+import { getChildrenWithEvents, getMyRecommendations, getPendingChildRequestCount, isSupabaseConfigured, isUpcomingEvent, type EntrantWithEvent } from "@/lib/data/portal";
+import { todayIsoInTimeZone } from "@/lib/competition-timing";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -60,12 +55,13 @@ export default async function FamilyPage() {
   const profile = await getCurrentProfile();
   if (profile && profile.role !== "parent") redirect("/me");
 
-  const [children, pendingCount, recommendations] = await Promise.all([
+  const [children, pendingCount, recommendations, preferences] = await Promise.all([
     getChildrenWithEvents(user.id),
     getPendingChildRequestCount(user.id),
     getMyRecommendations(user.id),
+    getNotificationPreferences(user.id),
   ]);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIsoInTimeZone(preferences?.timezone ?? "America/Chicago");
   const childrenByPriority = children
     .map((child) => {
       const upcoming = child.entrants

@@ -6,7 +6,9 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
+    // self lets this origin prompt for zip lookup; empty () would deny
+    // geolocation before Chrome shows a permission dialog.
+    value: "camera=(), microphone=(), geolocation=(self)",
   },
   {
     key: "Content-Security-Policy",

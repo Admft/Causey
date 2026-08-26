@@ -34,6 +34,14 @@ describe("abuse controls and public-path cost", () => {
     const nextConfig = read("next.config.ts");
     expect(nextConfig).toContain("Content-Security-Policy");
     expect(nextConfig).toContain("frame-ancestors 'none'");
+    // Empty geolocation=() blocks the browser prompt; self is required for
+    // "Use my location" while camera/mic stay denied.
+    expect(nextConfig).toContain(
+      'value: "camera=(), microphone=(), geolocation=(self)"'
+    );
+    expect(nextConfig).not.toContain(
+      'value: "camera=(), microphone=(), geolocation=()"'
+    );
     // Organizer cover photos are arbitrary HTTPS URLs, not only Supabase storage.
     expect(nextConfig).toContain("img-src 'self' data: blob: https:");
     expect(nextConfig).not.toMatch(

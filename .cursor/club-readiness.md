@@ -13,6 +13,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - Public search + “My club is going”; mark club attending; teammate going list
 - Host any listed type (draft → review → publish); club/team-only audience (not “school only”)
 - RSVP, organizer-registration checkbox, attendance on hosted **and** travel events
+- Hosted/travel manage shows an event pulse (invited / RSVP / unfinished registration / blank results) and People vs Listing
 - Record division/place/award; roster → club-scoped history; Plan/Family show blanks as not recorded
 - Season report + CSV; grade + typed USCF/NSDA/other IDs on profile/roster
 
@@ -24,7 +25,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Phone homepage hero is a page-width form (3+2 type tiles) so Find stays on one screen with My tournaments — 2026-08-26
 - [x] Phone homepage is search-first: type tiles, optional zip, club/district as text links — 2026-08-26
 - [x] Homepage hero fills the remaining viewport and a cue scrolls to what Causey indexes — 2026-08-26
-- [x] Public `/clubs` scope ledger is one lifted white card: aligned can-do / not-building rows, display heads, lead/sm type, district note under the pair — 2026-08-26
+- [x] Event manage workspace: pulse + People/Listing + cover re-upload on edit — 2026-08-26
 - [x] Public `/clubs` and `/districts` pitches include a compact “All competition types” back control to the homepage chooser — 2026-08-26
 - [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Create a club account — 2026-08-24
 - [x] Season trophy board on overview (recorded places from Reports data) — 2026-08-24

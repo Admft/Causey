@@ -11,6 +11,7 @@ export const NOTIFICATION_KINDS = [
   "cancellation",
   "rsvp_update",
   "announcement",
+  "result",
   "account",
 ] as const;
 
@@ -25,6 +26,7 @@ export type NotificationPrefsLike = {
   cancellation: boolean;
   rsvp_update: boolean;
   announcement: boolean;
+  result: boolean;
 };
 
 export type NotificationEmailPrefsLike = NotificationPrefsLike & {
@@ -40,6 +42,7 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefsLike = {
   cancellation: true,
   rsvp_update: true,
   announcement: true,
+  result: true,
 };
 
 export function isNotificationKind(value: string): value is NotificationKind {
@@ -70,6 +73,8 @@ export function prefersInAppKind(
       return resolved.rsvp_update;
     case "announcement":
       return resolved.announcement;
+    case "result":
+      return resolved.result;
     default:
       return true;
   }
@@ -119,7 +124,8 @@ const ATTENTION_ORDER: Record<NotificationKind, number> = {
   schedule_change: 5,
   rsvp_update: 6,
   announcement: 7,
-  account: 8,
+  result: 8,
+  account: 9,
 };
 
 export function sortAttentionItems(items: AttentionItem[]): AttentionItem[] {
@@ -300,6 +306,34 @@ export function buildLinkedChildAttentionItems(
           href: "/family#needs-response",
           ctaLabel: "Open family desk",
         });
+      }
+
+      if (row.status === "going" || row.status === "attended") {
+        const days = daysUntil(event.start_date, todayIso);
+        if (days >= 0 && days <= 7) {
+          if (days <= 1 && prefersInAppKind(prefs, "reminder_1_day")) {
+            items.push({
+              id: `child-remind-1:${child.profile_id}:${row.competition_id}`,
+              kind: "reminder_1_day",
+              title:
+                days === 0
+                  ? `${child.display_name} · Today: ${event.name}`
+                  : `${child.display_name} · Tomorrow: ${event.name}`,
+              body: `${child.display_name} is marked going. Confirm travel from the family desk.`,
+              href: "/family",
+              ctaLabel: "Open family desk",
+            });
+          } else if (days > 1 && prefersInAppKind(prefs, "reminder_7_day")) {
+            items.push({
+              id: `child-remind-7:${child.profile_id}:${row.competition_id}`,
+              kind: "reminder_7_day",
+              title: `${child.display_name} · This week: ${event.name}`,
+              body: `Starts in ${days} days.`,
+              href: "/family",
+              ctaLabel: "Open family desk",
+            });
+          }
+        }
       }
     }
   }

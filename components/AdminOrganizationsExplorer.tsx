@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AdminDistrictSchoolBulkVerify } from "@/components/AdminDistrictSchoolBulkVerify";
 import { AdminOrganizationForm } from "@/components/AdminOrganizationForm";
@@ -253,25 +254,18 @@ function OrganizationPanel({
 export function AdminOrganizationsExplorer({
   organizations,
   districtReadinessById,
+  initialStatus = "all",
 }: {
   organizations: AdminOrganizationRow[];
   districtReadinessById: DistrictReadinessById;
+  initialStatus?: StatusFilter;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-
-  const counts = useMemo(() => {
-    const result: Record<Status, number> = {
-      pending: 0,
-      rejected: 0,
-      verified: 0,
-    };
-    for (const org of organizations) result[org.verification_status] += 1;
-    return result;
-  }, [organizations]);
 
   const schoolsByDistrict = useMemo(() => {
     const map = new Map<string, AdminOrganizationRow[]>();
@@ -305,40 +299,8 @@ export function AdminOrganizationsExplorer({
       );
   }, [organizations, query, statusFilter, typeFilter]);
 
-  const statButtons: { key: StatusFilter; label: string; count: number }[] = [
-    { key: "pending", label: "Need review", count: counts.pending },
-    { key: "rejected", label: "Corrections sent", count: counts.rejected },
-    { key: "verified", label: "Verified", count: counts.verified },
-    { key: "all", label: "Total", count: organizations.length },
-  ];
-
   return (
     <div className="grid gap-6">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {statButtons.map((stat) => {
-          const active = statusFilter === stat.key;
-          return (
-            <button
-              key={stat.key}
-              type="button"
-              onClick={() => setStatusFilter(active ? "all" : stat.key)}
-              aria-pressed={active}
-              className={`rounded-xl border px-4 py-3 text-left transition-colors ${
-                active
-                  ? "border-brand-red/40 bg-accent-soft"
-                  : "border-line bg-surface hover:border-brand-red/30"
-              }`}
-            >
-              <span className="block font-display text-xl font-bold text-foreground">
-                {stat.count}
-              </span>
-              <span className="mt-0.5 block text-xs font-semibold text-muted-strong">
-                {stat.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="min-w-52 flex-1">
@@ -424,6 +386,7 @@ export function AdminOrganizationsExplorer({
               setQuery("");
               setStatusFilter("all");
               setTypeFilter("all");
+              router.replace("/admin/organizations");
             }}
             className="mt-4 rounded-md border border-line px-4 py-2 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/40 hover:text-brand-red"
           >

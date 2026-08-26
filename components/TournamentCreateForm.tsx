@@ -88,6 +88,7 @@ export type TournamentFormInitial = {
   rated: boolean;
   facets?: string[];
   sections?: TournamentSectionDraft[];
+  image_url?: string | null;
 };
 
 const OPEN_SECTION: TournamentSectionDraft = {
@@ -219,7 +220,7 @@ export function TournamentCreateForm({
       )
   );
   const [coverImageUrl, setCoverImageUrl] = useState(
-    initialDraft?.cover_image_url ?? null
+    initial?.image_url ?? initialDraft?.cover_image_url ?? null
   );
   const [step, setStep] = useState<"details" | "review">("details");
   const [error, setError] = useState<string | null>(null);
@@ -237,7 +238,7 @@ export function TournamentCreateForm({
   const saveVersion = useRef(0);
   // Stable UUID for create flows (coach + platform admin). Edit has no draft.
   const [resolvedDraftId] = useState(() =>
-    edit ? draftId ?? null : draftId ?? crypto.randomUUID()
+    edit ? edit.competitionId : draftId ?? crypto.randomUUID()
   );
 
   function currentDraftData(): TournamentDraftData {
@@ -266,6 +267,12 @@ export function TournamentCreateForm({
   }
 
   function persistDraft(coverImagePath?: string) {
+    if (edit) {
+      return Promise.resolve({
+        ok: false as const,
+        error: "Listing edits save with the form, not as a draft.",
+      });
+    }
     if (!resolvedDraftId) {
       return Promise.resolve({
         ok: false as const,
@@ -320,7 +327,8 @@ export function TournamentCreateForm({
   }
 
   useEffect(() => {
-    if (edit || !resolvedDraftId || initialDraft) return;
+    if (edit) return;
+    if (!resolvedDraftId || initialDraft) return;
     // Create the draft row immediately so cover uploads and leave-saves
     // don't race an empty tournament_drafts table.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -383,16 +391,22 @@ export function TournamentCreateForm({
       return;
     }
     if (!resolvedDraftId) {
-      setError("Could not identify this draft. Reload the page and try again.");
+      setError(
+        edit
+          ? "Could not identify this listing. Reload the page and try again."
+          : "Could not identify this draft. Reload the page and try again."
+      );
       return;
     }
 
     setUploading(true);
     try {
-      const saved = await persistDraft();
-      if (!saved.ok) {
-        setError(saved.error);
-        return;
+      if (!edit) {
+        const saved = await persistDraft();
+        if (!saved.ok) {
+          setError(saved.error);
+          return;
+        }
       }
       const extension =
         file.type === "image/png"
@@ -413,10 +427,18 @@ export function TournamentCreateForm({
         const detail = uploadError.message?.toLowerCase() ?? "";
         setError(
           detail.includes("bucket") || detail.includes("not found")
-            ? "Cover uploads are temporarily unavailable. Save the draft and try again later."
+            ? "Cover uploads are temporarily unavailable. Save and try again later."
             : detail.includes("row-level security") || detail.includes("policy")
               ? "You don’t have permission to upload a cover for this organization."
               : "Could not upload the cover image. Try a smaller JPG, PNG, or WebP and try again."
+        );
+        return;
+      }
+
+      if (edit) {
+        setCoverImageUrl(
+          supabase.storage.from("tournament-covers").getPublicUrl(imagePath)
+            .data.publicUrl
         );
         return;
       }
@@ -532,12 +554,14 @@ export function TournamentCreateForm({
               competitionId: edit.competitionId,
               eventSlug: edit.eventSlug,
               orgSlug,
+              ...(coverImageUrl ? { imageUrl: coverImageUrl } : {}),
               ...fields,
             })
           : await updateTournament({
               competitionId: edit.competitionId,
               eventSlug: edit.eventSlug,
               orgSlug,
+              ...(coverImageUrl ? { imageUrl: coverImageUrl } : {}),
               ...fields,
             });
         if (!result.ok) {
@@ -779,14 +803,18 @@ export function TournamentCreateForm({
 
       {!reviewing ? (
         <>
-          {!edit && resolvedDraftId ? (
+          {resolvedDraftId ? (
             <fieldset className="flex flex-col gap-3">
               <legend className="text-xs font-semibold text-muted-strong">
-                Cover image <span className="text-brand-red">Required</span>
+                Cover image{" "}
+                {edit ? null : (
+                  <span className="text-brand-red">Required</span>
+                )}
               </legend>
               <p className="-mt-2 text-xs text-muted">
-                Required. Search cards always show a picture — this is the one
-                families see. Use a landscape JPG, PNG, or WebP up to 5 MB.
+                {edit
+                  ? "Search cards show this picture. Replace it with a landscape JPG, PNG, or WebP up to 5 MB."
+                  : "Required. Search cards always show a picture — this is the one families see. Use a landscape JPG, PNG, or WebP up to 5 MB."}
               </p>
               {coverImageUrl ? (
                 <CompetitionCoverImage

@@ -184,6 +184,9 @@ export async function updateTournamentRecord(input: {
           values.primaryFacet,
           values.mathTypeFacet
         ),
+        ...(values.imageUrl !== undefined
+          ? { image_url: values.imageUrl }
+          : {}),
       },
       p_sections: sections,
     }

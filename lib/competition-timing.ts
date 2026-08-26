@@ -9,6 +9,26 @@ export function todayIsoDate(now = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
+/** Calendar date in a named timezone. Falls back to UTC if the zone is invalid. */
+export function todayIsoInTimeZone(
+  timeZone: string,
+  now = new Date()
+): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone,
+    }).formatToParts(now);
+    const part = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((value) => value.type === type)?.value;
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  } catch {
+    return todayIsoDate(now);
+  }
+}
+
 export function effectiveEndDate(competition: {
   start_date: string;
   end_date: string | null;

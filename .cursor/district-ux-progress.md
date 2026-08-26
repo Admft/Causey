@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Platform admin ops ledger, organizer event workspace, and parent competition alerts: `/admin` uses fail-closed global counts (never fake zero); event manage/edit share People/Listing plus a pulse; invites/schedule/cancel/results/announcements fan out to linked parents (`0067`) — 2026-08-26
 - [x] District announcement fan-out: district overview posts once to every connected school (plus a district-staff copy), with staff-only as an explicit choice; empty districts stay fail-closed until a school exists (`0043` operator access reused; no schema widen) — 2026-08-25
 - [x] Club-ready results + coordination: coaches record division/place/award after attendance (`0064`); roster names open club-scoped student history; Plan/Family/Reports show recorded outcomes (blank = not recorded); season reports include travel events the club marked as attending plus a club CSV; signed-in search chip “My club is going”; grade + typed credential IDs (uscf/nsda/other) on profile/roster; member-only org website/meeting note; leave-club success names the next step (`0065`) — 2026-08-24
 - [x] Club-owner + district-program agents: project skills, playbook, catalogs (`docs/club-feature-overview.md`), and first perfection tick — club overview records results after attendance; district setup-complete mission opens competitions; command center lists upcoming district + school events by host — 2026-08-24
@@ -38,6 +39,9 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
+- [x] Homepage desktop strip is “Browse tournaments” with a bottom “See more chess tournaments” link into `/chess` (zip/radius when nearby), not photo-sample lab copy — 2026-08-26
+- [x] “Use my location” can prompt again: Permissions-Policy allows geolocation for this origin (`self`), not an empty deny list that failed as blocked with no Chrome prompt — 2026-08-26
+- [x] Platform admin pages share a hairline ops strip; organizer manage is “Manage event” with pulse + subnav; Family/Alerts use the parent timezone — 2026-08-26
 - [x] Hero type picker uses Tailwind grid so production CSS minify cannot drop it into a stacked column — 2026-08-26
 - [x] Event pages take signed-in comments; desktop home shows real listings with photos (or nearby the saved zip); signup and landings ask for zip / location — 2026-08-26
 - [x] Homepage Find tournaments card adds a My tournaments tab: signed-out sign-in returns to `/?view=mine`; signed-in list is Going / Needs RSVP / traveling / hosted (not organizer registration) — 2026-08-26
