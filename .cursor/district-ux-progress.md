@@ -38,6 +38,11 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
+- [x] Home “Find a tournament” sheens the Find tournaments card (one-shot brand-red ring + sweep); stacked/phone layouts also scroll the card under the sticky chrome — 2026-08-26
+- [x] Page-back is a compact outline control (chevron + destination, `.page-back`) instead of ghost “← text” links, reused on public leaves, event/admin/roster, and create review — 2026-08-26
+- [x] Public leaf pages (`/clubs`, `/districts`, search, account, legal) share `PageBackLink` so a visitor can leave the page without relying on a hidden header logo — 2026-08-26
+- [x] `/clubs` can-do / not-building pair is one lifted ledger (subgrid rows, display heads, lead titles) on a soft band — 2026-08-26
+- [x] `/clubs` can-do and not-building cards share the same row structure and height so the band is not lopsided — 2026-08-26
 - [x] Listing covers stored as `http://` (Squarespace/TLA flyers) are upgraded to `https://` at display and scrape so CSP can show the photo instead of a broken image — 2026-08-26
 - [x] Home hero search: “Browse without a zip” only when the zip field is empty; search card stretches to the left column and fills the extra height with the live search recap — 2026-08-25
 - [x] Scholastic visual language: filled panels (no empty bubbles), rounded-xl controls / rounded-3xl hero shells, 16px/500 body + 800 display, grid drift + shared scroll-reveal, `/clubs` peer pitch, home organizer band (club + district), packed `/districts` / login / signup / search heroes — 2026-08-24

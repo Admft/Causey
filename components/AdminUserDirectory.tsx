@@ -5,6 +5,7 @@ import { adminSearchUsers } from "@/lib/actions/admin";
 import { AdminOrgMembershipForm } from "@/components/AdminOrgMembershipForm";
 import { AdminUserAccessForm } from "@/components/AdminUserAccessForm";
 import { AdminUserDeleteForm } from "@/components/AdminUserDeleteForm";
+import { PageBackButton, PageNextButton } from "@/components/PageBackLink";
 
 type AdminUserRow = {
   profile_id: string;
@@ -232,26 +233,22 @@ export function AdminUserDirectory({
             className="mt-6 flex items-center justify-between gap-4"
           >
             {hasPrevious ? (
-              <button
-                type="button"
+              <PageBackButton
                 onClick={() => search(page - 1)}
                 disabled={isPending}
-                className="text-sm font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
               >
-                ← Previous
-              </button>
+                Previous
+              </PageBackButton>
             ) : (
               <span />
             )}
             {hasNext ? (
-              <button
-                type="button"
+              <PageNextButton
                 onClick={() => search(page + 1)}
                 disabled={isPending}
-                className="text-sm font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
               >
-                Next →
-              </button>
+                Next
+              </PageNextButton>
             ) : null}
           </nav>
         ) : null}

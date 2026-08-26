@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
+import { PageBackLink } from "@/components/PageBackLink";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
 
@@ -58,7 +59,10 @@ export default function DistrictsPage() {
       <section className="access-grid overflow-x-clip">
         <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
           <div className="relative z-10 min-w-0">
-            <div className="animate-rise" data-hero-brand>
+            <div className="animate-rise">
+              <PageBackLink />
+            </div>
+            <div className="animate-rise mt-5" data-hero-brand>
               <CauseyLogo size="hero" />
             </div>
             <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[16ch] font-display text-display-xl tracking-tight text-foreground sm:mt-6">

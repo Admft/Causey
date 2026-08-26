@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
+import { PageBackLink } from "@/components/PageBackLink";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export const metadata: Metadata = {
@@ -49,16 +50,78 @@ const included = [
     title: "Season file",
     description: "Attendance, recorded places/awards, and a downloadable CSV.",
   },
+  {
+    title: "Announcements",
+    description: "Post to the club from the workspace. This is not a parent inbox.",
+  },
+  {
+    title: "Website and meeting note",
+    description: "A member-only site link and a practice/meeting line on the overview.",
+  },
 ];
 
 const notIncluded = [
-  "Recurring practice nights",
-  "A public club directory",
-  "Live USCF/NSDA lookup",
-  "Pairings/ballots",
-  "Dues",
-  "Coach–parent DMs",
+  {
+    title: "Recurring practice nights",
+    description: "The overview can hold a meeting note. It is not a weekly schedule.",
+  },
+  {
+    title: "A public club directory",
+    description: "Clubs stay member-only until owner and legal say otherwise.",
+  },
+  {
+    title: "Live USCF/NSDA lookup",
+    description: "IDs can be typed on a roster. Causey does not look them up live.",
+  },
+  {
+    title: "Pairings/ballots",
+    description: "Coordination and discovery, not SwissSys or Tabroom.",
+  },
+  {
+    title: "Dues",
+    description: "No billing or Stripe. Fees stay on the organizer’s site.",
+  },
+  {
+    title: "Coach–parent DMs",
+    description: "RSVP and announcements cover follow-through. There is no messenger.",
+  },
 ];
+
+function ScopeColumn({
+  eyebrow,
+  title,
+  items,
+  className = "",
+}: {
+  eyebrow: string;
+  title: string;
+  items: { title: string; description: string }[];
+  className?: string;
+}) {
+  return (
+    <div
+      className={`grid min-w-0 lg:row-span-7 lg:grid-rows-subgrid ${className}`}
+    >
+      <header className="px-6 pb-5 pt-6 sm:px-8 sm:pb-6 sm:pt-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-red">
+          {eyebrow}
+        </p>
+        <h2 className="mt-2 font-display text-display tracking-tight text-foreground">
+          {title}
+        </h2>
+      </header>
+      {items.map((item) => (
+        <div
+          key={item.title}
+          className="border-t border-line px-6 py-5 last:pb-6 sm:px-8 sm:py-6 sm:last:pb-8"
+        >
+          <p className="text-lead font-bold text-foreground">{item.title}</p>
+          <p className="mt-1 text-sm text-muted">{item.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function ClubsPage() {
   return (
@@ -66,7 +129,10 @@ export default function ClubsPage() {
       <section className="access-grid overflow-x-clip">
         <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
           <div className="relative z-10 min-w-0">
-            <div className="animate-rise" data-hero-brand>
+            <div className="animate-rise">
+              <PageBackLink />
+            </div>
+            <div className="animate-rise mt-5" data-hero-brand>
               <CauseyLogo size="hero" />
             </div>
             <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[16ch] font-display text-display-xl tracking-tight text-foreground sm:mt-6">
@@ -123,51 +189,35 @@ export default function ClubsPage() {
         </div>
       </section>
 
-      <section className="home-band band-join band-join--surface bg-surface">
-        <div className="mx-auto grid max-w-6xl gap-8 px-5 sm:px-8 lg:grid-cols-2 lg:gap-10">
+      <section className="home-band band-join band-join--soft bg-surface-soft">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <ScrollReveal>
-            <div className="rounded-2xl border border-line bg-background p-5 sm:p-6">
-              <h2 className="font-display text-display tracking-tight text-foreground">
-                What a club can do
-              </h2>
-              <ul className="mt-4 divide-y divide-line border-y border-line">
-                {included.map((item) => (
-                  <li key={item.title} className="py-3">
-                    <p className="text-sm font-bold text-foreground">
-                      {item.title}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">{item.description}</p>
-                  </li>
-                ))}
-              </ul>
+            <div className="overflow-hidden rounded-3xl border border-line bg-surface shadow-[var(--shadow-panel-lg)] lg:grid lg:grid-cols-2 lg:grid-rows-[auto_repeat(6,auto)]">
+              <ScopeColumn
+                className="max-lg:border-b max-lg:border-line lg:border-r lg:border-line"
+                eyebrow="In the workspace"
+                title="What a club can do"
+                items={included}
+              />
+              <ScopeColumn
+                eyebrow="Not building unless you ask"
+                title="Needs for a professional club"
+                items={notIncluded}
+              />
             </div>
           </ScrollReveal>
-          <ScrollReveal delay={60}>
-            <div className="rounded-2xl border border-line bg-background p-5 sm:p-6">
-              <h2 className="font-display text-display tracking-tight text-foreground">
-                Needs for a professional club
-              </h2>
-              <p className="mt-2 text-sm text-muted">
-                Not building unless you ask.
-              </p>
-              <ul className="mt-4 divide-y divide-line border-y border-line">
-                {notIncluded.map((item) => (
-                  <li key={item} className="py-3 text-sm text-muted">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-5 text-sm text-muted">
-                School districts are provisioned by Causey, not created here.{" "}
-                <Link
-                  href="/districts"
-                  className="font-bold text-muted-strong hover:text-brand-red"
-                >
-                  Review the district pilot →
-                </Link>
-              </p>
-            </div>
-          </ScrollReveal>
+          <p className="mt-5 text-sm text-muted">
+            School districts are provisioned by Causey, not created here.{" "}
+            <Link
+              href="/districts"
+              className="group font-bold text-muted-strong hover:text-brand-red"
+            >
+              Review the district pilot{" "}
+              <span aria-hidden="true" className="nudge-x">
+                →
+              </span>
+            </Link>
+          </p>
         </div>
       </section>
     </>

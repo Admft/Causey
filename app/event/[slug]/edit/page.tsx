@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CancelTournamentButton } from "@/components/CancelTournamentButton";
+import { PageBackLink } from "@/components/PageBackLink";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
 import { getSessionUser } from "@/lib/auth/session";
@@ -76,16 +77,11 @@ export default async function EditEventPage({
         </div>
       )}
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
-          <Link
-            href={`/orgs/${org.slug}`}
-            className="text-muted-strong transition-colors hover:text-brand-red"
-          >
-            ← Back to {org.name}
-          </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <PageBackLink href={`/orgs/${org.slug}`}>{org.name}</PageBackLink>
           <Link
             href={`/event/${competition.slug}`}
-            className="text-muted-strong transition-colors hover:text-brand-red"
+            className="text-sm font-semibold text-muted-strong hover:text-brand-red"
           >
             Event page
           </Link>

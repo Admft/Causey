@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/ForgotPasswordForm";
+import { PageBackLink } from "@/components/PageBackLink";
 
 export const metadata: Metadata = {
   title: "Forgot password",
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
 export default function ForgotPasswordPage() {
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
-      <p className="text-sm font-semibold text-brand-red">Account</p>
+      <PageBackLink href="/login">Sign in</PageBackLink>
+      <p className="mt-6 text-sm font-semibold text-brand-red">Account</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Forgot your password?
       </h1>

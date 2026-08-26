@@ -8,6 +8,7 @@ import {
   ResultForm,
 } from "@/components/EntrantManager";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
+import { PageBackLink } from "@/components/PageBackLink";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { getSessionUser } from "@/lib/auth/session";
@@ -455,21 +456,24 @@ export default async function ManageEventPage({
         />
       ) : null}
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
+        <div className="flex flex-wrap items-center gap-3">
+          {orgShell ? (
+            <PageBackLink href={`/orgs/${orgShell.slug}`}>
+              {orgShell.name}
+            </PageBackLink>
+          ) : (
+            <PageBackLink href={`/event/${competition.slug}`}>
+              Event page
+            </PageBackLink>
+          )}
           {orgShell ? (
             <Link
-              href={`/orgs/${orgShell.slug}`}
-              className="text-muted-strong transition-colors hover:text-brand-red"
+              href={`/event/${competition.slug}`}
+              className="text-sm font-semibold text-muted-strong hover:text-brand-red"
             >
-              ← Back to {orgShell.name}
+              Event page
             </Link>
           ) : null}
-          <Link
-            href={`/event/${competition.slug}`}
-            className="text-muted-strong transition-colors hover:text-brand-red"
-          >
-            {orgShell ? "Event page" : "← Back to event page"}
-          </Link>
         </div>
         <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
           Competition

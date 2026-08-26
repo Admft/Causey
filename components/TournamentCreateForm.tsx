@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { CompetitionCoverImage } from "@/components/CompetitionCoverImage";
+import { PageBackButton } from "@/components/PageBackLink";
 import {
   adminUpdateTournament,
 } from "@/lib/actions/admin";
@@ -1401,16 +1402,14 @@ export function TournamentCreateForm({
 
       {reviewing ? (
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
+          <PageBackButton
             onClick={() => {
               setError(null);
               setStep("details");
             }}
-            className="self-start text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
           >
-            ← Edit details
-          </button>
+            Edit details
+          </PageBackButton>
           <button
             type="submit"
             disabled={pending || uploading}

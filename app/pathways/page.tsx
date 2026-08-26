@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ChessSubnavBar } from "@/components/ChessSubnav";
+import { PageBackLink } from "@/components/PageBackLink";
 import { PathwayExplorer } from "@/components/PathwayExplorer";
 
 export const metadata: Metadata = {
@@ -13,7 +14,8 @@ export default function PathwaysPage() {
     <>
       <ChessSubnavBar tool="pathways" />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+        <PageBackLink href="/chess">Chess tournaments</PageBackLink>
+        <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
           Illustrative lookup
         </p>
         <h1 className="mt-2 max-w-[20ch] font-display text-display-lg font-bold tracking-tight text-foreground">

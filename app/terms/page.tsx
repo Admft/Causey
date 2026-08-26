@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageBackLink } from "@/components/PageBackLink";
 
 export const metadata: Metadata = {
   title: "Terms of use",
@@ -9,7 +10,8 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
-      <p className="text-sm font-semibold text-brand-red">Trust</p>
+      <PageBackLink />
+      <p className="mt-6 text-sm font-semibold text-brand-red">Trust</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Terms of use
       </h1>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AccountSecurityForm } from "@/components/AccountSecurityForm";
+import { PageBackLink } from "@/components/PageBackLink";
 import { AccountDataControls } from "@/components/AccountDataControls";
 import { AccountSettingsShell } from "@/components/AccountSettingsShell";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
@@ -437,13 +438,8 @@ export default async function AccountPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <Link
-          href={workspace.href}
-          className="text-sm font-semibold text-muted-strong hover:text-brand-red"
-        >
-          ← {workspace.label}
-        </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageBackLink href={workspace.href}>{workspace.label}</PageBackLink>
         <Link
           href="/me"
           className="text-sm font-semibold text-muted-strong hover:text-brand-red"

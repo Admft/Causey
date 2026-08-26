@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { CompetitionResult } from "@/lib/data/types";
 import {
@@ -10,6 +9,7 @@ import {
   type SearchSort,
 } from "@/lib/schemas";
 import { CompetitionCard } from "@/components/CompetitionCard";
+import { PageBackLink } from "@/components/PageBackLink";
 import { DisciplineFacetSwitch } from "@/components/DisciplineFacetSwitch";
 import {
   ActiveFilterChips,
@@ -336,12 +336,7 @@ export function SearchClient({
           grid motif (access shouldn't depend on where you live). */}
       <section className="access-grid section-rule">
         <div className="relative mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10 md:min-h-[400px] lg:min-h-[440px] lg:py-12">
-          <Link
-            href="/"
-            className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
-          >
-            ← All competition types
-          </Link>
+          <PageBackLink />
           <p className="mt-6 text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
             {categoryDefinition.label}
           </p>

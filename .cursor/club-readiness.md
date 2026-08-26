@@ -19,9 +19,10 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 ## Need for a professional club (priority)
 
 - [x] Overview tells the owner to **record results** after attendance (not only invite/create) — 2026-08-24
+- [x] Public `/clubs` scope ledger is one lifted white card: aligned can-do / not-building rows, display heads, lead/sm type, district note under the pair — 2026-08-26
+- [x] Public `/clubs` and `/districts` pitches include a compact “All competition types” back control to the homepage chooser — 2026-08-26
 - [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Create a club account — 2026-08-24
 - [x] Season trophy board on overview (recorded places from Reports data) — 2026-08-24
-- [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Create a club account — 2026-08-24
 - [x] Mid-season overview no longer says “Create your first competition” — 2026-08-24
 - [x] Directory cards keep a source-logo cover when a listing has no photo, so mixed search rows stay aligned; club-hosted create still requires a cover — 2026-08-25
 - [ ] Recurring practice night as a first-class object (today: meeting note string only)

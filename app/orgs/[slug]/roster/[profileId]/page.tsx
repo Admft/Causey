@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
+import { PageBackLink } from "@/components/PageBackLink";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import { competitionTypeLabel } from "@/lib/competition-types";
@@ -117,12 +118,7 @@ export default async function RosterMemberHistoryPage({
         orgType={org.type}
       />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <Link
-          href={`/orgs/${org.slug}/roster`}
-          className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
-        >
-          ← Back to roster
-        </Link>
+        <PageBackLink href={`/orgs/${org.slug}/roster`}>Roster</PageBackLink>
         <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
           Club record
         </p>

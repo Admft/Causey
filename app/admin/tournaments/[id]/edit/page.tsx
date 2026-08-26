@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdminTournamentStatusActions } from "@/components/AdminTournamentStatusActions";
+import { PageBackLink } from "@/components/PageBackLink";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminTournament } from "@/lib/data/admin";
@@ -25,12 +25,7 @@ export default async function AdminEditTournamentPage({
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      <Link
-        href="/admin/tournaments"
-        className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
-      >
-        ← Back to tournaments
-      </Link>
+      <PageBackLink href="/admin/tournaments">Tournaments</PageBackLink>
       <p className="mt-6 text-sm font-semibold text-brand-red">Platform admin</p>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
         <div>

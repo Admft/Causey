@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlreadySignedInSignup } from "@/components/AlreadySignedInSignup";
+import { PageBackLink } from "@/components/PageBackLink";
 import { ParentStudentSignupGate } from "@/components/ParentStudentSignupGate";
 import { SignupForm } from "@/components/SignupForm";
 import { sanitizeNextPath } from "@/lib/auth/next-path";
@@ -81,7 +82,8 @@ export default async function SignupPage({
   return (
     <section className="access-grid">
       <div className="relative mx-auto max-w-xl px-5 py-10 sm:px-8 sm:py-12">
-        <p className="text-sm font-semibold text-brand-red">Account</p>
+        <PageBackLink />
+        <p className="mt-6 text-sm font-semibold text-brand-red">Account</p>
         <h1 className="mt-2 font-display text-display-lg tracking-tight text-foreground">
           {isJoiningOrganization
             ? "Create a student account to join"

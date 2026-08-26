@@ -5,6 +5,7 @@ import {
   MarkAllNotificationsReadButton,
   MarkNotificationReadButton,
 } from "@/components/NotificationInboxActions";
+import { PageBackLink } from "@/components/PageBackLink";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
@@ -54,12 +55,7 @@ export default async function NotificationsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-      <Link
-        href={workspace.href}
-        className="text-sm font-semibold text-muted-strong hover:text-brand-red"
-      >
-        ← Back to workspace
-      </Link>
+      <PageBackLink href={workspace.href}>{workspace.label}</PageBackLink>
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
         Alerts
       </p>

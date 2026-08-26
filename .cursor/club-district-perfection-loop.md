@@ -34,6 +34,10 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Last tick
 
+- 2026-08-26 — Page-back controls are outlined chips with a chevron (not ghost “← text”), shared across public leaves and in-app returns.
+- 2026-08-26 — `/clubs` scope ledger: one white card on a soft band, subgrid-aligned rows, heavier type and padding so the can-do / not-building pair reads as a contract.
+- 2026-08-26 — Public pages get a named back link (`PageBackLink`) so `/clubs`, `/districts`, and account/legal leaves are not a dead end when the header logo is hidden.
+- 2026-08-26 — `/clubs` can-do vs not-building cards: matching title+line rows, equal height, district note under the pair.
 - 2026-08-24 — Visual language: anti-vibecode density/radius/type/motion; `/clubs` pitch; home/districts/login/signup/search packed; reports stats no longer empty bubbles.
 - 2026-08-24 — Club agent pass: season trophy board on overview; mid-season “Season is underway”; team/school copy on reports and history; district-only audience helper hidden for clubs.
 - 2026-08-24 — Agents created. First ship: club record-results mission + club/team chrome; district competitions-next + overview calendar.

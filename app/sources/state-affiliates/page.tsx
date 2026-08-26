@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageBackLink } from "@/components/PageBackLink";
 import {
   AFFILIATE_TIER_LABELS,
   STATE_AFFILIATES,
@@ -25,7 +26,8 @@ function displayHost(href: string): string {
 export default function StateAffiliatesPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
-      <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+      <PageBackLink />
+      <p className="mt-6 text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
         Source directory
       </p>
       <h1 className="mt-2 max-w-[18ch] font-display text-display font-bold tracking-tight text-foreground">

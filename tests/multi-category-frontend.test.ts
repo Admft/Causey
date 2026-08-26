@@ -47,6 +47,17 @@ describe("homepage leads with multi-category discovery", () => {
     expect(homePage).toContain("home-hero-search-col");
     expect(heroSearch).toContain("home-hero-search");
   });
+
+  it("points Find a tournament at the search card with a sheen and mobile scroll", () => {
+    expect(homePage).toContain('href: "#search"');
+    expect(homePage).toContain("Find a tournament");
+    expect(heroSearch).toContain('id="search"');
+    expect(heroSearch).toContain("is-search-attention");
+    expect(heroSearch).toContain("scrollIntoView");
+    expect(heroSearch).toContain("(max-width: 47.999rem)");
+    expect(read("app/globals.css")).toContain("@keyframes search-shine");
+    expect(read("app/globals.css")).toContain("@keyframes search-attention");
+  });
 });
 
 describe("hero search requires an explicit category", () => {
@@ -203,6 +214,8 @@ describe("generalized links and return paths", () => {
     expect(eventPage).toContain("discoveryCategory(competition.category)");
     expect(eventPage).toContain("backToDirectory");
     expect(eventPage).toContain("categoryDefinition.href");
+    expect(eventPage).toContain("PageBackLink");
+    expect(eventPage).not.toContain("←");
   });
 
   it("generic surfaces stop hardcoding /chess as the search destination", () => {
@@ -235,8 +248,13 @@ describe("generalized links and return paths", () => {
   });
 
   it("returns directory search to the homepage type chooser", () => {
-    expect(searchClient).toContain('href="/"');
-    expect(searchClient).toContain("All competition types");
+    expect(searchClient).toContain("PageBackLink");
+    expect(read("components/PageBackLink.tsx")).toContain('href = "/"');
+    expect(read("components/PageBackLink.tsx")).toContain(
+      "All competition types"
+    );
+    expect(read("components/PageBackLink.tsx")).toContain('className="page-back"');
+    expect(read("components/PageBackLink.tsx")).not.toContain("←");
   });
 
   it("puts category discipline chips on search instead of burying them in the rail", () => {

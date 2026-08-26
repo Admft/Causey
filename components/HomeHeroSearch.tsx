@@ -34,8 +34,74 @@ export function HomeHeroSearch({
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
+  const attentionTimer = useRef<number>(0);
+
+  // “Find a tournament” (#search): sheen on the card; on stacked (phone)
+  // layouts also scroll the form into view under the sticky chrome.
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return undefined;
+
+    const reducedMq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const stackedMq = window.matchMedia("(max-width: 47.999rem)");
+
+    function shine() {
+      if (reducedMq.matches) return;
+      form.classList.remove("is-search-attention");
+      void form.offsetWidth;
+      form.classList.add("is-search-attention");
+      window.clearTimeout(attentionTimer.current);
+      attentionTimer.current = window.setTimeout(() => {
+        form.classList.remove("is-search-attention");
+      }, 1100);
+    }
+
+    function goToSearch() {
+      const chrome = document.querySelector("[data-site-chrome]");
+      const inset = Math.ceil(
+        (chrome?.getBoundingClientRect().height ?? 96) + 12
+      );
+      form.style.scrollMarginTop = `${inset}px`;
+      if (stackedMq.matches) {
+        form.scrollIntoView({
+          behavior: reducedMq.matches ? "auto" : "smooth",
+          block: "start",
+        });
+      }
+      shine();
+      form.focus({ preventScroll: true });
+    }
+
+    function onClick(event: MouseEvent) {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+      if (!(event.target instanceof Element)) return;
+      const href = event.target.closest("a[href]")?.getAttribute("href");
+      if (href !== "#search" && href !== "/#search") return;
+      if (window.location.pathname !== "/") return;
+      event.preventDefault();
+      if (window.location.hash !== "#search") {
+        window.history.pushState(null, "", "#search");
+      }
+      goToSearch();
+    }
+
+    document.addEventListener("click", onClick, true);
+    let frame = 0;
+    if (window.location.hash === "#search") {
+      frame = window.requestAnimationFrame(() => goToSearch());
+    }
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("click", onClick, true);
+      window.clearTimeout(attentionTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     const el = zipRef.current;
@@ -107,6 +173,8 @@ export function HomeHeroSearch({
   return (
     <form
       id="search"
+      ref={formRef}
+      tabIndex={-1}
       onSubmit={onSubmit}
       className="home-hero-search flex w-full min-w-0 flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
     >

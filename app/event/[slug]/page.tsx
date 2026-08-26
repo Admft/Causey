@@ -14,6 +14,7 @@ import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { EventStandingLabel } from "@/components/EventStandingLabel";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
 import { ChessSubnavBar } from "@/components/ChessSubnav";
+import { PageBackLink } from "@/components/PageBackLink";
 import {
   DifficultyRating,
   SaveCompetitionButton,
@@ -277,7 +278,7 @@ export default async function EventPage({ params }: Params) {
         <ChessSubnavBar category={categoryDefinition.id} tool="tournaments" />
       ) : null}
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-      <Link
+      <PageBackLink
         href={
           backToDirectory
             ? categoryDefinition.href
@@ -285,12 +286,11 @@ export default async function EventPage({ params }: Params) {
               ? `/orgs/${hostOrgSlug}/competitions`
               : "/orgs"
         }
-        className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
       >
         {backToDirectory
-          ? `← All ${categoryDefinition.label} tournaments`
-          : "← Organization competitions"}
-      </Link>
+          ? `All ${categoryDefinition.label} tournaments`
+          : "Organization competitions"}
+      </PageBackLink>
 
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
         <div>

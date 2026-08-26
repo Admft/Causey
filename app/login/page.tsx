@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "@/components/LoginForm";
+import { PageBackLink } from "@/components/PageBackLink";
 import { sanitizeNextPath } from "@/lib/auth/next-path";
 import {
   accountRoleForOrgInvitationRole,
@@ -61,7 +62,8 @@ export default async function LoginPage({
     <section className="access-grid">
       <div className="relative mx-auto max-w-md px-5 py-10 sm:py-12">
         <div className="animate-rise">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+          <PageBackLink />
+          <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
             Account
           </p>
           <h1 className="mt-2 font-display text-display-lg tracking-tight text-foreground">

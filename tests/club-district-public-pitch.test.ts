@@ -15,12 +15,20 @@ describe("club and district public pitches", () => {
   it("gives clubs a peer surface to /districts with Club/Team language", () => {
     expect(clubsPage).toContain("A club season, from roster to results.");
     expect(clubsPage).toContain("Create a club account");
+    expect(clubsPage).toContain("PageBackLink");
+    expect(districtsPage).toContain("PageBackLink");
+    expect(read("components/PageBackLink.tsx")).toContain('className="page-back"');
+    expect(read("app/globals.css")).toContain(".page-back {");
     expect(clubsPage).toContain("/signup?role=coach");
     expect(clubsPage).toContain("Club/Team-only");
     expect(clubsPage).not.toContain("School/District");
     expect(clubsPage).not.toContain("Book a district");
     expect(clubsPage).toContain("Needs for a professional club");
     expect(clubsPage).toContain("Not building unless you ask");
+    expect(clubsPage).toContain("lg:grid-cols-2");
+    expect(clubsPage).toContain("lg:grid-rows-subgrid");
+    expect(clubsPage).toContain("Announcements");
+    expect(clubsPage).toContain("Website and meeting note");
     expect(clubsPage).toContain("Recurring practice nights");
     expect(clubsPage).toContain("A public club directory");
     expect(clubsPage).toContain("Live USCF/NSDA lookup");
