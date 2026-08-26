@@ -70,9 +70,11 @@ function DateChip({ start, small }: { start: string; small?: boolean }) {
 export function CompetitionCard({
   result,
   layout = "grid2",
+  sourceFallback = true,
 }: {
   result: CompetitionResult;
   layout?: ResultsLayout;
+  sourceFallback?: boolean;
 }) {
   const anyFilterActive = result.matching_section_ids.length !== result.sections.length;
   const compact = layout === "grid3";
@@ -146,6 +148,7 @@ export function CompetitionCard({
           source={result.source}
           alt=""
           compact
+          sourceFallback={sourceFallback}
           aspectClass="aspect-[4/3] sm:aspect-auto"
           className="w-full shrink-0 rounded-lg sm:h-16 sm:w-24"
         />
@@ -215,6 +218,7 @@ export function CompetitionCard({
         source={result.source}
         alt=""
         compact={compact}
+        sourceFallback={sourceFallback}
         aspectClass={compact ? "aspect-[16/9]" : "aspect-[16/10]"}
       />
       <div className={`flex flex-1 flex-col ${compact ? "p-4" : "p-5"}`}>

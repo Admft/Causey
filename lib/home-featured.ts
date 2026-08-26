@@ -1,5 +1,5 @@
 import { discoveryCategoryHref } from "@/lib/category-discovery";
-import { toDisplayCoverUrl } from "@/lib/cover-url";
+import { organizerCoverUrl } from "@/lib/cover-url";
 
 export const HOME_FEATURED_LIMIT = 6;
 export const HOME_FEATURED_RADIUS_MILES = 75;
@@ -17,7 +17,7 @@ export type HomeFeaturedCopy = {
 export function hasOrganizerCover(
   imageUrl: string | null | undefined
 ): boolean {
-  return toDisplayCoverUrl(imageUrl) !== null;
+  return organizerCoverUrl(imageUrl) !== null;
 }
 
 /** Stable daily shuffle so a refresh does not reshuffle the homepage strip. */
@@ -46,13 +46,11 @@ export function pickHomeFeatured<T extends { image_url?: string | null }>(
   dayIso: string,
   limit = HOME_FEATURED_LIMIT
 ): T[] {
+  const withPhotos = pool.filter((row) => hasOrganizerCover(row.image_url));
   if (mode === "photos") {
-    const withPhotos = pool.filter((row) => hasOrganizerCover(row.image_url));
     return shuffleWithDaySeed(withPhotos, dayIso).slice(0, limit);
   }
-  const withPhotos = pool.filter((row) => hasOrganizerCover(row.image_url));
-  const without = pool.filter((row) => !hasOrganizerCover(row.image_url));
-  return [...withPhotos, ...without].slice(0, limit);
+  return withPhotos.slice(0, limit);
 }
 
 export function homeFeaturedCopy(

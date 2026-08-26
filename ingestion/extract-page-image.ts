@@ -1,4 +1,5 @@
 import { load } from "cheerio";
+import { isSourceChromeCoverUrl } from "@/lib/cover-url";
 
 /**
  * Pull a usable cover image from a scraped HTML page.
@@ -7,9 +8,6 @@ import { load } from "cheerio";
  * Return null liberally — a missing image is better than a favicon,
  * banner ad, or site chrome showing up as a tournament photo.
  */
-
-const REJECT_URL_RE =
-  /favicon|sprite|pixel|tracking|1x1|badge|button|icon[-_]?|logo|avatar|emoji|spinner|placeholder|clo-logo|banner|advert|ad[-_]?banner|stalemate-save|uscfsales|uschess\.org\/sites\/default\/files\/favicons/i;
 
 const REJECT_ALT_RE = /banner\s*ad|advertisement|sponsor|us\s*chess\s*sales/i;
 
@@ -30,10 +28,8 @@ function looksUsable(
   alt?: string | null
 ): boolean {
   if (!url || url.startsWith("data:")) return false;
-  if (REJECT_URL_RE.test(url)) return false;
+  if (isSourceChromeCoverUrl(url)) return false;
   if (alt && REJECT_ALT_RE.test(alt)) return false;
-  // Tiny SVGs are almost always icons; raster covers are what we want.
-  if (/\.svg(\?|#|$)/i.test(url)) return false;
   return true;
 }
 

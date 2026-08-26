@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toDisplayCoverUrl } from "@/lib/cover-url";
+import { organizerCoverUrl, toDisplayCoverUrl } from "@/lib/cover-url";
 
 describe("toDisplayCoverUrl", () => {
   it("upgrades scraped http covers to https for CSP", () => {
@@ -21,5 +21,15 @@ describe("toDisplayCoverUrl", () => {
     expect(toDisplayCoverUrl("")).toBeNull();
     expect(toDisplayCoverUrl("javascript:alert(1)")).toBeNull();
     expect(toDisplayCoverUrl("not a url")).toBeNull();
+  });
+
+  it("does not treat source logos or FIDE Open Graph defaults as event photos", () => {
+    expect(
+      organizerCoverUrl("https://directory.fide.com/img/fide_og_1200.png")
+    ).toBeNull();
+    expect(organizerCoverUrl("https://example.com/site-logo.png")).toBeNull();
+    expect(organizerCoverUrl("https://organizer.example/flyer.jpg")).toBe(
+      "https://organizer.example/flyer.jpg"
+    );
   });
 });

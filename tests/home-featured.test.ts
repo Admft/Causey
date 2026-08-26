@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
-  HOME_FEATURED_LIMIT,
   HOME_FEATURED_RADIUS_MILES,
   hasOrganizerCover,
   homeFeaturedCopy,
@@ -28,12 +27,29 @@ describe("homepage featured listings", () => {
     expect(featuredSection).toContain("md:block");
     expect(featuredSection).toContain("section-rule");
     expect(featuredSection).toContain("justify-center");
-    expect(featuredSection).toContain("cta-enabled");
-    expect(featuredSection).toContain("cta-glow");
-    expect(featuredSection).toContain("nudge-x");
+    expect(featuredSection).toContain("sourceFallback={false}");
+    expect(featuredSection).toContain("HomeFeaturedSeeMore");
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "components/HomeFeaturedSeeMore.tsx"),
+        "utf8"
+      )
+    ).toContain("cta-enabled");
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "components/HomeFeaturedSeeMore.tsx"),
+        "utf8"
+      )
+    ).toContain("nudge-x");
     expect(readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8")).toContain(
-      ".cta-glow"
+      ".cta-sheen"
     );
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "components/HomeFeaturedSeeMore.tsx"),
+        "utf8"
+      )
+    ).toContain("is-cta-attention");
     expect(featuredSection).toContain("{featured.copy.searchLabel}");
     expect(homeFeaturedCopy("nearby", "75201").heading).toBe(
       "Browse tournaments near 75201"
@@ -60,20 +76,31 @@ describe("homepage featured listings", () => {
     expect(hasOrganizerCover("http://organizer.example/flyer.jpg")).toBe(true);
     expect(hasOrganizerCover(null)).toBe(false);
     expect(hasOrganizerCover("not-a-url")).toBe(false);
+    expect(
+      hasOrganizerCover("https://directory.fide.com/img/fide_og_1200.png")
+    ).toBe(false);
+    expect(hasOrganizerCover("https://calendar.fide.com/img/logo1.png")).toBe(
+      false
+    );
+    expect(hasOrganizerCover("/sources/fide.svg")).toBe(false);
 
     const pool = [
       { id: "a", image_url: "https://cdn.example/a.jpg" },
       { id: "b", image_url: null },
       { id: "c", image_url: "https://cdn.example/c.jpg" },
+      {
+        id: "d",
+        image_url: "https://directory.fide.com/img/fide_og_1200.png",
+      },
     ];
     expect(pickHomeFeatured(pool, "photos", "2026-08-26").map((row) => row.id)).toEqual(
       expect.arrayContaining(["a", "c"])
     );
     expect(pickHomeFeatured(pool, "photos", "2026-08-26")).toHaveLength(2);
-    expect(pickHomeFeatured(pool, "nearby", "2026-08-26")[0]?.id).toBe("a");
-    expect(pickHomeFeatured(pool, "nearby", "2026-08-26")).toHaveLength(
-      Math.min(HOME_FEATURED_LIMIT, pool.length)
+    expect(pickHomeFeatured(pool, "nearby", "2026-08-26").map((row) => row.id)).toEqual(
+      ["a", "c"]
     );
+    expect(pickHomeFeatured(pool, "nearby", "2026-08-26")).toHaveLength(2);
   });
 
   it("shuffles the photo sample the same way for a given day", () => {

@@ -38,6 +38,15 @@ describe("extractPageImage", () => {
     expect(extractPageImage(html, base)).toBeNull();
   });
 
+  it("rejects FIDE directory Open Graph defaults", () => {
+    const html = `
+      <html><head>
+        <meta property="og:image" content="https://directory.fide.com/img/fide_og_1200.png" />
+      </head><body></body></html>
+    `;
+    expect(extractPageImage(html, base)).toBeNull();
+  });
+
   it("rejects US Chess sales banner ads so organizer fallback can run", () => {
     const html = `
       <html><body>

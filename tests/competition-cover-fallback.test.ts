@@ -9,6 +9,7 @@ describe("competition covers stay aligned in search", () => {
   it("falls back to the listing source mark when a photo is missing or fails", () => {
     const cover = read("components/CompetitionCoverImage.tsx");
     expect(cover).toContain("sourceByCompetitionSource");
+    expect(cover).toContain("sourceFallback = true");
     expect(cover).toContain("onError={() => setFailed(true)}");
     expect(cover).toContain("toDisplayCoverUrl");
     expect(cover).toContain("CauseyLogo");

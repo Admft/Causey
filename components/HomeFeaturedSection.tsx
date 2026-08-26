@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { CompetitionCard } from "@/components/CompetitionCard";
+import { HomeFeaturedSeeMore } from "@/components/HomeFeaturedSeeMore";
 import type { HomeFeaturedResult } from "@/lib/data/home-featured";
 
 export function HomeFeaturedSection({
@@ -40,20 +40,19 @@ export function HomeFeaturedSection({
         >
           {featured.results.map((result) => (
             <li key={result.id}>
-              <CompetitionCard result={result} layout="grid3" />
+              <CompetitionCard
+                result={result}
+                layout="grid3"
+                sourceFallback={false}
+              />
             </li>
           ))}
         </ul>
         <p className="section-rule mt-8 flex justify-center pt-6">
-          <Link
+          <HomeFeaturedSeeMore
             href={featured.copy.searchHref}
-            className="cta-enabled cta-glow group inline-flex"
-          >
-            {featured.copy.searchLabel}
-            <span aria-hidden="true" className="nudge-x">
-              →
-            </span>
-          </Link>
+            label={featured.copy.searchLabel}
+          />
         </p>
       </div>
     </section>

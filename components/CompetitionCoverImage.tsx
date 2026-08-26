@@ -52,6 +52,7 @@ export function CompetitionCoverImage({
   aspectClass = "aspect-[16/10]",
   source,
   compact,
+  sourceFallback = true,
 }: {
   src: string | null | undefined;
   alt: string;
@@ -61,6 +62,8 @@ export function CompetitionCoverImage({
   /** Listing source used when the photo is missing or fails to load. */
   source?: string;
   compact?: boolean;
+  /** Search keeps the source mark; homepage featured does not. */
+  sourceFallback?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const photoSrc = toDisplayCoverUrl(src);
@@ -70,9 +73,18 @@ export function CompetitionCoverImage({
   }, [photoSrc]);
 
   const showPhoto = Boolean(photoSrc) && !failed;
-  const showSource = Boolean(source);
+  const showSource = !showPhoto && sourceFallback && Boolean(source);
 
-  if (!showPhoto && !showSource) return null;
+  if (!showPhoto && !showSource) {
+    if (!sourceFallback) {
+      return (
+        <div
+          className={`relative overflow-hidden bg-surface-soft ${aspectClass} ${className}`}
+        />
+      );
+    }
+    return null;
+  }
 
   return (
     <div

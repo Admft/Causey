@@ -203,25 +203,32 @@ textarea.field {
   box-shadow: none;
 }
 
-/* Homepage “see more” closer: same primary CTA, with a live red halo so
-   the strip does not end on a timid text link. */
-.cta-glow {
-  box-shadow: var(--shadow-cta);
-  animation: cta-glow 2.4s var(--ease-brand) infinite;
+/* Homepage “see more”: normal red CTA at rest; one sheen when it enters. */
+.cta-sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
-.cta-glow:hover,
-.cta-glow:focus-visible {
-  animation: none;
-  box-shadow: 0 10px 32px color-mix(in srgb, var(--brand-red) 48%, transparent);
+.cta-sheen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  z-index: 0;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    color-mix(in srgb, #ffffff 80%, transparent) 42%,
+    color-mix(in srgb, #ffffff 55%, transparent) 50%,
+    transparent 100%
+  );
+  opacity: 0;
 }
-@keyframes cta-glow {
-  0%,
-  100% {
-    box-shadow: var(--shadow-cta);
-  }
-  50% {
-    box-shadow: 0 10px 32px color-mix(in srgb, var(--brand-red) 48%, transparent);
-  }
+.cta-sheen.is-cta-attention::before {
+  animation: search-shine 900ms var(--ease-brand);
 }
 .cta-outline {
   display: inline-flex;
@@ -693,8 +700,6 @@ textarea.field {
   }
   .cta-enabled:hover,
   .cta-enabled:active,
-  .cta-glow:hover,
-  .cta-glow:focus-visible,
   .card-lift:hover,
   .card-lift:focus-visible,
   .group:hover .nudge-x,
@@ -710,7 +715,7 @@ textarea.field {
   .home-hero-search.is-search-attention,
   .home-hero-search.is-search-attention::before,
   .home-hero-cue,
-  .cta-glow {
+  .cta-sheen.is-cta-attention::before {
     animation: none;
   }
   .coverage-step--reached::after,
