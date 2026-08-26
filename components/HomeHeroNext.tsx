@@ -48,7 +48,7 @@ export function HomeHeroNext({ targetId }: { targetId: string }) {
   return (
     <button
       type="button"
-      className={`home-hero-cue ${away ? "home-hero-cue--away" : ""}`}
+      className={`home-hero-cue max-md:hidden ${away ? "home-hero-cue--away" : ""}`}
       aria-controls={targetId}
       onClick={goToNext}
     >

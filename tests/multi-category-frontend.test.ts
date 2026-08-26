@@ -56,13 +56,13 @@ describe("homepage leads with multi-category discovery", () => {
   it("fills the remaining viewport on desktop and scrolls into coverage", () => {
     const globals = read("app/globals.css");
     const cue = read("components/HomeHeroNext.tsx");
-    expect(homePage).toContain('className="home-hero access-grid"');
+    expect(homePage).toContain("home-hero access-grid");
+    expect(homePage).toContain("md:min-h-[calc(100dvh-var(--home-hero-chrome))]");
     expect(homePage).toContain('<HomeHeroNext targetId="coverage" />');
     expect(coveragePath).toContain('id="coverage"');
-    expect(globals).toContain("100dvh - var(--home-hero-chrome)");
-    expect(globals).toContain("100svh - var(--home-hero-chrome)");
     expect(globals).toContain("@keyframes home-hero-cue-bob");
     expect(cue).toContain("See what Causey indexes");
+    expect(cue).toContain("max-md:hidden");
     expect(cue).toContain("scrollIntoView");
     expect(cue).toContain("prefers-reduced-motion");
   });
@@ -93,13 +93,12 @@ describe("homepage leads with multi-category discovery", () => {
     expect(heroCard).toContain("rounded-2xl");
     expect(heroCard).toContain("md:rounded-3xl");
     expect(heroCard).toContain("shadow-[var(--shadow-panel)]");
-    expect(heroSearch).toContain("home-hero-types");
+    expect(heroSearch).toContain("grid grid-cols-6 gap-2 md:grid-cols-5");
+    expect(heroSearch).toContain("col-span-2 col-start-2 md:col-span-1 md:col-start-auto");
     expect(heroSearch).toContain("{option.shortLabel}");
     expect(heroSearch).toContain('placeholder="Optional"');
     expect(heroSearch).toContain("md:grid-cols-2");
     expect(heroSearch).toContain("max-md:hidden");
-    expect(read("app/globals.css")).toContain("repeat(6, minmax(0, 1fr))");
-    expect(read("app/globals.css")).toContain("repeat(5, minmax(0, 1fr))");
     expect(read("app/globals.css")).not.toContain("max-w-[18rem]");
   });
 

@@ -117,10 +117,14 @@ export function HomeHeroSearch({
             aria-labelledby="hero-category-label"
             aria-invalid={categoryError !== null}
             aria-describedby={categoryError ? "hero-category-error" : undefined}
-            className="home-hero-types mt-2"
+            className="mt-2 grid grid-cols-6 gap-2 md:grid-cols-5"
           >
             {DISCOVERY_CATEGORIES.map((option) => {
               const selected = category === option.id;
+              const tilePlace =
+                option.id === "arts"
+                  ? "col-span-2 col-start-2 md:col-span-1 md:col-start-auto"
+                  : "col-span-2 md:col-span-1";
               return (
                 <button
                   key={option.id}
@@ -132,7 +136,7 @@ export function HomeHeroSearch({
                     setCategory(option.id);
                     setCategoryError(null);
                   }}
-                  className={`flex h-14 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-1 text-center transition-colors md:h-16 ${
+                  className={`flex h-14 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-1 text-center transition-colors md:h-16 ${tilePlace} ${
                     selected
                       ? "border-brand-red/45 bg-accent-soft text-brand-red"
                       : "border-line bg-white text-foreground hover:border-brand-red/35 hover:text-brand-red"

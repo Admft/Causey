@@ -38,7 +38,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
-- [x] Phone hero club/district are two equal brand-blue-soft chips aligned to the search card — 2026-08-26
+- [x] Hero type picker uses Tailwind grid so production CSS minify cannot drop it into a stacked column — 2026-08-26
 - [x] Homepage Find tournaments card adds a My tournaments tab: signed-out sign-in returns to `/?view=mine`; signed-in list is Going / Needs RSVP / traveling / hosted (not organizer registration) — 2026-08-26
 - [x] Phone homepage hero is a content-height form at page width (3+2 type tiles, rounded-2xl, no full-viewport void or 18rem bubble) — 2026-08-26
 - [x] Phone homepage type chooser is a 2×3 tile grid (Writing centered on the last row) so Find + zip + Search stay on the first screen with the My tournaments tab — 2026-08-26

@@ -43,8 +43,8 @@ export default async function CompetitionTypesPage({
 
   return (
     <>
-      <section className="home-hero access-grid">
-        <div className="home-hero-lockup relative mx-auto max-w-6xl px-5 sm:px-8">
+      <section className="home-hero access-grid relative flex flex-col md:min-h-[calc(100dvh-var(--home-hero-chrome))]">
+        <div className="home-hero-lockup relative mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 py-4 sm:px-8 md:flex-1 md:grid md:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)] md:items-center md:gap-x-10 md:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,26rem)] lg:gap-x-12">
           <div className="home-hero-copy relative z-10">
             <div className="flex min-w-0 flex-col">
               <div className="animate-rise" data-hero-brand>
