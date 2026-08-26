@@ -44,38 +44,39 @@ export function HomeHeroSearch({
   useEffect(() => {
     const form = formRef.current;
     if (!form) return undefined;
+    const searchForm = form;
 
     const reducedMq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const stackedMq = window.matchMedia("(max-width: 47.999rem)");
 
-    function shine() {
+    const shine = () => {
       if (reducedMq.matches) return;
-      form.classList.remove("is-search-attention");
-      void form.offsetWidth;
-      form.classList.add("is-search-attention");
+      searchForm.classList.remove("is-search-attention");
+      void searchForm.offsetWidth;
+      searchForm.classList.add("is-search-attention");
       window.clearTimeout(attentionTimer.current);
       attentionTimer.current = window.setTimeout(() => {
-        form.classList.remove("is-search-attention");
+        searchForm.classList.remove("is-search-attention");
       }, 1100);
-    }
+    };
 
-    function goToSearch() {
+    const goToSearch = () => {
       const chrome = document.querySelector("[data-site-chrome]");
       const inset = Math.ceil(
         (chrome?.getBoundingClientRect().height ?? 96) + 12
       );
-      form.style.scrollMarginTop = `${inset}px`;
+      searchForm.style.scrollMarginTop = `${inset}px`;
       if (stackedMq.matches) {
-        form.scrollIntoView({
+        searchForm.scrollIntoView({
           behavior: reducedMq.matches ? "auto" : "smooth",
           block: "start",
         });
       }
       shine();
-      form.focus({ preventScroll: true });
-    }
+      searchForm.focus({ preventScroll: true });
+    };
 
-    function onClick(event: MouseEvent) {
+    const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
@@ -89,7 +90,7 @@ export function HomeHeroSearch({
         window.history.pushState(null, "", "#search");
       }
       goToSearch();
-    }
+    };
 
     document.addEventListener("click", onClick, true);
     let frame = 0;
