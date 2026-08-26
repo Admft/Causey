@@ -17,6 +17,8 @@ function absolutize(href: string, baseUrl: string): string | null {
   try {
     const url = new URL(href.trim(), baseUrl);
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    // Store HTTPS so cards are not blocked by img-src https: / mixed content.
+    if (url.protocol === "http:") url.protocol = "https:";
     return url.toString();
   } catch {
     return null;

@@ -68,6 +68,17 @@ describe("extractPageImage", () => {
     );
   });
 
+  it("upgrades http og:image to https so CSP can load the cover", () => {
+    const html = `
+      <html><head>
+        <meta property="og:image" content="http://static1.squarespace.com/static/cover.png" />
+      </head><body></body></html>
+    `;
+    expect(extractPageImage(html, base)).toBe(
+      "https://static1.squarespace.com/static/cover.png"
+    );
+  });
+
   it("uses the largest responsive image instead of a placeholder src", () => {
     const html = `
       <html><body><main>

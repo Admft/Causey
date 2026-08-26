@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CauseyLogo } from "@/components/CauseyLogo";
+import { toDisplayCoverUrl } from "@/lib/cover-url";
 import { sourceByCompetitionSource } from "@/lib/ingestion-sources";
 
 function SourceCoverMark({
@@ -62,12 +63,13 @@ export function CompetitionCoverImage({
   compact?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
+  const photoSrc = toDisplayCoverUrl(src);
 
   useEffect(() => {
     setFailed(false);
-  }, [src]);
+  }, [photoSrc]);
 
-  const showPhoto = Boolean(src) && !failed;
+  const showPhoto = Boolean(photoSrc) && !failed;
   const showSource = Boolean(source);
 
   if (!showPhoto && !showSource) return null;
@@ -81,7 +83,7 @@ export function CompetitionCoverImage({
           {/* Arbitrary organizer hosts — plain img avoids next/image allowlists. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={src!}
+            src={photoSrc!}
             alt={alt}
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
