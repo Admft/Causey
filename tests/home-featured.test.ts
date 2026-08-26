@@ -27,6 +27,13 @@ describe("homepage featured listings", () => {
     expect(featuredSection).toContain("hidden");
     expect(featuredSection).toContain("md:block");
     expect(featuredSection).toContain("section-rule");
+    expect(featuredSection).toContain("justify-center");
+    expect(featuredSection).toContain("cta-enabled");
+    expect(featuredSection).toContain("cta-glow");
+    expect(featuredSection).toContain("nudge-x");
+    expect(readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8")).toContain(
+      ".cta-glow"
+    );
     expect(featuredSection).toContain("{featured.copy.searchLabel}");
     expect(homeFeaturedCopy("nearby", "75201").heading).toBe(
       "Browse tournaments near 75201"

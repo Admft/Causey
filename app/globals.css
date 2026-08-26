@@ -202,6 +202,27 @@ textarea.field {
   transform: translateY(1px);
   box-shadow: none;
 }
+
+/* Homepage “see more” closer: same primary CTA, with a live red halo so
+   the strip does not end on a timid text link. */
+.cta-glow {
+  box-shadow: var(--shadow-cta);
+  animation: cta-glow 2.4s var(--ease-brand) infinite;
+}
+.cta-glow:hover,
+.cta-glow:focus-visible {
+  animation: none;
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--brand-red) 48%, transparent);
+}
+@keyframes cta-glow {
+  0%,
+  100% {
+    box-shadow: var(--shadow-cta);
+  }
+  50% {
+    box-shadow: 0 10px 32px color-mix(in srgb, var(--brand-red) 48%, transparent);
+  }
+}
 .cta-outline {
   display: inline-flex;
   align-items: center;
@@ -672,6 +693,8 @@ textarea.field {
   }
   .cta-enabled:hover,
   .cta-enabled:active,
+  .cta-glow:hover,
+  .cta-glow:focus-visible,
   .card-lift:hover,
   .card-lift:focus-visible,
   .group:hover .nudge-x,
@@ -686,7 +709,8 @@ textarea.field {
   .animate-rise-delay-2,
   .home-hero-search.is-search-attention,
   .home-hero-search.is-search-attention::before,
-  .home-hero-cue {
+  .home-hero-cue,
+  .cta-glow {
     animation: none;
   }
   .coverage-step--reached::after,

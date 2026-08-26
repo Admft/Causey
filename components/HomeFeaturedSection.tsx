@@ -44,12 +44,15 @@ export function HomeFeaturedSection({
             </li>
           ))}
         </ul>
-        <p className="section-rule mt-8 pt-6">
+        <p className="section-rule mt-8 flex justify-center pt-6">
           <Link
             href={featured.copy.searchHref}
-            className="text-sm font-semibold text-brand-red hover:underline"
+            className="cta-enabled cta-glow group inline-flex"
           >
             {featured.copy.searchLabel}
+            <span aria-hidden="true" className="nudge-x">
+              →
+            </span>
           </Link>
         </p>
       </div>

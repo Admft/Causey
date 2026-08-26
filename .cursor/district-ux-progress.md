@@ -39,6 +39,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
+- [x] Homepage “See more chess tournaments” is a glowing primary CTA (`.cta-glow`) into `/chess`, not a timid text link — 2026-08-26
 - [x] Homepage desktop strip is “Browse tournaments” with a bottom “See more chess tournaments” link into `/chess` (zip/radius when nearby), not photo-sample lab copy — 2026-08-26
 - [x] “Use my location” can prompt again: Permissions-Policy allows geolocation for this origin (`self`), not an empty deny list that failed as blocked with no Chrome prompt — 2026-08-26
 - [x] Platform admin pages share a hairline ops strip; organizer manage is “Manage event” with pulse + subnav; Family/Alerts use the parent timezone — 2026-08-26
