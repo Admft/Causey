@@ -31,12 +31,21 @@ describe("mobile discovery and private district setup", () => {
     expect((districtPitch.match(/padStart/g) ?? []).length).toBe(1);
   });
 
-  it("puts compact filters before the mobile tournament search controls", () => {
-    expect(searchClient.indexOf('idPrefix="mobile-filter"')).toBeLessThan(
-      searchClient.indexOf('htmlFor="tournament-search"')
+  it("puts zip and name search before mobile filters", () => {
+    expect(searchClient.indexOf('htmlFor="tournament-search"')).toBeLessThan(
+      searchClient.indexOf('idPrefix="mobile-filter"')
     );
     expect(searchClient).toContain("hidden lg:sticky");
+    expect(searchClient).toContain("hidden max-w-lg text-md text-muted md:block");
     expect(searchFilters).toContain("grid-cols-2 gap-3");
     expect(searchFilters).toContain('idPrefix = "filter"');
+  });
+
+  it("keeps directory type switching to one scrolling row on phones", () => {
+    const subnav = read("components/ChessSubnav.tsx");
+    expect(subnav).toContain("hidden shrink-0 text-xs font-semibold text-muted sm:block");
+    expect(subnav).toContain("overflow-x-auto");
+    expect(subnav).toContain("{cat.shortLabel}");
+    expect(subnav).not.toContain("border-t border-line pt-2");
   });
 });

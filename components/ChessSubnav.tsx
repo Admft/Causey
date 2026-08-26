@@ -28,34 +28,33 @@ export function ChessSubnav({
 }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4 sm:gap-y-1.5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <p className="text-xs font-semibold text-muted">Competing in</p>
+      <div className="flex min-w-0 items-center gap-3">
+        <p className="hidden shrink-0 text-xs font-semibold text-muted sm:block">
+          Competing in
+        </p>
         <div
           role="navigation"
           aria-label="Competition type"
-          className="flex flex-wrap items-center gap-1"
+          className="flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap [&::-webkit-scrollbar]:hidden"
         >
           {DISCOVERY_CATEGORIES.map((cat) => {
             const active = cat.id === category;
+            const className = active
+              ? "inline-flex shrink-0 items-center rounded-md border border-line bg-white px-2.5 py-1 text-sm font-semibold text-foreground"
+              : "inline-flex shrink-0 items-center rounded-md px-2.5 py-1 text-sm font-medium text-muted-strong transition-colors hover:bg-white hover:text-foreground";
             if (active) {
               return (
-                <span
-                  key={cat.id}
-                  aria-current="page"
-                  className="inline-flex items-center rounded-md border border-line bg-white px-2.5 py-1 text-sm font-semibold text-foreground"
-                >
-                  {cat.label}
+                <span key={cat.id} aria-current="page" className={className}>
+                  <span className="sm:hidden">{cat.shortLabel}</span>
+                  <span className="hidden sm:inline">{cat.label}</span>
                 </span>
               );
             }
 
             return (
-              <Link
-                key={cat.id}
-                href={cat.href}
-                className="inline-flex items-center rounded-md px-2.5 py-1 text-sm font-medium text-muted-strong transition-colors hover:bg-white hover:text-foreground"
-              >
-                {cat.label}
+              <Link key={cat.id} href={cat.href} className={className}>
+                <span className="sm:hidden">{cat.shortLabel}</span>
+                <span className="hidden sm:inline">{cat.label}</span>
               </Link>
             );
           })}
@@ -65,7 +64,7 @@ export function ChessSubnav({
       {category === "chess" ? (
         <nav
           aria-label="Chess tools"
-          className="flex flex-wrap items-center gap-1 border-t border-line pt-2 sm:border-t-0 sm:pt-0"
+          className="flex items-center gap-1"
         >
           {CHESS_TOOLS.map((item) => {
             const active = item.id === tool;

@@ -335,26 +335,17 @@ export function SearchClient({
       {/* Zip + radius: the one bold moment on this page, on the coordinate-
           grid motif (access shouldn't depend on where you live). */}
       <section className="access-grid section-rule">
-        <div className="relative mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10 md:min-h-[400px] lg:min-h-[440px] lg:py-12">
+        <div className="relative mx-auto max-w-6xl px-5 py-6 sm:px-8 sm:py-10 md:min-h-[400px] lg:min-h-[440px] lg:py-12">
           <PageBackLink />
-          <p className="mt-6 text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+          <p className="mt-5 text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red md:mt-6">
             {categoryDefinition.label}
           </p>
-          <h1 className="animate-rise mt-2 max-w-[20ch] font-display text-display-lg tracking-tight text-foreground">
+          <h1 className="animate-rise mt-2 max-w-[20ch] font-display text-display tracking-tight text-foreground md:text-display-lg">
             {categoryDefinition.heading}
           </h1>
-          <p className="mt-3 max-w-lg text-md text-muted">
+          <p className="mt-3 hidden max-w-lg text-md text-muted md:block">
             {categoryDefinition.description}
           </p>
-          <div className="mt-6 max-w-lg lg:hidden">
-            <SearchFilters
-              filters={filters}
-              onChange={setFilters}
-              category={category}
-              idPrefix="mobile-filter"
-              clubGoingAvailable={clubGoingAvailable}
-            />
-          </div>
           {/* One search cluster: name it, or place it. Keyword applies as you
               type; zip + radius apply on submit/blur. All three controls share
               one label treatment so the band reads as a single tool. */}
@@ -387,7 +378,7 @@ export function SearchClient({
                 className="field mt-1"
                 inputMode="numeric"
                 autoComplete="postal-code"
-                placeholder="75201"
+                placeholder="Optional"
                 value={zipInput}
                 onChange={(e) => setZipInput(e.target.value)}
                 onBlur={applyZip}
@@ -400,7 +391,7 @@ export function SearchClient({
                 </p>
               )}
             </div>
-            <div>
+            <div className={zipInput.trim() ? undefined : "max-md:hidden"}>
               <label htmlFor="radius" className="text-xs font-semibold text-muted-strong">
                 Distance
               </label>
@@ -417,7 +408,7 @@ export function SearchClient({
                 ))}
               </select>
             </div>
-            <button type="submit" className="cta-enabled">
+            <button type="submit" className="cta-enabled touch-manipulation">
               Search tournaments
             </button>
           </form>
@@ -449,6 +440,15 @@ export function SearchClient({
           </aside>
 
           <div aria-live="polite">
+            <div className="mb-6 max-w-lg lg:hidden">
+              <SearchFilters
+                filters={filters}
+                onChange={setFilters}
+                category={category}
+                idPrefix="mobile-filter"
+                clubGoingAvailable={clubGoingAvailable}
+              />
+            </div>
             <DisciplineFacetSwitch
               category={category}
               filters={filters}

@@ -64,6 +64,7 @@ export function HomeCoveragePath() {
 
   return (
     <section
+      id="coverage"
       className="home-band band-join band-join--surface bg-surface"
       aria-labelledby="coverage-heading"
     >

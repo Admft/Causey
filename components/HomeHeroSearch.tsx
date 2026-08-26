@@ -166,17 +166,17 @@ export function HomeHeroSearch({
       ref={formRef}
       tabIndex={-1}
       onSubmit={onSubmit}
-      className="home-hero-search flex w-full min-w-0 flex-col rounded-3xl border border-line bg-white p-5 shadow-[var(--shadow-card)] sm:p-6"
+      className="home-hero-search flex w-full min-w-0 flex-col rounded-3xl border border-line bg-white p-4 shadow-[var(--shadow-card)] md:p-6"
     >
-      <h2 className="font-display text-display-sm font-bold tracking-tight text-foreground">
+      <h2 className="font-display text-xl font-bold tracking-tight text-foreground md:text-display-sm">
         Find tournaments
       </h2>
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 hidden text-sm text-muted md:block">
         Pick a competition type, then optionally narrow by zip and distance.
         Each directory also has name and category-specific filters.
       </p>
 
-      <div className="mt-5 flex flex-col gap-4">
+      <div className="mt-4 flex flex-col gap-4 md:mt-5">
         <div className="min-w-0">
           <p
             id="hero-category-label"
@@ -190,7 +190,7 @@ export function HomeHeroSearch({
             aria-labelledby="hero-category-label"
             aria-invalid={categoryError !== null}
             aria-describedby={categoryError ? "hero-category-error" : undefined}
-            className="mt-2 grid grid-cols-5 gap-1.5 sm:gap-2"
+            className="mt-2 flex flex-col gap-2 md:grid md:grid-cols-5 md:gap-2"
           >
             {DISCOVERY_CATEGORIES.map((option) => {
               const selected = category === option.id;
@@ -205,7 +205,7 @@ export function HomeHeroSearch({
                     setCategory(option.id);
                     setCategoryError(null);
                   }}
-                  className={`flex min-h-14 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-center transition-colors sm:min-h-16 ${
+                  className={`flex min-h-12 touch-manipulation items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors md:min-h-16 md:flex-col md:justify-center md:gap-1 md:px-1 md:py-2 md:text-center ${
                     selected
                       ? "border-brand-red/45 bg-accent-soft text-brand-red"
                       : "border-line bg-white text-foreground hover:border-brand-red/35 hover:text-brand-red"
@@ -213,9 +213,12 @@ export function HomeHeroSearch({
                 >
                   <CategoryGlyph
                     category={option.id}
-                    className="h-6 w-6 shrink-0 sm:h-7 sm:w-7"
+                    className="h-6 w-6 shrink-0 md:h-7 md:w-7"
                   />
-                  <span className="max-w-full text-2xs font-bold leading-tight">
+                  <span className="text-sm font-bold md:hidden">
+                    {option.label}
+                  </span>
+                  <span className="hidden max-w-full text-2xs font-bold leading-tight md:block">
                     {option.shortLabel}
                   </span>
                 </button>
@@ -232,7 +235,7 @@ export function HomeHeroSearch({
             </p>
           ) : null}
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_8.5rem]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_8.5rem]">
           <div className="min-w-0">
             <label
               htmlFor="hero-zip"
@@ -247,7 +250,7 @@ export function HomeHeroSearch({
               inputMode="numeric"
               autoComplete="postal-code"
               maxLength={5}
-              placeholder="75201"
+              placeholder="Optional"
               value={zip}
               onChange={(event) => setZip(event.target.value)}
               onBlur={(event) => validateZip(event.target.value)}
@@ -260,7 +263,9 @@ export function HomeHeroSearch({
               </p>
             ) : null}
           </div>
-          <div className="min-w-0">
+          <div
+            className={`min-w-0 ${zipTrimmed ? "" : "max-md:hidden"}`}
+          >
             <label
               htmlFor="hero-radius"
               className="text-xs font-semibold text-muted-strong"
@@ -283,11 +288,11 @@ export function HomeHeroSearch({
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-4 md:mt-5">
         <button
           type="submit"
           disabled={pending}
-          className="cta-enabled w-full disabled:opacity-60"
+          className="cta-enabled w-full touch-manipulation disabled:opacity-60"
         >
           {pending ? "Searching…" : "Search tournaments"}
         </button>
@@ -306,7 +311,7 @@ export function HomeHeroSearch({
             Enter a 5-digit zip, or clear the field to browse without one.
           </p>
         ) : !category ? (
-          <p className="mt-3 text-2xs text-muted">
+          <p className="mt-3 hidden text-2xs text-muted md:block">
             Every directory lists the official sources it indexes, including the
             ones still link-only.
           </p>

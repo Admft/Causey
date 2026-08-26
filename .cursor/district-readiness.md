@@ -21,6 +21,8 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] After schools are ready, next action is **run/review competitions**, not “stare at empty reports” — 2026-08-24
 - [x] Command center shows **upcoming district + school events** with host names — 2026-08-24
 - [x] Guided multi-school invite to a district-hosted event — 2026-08-24
+- [x] Phone discovery is search-first: directory pages search before filters; home uses type rows — 2026-08-26
+- [x] Homepage hero fills the remaining viewport; coverage is one scroll from the public pitch — 2026-08-26
 - [x] `/districts` hero filled with setup steps; home organizer band pairs club + district without empty lanes — 2026-08-24
 - [x] District announcement fan-out to connected schools from the district overview — 2026-08-25
 - [ ] Email proven at school volume

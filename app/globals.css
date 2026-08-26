@@ -31,6 +31,13 @@
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-3xl: 1.5rem;
+  /* Sticky header (h-14); JS on the homepage overwrites with the live height. */
+  --home-hero-chrome: 3.5rem;
+}
+@media (width >= 40rem) {
+  :root {
+    --home-hero-chrome: 4rem;
+  }
 }
 
 @theme {
@@ -437,13 +444,31 @@ select.field {
   }
 }
 
-/* Home hero: equal-height columns. Grid/flex stretch plus percentage
-   height on the card was resolving as content-sized; table-cell rows
-   give the search form a definite height to fill. */
-.home-hero-lockup {
+/* Home hero: one viewport below sticky chrome. svh/dvh so mobile URL bars
+   do not leave a gap or clip; the lockup centers in the leftover space. */
+.home-hero {
+  position: relative;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  min-height: calc(100vh - var(--home-hero-chrome));
+  min-height: calc(100svh - var(--home-hero-chrome));
+  min-height: calc(100dvh - var(--home-hero-chrome));
+}
+.home-hero-lockup {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
   gap: 2rem;
+  padding-block: 1.5rem 1rem;
+}
+@media (width < 48rem) {
+  .home-hero-lockup {
+    justify-content: flex-start;
+    gap: 1.25rem;
+    padding-block: 1rem 0.75rem;
+  }
 }
 .home-hero-search {
   position: relative;
@@ -502,20 +527,68 @@ select.field {
     transform: translateX(280%);
   }
 }
+.home-hero-cue {
+  z-index: 10;
+  display: inline-flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  gap: 0.25rem;
+  margin-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted-strong);
+  font: inherit;
+  cursor: pointer;
+  transition: opacity 200ms var(--ease-brand), color 150ms var(--ease-brand);
+  animation: home-hero-cue-bob 1.8s var(--ease-brand) infinite;
+}
+.home-hero-cue span {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.home-hero-cue:hover {
+  color: var(--brand-red);
+}
+.home-hero-cue:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 4px;
+  border-radius: var(--radius-xl);
+}
+.home-hero-cue--away {
+  opacity: 0;
+  pointer-events: none;
+  animation: none;
+}
+@keyframes home-hero-cue-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+#coverage {
+  scroll-margin-top: var(--home-hero-chrome, 4rem);
+}
+@media (width < 48rem) {
+  .home-hero-cue {
+    display: none;
+  }
+}
 @media (width >= 48rem) {
   .home-hero-lockup {
-    display: table;
+    display: grid;
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 2.5rem 0;
-  }
-  .home-hero-copy,
-  .home-hero-search-col {
-    display: table-cell;
-    vertical-align: top;
-  }
-  .home-hero-search-col {
-    width: 24rem;
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
+    align-items: center;
+    column-gap: 2.5rem;
+    row-gap: 0;
   }
   .home-hero-search {
     display: flex;
@@ -524,10 +597,8 @@ select.field {
 }
 @media (width >= 64rem) {
   .home-hero-lockup {
-    border-spacing: 3rem 0;
-  }
-  .home-hero-search-col {
-    width: 26rem;
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
+    column-gap: 3rem;
   }
 }
 
@@ -656,7 +727,8 @@ select.field {
   .animate-rise-delay-1,
   .animate-rise-delay-2,
   .home-hero-search.is-search-attention,
-  .home-hero-search.is-search-attention::before {
+  .home-hero-search.is-search-attention::before,
+  .home-hero-cue {
     animation: none;
   }
   .coverage-step--reached::after,

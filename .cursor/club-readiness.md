@@ -19,6 +19,8 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 ## Need for a professional club (priority)
 
 - [x] Overview tells the owner to **record results** after attendance (not only invite/create) — 2026-08-24
+- [x] Phone homepage is search-first: type rows, optional zip, club/district as text links — 2026-08-26
+- [x] Homepage hero fills the remaining viewport and a cue scrolls to what Causey indexes — 2026-08-26
 - [x] Public `/clubs` scope ledger is one lifted white card: aligned can-do / not-building rows, display heads, lead/sm type, district note under the pair — 2026-08-26
 - [x] Public `/clubs` and `/districts` pitches include a compact “All competition types” back control to the homepage chooser — 2026-08-26
 - [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Create a club account — 2026-08-24
@@ -32,6 +34,11 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 ## Out (do not build unless asked)
 
 Needs for a professional club (not building unless you ask): recurring practice nights, a public club directory, live USCF/NSDA lookup, pairings/ballots, dues, coach–parent DMs.
+
+## Findings — 2026-08-26
+
+- Student / coach on a phone · homepage · desktop copy, chips, and five tiny type icons compete with search · first job is unclear · **M · shipping this tick**
+- Student on a phone · directory · filters sit above name/zip so the list is a long form before the first tournament · **M · shipping this tick**
 
 ## Findings — 2026-08-24
 

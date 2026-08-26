@@ -48,6 +48,20 @@ describe("homepage leads with multi-category discovery", () => {
     expect(heroSearch).toContain("home-hero-search");
   });
 
+  it("fills the remaining viewport and scrolls into the coverage band", () => {
+    const globals = read("app/globals.css");
+    const cue = read("components/HomeHeroNext.tsx");
+    expect(homePage).toContain('className="home-hero access-grid"');
+    expect(homePage).toContain('<HomeHeroNext targetId="coverage" />');
+    expect(coveragePath).toContain('id="coverage"');
+    expect(globals).toContain("100dvh - var(--home-hero-chrome)");
+    expect(globals).toContain("100svh - var(--home-hero-chrome)");
+    expect(globals).toContain("@keyframes home-hero-cue-bob");
+    expect(cue).toContain("See what Causey indexes");
+    expect(cue).toContain("scrollIntoView");
+    expect(cue).toContain("prefers-reduced-motion");
+  });
+
   it("offers club and district as chips and still sheens #search", () => {
     expect(homePage).not.toContain("Find a tournament");
     expect(homePage).toContain("Run a club or team");
@@ -60,6 +74,17 @@ describe("homepage leads with multi-category discovery", () => {
     expect(heroSearch).toContain("(max-width: 47.999rem)");
     expect(read("app/globals.css")).toContain("@keyframes search-shine");
     expect(read("app/globals.css")).toContain("@keyframes search-attention");
+  });
+
+  it("simplifies the stacked homepage so search is the first job", () => {
+    expect(homePage).toContain("Pick a type, then search by zip.");
+    expect(homePage).toContain("hidden flex-wrap gap-2 md:flex");
+    expect(homePage).toContain("mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm md:hidden");
+    expect(heroSearch).toContain("flex flex-col gap-2 md:grid md:grid-cols-5");
+    expect(heroSearch).toContain("{option.label}");
+    expect(heroSearch).toContain('placeholder="Optional"');
+    expect(heroSearch).toContain("max-md:hidden");
+    expect(read("app/globals.css")).toContain("justify-content: flex-start");
   });
 });
 
