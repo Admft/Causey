@@ -404,6 +404,44 @@ select.field {
   }
 }
 
+/* Home hero: equal-height columns. Grid/flex stretch plus percentage
+   height on the card was resolving as content-sized; table-cell rows
+   give the search form a definite height to fill. */
+.home-hero-lockup {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+@media (width >= 48rem) {
+  .home-hero-lockup {
+    display: table;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2.5rem 0;
+  }
+  .home-hero-copy,
+  .home-hero-search-col {
+    display: table-cell;
+    vertical-align: top;
+  }
+  .home-hero-search-col {
+    width: 24rem;
+  }
+  .home-hero-search {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+}
+@media (width >= 64rem) {
+  .home-hero-lockup {
+    border-spacing: 3rem 0;
+  }
+  .home-hero-search-col {
+    width: 26rem;
+  }
+}
+
 /* Hero first-paint rise — §10. Guide attention into the first viewport. */
 @keyframes rise {
   from {

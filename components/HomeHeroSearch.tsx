@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
 import {
   DISCOVERY_CATEGORIES,
@@ -36,6 +36,25 @@ export function HomeHeroSearch({
   const [pending, setPending] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const el = zipRef.current;
+    if (!el) return undefined;
+    const sync = () => {
+      const next = el.value;
+      setZip((prev) => (prev === next ? prev : next));
+    };
+    const t0 = window.setTimeout(sync, 0);
+    const t1 = window.setTimeout(sync, 300);
+    el.addEventListener("change", sync);
+    el.addEventListener("input", sync);
+    return () => {
+      window.clearTimeout(t0);
+      window.clearTimeout(t1);
+      el.removeEventListener("change", sync);
+      el.removeEventListener("input", sync);
+    };
+  }, []);
 
   function validateZip(value: string): boolean {
     const trimmed = value.trim();
@@ -71,11 +90,25 @@ export function HomeHeroSearch({
     );
   }
 
+  const zipTrimmed = zip.trim();
+  const zipComplete = /^\d{5}$/.test(zipTrimmed);
+  const recapType = category
+    ? discoveryCategoryLabel(category)
+    : "Choose a type";
+  const recapNear = zipComplete
+    ? zipTrimmed
+    : zipTrimmed
+      ? "Needs a 5-digit zip"
+      : "Any location";
+  const recapDistance = zipComplete
+    ? `${radius} mi`
+    : "Add a zip to limit distance";
+
   return (
     <form
       id="search"
       onSubmit={onSubmit}
-      className="flex w-full min-w-0 flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
+      className="home-hero-search flex w-full min-w-0 flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
     >
       <h2 className="font-display text-display-sm font-bold tracking-tight text-foreground">
         Find tournaments
@@ -192,6 +225,30 @@ export function HomeHeroSearch({
         </div>
       </div>
 
+      <div className="mt-5 hidden min-h-0 flex-1 flex-col rounded-2xl border border-line bg-surface-soft px-4 py-3 md:flex">
+        <p className="text-xs font-semibold text-muted-strong">This search</p>
+        <dl className="mt-2 space-y-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="text-xs text-muted">Type</dt>
+            <dd className="text-sm font-semibold text-foreground">{recapType}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="text-xs text-muted">Near</dt>
+            <dd className="text-sm font-semibold text-foreground">{recapNear}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="text-xs text-muted">Distance</dt>
+            <dd className="text-sm font-semibold text-foreground">
+              {recapDistance}
+            </dd>
+          </div>
+        </dl>
+        <p className="mt-auto pt-3 text-2xs text-muted">
+          Coverage varies by type. Chess is the densest directory today, and
+          every directory is still incomplete.
+        </p>
+      </div>
+
       <div className="mt-5">
         <button
           type="submit"
@@ -201,18 +258,25 @@ export function HomeHeroSearch({
           {pending ? "Searching…" : "Search tournaments"}
         </button>
 
-        <p className="mt-3 text-2xs text-muted">
-          {category ? (
+        {category && !zipTrimmed ? (
+          <p className="mt-3 text-2xs text-muted">
             <Link
               href={discoveryCategoryHref(category)}
               className="font-semibold text-brand-red hover:underline"
             >
               Browse {discoveryCategoryLabel(category)} without a zip
             </Link>
-          ) : (
-            "Every directory lists the official sources it indexes, including the ones still link-only."
-          )}
-        </p>
+          </p>
+        ) : zipTrimmed && category && !zipComplete ? (
+          <p className="mt-3 text-2xs text-muted">
+            Enter a 5-digit zip, or clear the field to browse without one.
+          </p>
+        ) : !category ? (
+          <p className="mt-3 text-2xs text-muted">
+            Every directory lists the official sources it indexes, including the
+            ones still link-only.
+          </p>
+        ) : null}
       </div>
     </form>
   );

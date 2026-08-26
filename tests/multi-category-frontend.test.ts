@@ -40,6 +40,13 @@ describe("homepage leads with multi-category discovery", () => {
       "<HomeHeroSearch initialCategory={initialCategory} />"
     );
   });
+
+  it("stretches the search card to the left column on desktop", () => {
+    expect(homePage).toContain("home-hero-lockup");
+    expect(homePage).toContain("home-hero-copy");
+    expect(homePage).toContain("home-hero-search-col");
+    expect(heroSearch).toContain("home-hero-search");
+  });
 });
 
 describe("hero search requires an explicit category", () => {
@@ -60,6 +67,12 @@ describe("hero search requires an explicit category", () => {
     expect(heroSearch).toContain("Search tournaments");
     expect(heroSearch).toContain("optionally narrow by zip and distance");
     expect(heroSearch).not.toContain("search by name or zip");
+  });
+
+  it("offers browse-without-zip only when the zip field is empty", () => {
+    expect(heroSearch).toContain("Browse {discoveryCategoryLabel(category)} without a zip");
+    expect(heroSearch).toContain("category && !zipTrimmed");
+    expect(heroSearch).toContain("This search");
   });
 });
 
