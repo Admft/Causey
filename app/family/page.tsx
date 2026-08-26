@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DismissRecommendationButton } from "@/components/DismissRecommendationButton";
 import { FamilyRegistrationActions } from "@/components/FamilyRegistrationActions";
+import { MissingZipCard } from "@/components/MissingZipCard";
 import { LinkChildForm } from "@/components/LinkChildForm";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
@@ -232,6 +233,12 @@ export default async function FamilyPage() {
             RSVPs and unfinished organizer registration for each linked
             student land here. Causey RSVP is not organizer entry or payment.
           </p>
+
+          {profile && !profile.zip ? (
+            <div className="mt-6">
+              <MissingZipCard />
+            </div>
+          ) : null}
 
           <div className="mt-8">
             <PortalMission

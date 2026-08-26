@@ -13,7 +13,9 @@ export type RateLimitBucket =
   | "signup"
   | "join_code"
   | "claim"
-  | "csv_import";
+  | "csv_import"
+  | "comment"
+  | "geo";
 
 const LIMITS: Record<RateLimitBucket, { max: number; windowSeconds: number }> = {
   search: { max: 60, windowSeconds: 60 },
@@ -21,6 +23,8 @@ const LIMITS: Record<RateLimitBucket, { max: number; windowSeconds: number }> = 
   join_code: { max: 10, windowSeconds: 60 },
   claim: { max: 10, windowSeconds: 60 },
   csv_import: { max: 3, windowSeconds: 60 },
+  comment: { max: 10, windowSeconds: 60 },
+  geo: { max: 20, windowSeconds: 60 },
 };
 
 function supabaseConfigured() {

@@ -39,6 +39,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 
 ## Frontend polish shipped
 - [x] Hero type picker uses Tailwind grid so production CSS minify cannot drop it into a stacked column — 2026-08-26
+- [x] Event pages take signed-in comments; desktop home shows real listings with photos (or nearby the saved zip); signup and landings ask for zip / location — 2026-08-26
 - [x] Homepage Find tournaments card adds a My tournaments tab: signed-out sign-in returns to `/?view=mine`; signed-in list is Going / Needs RSVP / traveling / hosted (not organizer registration) — 2026-08-26
 - [x] Phone homepage hero is a content-height form at page width (3+2 type tiles, rounded-2xl, no full-viewport void or 18rem bubble) — 2026-08-26
 - [x] Phone homepage type chooser is a 2×3 tile grid (Writing centered on the last row) so Find + zip + Search stay on the first screen with the My tournaments tab — 2026-08-26

@@ -4,10 +4,13 @@ import { CauseyLogo } from "@/components/CauseyLogo";
 import { HomeAccountPitch } from "@/components/HomeAccountPitch";
 import { HomeCoveragePath } from "@/components/HomeCoveragePath";
 import { HomeDistrictPitch } from "@/components/HomeDistrictPitch";
+import { HomeFeaturedSection } from "@/components/HomeFeaturedSection";
 import { HomeHeroCard } from "@/components/HomeHeroCard";
 import { HomeHeroNext } from "@/components/HomeHeroNext";
+import { MissingZipCard } from "@/components/MissingZipCard";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { parseDiscoveryCategory } from "@/lib/category-discovery";
+import { getHomeFeaturedCompetitions } from "@/lib/data/home-featured";
 import { getHomeMyTournaments } from "@/lib/data/home-my-tournaments";
 import { isHomeMyTournamentsView } from "@/lib/home-my-tournaments";
 
@@ -37,9 +40,10 @@ export default async function CompetitionTypesPage({
   const initialCategory = parseDiscoveryCategory(
     profile?.preferred_competition_category
   );
-  const myTournaments = profile
-    ? await getHomeMyTournaments(profile)
-    : null;
+  const [myTournaments, featured] = await Promise.all([
+    profile ? getHomeMyTournaments(profile) : Promise.resolve(null),
+    getHomeFeaturedCompetitions(profile?.zip ?? null),
+  ]);
 
   return (
     <>
@@ -80,6 +84,7 @@ export default async function CompetitionTypesPage({
           <div className="home-hero-search-col relative z-10">
             <HomeHeroCard
               initialCategory={initialCategory}
+              initialZip={profile?.zip ?? ""}
               initialTab={isHomeMyTournamentsView(view) ? "mine" : "find"}
               summary={myTournaments}
             />
@@ -98,6 +103,14 @@ export default async function CompetitionTypesPage({
         </div>
         <HomeHeroNext targetId="coverage" />
       </section>
+
+      {profile && !profile.zip ? (
+        <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+          <MissingZipCard />
+        </div>
+      ) : null}
+
+      <HomeFeaturedSection featured={featured} zip={profile?.zip ?? null} />
 
       <HomeCoveragePath />
 

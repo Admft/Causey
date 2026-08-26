@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
+import { requestNearestZip } from "@/lib/browser-zip";
 import {
   DISCOVERY_CATEGORIES,
   discoveryCategoryHref,
@@ -22,18 +23,21 @@ const RADII = ["10", "25", "50", "100", "250"];
  */
 export function HomeHeroSearch({
   initialCategory = null,
+  initialZip = "",
 }: {
   initialCategory?: DiscoveryCategory | null;
+  initialZip?: string;
 }) {
   const router = useRouter();
   const [category, setCategory] = useState<DiscoveryCategory | "">(
     initialCategory ?? ""
   );
-  const [zip, setZip] = useState("");
+  const [zip, setZip] = useState(initialZip);
   const [radius, setRadius] = useState("50");
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [locating, setLocating] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
 
@@ -189,7 +193,29 @@ export function HomeHeroSearch({
               <p id="hero-zip-error" role="alert" className="mt-1 text-2xs text-error">
                 {zipError}
               </p>
-            ) : null}
+            ) : (
+              <button
+                type="button"
+                className="mt-1 text-2xs font-semibold text-brand-red hover:underline disabled:opacity-60"
+                disabled={pending || locating}
+                onClick={async () => {
+                  setZipError(null);
+                  setLocating(true);
+                  try {
+                    const result = await requestNearestZip();
+                    if (!result.ok) {
+                      setZipError(result.error);
+                      return;
+                    }
+                    setZip(result.zip);
+                  } finally {
+                    setLocating(false);
+                  }
+                }}
+              >
+                {locating ? "Finding zip…" : "Use my location"}
+              </button>
+            )}
           </div>
           <div
             className={`min-w-0 ${zipTrimmed ? "" : "max-md:hidden"}`}

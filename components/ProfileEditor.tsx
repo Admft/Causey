@@ -18,6 +18,7 @@ import {
   parseDiscoveryCategory,
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
+import { ZipCaptureField } from "@/components/ZipCaptureField";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -216,15 +217,15 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-muted-strong">Zip</span>
-          <input
-            className="field"
-            value={zip}
-            maxLength={5}
-            onChange={(e) => setZip(e.target.value)}
-          />
-        </label>
+        <ZipCaptureField
+          id="profile-zip"
+          value={zip}
+          onChange={(next) => {
+            setZip(next);
+            setSaved(false);
+          }}
+          helper="Used for nearby search on the homepage and directories."
+        />
       </div>
 
       <fieldset className="flex flex-col gap-2">

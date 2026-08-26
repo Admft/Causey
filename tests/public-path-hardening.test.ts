@@ -13,16 +13,21 @@ describe("abuse controls and public-path cost", () => {
     expect(read("vercel.json")).toContain('"0 14 * * *"');
   });
 
-  it("rate-limits search, signup, join, claim, and CSV through an allowlisted RPC", () => {
-    const sql = read("supabase/migrations/0062_rate_limits.sql");
+  it("rate-limits search, signup, join, claim, CSV, comments, and geo through an allowlisted RPC", () => {
+    const sql = read("supabase/migrations/0066_competition_comments_and_home_geo.sql");
     expect(sql).toContain("consume_rate_limit");
-    expect(sql).toContain("'search', 'signup', 'join_code', 'claim', 'csv_import'");
+    expect(sql).toContain("'comment'");
+    expect(sql).toContain("'geo'");
     expect(sql).toContain("security definer");
+    expect(read("lib/rate-limit.ts")).toContain('"comment"');
+    expect(read("lib/rate-limit.ts")).toContain('"geo"');
     expect(read("app/api/competitions/route.ts")).toContain('consumeRateLimit(\n    "search"');
     expect(read("lib/actions/signup-guard.ts")).toContain('"signup"');
     expect(read("lib/actions/orgs.ts")).toContain('"join_code"');
     expect(read("lib/actions/district.ts")).toContain('"claim"');
     expect(read("lib/actions/district.ts")).toContain('"csv_import"');
+    expect(read("lib/actions/comments.ts")).toContain('"comment"');
+    expect(read("app/api/geo/nearest-zip/route.ts")).toContain('"geo"');
   });
 
   it("sends a Content-Security-Policy and skips session refresh on anonymous public GETs", () => {

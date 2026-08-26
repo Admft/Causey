@@ -112,6 +112,16 @@ describe("homepage leads with multi-category discovery", () => {
     expect(homePage).toContain("isHomeMyTournamentsView");
     expect(homePage).toContain("getHomeMyTournaments");
   });
+
+  it("shows desktop featured listings and a zip capture path", () => {
+    expect(homePage).toContain("HomeFeaturedSection");
+    expect(homePage).toContain("MissingZipCard");
+    expect(homePage).toContain('initialZip={profile?.zip ?? ""}');
+    expect(heroSearch).toContain("Use my location");
+    expect(heroSearch).toContain("requestNearestZip");
+    expect(eventPage).toContain("CompetitionComments");
+    expect(signupForm).toContain("ZipCaptureField");
+  });
 });
 
 describe("hero search requires an explicit category", () => {

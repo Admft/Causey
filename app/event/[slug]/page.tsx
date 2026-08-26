@@ -19,6 +19,8 @@ import {
   DifficultyRating,
   SaveCompetitionButton,
 } from "@/components/AccountCompetitionActions";
+import { CompetitionComments } from "@/components/CompetitionComments";
+import { listCompetitionComments } from "@/lib/data/competition-comments";
 import { isCompetitionEnded } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
 import {
@@ -151,11 +153,12 @@ export default async function EventPage({ params }: Params) {
   let coachOrgs: CoachOrgAttendance[] = [];
   let recommendTargets: RecommendTarget[] = [];
   let clubGoing: ClubGoingGroup[] = [];
-  const [ratingSummary, hostOrgSlug] = await Promise.all([
+  const [ratingSummary, hostOrgSlug, comments] = await Promise.all([
     getRatingSummary(competition.id),
     competition.org_id
       ? getOrganizationSlugById(competition.org_id)
       : Promise.resolve(null),
+    listCompetitionComments(competition.id),
   ]);
   if (user) {
     [canManage, viewerOrgMatch] = await Promise.all([
@@ -597,6 +600,14 @@ export default async function EventPage({ params }: Params) {
               ))}
             </ul>
           </section>
+
+          <CompetitionComments
+            competitionId={competition.id}
+            eventSlug={competition.slug}
+            signedIn={Boolean(user)}
+            viewerId={user?.id ?? null}
+            comments={comments}
+          />
         </div>
 
         <aside className="flex flex-col gap-5 lg:pt-8">

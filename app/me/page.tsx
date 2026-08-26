@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
+import { MissingZipCard } from "@/components/MissingZipCard";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
@@ -342,6 +343,12 @@ export default async function MePage() {
         </Link>
         .
       </p>
+
+      {profile.zip ? null : (
+        <div className="mt-6">
+          <MissingZipCard />
+        </div>
+      )}
 
       <div className="mt-8">
         <PortalMission

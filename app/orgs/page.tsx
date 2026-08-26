@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DismissRecommendationButton } from "@/components/DismissRecommendationButton";
 import { JoinOrgForm } from "@/components/JoinOrgForm";
+import { MissingZipCard } from "@/components/MissingZipCard";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
@@ -194,6 +195,11 @@ export default async function OrgsPage({
           </Link>
           .
         </p>
+      ) : null}
+      {profile && !profile.zip ? (
+        <div className="mb-6">
+          <MissingZipCard />
+        </div>
       ) : null}
       {isStaffWorkspace ? (
         <>

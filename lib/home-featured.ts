@@ -1,0 +1,76 @@
+import { toDisplayCoverUrl } from "@/lib/cover-url";
+
+export const HOME_FEATURED_LIMIT = 6;
+export const HOME_FEATURED_RADIUS_MILES = 75;
+export const HOME_FEATURED_POOL = 48;
+
+export type HomeFeaturedMode = "nearby" | "photos";
+
+export type HomeFeaturedCopy = {
+  heading: string;
+  blurb: string;
+  searchHref: string;
+  searchLabel: string;
+};
+
+export function hasOrganizerCover(
+  imageUrl: string | null | undefined
+): boolean {
+  return toDisplayCoverUrl(imageUrl) !== null;
+}
+
+/** Stable daily shuffle so a refresh does not reshuffle the homepage strip. */
+export function shuffleWithDaySeed<T>(items: readonly T[], dayIso: string): T[] {
+  const out = [...items];
+  let seed = 0;
+  for (let i = 0; i < dayIso.length; i += 1) {
+    seed = (seed * 31 + dayIso.charCodeAt(i)) >>> 0;
+  }
+  if (seed === 0) seed = 1;
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const j = seed % (i + 1);
+    const current = out[i];
+    const swap = out[j];
+    if (current === undefined || swap === undefined) continue;
+    out[i] = swap;
+    out[j] = current;
+  }
+  return out;
+}
+
+export function pickHomeFeatured<T extends { image_url?: string | null }>(
+  pool: readonly T[],
+  mode: HomeFeaturedMode,
+  dayIso: string,
+  limit = HOME_FEATURED_LIMIT
+): T[] {
+  if (mode === "photos") {
+    const withPhotos = pool.filter((row) => hasOrganizerCover(row.image_url));
+    return shuffleWithDaySeed(withPhotos, dayIso).slice(0, limit);
+  }
+  const withPhotos = pool.filter((row) => hasOrganizerCover(row.image_url));
+  const without = pool.filter((row) => !hasOrganizerCover(row.image_url));
+  return [...withPhotos, ...without].slice(0, limit);
+}
+
+export function homeFeaturedCopy(
+  mode: HomeFeaturedMode,
+  zip: string | null
+): HomeFeaturedCopy {
+  if (mode === "nearby" && zip) {
+    return {
+      heading: `Upcoming near ${zip}`,
+      blurb: `Public listings within about ${HOME_FEATURED_RADIUS_MILES} miles of the zip on your account. Coverage is still incomplete, and chess is denser than other types.`,
+      searchHref: `/#search`,
+      searchLabel: "Search all tournaments",
+    };
+  }
+  return {
+    heading: "Upcoming listings with photos",
+    blurb:
+      "A daily sample of indexed events that include an organizer photo. Not a ranking, and not a complete calendar.",
+    searchHref: "/#search",
+    searchLabel: "Search all tournaments",
+  };
+}

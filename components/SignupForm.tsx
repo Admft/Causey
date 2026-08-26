@@ -18,6 +18,7 @@ import {
 } from "@/lib/category-discovery";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { PasswordField } from "@/components/PasswordField";
+import { ZipCaptureField } from "@/components/ZipCaptureField";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -388,18 +389,12 @@ export function SignupForm({
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-muted-strong">Zip</span>
-          <input
-            className="field"
-            inputMode="numeric"
-            pattern="\d{5}"
-            maxLength={5}
-            value={zip}
-            onChange={(e) => setZip(e.target.value)}
-            placeholder="Optional"
-          />
-        </label>
+        <ZipCaptureField
+          id="signup-zip"
+          value={zip}
+          onChange={setZip}
+          helper="Nearby search uses this zip. Optional — you can add it after you confirm email."
+        />
       </div>
 
       <fieldset className="flex flex-col gap-2">

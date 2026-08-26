@@ -23,10 +23,12 @@ function tabClass(active: boolean) {
  */
 export function HomeHeroCard({
   initialCategory = null,
+  initialZip = "",
   initialTab = "find",
   summary,
 }: {
   initialCategory?: DiscoveryCategory | null;
+  initialZip?: string;
   initialTab?: HeroTab;
   summary: HomeMyTournamentsSummary | null;
 }) {
@@ -147,7 +149,10 @@ export function HomeHeroCard({
         hidden={tab !== "find"}
         className="mt-4 md:mt-5"
       >
-        <HomeHeroSearch initialCategory={initialCategory} />
+        <HomeHeroSearch
+          initialCategory={initialCategory}
+          initialZip={initialZip}
+        />
       </div>
       <div
         id="hero-mine-panel"
