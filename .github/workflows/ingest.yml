@@ -1,4 +1,4 @@
-# Manual tournament ingestion for runnable chess and category sources.
+# Scheduled and manual tournament ingestion for runnable chess and category sources.
 #
 # Prerequisites:
 #   1. Run Supabase migrations through 0055_txsef_source.sql.
@@ -9,12 +9,14 @@
 #   3. Optional: OPENAI_API_KEY for pathway enrichment (gpt-4.1-mini)
 #   4. Manual dry-run locally: npm run scrape:all && npm run scrape:discovery
 #
-# Production scheduling is intentionally disabled on dev. GitHub schedules use
-# the default branch, so enabling cron requires a separate approved release.
-# Trigger manually against dev via Actions → Ingest tournaments → Run workflow.
+# GitHub loads schedules from the default branch. The scheduled workflow is
+# released on main but explicitly checks out dev, while manual runs remain
+# restricted to dev.
 name: Ingest tournaments
 
 on:
+  schedule:
+    - cron: "0 11 * * 1,4"
   workflow_dispatch:
     inputs:
       source:
@@ -56,11 +58,13 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Confirm approved workflow ref
-        if: github.ref_name != 'dev'
+        if: github.event_name == 'workflow_dispatch' && github.ref_name != 'dev'
         run: |
-          echo "::error::Ingestion dispatch is approved only from dev until an explicit production release."
+          echo "::error::Manual ingestion dispatch is approved only from dev."
           exit 1
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -80,7 +84,7 @@ jobs:
           echo "Supabase secrets present."
       - name: Scrape selected tournament source
         env:
-          SCRAPER_SOURCES: ${{ inputs.sources || inputs.source || 'all' }}
+          SCRAPER_SOURCES: ${{ github.event_name == 'schedule' && 'all' || inputs.sources || inputs.source || 'all' }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -124,10 +128,10 @@ jobs:
             run_source "$source"
           done
       - name: Verify purge dry-run safety
-        if: inputs.source == 'all' && inputs.sources == ''
+        if: github.event_name == 'schedule' || (inputs.source == 'all' && inputs.sources == '')
         run: npm run verify:purge-dry-run
       - name: Review stale-retention candidates without deleting
-        if: inputs.source == 'all' && inputs.sources == ''
+        if: github.event_name == 'schedule' || (inputs.source == 'all' && inputs.sources == '')
         run: PURGE_DRY_RUN=1 npm run purge:stale
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

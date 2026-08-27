@@ -4,6 +4,7 @@ import {
   parseEventTextExtras,
   parseSectionsFromText,
   reconcileSectionsWithEvent,
+  sectionsWithinPersistenceLimit,
 } from "../ingestion/parse-sections";
 
 const IRVING = `
@@ -83,6 +84,21 @@ describe("reconcileSectionsWithEvent", () => {
     expect(sections).toHaveLength(1);
     expect(sections[0]?.name).toBe("Open");
     expect(sections[0]?.min_grade).toBeNull();
+  });
+});
+
+describe("section persistence limits", () => {
+  it("does not persist more than twenty ambiguous rating mentions as divisions", () => {
+    const parsed = parseSectionsFromText(
+      Array.from(
+        { length: 21 },
+        (_, index) => `Under ${800 + index * 100} section`
+      ).join(". ")
+    );
+    expect(parsed).toHaveLength(21);
+    expect(sectionsWithinPersistenceLimit(parsed)).toMatchObject([
+      { name: "Open" },
+    ]);
   });
 });
 

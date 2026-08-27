@@ -10,7 +10,8 @@ describe("competition covers stay aligned in search", () => {
     const cover = read("components/CompetitionCoverImage.tsx");
     expect(cover).toContain("sourceByCompetitionSource");
     expect(cover).toContain("sourceFallback = true");
-    expect(cover).toContain("onError={() => setFailed(true)}");
+    expect(cover).toContain("onError={() => setFailedSrc(photoSrc)}");
+    expect(cover).toContain("failedSrc !== photoSrc");
     expect(cover).toContain("toDisplayCoverUrl");
     expect(cover).toContain("CauseyLogo");
     expect(cover).toContain("bg-org-gold-soft");

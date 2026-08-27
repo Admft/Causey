@@ -339,11 +339,36 @@ export function sectionsOrOpenFallback(
   return sections.length > 0 ? sections : [openSection("Open")];
 }
 
+export const MAX_PERSISTED_SECTIONS = 20;
+
+/**
+ * Source prose can mention many prize-table rating bands that are not actual
+ * tournament divisions. Never truncate that ambiguous list into fake sections:
+ * preserve any clearly named non-U sections, or fall back to one honest Open
+ * section when the database's division limit is exceeded.
+ */
+export function sectionsWithinPersistenceLimit(
+  sections: ParsedSectionDraft[]
+): ParsedSectionDraft[] {
+  const withFallback = sectionsOrOpenFallback(sections);
+  if (withFallback.length <= MAX_PERSISTED_SECTIONS) return withFallback;
+  const named = withFallback.filter((section) => !/^U\d+$/i.test(section.name));
+  return named.length > 0 && named.length <= MAX_PERSISTED_SECTIONS
+    ? named
+    : [openSection("Open")];
+}
+
 export function toSectionRows(
   competitionId: string,
   drafts: ParsedSectionDraft[]
 ): Section[] {
-  return sectionsOrOpenFallback(drafts).map((d) => ({
+  const bounded = sectionsWithinPersistenceLimit(drafts);
+  if (bounded.length !== drafts.length && drafts.length > MAX_PERSISTED_SECTIONS) {
+    console.warn(
+      `Section parser produced ${drafts.length} ambiguous divisions for ${competitionId}; persisting ${bounded.length} conservative fallback section(s).`
+    );
+  }
+  return bounded.map((d) => ({
     id: randomUUID(),
     competition_id: competitionId,
     name: d.name,

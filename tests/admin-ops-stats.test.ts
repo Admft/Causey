@@ -25,7 +25,7 @@ describe("platform admin ops stats", () => {
     expect(overview).toContain("AdminOpsLedger");
     expect(overview).toContain("Archived");
     expect(overview).toContain("Ready to publish");
-    expect(overview).toContain("Sources with issues");
+    expect(overview).toContain("Runnable sources needing attention");
     expect(overview).toContain("Moderation first");
     expect(overview).not.toContain("lg:grid-cols-4");
   });
