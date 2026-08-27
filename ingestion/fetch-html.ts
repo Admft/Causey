@@ -36,6 +36,19 @@ export type FetchRetryOptions = {
   randomImpl?: () => number;
 };
 
+type PublicFetchOptions = FetchRetryOptions & {
+  userAgent?: string;
+  headers?: Record<string, string>;
+  lookupImpl?: LookupFn;
+  maxRedirects?: number;
+};
+
+const HTML_ACCEPT =
+  "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+const IMAGE_ACCEPT =
+  "image/jpeg,image/png,image/webp,image/*;q=0.8,*/*;q=0.1";
+const FETCH_MAX_BYTES = 10 * 1024 * 1024;
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -337,18 +350,13 @@ export async function fetchHtml(
 }
 
 /**
- * SSRF-safe HTML fetch for untrusted organizer URLs. Redirects are followed
+ * SSRF-safe fetch for untrusted organizer URLs. Redirects are followed
  * manually so every destination is re-resolved and revalidated.
  */
-export async function fetchPublicHtml(
+export async function fetchPublicResponse(
   rawUrl: string,
-  opts: FetchRetryOptions & {
-    userAgent?: string;
-    headers?: Record<string, string>;
-    lookupImpl?: LookupFn;
-    maxRedirects?: number;
-  } = {}
-): Promise<string> {
+  opts: PublicFetchOptions = {}
+): Promise<Response> {
   let target = await resolvePublicHttpUrl(rawUrl, opts.lookupImpl);
   const maxRedirects = opts.maxRedirects ?? 5;
 
@@ -368,7 +376,7 @@ export async function fetchPublicHtml(
         redirect: "manual",
         headers: {
           "User-Agent": opts.userAgent ?? USER_AGENT,
-          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          Accept: HTML_ACCEPT,
           ...opts.headers,
         },
       },
@@ -394,10 +402,38 @@ export async function fetchPublicHtml(
         `Fetch failed: HTTP ${response.status} from ${target.url}`
       );
     }
-    const buf = Buffer.from(await response.arrayBuffer());
-    return decodeHtmlBuffer(buf, response.headers.get("content-type"));
+    return response;
   }
   throw new Error(`Too many organizer redirects from ${rawUrl}`);
+}
+
+/** SSRF-safe HTML fetch for untrusted organizer pages. */
+export async function fetchPublicHtml(
+  rawUrl: string,
+  opts: PublicFetchOptions = {}
+): Promise<string> {
+  const response = await fetchPublicResponse(rawUrl, opts);
+  const buf = Buffer.from(await response.arrayBuffer());
+  return decodeHtmlBuffer(buf, response.headers.get("content-type"));
+}
+
+/** SSRF-safe image bytes for untrusted organizer covers. */
+export async function fetchPublicBytes(
+  rawUrl: string,
+  opts: PublicFetchOptions = {}
+): Promise<{ buf: Buffer; contentType: string | null }> {
+  const response = await fetchPublicResponse(rawUrl, {
+    ...opts,
+    headers: {
+      Accept: IMAGE_ACCEPT,
+      ...opts.headers,
+    },
+  });
+  const buf = Buffer.from(await response.arrayBuffer());
+  if (buf.length > FETCH_MAX_BYTES) {
+    throw new Error(`Organizer response exceeded 10 MiB: ${rawUrl}`);
+  }
+  return { buf, contentType: response.headers.get("content-type") };
 }
 
 /**

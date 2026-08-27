@@ -23,8 +23,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getServiceRoleClient } from "../lib/supabase/client";
-import { extractPageImage } from "./extract-page-image";
-import { fetchHtml, fetchPublicHtml } from "./fetch-html";
+import { enrichCoverFromOrganizerSite } from "./enrich-organizer-cover";
+import { fetchHtml } from "./fetch-html";
 import {
   normalizeRawTla,
   SCRAPER_SITE,
@@ -32,7 +32,6 @@ import {
   type RawTla,
 } from "./normalize";
 import {
-  findOrganizerEventUrlInSitemap,
   LISTING_URL,
   maxPagerPage,
   parseDetailHtml,
@@ -49,62 +48,11 @@ import {
 
 loadDotEnv();
 
-const DETAIL_DELAY_MS = 350;
 const MAX_PAGES = Number(process.env.SCRAPE_MAX_PAGES ?? "40");
 const SKIP_DETAIL = process.env.SCRAPE_SKIP_DETAIL === "1";
-const organizerPageCache = new Map<string, Promise<string | null>>();
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-function cachedOrganizerFetch(url: string): Promise<string | null> {
-  const cached = organizerPageCache.get(url);
-  if (cached) return cached;
-  const request = (async () => {
-    try {
-      await sleep(DETAIL_DELAY_MS);
-      return await fetchPublicHtml(url);
-    } catch {
-      return null;
-    }
-  })();
-  organizerPageCache.set(url, request);
-  return request;
-}
-
-async function enrichFromOrganizerSite(
-  detail: DetailEnrichment,
-  eventName: string,
-  eventDate: string
-): Promise<void> {
-  if (!detail.organizerWebsite || detail.imageUrl) return;
-
-  const homepageHtml = await cachedOrganizerFetch(detail.organizerWebsite);
-  if (!homepageHtml) return;
-
-  // Squarespace product/event pages are reliably listed in sitemap.xml even
-  // when the US Chess record provides only the organizer homepage.
-  if (!detail.registrationUrl && /squarespace/i.test(homepageHtml)) {
-    const sitemapUrl = new URL("/sitemap.xml", detail.organizerWebsite).toString();
-    const sitemapXml = await cachedOrganizerFetch(sitemapUrl);
-    if (sitemapXml) {
-      detail.registrationUrl = findOrganizerEventUrlInSitemap(
-        sitemapXml,
-        eventName,
-        detail.organizerWebsite,
-        eventDate
-      );
-    }
-  }
-
-  if (detail.registrationUrl) {
-    const eventHtml = await cachedOrganizerFetch(detail.registrationUrl);
-    if (eventHtml) {
-      detail.imageUrl = extractPageImage(eventHtml, detail.registrationUrl);
-    }
-  }
-
 }
 
 async function loadListingPages(): Promise<RawTla[]> {
@@ -208,8 +156,8 @@ async function main() {
         detail = parseDetailHtml(html, raw.detailUrl);
         // US Chess pages often lack event photos and may provide only an
         // organizer homepage instead of the event's registration page.
-        await enrichFromOrganizerSite(detail, raw.name, raw.dateText);
-        await sleep(DETAIL_DELAY_MS);
+        await enrichCoverFromOrganizerSite(detail, raw.name, raw.dateText);
+        await sleep(350);
       } catch (err) {
         console.warn(`\ndetail fetch failed for ${raw.detailUrl}:`, err);
       }

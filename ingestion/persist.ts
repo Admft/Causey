@@ -27,6 +27,7 @@ import {
   retractStaleSourceListings,
   type RetractionMode,
 } from "./stale-retraction";
+import { mapLimit, resolvePersistedCoverUrl } from "./rehost-cover";
 
 export type StagedCompetition = Competition & {
   /** Stable source-native identity; legacy staged files fall back safely. */
@@ -556,7 +557,19 @@ export async function upsertCompetitions(
     ])
   );
 
-  const payload = [...bySlug.values()].map((d) => {
+  const uniqueDrafts = [...bySlug.values()];
+  const imageUrls = await mapLimit(uniqueDrafts, 3, async (d) => {
+    const current = existingBySlug.get(d.slug);
+    return resolvePersistedCoverUrl({
+      incoming: d.image_url,
+      existing: current?.imageUrl,
+      client,
+      source,
+      competitionId: current?.id ?? d.id,
+    });
+  });
+
+  const payload = uniqueDrafts.map((d, index) => {
     // Pathway fields are owned by enrich-pathways — never wipe on scrape upsert.
     // interest_count is owned by save/registration triggers for the same reason.
     // series_id is owned by curation / series-match — omit null so re-scrape
@@ -586,10 +599,7 @@ export async function upsertCompetitions(
     const row: Record<string, unknown> = {
       ...rest,
       id: existingBySlug.get(d.slug)?.id ?? d.id,
-      image_url: preserveExistingImage(
-        d.image_url,
-        existingBySlug.get(d.slug)?.imageUrl
-      ),
+      image_url: imageUrls[index] ?? null,
     };
     if (series_id) row.series_id = series_id;
     return row;

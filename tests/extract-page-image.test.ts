@@ -101,6 +101,41 @@ describe("extractPageImage", () => {
     );
   });
 
+  it("strips Google Sites =w16383 and prefers a display-sized srcset", () => {
+    const google = `
+      <html><head>
+        <meta property="og:image" content="https://lh3.googleusercontent.com/sitesv/TOKEN=w16383" />
+      </head><body></body></html>
+    `;
+    expect(extractPageImage(google, base)).toBe(
+      "https://lh3.googleusercontent.com/sitesv/TOKEN"
+    );
+
+    const srcset = `
+      <html><body><main>
+        <img src="https://lh3.googleusercontent.com/sitesv/TOKEN=w400"
+             srcset="https://lh3.googleusercontent.com/sitesv/TOKEN=w1280 1280w, https://lh3.googleusercontent.com/sitesv/TOKEN=w16383 16383w"
+             width="1280" height="720" alt="Tournament" />
+      </main></body></html>
+    `;
+    expect(extractPageImage(srcset, base)).toBe(
+      "https://lh3.googleusercontent.com/sitesv/TOKEN=w1280"
+    );
+  });
+
+  it("finds a cover on builder pages that omit main/article", () => {
+    const html = `
+      <html><body>
+        <div class="yaqOZd">
+          <img src="/photos/club-night.jpg" width="1200" height="800" alt="Club night" />
+        </div>
+      </body></html>
+    `;
+    expect(extractPageImage(html, base)).toBe(
+      "https://organizer.example.com/photos/club-night.jpg"
+    );
+  });
+
   it("returns null when nothing usable exists", () => {
     const html = `<html><body><p>No images here</p></body></html>`;
     expect(extractPageImage(html, base)).toBeNull();

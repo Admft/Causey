@@ -27,6 +27,8 @@ describe("competition covers stay aligned in search", () => {
     expect(read("app/event/[slug]/page.tsx")).toContain(
       "source={competition.source}"
     );
+    expect(read("ingestion/persist.ts")).toContain("resolvePersistedCoverUrl");
+    expect(read("lib/cover-url.ts")).toContain("stripGoogleSitesMaxWidth");
   });
 
   it("requires a cover before an organization can preview or publish", () => {

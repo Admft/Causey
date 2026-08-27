@@ -91,6 +91,16 @@ organizer homepage image (TLA) or an available source-hub image (CCA /
 OnlineReg / Chess-Results / FIDE) rather than leaving the card empty. Image
 fallback never changes the registration destination.
 
+Google Sites and Facebook CDN covers are signed and expire (cards then 403).
+Upsert copies those bytes into the public `tournament-covers` bucket. To repair
+rows already stored as dead `lh3.googleusercontent.com/sitesv` URLs:
+
+```bash
+npx tsx ingestion/refresh-ephemeral-covers.ts
+```
+
+Set `SCRAPE_REHOST_COVERS=0` to skip the copy (offline upsert of staged JSON).
+
 **Location / publish gate:** same as TLA — real ZIP + coords from `zips`.
 Hubs resolve ZIP via listing parse (Chess-Results), or city+state → GeoNames
 place index (`data/cache/us-city-zips.json`, built on first scrape) then `zips`
