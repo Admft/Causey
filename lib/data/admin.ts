@@ -605,8 +605,13 @@ export async function getAdminTournaments(
 
   const { data } = await query;
   const rows = (data ?? []) as unknown as AdminTournamentRow[];
-  if (!filters?.ready) return rows;
-  return rows.filter((row) => isTournamentPublishReady(row));
+  if (filters?.ready === true) {
+    return rows.filter((row) => isTournamentPublishReady(row));
+  }
+  if (filters?.ready === false) {
+    return rows.filter((row) => !isTournamentPublishReady(row));
+  }
+  return rows;
 }
 
 export async function getAdminTournamentCount(): Promise<number> {

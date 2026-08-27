@@ -18,24 +18,28 @@ describe("mobile discovery and private district setup", () => {
     expect(districtPitch).not.toContain("Lincoln High School");
   });
 
-  it("houses club and district as peers in one chassis, with planned next as the lower deck", () => {
+  it("sets club and district as different objects, not twin brochures", () => {
     const districtsPage = read("app/districts/page.tsx");
     expect(districtPitch).toContain("Chess for a whole district, set up with you.");
     expect(districtPitch).toContain("assisted chess pilot");
-    expect(districtPitch).toContain("lg:grid-rows-subgrid");
-    expect(districtPitch).toContain("shadow-[var(--shadow-panel-lg)]");
+    expect(districtPitch).toContain("Club season");
+    expect(districtPitch).toContain("font-display text-2xl tabular-nums");
+    expect(districtPitch).toContain("bg-brand-blue-soft");
+    expect(districtPitch).toContain("lg:col-span-7");
+    expect(districtPitch).toContain("lg:col-span-5");
+    expect(districtPitch).toContain("lg:mt-20");
     expect(districtPitch).toContain("See the club workspace");
     expect(districtPitch).toContain("Create a club account");
     expect(districtPitch).toContain("Review the district pilot");
-    expect(districtPitch).toContain("Planned next");
-    expect(districtPitch).toContain("Guided district setup");
-    expect(districtPitch).toContain("More competition types");
+    expect(districtPitch).toContain("District office");
+    expect(districtPitch).toContain("School tournament");
+    expect(districtPitch).toContain("District-wide");
+    expect(districtPitch).not.toContain("Planned next");
+    expect(districtPitch).not.toContain("Guided district setup");
+    expect(districtPitch).not.toContain("BuyerColumn");
+    expect(districtPitch).not.toContain("lg:grid-rows-subgrid");
     expect(districtPitch).not.toContain("Ready for an assisted pilot");
     expect(districtPitch).not.toContain("The district foundation is in place");
-    expect(districtPitch).not.toContain("Illustrative season");
-    expect(districtPitch).not.toContain("Illustrative command center");
-    expect(districtPitch).not.toContain("what is ready now");
-    expect(districtPitch).not.toContain("aggregate reporting");
     expect((districtPitch.match(/padStart/g) ?? []).length).toBe(1);
     expect(districtsPage).toContain("What we have not finished");
   });

@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AdminMixChart } from "@/components/AdminCharts";
-import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { AdminTournamentBulkList } from "@/components/AdminTournamentBulkList";
+import { AdminTournamentQueues } from "@/components/AdminTournamentQueues";
 import {
   ADMIN_TOURNAMENT_AUDIENCE_OPTIONS,
   ADMIN_TOURNAMENT_MODE_OPTIONS,
   ADMIN_TOURNAMENT_TYPE_OPTIONS,
+  ADMIN_TOURNAMENT_QUEUE_LABEL,
+  adminTournamentQueue,
   adminTournamentsHaveFilters,
   adminTournamentsHref,
   parseAdminTournamentFilters,
 } from "@/lib/admin-tournament-filters";
+import { remainderCount } from "@/lib/admin-charts";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
   getAdminOpsStats,
@@ -56,6 +58,7 @@ export default async function AdminTournamentsPage({
   const rawFilters = await searchParams;
   const filters = parseAdminTournamentFilters(rawFilters);
   const hasFilters = adminTournamentsHaveFilters(filters);
+  const queue = adminTournamentQueue(filters);
   const [tournaments, totalTournamentCount, ops] = await Promise.all([
     getAdminTournaments(filters),
     getAdminTournamentCount(),
@@ -112,9 +115,9 @@ export default async function AdminTournamentsPage({
             Tournaments
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Drafts and rejected records are not public. Organizer submissions
-            awaiting a decision belong in Moderation. Narrow by type, source,
-            timing, or place, then publish a complete draft group.
+            Work one queue at a time: review organizer submissions, publish
+            complete drafts, or restore archived records. Drafts and rejected
+            listings stay out of public search.
           </p>
         </div>
         <Link href="/admin/tournaments/new" className="cta-enabled">
@@ -123,69 +126,81 @@ export default async function AdminTournamentsPage({
       </div>
 
       <div className="mt-8">
-        <AdminStatStrip
-          label="All tournament records"
-          items={[
-            {
-              label: "Published",
-              value: ops.listings.published,
-              href: adminTournamentsHref({ status: "published" }),
-            },
-            {
-              label: "Drafts",
-              value: ops.listings.drafts,
-              href: adminTournamentsHref({ status: "draft" }),
-            },
-            {
-              label: "Pending review",
-              value: ops.listings.pendingReview,
-              href: adminTournamentsHref({ status: "pending_review" }),
-            },
-            {
-              label: "Archived",
-              value: ops.listings.archived,
-              href: adminTournamentsHref({ status: "archived" }),
-            },
-            {
-              label: "Ready to publish",
-              value: ops.listings.readyToPublish,
-              href: adminTournamentsHref({ status: "draft", ready: true }),
-            },
-          ]}
-          chart={
-            <AdminMixChart
-              title="Record status"
-              segments={[
-                {
-                  label: "Published",
-                  value: ops.listings.published,
-                  tone: "ok",
-                },
-                {
-                  label: "Drafts",
-                  value: ops.listings.drafts,
-                  tone: "quiet",
-                },
-                {
-                  label: "Pending",
-                  value: ops.listings.pendingReview,
-                  tone: "attention",
-                },
-                {
-                  label: "Archived",
-                  value: ops.listings.archived,
-                  tone: "quiet",
-                },
-              ]}
-            />
-          }
+        <AdminTournamentQueues
+          filters={filters}
+          pendingReview={ops.listings.pendingReview}
+          readyToPublish={ops.listings.readyToPublish}
+          archived={ops.listings.archived}
+          published={ops.listings.published}
+          needsDetails={remainderCount(
+            ops.listings.drafts,
+            ops.listings.readyToPublish
+          )}
+          rejected={ops.listings.rejected}
         />
       </div>
+
+      {queue === "review" ? (
+        <p className="mt-6 text-sm text-muted">
+          Approve or send back from{" "}
+          <Link
+            href="/admin/moderation"
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Moderation
+          </Link>
+          . This list is for browsing and editing the same records.
+        </p>
+      ) : null}
+      {queue === "ready" ? (
+        <p className="mt-6 text-sm text-muted">
+          These drafts have a usable place and registration link. Publish
+          selected rows, or publish every ready draft on this page.
+        </p>
+      ) : null}
+      {queue === "archived" ? (
+        <p className="mt-6 text-sm text-muted">
+          Archived listings are off the public directories. Complete records
+          are marked and can be restored.
+          {filters.ready !== true ? (
+            <>
+              {" "}
+              <Link
+                href={adminTournamentsHref(filters, { ready: true })}
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Show complete only
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              {" "}
+              <Link
+                href={adminTournamentsHref({ ...filters, ready: undefined })}
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Show every archived record
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      ) : null}
 
       <form
         method="get"
         className="mt-8 grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4"
       >
+        {filters.status ? (
+          <input type="hidden" name="status" value={filters.status} />
+        ) : null}
+        {filters.ready === true ? (
+          <input type="hidden" name="ready" value="1" />
+        ) : null}
+        {filters.ready === false ? (
+          <input type="hidden" name="ready" value="0" />
+        ) : null}
         <label>
           <span className="text-xs font-semibold text-muted-strong">Type</span>
           <select
@@ -199,21 +214,6 @@ export default async function AdminTournamentsPage({
                 {type.label}
               </option>
             ))}
-          </select>
-        </label>
-        <label>
-          <span className="text-xs font-semibold text-muted-strong">Status</span>
-          <select
-            className="field mt-1"
-            name="status"
-            defaultValue={filters.status ?? ""}
-          >
-            <option value="">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="pending_review">Awaiting review</option>
-            <option value="published">Published</option>
-            <option value="rejected">Rejected</option>
-            <option value="archived">Archived</option>
           </select>
         </label>
         <label>
@@ -243,7 +243,7 @@ export default async function AdminTournamentsPage({
             <option value="ended">Ended</option>
           </select>
         </label>
-        <label className="sm:col-span-2">
+        <label className="sm:col-span-2 lg:col-span-4">
           <span className="text-xs font-semibold text-muted-strong">Name</span>
           <input
             className="field mt-1"
@@ -254,6 +254,14 @@ export default async function AdminTournamentsPage({
             maxLength={80}
           />
         </label>
+        <details
+          className="sm:col-span-2 lg:col-span-4"
+          open={Boolean(filters.state || filters.mode || filters.audience)}
+        >
+          <summary className="cursor-pointer text-sm font-semibold text-muted-strong hover:text-foreground">
+            More filters
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label>
           <span className="text-xs font-semibold text-muted-strong">State</span>
           <input
@@ -300,19 +308,11 @@ export default async function AdminTournamentsPage({
             ))}
           </select>
         </label>
-        <div className="flex flex-wrap items-end gap-3 sm:col-span-2 lg:col-span-3">
-          <label className="flex min-h-11 items-center gap-2 pb-0.5 text-sm font-medium text-muted-strong">
-            <input
-              type="checkbox"
-              name="ready"
-              value="1"
-              defaultChecked={Boolean(filters.ready)}
-              className="size-4 rounded border-line"
-            />
-            Ready to publish
-          </label>
+          </div>
+        </details>
+        <div className="flex flex-wrap items-end gap-3 sm:col-span-2 lg:col-span-4">
           <button type="submit" className="cta-enabled">
-            Apply filters
+            Narrow this queue
           </button>
           {hasFilters ? (
             <Link
@@ -378,7 +378,9 @@ export default async function AdminTournamentsPage({
 
       <section className="section-rule mt-8 pt-8">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="text-sm font-semibold text-foreground">Records</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            {ADMIN_TOURNAMENT_QUEUE_LABEL[queue]}
+          </h2>
           <span className="text-xs text-muted">
             {tournaments.length} shown
             {!filters.status && publishedCount
@@ -430,6 +432,8 @@ export default async function AdminTournamentsPage({
               }))}
               filterStatus={filters.status}
               filterSource={filters.source}
+              filterReady={filters.ready}
+              groupByWork={queue === "all"}
               totalTournamentCount={totalTournamentCount}
             />
           </div>

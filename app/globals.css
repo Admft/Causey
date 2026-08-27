@@ -607,6 +607,32 @@ textarea.field {
   scroll-margin-top: var(--home-hero-chrome, 4rem);
 }
 
+/* Browse-strip hint: slide to reveal the next listing, hold, then yank
+ * back past rest and settle. Fired once from HomeFeaturedRail. */
+.home-featured-rail[data-hint] {
+  scroll-snap-type: none;
+}
+.home-featured-rail[data-hint] > ul {
+  animation: featured-rail-hint 900ms var(--ease-brand) both;
+}
+@keyframes featured-rail-hint {
+  0% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(calc(-1 * var(--featured-peek, 6rem)));
+  }
+  55% {
+    transform: translateX(calc(-1 * var(--featured-peek, 6rem)));
+  }
+  78% {
+    transform: translateX(0.5rem);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 /* Hero first-paint rise — §10. Guide attention into the first viewport. */
 @keyframes rise {
   from {
@@ -670,6 +696,9 @@ textarea.field {
   .home-hero-search.is-search-attention::before,
   .home-hero-cue,
   .cta-sheen.is-cta-attention::before {
+    animation: none;
+  }
+  .home-featured-rail[data-hint] > ul {
     animation: none;
   }
   .scroll-reveal {

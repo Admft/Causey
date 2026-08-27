@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- **Home organizer chassis:** one housed band for club season + district pilot + planned next.
+- **Home organizer chassis:** club season scoresheet vs nested district office; no Planned next strip.
 
 ## Last tick
 
+- 2026-08-26 — Home organizer: club season as a printed scoresheet, district as a nested blue office panel; drop twin cards and Planned next.
 - 2026-08-26 — Home organizer band: one chassis (club season spine + district ledger + planned-next lower deck), not two stamped cards.
 - 2026-08-26 — Home hero type picker uses the section graphics (equal-size cropped marks) for Chess, Debate, STEM, Arts, and Writing.
 - 2026-08-26 — Directory search heroes restore the type-specific 3D PNGs beside the filled search card (compact overlay on phones).

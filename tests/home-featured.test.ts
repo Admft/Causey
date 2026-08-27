@@ -27,12 +27,33 @@ describe("homepage featured listings", () => {
     expect(featuredSection).toContain("band-join--soft");
     expect(featuredSection).toContain("rounded-3xl");
     expect(featuredSection).toContain("lg:items-end");
-    expect(featuredSection).toContain("snap-x");
+    expect(featuredSection).toContain("HomeFeaturedRail");
     expect(featuredSection).toContain("w-[min(20rem,calc(100vw-2.5rem))]");
     expect(featuredSection).toContain("sm:w-80");
     expect(featuredSection).toContain('layout="grid2"');
     expect(featuredSection).not.toContain("sourceFallback={false}");
     expect(featuredSection).toContain("HomeFeaturedSeeMore");
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "components/HomeFeaturedRail.tsx"),
+        "utf8"
+      )
+    ).toContain("snap-x");
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "components/HomeFeaturedRail.tsx"),
+        "utf8"
+      )
+    ).toContain("prefers-reduced-motion");
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "components/HomeFeaturedRail.tsx"),
+        "utf8"
+      )
+    ).toContain("data-hint");
+    expect(readFileSync(resolve(process.cwd(), "app/globals.css"), "utf8")).toContain(
+      "featured-rail-hint"
+    );
     expect(
       readFileSync(
         resolve(process.cwd(), "components/HomeFeaturedSeeMore.tsx"),

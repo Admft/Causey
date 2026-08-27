@@ -1,4 +1,5 @@
 import { CompetitionCard } from "@/components/CompetitionCard";
+import { HomeFeaturedRail } from "@/components/HomeFeaturedRail";
 import { HomeFeaturedSeeMore } from "@/components/HomeFeaturedSeeMore";
 import type { HomeFeaturedResult } from "@/lib/data/home-featured";
 
@@ -42,7 +43,7 @@ export function HomeFeaturedSection({
             </div>
           </div>
         </div>
-        <div className="soft-scroll mt-8 snap-x snap-mandatory overflow-x-auto overscroll-x-contain py-3">
+        <HomeFeaturedRail>
           <ul className="flex w-max gap-4" aria-label="Listing preview">
             {featured.results.map((result) => (
               <li
@@ -53,7 +54,7 @@ export function HomeFeaturedSection({
               </li>
             ))}
           </ul>
-        </div>
+        </HomeFeaturedRail>
       </div>
     </section>
   );

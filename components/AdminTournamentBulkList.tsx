@@ -13,6 +13,12 @@ import { formatDateRange } from "@/lib/format";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
 import { competitionTypeLabel } from "@/lib/competition-types";
 import type { CompetitionCategory } from "@/lib/schemas";
+import {
+  ADMIN_TOURNAMENT_WORK_LABEL,
+  ADMIN_TOURNAMENT_WORK_ORDER,
+  adminTournamentWorkState,
+  type AdminTournamentWorkState,
+} from "@/lib/admin-tournament-filters";
 
 type TournamentStatus =
   | "draft"
@@ -49,17 +55,30 @@ const STATUS_LABELS: Record<string, string> = {
   archived: "Archived",
 };
 
+const WORK_RULE: Record<AdminTournamentWorkState, string> = {
+  review: "border-l-2 border-brand-red",
+  ready: "border-l-2 border-brand-blue",
+  needs_details: "border-l-2 border-line",
+  published: "border-l-2 border-brand-red/30",
+  archived: "border-l-2 border-foreground/20",
+  rejected: "border-l-2 border-line",
+};
+
 const BULK_CAP = 100;
 
 export function AdminTournamentBulkList({
   tournaments,
   filterStatus,
   filterSource,
+  filterReady,
+  groupByWork = false,
   totalTournamentCount,
 }: {
   tournaments: BulkTournament[];
   filterStatus?: string;
   filterSource?: string;
+  filterReady?: boolean;
+  groupByWork?: boolean;
   totalTournamentCount: number;
 }) {
   const router = useRouter();
@@ -86,12 +105,38 @@ export function AdminTournamentBulkList({
         .map((row) => row.id),
     [tournaments]
   );
+  const completeArchivedIds = useMemo(
+    () =>
+      tournaments
+        .filter((row) => row.status === "archived" && row.publishReady)
+        .slice(0, BULK_CAP)
+        .map((row) => row.id),
+    [tournaments]
+  );
+  const workGroups = useMemo(() => {
+    if (!groupByWork) {
+      return [{ state: null as AdminTournamentWorkState | null, rows: tournaments }];
+    }
+    const buckets = new Map<AdminTournamentWorkState, BulkTournament[]>();
+    for (const state of ADMIN_TOURNAMENT_WORK_ORDER) buckets.set(state, []);
+    for (const row of tournaments) {
+      buckets.get(adminTournamentWorkState(row))?.push(row);
+    }
+    return ADMIN_TOURNAMENT_WORK_ORDER.flatMap((state) => {
+      const rows = buckets.get(state) ?? [];
+      return rows.length ? [{ state, rows }] : [];
+    });
+  }, [groupByWork, tournaments]);
   const allSelected =
     selectableIds.length > 0 &&
     selectableIds.every((id) => selected.has(id));
   const selectedCount = selected.size;
+  const readyQueue = filterStatus === "draft" && filterReady === true;
   const canPublishGroup =
-    filterStatus === "draft" && Boolean(filterSource) && readyDraftIds.length > 0;
+    readyDraftIds.length > 0 &&
+    (readyQueue || (filterStatus === "draft" && Boolean(filterSource)));
+  const canRestoreComplete =
+    filterStatus === "archived" && completeArchivedIds.length > 0;
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -115,9 +160,12 @@ export function AdminTournamentBulkList({
 
   async function publishIds(ids: string[], label: string) {
     if (!ids.length) return;
+    const restoring = filterStatus === "archived";
     if (
       !window.confirm(
-        `Publish ${ids.length} ${label}? Public records will appear in their matching category directory.`
+        restoring
+          ? `Restore ${ids.length} ${label} to the public directory?`
+          : `Publish ${ids.length} ${label}? Public records will appear in their matching category directory.`
       )
     ) {
       return;
@@ -245,6 +293,20 @@ export function AdminTournamentBulkList({
               {readyDraftIds.length === 1 ? "" : "s"}
             </button>
           ) : null}
+          {completeArchivedIds.length > 0 ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                setSelected(new Set(completeArchivedIds));
+                setError(null);
+                setMessage(null);
+              }}
+              className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+            >
+              Select {completeArchivedIds.length} complete archived
+            </button>
+          ) : null}
         </div>
         {canPublishGroup ? (
           <button
@@ -253,7 +315,9 @@ export function AdminTournamentBulkList({
             onClick={() =>
               publishIds(
                 readyDraftIds,
-                `ready draft${readyDraftIds.length === 1 ? "" : "s"} from ${competitionSourceLabel(filterSource!)}`
+                filterSource
+                  ? `ready draft${readyDraftIds.length === 1 ? "" : "s"} from ${competitionSourceLabel(filterSource)}`
+                  : `ready draft${readyDraftIds.length === 1 ? "" : "s"}`
               )
             }
             className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
@@ -261,6 +325,23 @@ export function AdminTournamentBulkList({
             {pendingAction === "publish"
               ? "Publishing…"
               : `Publish ${readyDraftIds.length} ready draft${readyDraftIds.length === 1 ? "" : "s"}`}
+          </button>
+        ) : null}
+        {canRestoreComplete ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              publishIds(
+                completeArchivedIds,
+                `complete archived listing${completeArchivedIds.length === 1 ? "" : "s"}`
+              )
+            }
+            className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+          >
+            {pendingAction === "publish"
+              ? "Restoring…"
+              : `Restore ${completeArchivedIds.length} complete`}
           </button>
         ) : null}
       </div>
@@ -284,8 +365,12 @@ export function AdminTournamentBulkList({
                   className="cta-enabled disabled:opacity-60"
                 >
                   {pendingAction === "publish"
-                    ? "Publishing…"
-                    : "Publish selected"}
+                    ? filterStatus === "archived"
+                      ? "Restoring…"
+                      : "Publishing…"
+                    : filterStatus === "archived"
+                      ? "Restore selected"
+                      : "Publish selected"}
                 </button>
               ) : null}
               {selectedCount > 0 ? (
@@ -330,11 +415,31 @@ export function AdminTournamentBulkList({
         </div>
       )}
 
-      <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
-        {tournaments.map((tournament) => (
+      {workGroups.map((group) => (
+        <section
+          key={group.state ?? "records"}
+          className={group.state ? "mt-6" : "mt-4"}
+          aria-label={
+            group.state ? ADMIN_TOURNAMENT_WORK_LABEL[group.state] : undefined
+          }
+        >
+          {group.state ? (
+            <h3 className="text-sm font-semibold text-foreground">
+              {ADMIN_TOURNAMENT_WORK_LABEL[group.state]}
+              <span className="ml-2 font-medium tabular-nums text-muted">
+                {group.rows.length}
+              </span>
+            </h3>
+          ) : null}
+          <ul
+            className={`${group.state ? "mt-3" : ""} divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface`}
+          >
+            {group.rows.map((tournament) => {
+              const work = adminTournamentWorkState(tournament);
+              return (
           <li
             key={tournament.id}
-            className="grid gap-3 px-4 py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto]"
+            className={`grid gap-3 px-4 py-4 lg:grid-cols-[auto_minmax(0,1fr)_auto] ${WORK_RULE[work]}`}
           >
             <label className="flex items-start pt-1">
               <input
@@ -382,6 +487,11 @@ export function AdminTournamentBulkList({
                     Needs details
                   </span>
                 ) : null}
+                {tournament.status === "archived" && tournament.publishReady ? (
+                  <span className="rounded-md border border-brand-blue/40 bg-brand-blue-soft/60 px-1.5 py-0.5 text-2xs font-semibold text-brand-blue-strong">
+                    Ready to restore
+                  </span>
+                ) : null}
               </div>
               <p className="mt-1 text-xs text-muted">
                 {competitionTypeLabel({
@@ -421,8 +531,11 @@ export function AdminTournamentBulkList({
               </button>
             </div>
           </li>
-        ))}
-      </ul>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
 
       <section className="mt-8 border-t border-line pt-6">
         <h3 className="text-sm font-semibold text-foreground">

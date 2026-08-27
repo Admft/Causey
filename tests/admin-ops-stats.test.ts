@@ -74,7 +74,8 @@ describe("platform admin ops stats", () => {
     expect(overview).toContain("Organizer pipeline");
     expect(moderation).toContain("Waiting by type");
     expect(moderation).toContain("AdminBarChart");
-    expect(tournaments).toContain("Record status");
+    expect(tournaments).toContain("AdminTournamentQueues");
+    expect(read("components/AdminTournamentQueues.tsx")).toContain("Work queues");
     expect(orgs).toContain("By type");
     expect(users).toContain("remainderCount");
     expect(scrapers).toContain("Rows upserted");
@@ -93,8 +94,11 @@ describe("platform admin ops stats", () => {
     expect(tournaments).toContain(
       'getAdminOpsStats(["listings", "readyDrafts"])'
     );
-    expect(tournaments).toContain('status: "archived"');
+    expect(tournaments).toContain("AdminTournamentQueues");
     expect(tournaments).toContain("ready: true");
+    expect(read("lib/admin-tournament-filters.ts")).toContain(
+      'status: "archived"'
+    );
     expect(orgs).toContain('getAdminOpsStats(["organizations"])');
     expect(orgs).toContain("initialStatus");
     expect(orgs).toContain("/admin/organizations?status=pending");

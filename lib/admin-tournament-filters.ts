@@ -23,6 +23,7 @@ export type AdminTournamentStatus = (typeof ADMIN_TOURNAMENT_STATUSES)[number];
 export type AdminTournamentListFilters = {
   status?: AdminTournamentStatus;
   source?: string;
+  /** true = publish-ready only; false = not ready (needs details). */
   ready?: boolean;
   category?: CompetitionCategory;
   timing?: TimingFilter;
@@ -31,6 +32,123 @@ export type AdminTournamentListFilters = {
   mode?: ParticipationMode;
   audience?: CompetitionAudience;
 };
+
+export type AdminTournamentQueue =
+  | "review"
+  | "ready"
+  | "needs_details"
+  | "drafts"
+  | "published"
+  | "archived"
+  | "rejected"
+  | "all";
+
+export type AdminTournamentWorkState =
+  | "review"
+  | "ready"
+  | "needs_details"
+  | "published"
+  | "archived"
+  | "rejected";
+
+export const ADMIN_TOURNAMENT_WORK_ORDER: readonly AdminTournamentWorkState[] = [
+  "review",
+  "ready",
+  "needs_details",
+  "published",
+  "archived",
+  "rejected",
+];
+
+export const ADMIN_TOURNAMENT_QUEUE_LABEL: Record<
+  AdminTournamentQueue,
+  string
+> = {
+  review: "Needs review",
+  ready: "Ready to publish",
+  needs_details: "Needs details",
+  drafts: "Drafts",
+  published: "Published",
+  archived: "Archived",
+  rejected: "Rejected",
+  all: "Records",
+};
+
+export const ADMIN_TOURNAMENT_WORK_LABEL: Record<
+  AdminTournamentWorkState,
+  string
+> = {
+  review: "Needs review",
+  ready: "Ready to publish",
+  needs_details: "Needs details",
+  published: "Published",
+  archived: "Archived",
+  rejected: "Rejected",
+};
+
+export function adminTournamentWorkState(row: {
+  status: AdminTournamentStatus;
+  publishReady: boolean;
+}): AdminTournamentWorkState {
+  if (row.status === "pending_review") return "review";
+  if (row.status === "draft" && row.publishReady) return "ready";
+  if (row.status === "draft") return "needs_details";
+  if (row.status === "published") return "published";
+  if (row.status === "archived") return "archived";
+  return "rejected";
+}
+
+export function adminTournamentQueue(
+  filters: AdminTournamentListFilters
+): AdminTournamentQueue {
+  if (filters.status === "pending_review") return "review";
+  if (filters.status === "draft" && filters.ready === true) return "ready";
+  if (filters.status === "draft" && filters.ready === false) {
+    return "needs_details";
+  }
+  if (filters.status === "draft") return "drafts";
+  if (filters.status === "published") return "published";
+  if (filters.status === "archived") return "archived";
+  if (filters.status === "rejected") return "rejected";
+  return "all";
+}
+
+export function adminTournamentQueueHref(
+  filters: AdminTournamentListFilters,
+  queue: AdminTournamentQueue
+): string {
+  const preserved: AdminTournamentListFilters = {
+    ...(filters.category ? { category: filters.category } : {}),
+    ...(filters.source ? { source: filters.source } : {}),
+    ...(filters.timing ? { timing: filters.timing } : {}),
+    ...(filters.q ? { q: filters.q } : {}),
+    ...(filters.state ? { state: filters.state } : {}),
+    ...(filters.mode ? { mode: filters.mode } : {}),
+    ...(filters.audience ? { audience: filters.audience } : {}),
+  };
+  if (queue === "review") {
+    return adminTournamentsHref(preserved, { status: "pending_review" });
+  }
+  if (queue === "ready") {
+    return adminTournamentsHref(preserved, { status: "draft", ready: true });
+  }
+  if (queue === "needs_details") {
+    return adminTournamentsHref(preserved, { status: "draft", ready: false });
+  }
+  if (queue === "drafts") {
+    return adminTournamentsHref(preserved, { status: "draft" });
+  }
+  if (queue === "published") {
+    return adminTournamentsHref(preserved, { status: "published" });
+  }
+  if (queue === "archived") {
+    return adminTournamentsHref(preserved, { status: "archived" });
+  }
+  if (queue === "rejected") {
+    return adminTournamentsHref(preserved, { status: "rejected" });
+  }
+  return adminTournamentsHref(preserved);
+}
 
 export const ADMIN_TOURNAMENT_TYPE_OPTIONS = COMPETITION_TYPES.map((type) => ({
   value: type.id,
@@ -82,7 +200,11 @@ export function parseAdminTournamentFilters(input: {
   return {
     ...(status ? { status } : {}),
     ...(source ? { source } : {}),
-    ...(input.ready === "1" ? { ready: true } : {}),
+    ...(input.ready === "1"
+      ? { ready: true }
+      : input.ready === "0"
+        ? { ready: false }
+        : {}),
     ...(category.success ? { category: category.data } : {}),
     ...(timing ? { timing } : {}),
     ...(q ? { q } : {}),
@@ -98,7 +220,7 @@ export function adminTournamentsHaveFilters(
   return Boolean(
     filters.status ||
       filters.source ||
-      filters.ready ||
+      filters.ready !== undefined ||
       filters.category ||
       filters.timing ||
       filters.q ||
@@ -122,7 +244,8 @@ export function adminTournamentsHref(
   if (merged.state) params.set("state", merged.state);
   if (merged.mode) params.set("mode", merged.mode);
   if (merged.audience) params.set("audience", merged.audience);
-  if (merged.ready) params.set("ready", "1");
+  if (merged.ready === true) params.set("ready", "1");
+  if (merged.ready === false) params.set("ready", "0");
   const query = params.toString();
   return query ? `/admin/tournaments?${query}` : "/admin/tournaments";
 }

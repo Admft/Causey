@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  adminTournamentQueueHref,
   adminTournamentsHaveFilters,
   adminTournamentsHref,
   parseAdminTournamentFilters,
@@ -72,6 +73,52 @@ describe("adminTournamentsHref", () => {
   it("clears to the unfiltered list", () => {
     expect(adminTournamentsHref()).toBe("/admin/tournaments");
     expect(adminTournamentsHaveFilters({})).toBe(false);
+  });
+});
+
+describe("admin tournament work queues", () => {
+  it("parses ready=0 as needs-details and keeps other filters when switching queues", () => {
+    expect(parseAdminTournamentFilters({ ready: "0", status: "draft" })).toEqual(
+      { status: "draft", ready: false }
+    );
+    expect(adminTournamentsHaveFilters({ ready: false, status: "draft" })).toBe(
+      true
+    );
+    expect(
+      adminTournamentQueueHref(
+        parseAdminTournamentFilters({
+          category: "chess",
+          q: "open",
+        }),
+        "review"
+      )
+    ).toBe("/admin/tournaments?category=chess&status=pending_review&q=open");
+    expect(
+      adminTournamentQueueHref(
+        parseAdminTournamentFilters({ category: "chess" }),
+        "ready"
+      )
+    ).toBe("/admin/tournaments?category=chess&status=draft&ready=1");
+    expect(
+      adminTournamentQueueHref(
+        parseAdminTournamentFilters({ category: "chess" }),
+        "archived"
+      )
+    ).toBe("/admin/tournaments?category=chess&status=archived");
+  });
+
+  it("groups all-records browsing by work state in the admin list", () => {
+    const page = read("app/admin/tournaments/page.tsx");
+    const list = read("components/AdminTournamentBulkList.tsx");
+    const queues = read("components/AdminTournamentQueues.tsx");
+    expect(page).toContain("AdminTournamentQueues");
+    expect(page).toContain("groupByWork={queue === \"all\"}");
+    expect(queues).toContain("Needs review");
+    expect(queues).toContain("Ready to publish");
+    expect(queues).toContain("Archived");
+    expect(list).toContain("Ready to restore");
+    expect(list).toContain("groupByWork");
+    expect(read("lib/data/admin.ts")).toContain("filters?.ready === false");
   });
 });
 
