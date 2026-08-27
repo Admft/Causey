@@ -97,12 +97,12 @@ export default async function LoginPage({
               className="group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)]"
             >
               <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground">
+                <p className="text-lead font-bold text-foreground">
                   Search tournaments
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  Indexed feeds and club-published events, open without an
-                  account.
+                  Find events by zip, including tournaments clubs publish here.
+                  No account needed.
                 </p>
               </div>
               <span

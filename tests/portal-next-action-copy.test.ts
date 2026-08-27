@@ -108,6 +108,10 @@ describe("portal next-action vocabulary", () => {
     expect(alreadySignedIn).toContain("workspaceOpenCta");
     expect(homeAccountPitch).toContain("workspaceOpenCta");
     expect(homeAccountPitch).toContain("SEARCH_TOURNAMENTS_LABEL");
+    expect(homeAccountPitch).toContain(
+      "Find events by zip, including tournaments clubs publish here."
+    );
+    expect(homeAccountPitch).not.toContain("Indexed feeds");
     expect(accountPage).toContain("workspaceOpenCta");
     expect(accountPage).toContain("accountOrganizationsEmptyCta");
     expect(accountPage).toContain("PortalEmptyState");

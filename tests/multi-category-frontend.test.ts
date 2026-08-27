@@ -241,9 +241,9 @@ describe("coverage and empty states stay honest", () => {
   it("coverage panel indexes all five directories from shared metadata", () => {
     expect(coveragePath).toContain("DISCOVERY_CATEGORIES.map");
     expect(coveragePath).toContain("LIVE_SOURCES");
-    expect(coveragePath).toContain("What search covers today");
-    expect(coveragePath).toContain("Indexed now");
-    expect(coveragePath).toContain("Not indexed");
+    expect(coveragePath).toContain("CategoryGlyph");
+    expect(coveragePath).toContain("Five directories, one honest map");
+    expect(coveragePath).toContain("link-only");
     expect(coveragePath).toContain("referenceSources");
     expect(coveragePath).not.toContain("use client");
     expect(coveragePath).not.toContain("Coming soon");

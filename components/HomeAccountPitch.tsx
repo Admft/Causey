@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { AccountRole } from "@/lib/auth/types";
 import { getCurrentProfile } from "@/lib/auth/session";
 import { preferredDiscoveryHref } from "@/lib/category-discovery";
@@ -13,6 +14,9 @@ import {
  * Discovery-first: student path leads; coach tools are secondary disclosure.
  * When already signed in, swap to role next-actions — never pitch Sign up.
  */
+
+const SEARCH_PITCH =
+  "Find events by zip, including tournaments clubs publish here.";
 
 const SIGNED_IN_NEXT = (
   searchHref: string
@@ -38,13 +42,12 @@ const SIGNED_IN_NEXT = (
         {
           href: searchHref,
           label: SEARCH_TOURNAMENTS_LABEL,
-          description:
-            "Indexed feeds and club-published events in one search.",
+          description: SEARCH_PITCH,
         },
         {
           href: "/account",
           label: "Account settings",
-          description: "Profile, alerts, family, and sign-in.",
+          description: "Change your profile, alerts, family links, and sign-in.",
         },
       ],
     },
@@ -57,13 +60,12 @@ const SIGNED_IN_NEXT = (
         {
           href: searchHref,
           label: SEARCH_TOURNAMENTS_LABEL,
-          description:
-            "Indexed feeds and club-published events in one search.",
+          description: SEARCH_PITCH,
         },
         {
           href: "/account",
           label: "Account settings",
-          description: "Profile, alerts, family, and sign-in.",
+          description: "Change your profile, alerts, family links, and sign-in.",
         },
       ],
     },
@@ -76,18 +78,76 @@ const SIGNED_IN_NEXT = (
         {
           href: searchHref,
           label: SEARCH_TOURNAMENTS_LABEL,
-          description:
-            "Indexed feeds and club-published events in one search.",
+          description: SEARCH_PITCH,
         },
         {
           href: "/account",
           label: "Account settings",
-          description: "Profile, alerts, and sign-in.",
+          description: "Change your profile, alerts, and sign-in.",
         },
       ],
     },
   };
 };
+
+function AccountPitchPanel({
+  heading,
+  children,
+}: {
+  heading?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="min-w-0 w-full max-w-md md:max-w-none md:self-center">
+      <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)]">
+        {heading ? (
+          <p className="text-sm font-bold text-foreground">{heading}</p>
+        ) : null}
+        <ul
+          className={
+            heading
+              ? "mt-3 divide-y divide-line border-y border-line"
+              : "divide-y divide-line"
+          }
+        >
+          {children}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function AccountPitchRow({
+  href,
+  label,
+  description,
+}: {
+  href: string;
+  label: string;
+  description: string;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="group flex items-start justify-between gap-4 py-4"
+      >
+        <div className="min-w-0">
+          <p className="text-lead font-bold text-foreground transition-colors group-hover:text-brand-red">
+            {label}
+          </p>
+          <p className="mt-1 text-sm text-muted">{description}</p>
+        </div>
+        <span
+          aria-hidden="true"
+          className="nudge-x mt-0.5 shrink-0 text-lg font-bold text-brand-red"
+        >
+          →
+        </span>
+      </Link>
+    </li>
+  );
+}
 
 export async function HomeAccountPitch() {
   const profile = await getCurrentProfile();
@@ -108,10 +168,10 @@ export async function HomeAccountPitch() {
       >
         {/*
           Same composition as the signed-out band below: copy + primary CTA
-          left, descriptive cards right. One grid, one rhythm, no dead space.
+          left, one filled destination panel right. One grid, one rhythm.
         */}
-        <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
-          <div className="min-w-0 max-w-xl">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
+          <div className="min-w-0 max-w-xl md:self-center">
             <h2
               id="account-heading"
               className="font-display text-display font-bold tracking-tight text-foreground"
@@ -126,31 +186,11 @@ export async function HomeAccountPitch() {
             </div>
           </div>
 
-          <ul className="min-w-0 w-full max-w-md divide-y divide-line border-y border-line md:max-w-none">
+          <AccountPitchPanel>
             {next.secondary.map((action) => (
-              <li key={action.href}>
-                <Link
-                  href={action.href}
-                  className="group flex items-start justify-between gap-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
-                      {action.label}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {action.description}
-                    </p>
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className="nudge-x shrink-0 text-lg font-bold text-brand-red"
-                  >
-                    →
-                  </span>
-                </Link>
-              </li>
+              <AccountPitchRow key={action.href} {...action} />
             ))}
-          </ul>
+          </AccountPitchPanel>
         </div>
       </section>
     );
@@ -163,9 +203,9 @@ export async function HomeAccountPitch() {
     >
       {/*
         One conversion moment: student CTA owns the left column, the other two
-        roles are cards on the right (no duplicate student card, no orphan
-        disclosure). Solid soft-blue so the band reads as "act here," not a
-        washed-out afterthought.
+        roles are rows in the same panel on the right (no duplicate student
+        card, no orphan disclosure). Solid soft-blue so the band reads as
+        "act here," not a washed-out afterthought.
       */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
         <div className="min-w-0 max-w-xl md:self-center">
@@ -193,59 +233,18 @@ export async function HomeAccountPitch() {
           </div>
         </div>
 
-        <div className="min-w-0 w-full max-w-md md:max-w-none md:self-center">
-          <div className="rounded-2xl border border-line bg-surface p-5">
-            <p className="text-sm font-bold text-foreground">
-              Also create an account as
-            </p>
-            <ul className="mt-3 divide-y divide-line border-y border-line">
-              <li>
-                <Link
-                  href="/signup?role=parent"
-                  className="group flex items-start justify-between gap-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
-                      Parent
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      Link your child’s account, answer RSVPs, and finish
-                      organizer registration from one desk.
-                    </p>
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className="nudge-x shrink-0 text-lg font-bold text-brand-red"
-                  >
-                    →
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/signup?role=coach"
-                  className="group flex items-start justify-between gap-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-foreground group-hover:text-brand-red">
-                      Coach or organizer
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      Start a club, invite students with a join code, and publish
-                      your own tournaments next to the indexed feeds.
-                    </p>
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className="nudge-x shrink-0 text-lg font-bold text-brand-red"
-                  >
-                    →
-                  </span>
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <AccountPitchPanel heading="Also create an account as">
+          <AccountPitchRow
+            href="/signup?role=parent"
+            label="Parent"
+            description="Link your child’s account, answer RSVPs, and finish organizer registration from one desk."
+          />
+          <AccountPitchRow
+            href="/signup?role=coach"
+            label="Coach or organizer"
+            description="Start a club, invite students with a join code, and publish your own tournaments next to public listings."
+          />
+        </AccountPitchPanel>
       </div>
     </section>
   );
