@@ -24,6 +24,27 @@ export function PathwayStatusPanel({
 }) {
   const relatedList = related ?? [];
 
+  // No pathway and no curated graph: three quiet lines, not a big empty card.
+  if (status === "none" && unlocks.length === 0) {
+    return (
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+          What winning here unlocks
+        </h2>
+        <p className="mt-2 text-sm text-muted">
+          {summary ??
+            "No qualification pathway in our data. Most open and club events are entry-only — check the organizer site if you expected a qualifier."}
+        </p>
+        <Link
+          href="/pathways"
+          className="mt-2 inline-block text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red"
+        >
+          Explore qualification pathways
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6">
       <h2 className="text-lead font-semibold text-foreground">

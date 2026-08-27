@@ -22,7 +22,9 @@ describe("organizer event workspace", () => {
     expect(edit).toContain('tab="listing"');
     expect(eventPage).toContain("Manage event");
     expect(eventPage).not.toContain("Manage entrants");
-    expect(eventPage).toContain("EventPulseStrip");
+    // The pulse lives on the manage page; the public page shows the same
+    // attendee next step to hosts and visitors alike.
+    expect(eventPage).not.toContain("EventPulseStrip");
     expect(read("components/EventPulseStrip.tsx")).toContain("StatCluster");
     expect(manage).not.toContain("OrgSubnavBar");
     expect(edit).not.toContain("OrgSubnavBar");

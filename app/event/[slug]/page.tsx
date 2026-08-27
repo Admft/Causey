@@ -27,6 +27,7 @@ import { CompetitionComments } from "@/components/CompetitionComments";
 import { listCompetitionComments } from "@/lib/data/competition-comments";
 import { isCompetitionEnded } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
+import { isCurrentUserPlatformAdmin } from "@/lib/auth/platform-admin";
 import {
   discoveryCategory,
   formatCompetitionFacetLabel,
@@ -159,6 +160,7 @@ export default async function EventPage({ params }: Params) {
   let initialScore: number | null = null;
   let canManage = false;
   let viewerOrgMatch = false;
+  let viewerIsPlatformAdmin = false;
   let rsvpTargets: {
     profileId: string;
     label: string;
@@ -186,6 +188,11 @@ export default async function EventPage({ params }: Params) {
         ? viewerHasOrganizationContext(user.id, competition.org_id)
         : Promise.resolve(false),
     ]);
+    // The manage RPC is also true for platform admins on any listing; only
+    // spend the extra check when org membership doesn't explain the access.
+    if (canManage && !viewerOrgMatch) {
+      viewerIsPlatformAdmin = await isCurrentUserPlatformAdmin();
+    }
     if (competition.visibility === "public") {
       coachOrgs = await getCoachOrgsWithAttendance(
         user.id,
@@ -313,7 +320,7 @@ export default async function EventPage({ params }: Params) {
           : "Organization competitions"}
       </PageBackLink>
 
-      {canManage ? (
+      {canManage && viewerOrgMatch ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-org-gold bg-org-gold-soft px-4 py-3">
           <p className="text-sm font-semibold text-org-gold-strong">
             Your organization hosts this event
@@ -330,6 +337,28 @@ export default async function EventPage({ params }: Params) {
               className="text-sm font-semibold text-muted-strong hover:text-brand-red"
             >
               Edit listing
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {canManage && !viewerOrgMatch && viewerIsPlatformAdmin ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface-soft px-4 py-3">
+          <p className="text-sm font-semibold text-muted-strong">
+            Platform admin tools
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href={`/admin/tournaments/${competition.id}/edit`}
+              className="cta-enabled inline-flex"
+            >
+              Edit tournament
+            </Link>
+            <Link
+              href="/admin/tournaments"
+              className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+            >
+              Tournament queues
             </Link>
           </div>
         </div>

@@ -110,9 +110,9 @@ function ExternalRegistrationPanelState({
           </>
         ) : (
           <p className="max-w-prose text-sm text-muted-strong">
-            Causey will keep this on the Plan
-            {forLabel ? ` for ${forLabel}` : ""}. Causey RSVP is not entry — the
-            organizer remains the source of truth for entry and payment.
+            Marked complete{forLabel ? ` for ${forLabel}` : ""} — Causey keeps
+            this on the Plan. The organizer stays the source of truth for entry
+            and payment.
           </p>
         )}
         <div className={`${embedded ? "mt-4" : "mt-3"} flex flex-wrap items-center gap-4`}>
@@ -172,9 +172,9 @@ function ExternalRegistrationPanelState({
           </>
         ) : (
           <p className="max-w-prose text-sm text-muted">
-            Causey cannot see the organizer&rsquo;s checkout. Confirm after
-            registration and payment are finished
-            {whose ? ` ${whose}` : ""}. Causey RSVP is not organizer entry.
+            Causey can&rsquo;t see the organizer&rsquo;s checkout, so confirm
+            here once registration and payment are finished
+            {whose ? ` ${whose}` : ""}.
           </p>
         )}
         <div className={`${embedded ? "mt-4" : "mt-4"} flex flex-wrap items-center gap-3`}>
@@ -242,8 +242,9 @@ function ExternalRegistrationPanelState({
         <span aria-hidden="true">↗</span>
       </a>
       <p className="mt-2 max-w-prose text-2xs text-muted">
-        Registration and payment happen on the organizer&rsquo;s site, never on
-        Causey. Causey RSVP only tells the club who is coming.
+        {!embedded
+          ? "Registration and payment happen on the organizer’s site, never on Causey. Causey RSVP only tells the club who is coming. "
+          : ""}
         {!signedIn ? (
           <>
             {" "}

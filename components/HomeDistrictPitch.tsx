@@ -1,13 +1,17 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
 
 /**
- * Organizer band under discovery. Not two stamped cards: the club season is a
- * printed scoresheet (athletic, self-serve); the district is a nested office
- * panel in the calm blue wash (assisted, not instant). Search owns the page
- * CTA, so these paths stay outline + text. Unfinished district work lives on
- * /districts.
+ * Organizer band under discovery. Each buyer gets a physical object, not a
+ * feature list. The club season is a printed scoresheet: red margin rule
+ * down the number column, a stamped field label per step, fine-print
+ * colophon (athletic, self-serve). The district is an office report in the
+ * calm blue wash: aggregate stamp on the header, a schematic calendar of
+ * school and district tournaments (assisted, not instant). Search owns the
+ * page CTA, so these paths stay outline + text. Unfinished district work
+ * lives on /districts.
  */
 const CLUB_SEASON = [
   {
@@ -32,6 +36,18 @@ const CLUB_SEASON = [
   },
 ];
 
+/**
+ * Schematic office-calendar shape for the district report: a weekday row and
+ * three weeks. Hollow squares are school tournaments on their own days; the
+ * full-width bar is one district-wide event across every connected school.
+ * Illustrative by construction — no dates, no school names, nothing to
+ * mistake for a real listing.
+ */
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const SCHEMATIC_WEEKS = 3;
+const SCHOOL_MARK_DAYS = new Set([2, 11, 16]);
+const DISTRICT_WEEK_STARTS_AT = 14;
+
 export function HomeDistrictPitch() {
   return (
     <section
@@ -55,35 +71,44 @@ export function HomeDistrictPitch() {
               going, take attendance, record how they finished.
             </p>
 
-            <ol
-              aria-label="Club season"
-              className="mt-8 border-t-2 border-foreground"
-            >
-              {CLUB_SEASON.map((step, index) => (
-                <li
-                  key={step.title}
-                  className="grid grid-cols-[3.25rem_minmax(0,1fr)] items-start gap-x-4 border-b border-line py-4 last:border-b-2 last:border-foreground sm:grid-cols-[3.5rem_minmax(0,1fr)_7.5rem]"
-                >
-                  <span className="font-display text-2xl tabular-nums leading-none text-brand-red">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-lead font-bold text-foreground">
-                      {step.title}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">{step.description}</p>
-                  </div>
-                  <p className="hidden pt-1 text-right text-xs font-bold tracking-wide text-muted-strong sm:block">
-                    {step.mark}
-                  </p>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-3 text-xs text-muted">
-              Causey is not pairings, dues, or a public club directory.
-            </p>
+            <div className="mt-8 overflow-hidden rounded-3xl border border-line bg-surface shadow-[var(--shadow-card)]">
+              <div className="flex items-center justify-between gap-4 border-b border-line px-6 py-4 sm:px-8">
+                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-brand-red">
+                  Club season
+                </p>
+                <p className="text-2xs text-muted">Kept by the coach</p>
+              </div>
+              <ol aria-label="Club season">
+                {CLUB_SEASON.map((step, index) => (
+                  <li
+                    key={step.title}
+                    className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 border-b border-line px-6 py-4 last:border-b-0 sm:grid-cols-[3rem_minmax(0,1fr)] sm:px-8 sm:py-5"
+                  >
+                    <span className="border-r border-brand-red/40 pr-3 font-display text-2xl tabular-nums leading-none text-brand-red">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                        <p className="text-lead font-bold text-foreground">
+                          {step.title}
+                        </p>
+                        <p className="rounded-xl border border-line bg-surface-soft px-2.5 py-1 text-2xs font-bold uppercase tracking-[0.1em] text-muted-strong">
+                          {step.mark}
+                        </p>
+                      </div>
+                      <p className="mt-1 max-w-md text-sm text-muted">
+                        {step.description}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <p className="border-t border-line px-6 py-4 text-xs text-muted sm:px-8">
+                Causey is not pairings, dues, or a public club directory.
+              </p>
+            </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-6 flex flex-wrap items-center gap-4">
               <Link href="/clubs" className="cta-outline inline-flex">
                 See the club workspace
               </Link>
@@ -98,7 +123,7 @@ export function HomeDistrictPitch() {
         </ScrollReveal>
 
         <ScrollReveal className="lg:col-span-5 lg:mt-20" delay={70}>
-          <article className="rounded-3xl bg-brand-blue-soft px-5 py-6 sm:px-7 sm:py-8">
+          <article className="rounded-3xl border border-brand-blue/30 bg-brand-blue-soft px-5 py-6 sm:px-7 sm:py-8">
             <p className="text-sm font-semibold text-brand-blue-strong">
               School districts
             </p>
@@ -113,32 +138,83 @@ export function HomeDistrictPitch() {
               district and its participating schools for an assisted chess pilot.
             </p>
 
-            <div className="mt-6 border border-brand-blue/40 bg-white p-4">
-              <p className="text-2xs font-semibold tracking-wide text-brand-blue-strong">
-                District office
-              </p>
-              <p className="mt-2 text-sm font-bold text-foreground">
+            <div className="mt-6 rounded-2xl border border-brand-blue/40 bg-white p-5 shadow-[var(--shadow-card)]">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line pb-3">
+                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-brand-blue-strong">
+                  District office
+                </p>
+                <p className="rounded-xl border border-brand-blue/40 bg-brand-blue-soft/60 px-2.5 py-1 text-2xs font-bold uppercase tracking-[0.1em] text-brand-blue-strong">
+                  Aggregate totals only
+                </p>
+              </div>
+              <p className="mt-3 text-sm font-bold text-foreground">
                 School-level totals. A calendar of school and district
                 tournaments. Not a copy of any student’s browsing.
               </p>
-              <div className="mt-4 grid grid-cols-2 gap-px bg-line">
-                <div className="bg-white p-3">
-                  <p className="text-sm font-bold text-foreground">
-                    School tournament
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    Coach runs the roster and the day.
-                  </p>
-                </div>
-                <div className="bg-white p-3">
-                  <p className="text-sm font-bold text-foreground">
-                    District-wide
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    One event, every connected school.
-                  </p>
+
+              <div
+                aria-hidden="true"
+                className="mt-4 overflow-hidden rounded-xl border border-line"
+              >
+                <div className="grid grid-cols-7 gap-px bg-line">
+                  {WEEKDAYS.map((day) => (
+                    <p
+                      key={day}
+                      className="bg-white py-1 text-center text-2xs font-semibold text-muted"
+                    >
+                      {day}
+                    </p>
+                  ))}
+                  {Array.from(
+                    { length: SCHEMATIC_WEEKS * WEEKDAYS.length },
+                    (_, day) => (
+                      <Fragment key={day}>
+                        {day === DISTRICT_WEEK_STARTS_AT ? (
+                          <div className="col-span-7 bg-white px-1.5 py-1">
+                            <div className="h-1.5 rounded-sm bg-brand-blue-strong" />
+                          </div>
+                        ) : null}
+                        <div className="flex h-7 items-center justify-center bg-white">
+                          {SCHOOL_MARK_DAYS.has(day) ? (
+                            <span className="h-2.5 w-2.5 rounded-sm border-2 border-brand-blue-strong" />
+                          ) : null}
+                        </div>
+                      </Fragment>
+                    )
+                  )}
                 </div>
               </div>
+
+              <ul className="mt-4 space-y-3 border-t border-line pt-4">
+                <li className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-sm border-2 border-brand-blue-strong"
+                  />
+                  <p className="text-sm">
+                    <span className="font-bold text-foreground">
+                      School tournament.
+                    </span>{" "}
+                    <span className="text-muted">
+                      Coach runs the roster and the day.
+                    </span>
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 h-1.5 w-5 shrink-0 rounded-sm bg-brand-blue-strong"
+                  />
+                  <p className="text-sm">
+                    <span className="font-bold text-foreground">
+                      District-wide.
+                    </span>{" "}
+                    <span className="text-muted">
+                      One event, every connected school.
+                    </span>
+                  </p>
+                </li>
+              </ul>
             </div>
 
             <p className="mt-5 text-sm text-muted">

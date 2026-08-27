@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
@@ -125,6 +125,7 @@ function DifficultyRatingControl({
   returnPath,
 }: DifficultyRatingProps) {
   const router = useRouter();
+  const labelId = useId();
   const [score, setScore] = useState<number | null>(initialScore);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,20 +175,28 @@ function DifficultyRatingControl({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-semibold text-muted-strong">
+      <p
+        id={labelId}
+        className="text-xs font-semibold text-muted-strong"
+      >
         Difficulty (1 easy – 10 hard)
       </p>
-      <div className="grid w-full grid-cols-5 gap-1">
+      <div
+        role="group"
+        aria-labelledby={labelId}
+        className="grid w-full grid-cols-10 overflow-hidden rounded-xl border border-line bg-white"
+      >
         {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
           <button
             key={n}
             type="button"
             disabled={pending}
+            aria-pressed={score === n}
             onClick={() => rate(n)}
-            className={`min-h-8 rounded-xl border text-xs font-semibold transition-colors disabled:opacity-60 ${
+            className={`h-8 border-l border-line text-2xs font-semibold transition-colors first:border-l-0 disabled:opacity-60 ${
               score === n
-                ? "border-brand-red/40 bg-accent-soft text-brand-red"
-                : "border-line bg-white text-muted-strong hover:border-brand-red/30 hover:text-foreground"
+                ? "bg-accent-soft text-brand-red"
+                : "text-muted-strong hover:bg-surface-soft hover:text-foreground"
             }`}
           >
             {n}
