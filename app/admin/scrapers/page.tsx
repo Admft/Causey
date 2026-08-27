@@ -11,6 +11,7 @@ import {
   getAdminScrapeRuns,
 } from "@/lib/data/admin";
 import { getGitHubIngestionConfig } from "@/lib/github-ingestion";
+import { sourceNeedsOperationalAttention } from "@/lib/ingestion-sources";
 
 export const metadata: Metadata = {
   title: "Admin scrapers",
@@ -45,11 +46,8 @@ export default async function AdminScrapersPage() {
     runResult.unavailable || !lastRun ? null : lastRun.rows_upserted;
   const issueCount = health.unavailable
     ? null
-    : health.sources.filter(
-        (row) =>
-          row.health.state === "failing" ||
-          row.health.state === "warning" ||
-          row.health.state === "blocked"
+    : health.sources.filter((row) =>
+        sourceNeedsOperationalAttention(row.source, row.health)
       ).length;
 
   const healthCounts: Record<string, number> = {
@@ -117,7 +115,7 @@ export default async function AdminScrapersPage() {
               href: "/admin/scrapers",
             },
             {
-              label: "Sources with issues",
+              label: "Runnable sources needing attention",
               value: issueCount,
               href: "/admin/scrapers#source-health",
             },

@@ -19,6 +19,7 @@ import {
   assertSourceAutomationAllowed,
   evaluateSourceBatchHealth,
 } from "../lib/ingestion-sources";
+import { recordSuccessfulNoopScrapeRun } from "./scrape-run";
 
 export async function runCategorySourceScraper(options: {
   label: string;
@@ -57,6 +58,16 @@ export async function runCategorySourceScraper(options: {
       console.warn(`${options.label} source-health alert: ${health.message}`);
       console.log(
         `${options.label} has no complete, year-specific cycle to stage; leaving existing data unchanged.`
+      );
+      await recordSuccessfulNoopScrapeRun(
+        getServiceRoleClient(),
+        options.source,
+        {
+          listings: listingUrls,
+          parsed: 0,
+          category: null,
+          outcome: "no_complete_cycle",
+        }
       );
       return;
     }

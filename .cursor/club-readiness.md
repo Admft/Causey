@@ -31,6 +31,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Homepage hero fills the remaining viewport and a cue scrolls to what Causey indexes — 2026-08-26
 - [x] Event manage workspace: pulse + People/Listing + cover re-upload on edit — 2026-08-26
 - [x] Public `/clubs` and `/districts` pitches include a compact “All competition types” back control to the homepage chooser — 2026-08-26
+- [x] Event travel control says “Bring your roster,” uses one org chooser, and excludes rosterless district offices — 2026-08-26
 - [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Create a club account — 2026-08-24
 - [x] Season trophy board on overview (recorded places from Reports data) — 2026-08-24
 - [x] Mid-season overview no longer says “Create your first competition” — 2026-08-24
@@ -71,7 +72,7 @@ Persona: paid chess club / team owner, first-time coach. Source only (no live UI
 - Club owner · practice nights · meeting_note string only · **P1 · L** (later / out unless asked)
 
 ### P2
-- Event page coach panel title “Take your organization” (`OrgAttendancePanel`)
+- Event page coach panel title “Take your organization” (`OrgAttendancePanel`) — **shipped 2026-08-26** as roster-first copy and a single chooser; districts cannot be marked as traveling
 - Settings type helper cites “district hierarchy”; H1 “Organization controls”
 - Roster history eyebrow always “Club record” (teams included)
 - Result award placeholder “Broke to elims” (debate language on chess manage)

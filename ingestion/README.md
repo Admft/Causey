@@ -73,7 +73,6 @@ npm run scrape:purple-comet     # Official Purple Comet online math contest wind
 npm run scrape:uil-music-marching # Official UIL state open-class marching band dates
 npm run scrape:txsef            # Official Texas state science-fair dates
 npm run scrape:discovery        # Runnable non-chess adapters in sequence
-SCRAPE_INCLUDE_BLOCKED=1 npm run scrape:discovery # also re-check ordinary VEX access
 npm run scrape:all              # All six chess sources in sequence
 
 SCRAPE_UPSERT_ONLY=1 npm run scrape:tla   # re-upsert staged JSON
@@ -287,16 +286,17 @@ the twice-weekly cadence, and use `SCRAPE_MAX_EVENTS` for local checks. Do not
 increase request concurrency or bypass access controls. A blocked or changed
 page should produce no fabricated fixture or event.
 
-## Manual automation pending production release approval
+## GitHub Actions automation
 
 **Primary:** `.github/workflows/ingest.yml`
 
-- Schedule: disabled on `dev`. GitHub schedules execute from the default branch,
-  so cron must not be enabled until the corrected workflow receives a separate
-  production release approval.
+- Schedule: Monday and Thursday at 11:00 UTC. GitHub loads schedules from the
+  default branch (`main`), while the released workflow explicitly checks out
+  `dev` before running ingestion.
 - Runs `npm run scrape:all && npm run scrape:discovery`; the discovery runner
   skips Tabroom pending written NSDA permission and skips VEX while ordinary
-  public requests return HTTP 403
+  public requests return HTTP 403. DOE National Science Bowl is also skipped
+  while ordinary public access remains blocked.
 - Manual: Actions → **Ingest tournaments** on `dev` → choose one permitted
   source or all
 - Tabroom is intentionally absent from Actions/admin/source-filter choices
@@ -330,8 +330,8 @@ docker compose -f docker-compose.ingest.yml build
 docker compose -f docker-compose.ingest.yml run --rm ingest
 ```
 
-Do not add host cron while GitHub scheduling is disabled for release review.
-When production scheduling is approved, use only one scheduler per database.
+Use only one scheduler per database. Disable the GitHub schedule before adding
+a host cron.
 
 ## US Chess (`scrape-tla.ts`)
 

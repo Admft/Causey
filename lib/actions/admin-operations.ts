@@ -189,7 +189,7 @@ async function dispatchIngestionWorkflow(input: {
         response.status === 401 || response.status === 403
           ? "GitHub rejected the dispatch token. Confirm it has Actions write access."
           : response.status === 404
-            ? "The ingestion workflow or configured repository could not be found."
+            ? "GitHub could not dispatch this request. The workflow may be disabled, missing on the configured ref, or inaccessible to the token."
             : "GitHub Actions did not accept the scraper request.",
     };
   }
@@ -204,6 +204,7 @@ export async function adminRunScraper(input: {
   ActionResult<{
     sources: AdminScraperSource[];
     workflowUrl: string;
+    auditWarning?: string;
   }>
 > {
   const admin = await getPlatformAdminUser();
@@ -237,12 +238,22 @@ export async function adminRunScraper(input: {
   if (!dispatched.ok) {
     return dispatched;
   }
+  let auditWarning: string | undefined;
   for (const source of sources) {
-    await supabase.rpc("record_admin_scraper_dispatch", {
+    const { error } = await supabase.rpc("record_admin_scraper_dispatch", {
       p_source: source,
       p_repository: repository,
       p_ref: ref,
     });
+    if (error) {
+      console.error("Admin scraper dispatch audit failed:", {
+        source,
+        code: error.code,
+        message: error.message,
+      });
+      auditWarning =
+        "GitHub accepted the scraper request, but Causey could not save its admin audit record.";
+    }
   }
 
   revalidatePath("/admin/scrapers");
@@ -251,5 +262,6 @@ export async function adminRunScraper(input: {
     ok: true,
     sources,
     workflowUrl,
+    ...(auditWarning ? { auditWarning } : {}),
   };
 }

@@ -94,6 +94,16 @@ export function canCreateTournament(
   return isOrgCoach(org, membership, profile.id);
 }
 
+/**
+ * District offices coordinate through connected schools and do not own a
+ * student roster. Only roster-bearing organizations can travel to an event.
+ */
+export function canMarkOrganizationAttending(
+  org: Pick<Organization, "type">
+): boolean {
+  return org.type !== "district";
+}
+
 /** A viewer may RSVP for themselves or for an actively linked child. */
 export function canRsvpFor(
   viewerId: string,

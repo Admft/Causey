@@ -6,6 +6,7 @@ import {
   INGESTION_SOURCES,
   evaluateSourceOperationalHealth,
   isCompetitionSourceFilter,
+  sourceNeedsOperationalAttention,
   type IngestionSource,
   type SourceHealth,
 } from "@/lib/ingestion-sources";
@@ -404,14 +405,14 @@ export async function getAdminOpsStats(
     const health = runsUnavailable
       ? null
       : INGESTION_SOURCES.filter((source) => source.competitionSource).map(
-          (source) => evaluateSourceOperationalHealth(source, runs)
+          (source) => ({
+            source,
+            health: evaluateSourceOperationalHealth(source, runs),
+          })
         );
     const issueCount = health
-      ? health.filter(
-          (row) =>
-            row.state === "failing" ||
-            row.state === "warning" ||
-            row.state === "blocked"
+      ? health.filter(({ source, health: sourceHealth }) =>
+          sourceNeedsOperationalAttention(source, sourceHealth)
         ).length
       : null;
     ingestion = {

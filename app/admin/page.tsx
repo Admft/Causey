@@ -322,7 +322,7 @@ export default async function AdminOverviewPage() {
                     href: "/admin/scrapers",
                   },
                   {
-                    label: "Sources with issues",
+                    label: "Runnable sources needing attention",
                     value: stats.ingestion.issueCount,
                     href: "/admin/scrapers",
                   },

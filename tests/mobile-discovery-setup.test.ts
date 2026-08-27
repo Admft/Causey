@@ -18,22 +18,26 @@ describe("mobile discovery and private district setup", () => {
     expect(districtPitch).not.toContain("Lincoln High School");
   });
 
-  it("sets club and district as different objects, not twin brochures", () => {
+  it("runs one self-playing season board with a club/district switch", () => {
     const districtsPage = read("app/districts/page.tsx");
     expect(districtPitch).toContain("Chess for a whole district, set up with you.");
     expect(districtPitch).toContain("assisted chess pilot");
     expect(districtPitch).toContain("Club season");
-    expect(districtPitch).toContain("font-display text-2xl tabular-nums");
+    expect(districtPitch).toContain("Clubs and teams");
+    expect(districtPitch).toContain("School districts");
+    expect(districtPitch).toContain("aria-pressed");
     expect(districtPitch).toContain("bg-brand-blue-soft");
-    expect(districtPitch).toContain("lg:col-span-7");
-    expect(districtPitch).toContain("lg:col-span-5");
-    expect(districtPitch).toContain("lg:mt-20");
+    expect(districtPitch).toContain("tabular-nums");
     expect(districtPitch).toContain("See the club workspace");
     expect(districtPitch).toContain("Create a club account");
     expect(districtPitch).toContain("Review the district pilot");
     expect(districtPitch).toContain("District office");
     expect(districtPitch).toContain("School tournament");
     expect(districtPitch).toContain("District-wide");
+    expect(districtPitch).not.toContain("lg:grid-cols-2");
+    expect(districtPitch).not.toContain("lg:col-span-7");
+    expect(districtPitch).not.toContain("lg:col-span-5");
+    expect(districtPitch).not.toContain("lg:mt-20");
     expect(districtPitch).not.toContain("Planned next");
     expect(districtPitch).not.toContain("Guided district setup");
     expect(districtPitch).not.toContain("BuyerColumn");

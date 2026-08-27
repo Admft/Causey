@@ -21,6 +21,7 @@ import {
   type ParticipationMode,
   type TournamentDraftData,
 } from "@/lib/schemas";
+import { canMarkOrganizationAttending } from "@/lib/org-permissions";
 
 /**
  * Portal reads. These deliberately bypass lib/data (the anon DataSource):
@@ -795,14 +796,20 @@ export async function getClubGoing(
 }
 
 export type CoachOrgAttendance = {
-  org: { id: string; slug: string; name: string };
+  org: {
+    id: string;
+    slug: string;
+    name: string;
+    type: Exclude<Organization["type"], "district">;
+  };
   attending: boolean;
 };
 
 /**
- * For the event page: orgs the viewer coaches, with whether each is marked
- * as attending this competition. Excludes the hosting org (it doesn't
- * "attend" its own event).
+ * For the event page: roster-bearing orgs the viewer coaches, with whether
+ * each is marked as attending this competition. Excludes districts, which
+ * coordinate through connected schools, and the host org, which doesn't
+ * "attend" its own event.
  */
 export async function getCoachOrgsWithAttendance(
   userId: string,
@@ -810,7 +817,10 @@ export async function getCoachOrgsWithAttendance(
   hostingOrgId: string | null
 ): Promise<CoachOrgAttendance[]> {
   const coached = (await getMyOrgs(userId)).filter(
-    (row) => row.isCoach && row.org.id !== hostingOrgId
+    (row) =>
+      row.isCoach &&
+      row.org.id !== hostingOrgId &&
+      canMarkOrganizationAttending(row.org)
   );
   if (!coached.length) return [];
 
@@ -826,7 +836,12 @@ export async function getCoachOrgsWithAttendance(
   const attending = new Set((data ?? []).map((row) => row.org_id as string));
 
   return coached.map(({ org }) => ({
-    org: { id: org.id, slug: org.slug, name: org.name },
+    org: {
+      id: org.id,
+      slug: org.slug,
+      name: org.name,
+      type: org.type as Exclude<Organization["type"], "district">,
+    },
     attending: attending.has(org.id),
   }));
 }

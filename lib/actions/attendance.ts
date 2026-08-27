@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 import { actionErrorMessage } from "@/lib/actions/errors";
+import { canMarkOrganizationAttending } from "@/lib/org-permissions";
 
 /**
  * Mark (or unmark) one of the coach's orgs as attending a public event.
@@ -21,6 +22,24 @@ export async function setOrgAttendance(input: {
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
+  const { data: organization, error: organizationError } = await supabase
+    .from("organizations")
+    .select("type")
+    .eq("id", input.orgId)
+    .maybeSingle();
+  if (organizationError || !organization) {
+    return {
+      ok: false,
+      error: "This organization is unavailable or you cannot manage it.",
+    };
+  }
+  if (!canMarkOrganizationAttending(organization)) {
+    return {
+      ok: false,
+      error:
+        "District offices do not have student rosters. Mark a connected school as going instead.",
+    };
+  }
 
   if (input.attending) {
     const { error } = await supabase.from("org_competition_attendance").upsert(

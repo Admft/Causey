@@ -1,245 +1,640 @@
+"use client";
+
 import Link from "next/link";
-import { Fragment } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
 
 /**
- * Organizer band under discovery. Each buyer gets a physical object, not a
- * feature list. The club season is a printed scoresheet: red margin rule
- * down the number column, a stamped field label per step, fine-print
- * colophon (athletic, self-serve). The district is an office report in the
- * calm blue wash: aggregate stamp on the header, a schematic calendar of
- * school and district tournaments (assisted, not instant). Search owns the
- * page CTA, so these paths stay outline + text. Unfinished district work
- * lives on /districts.
+ * Organizer band under discovery: ONE board that demonstrates the product
+ * instead of two brochures describing it. A Club/District switch on top
+ * re-runs the board; on first scroll entry the season path draws itself and
+ * the board auto-plays the four steps once, resting on the finished season.
+ * The preview pane is an aria-hidden wireframe labeled with real product
+ * vocabulary (join link, club is going, season CSV, aggregate totals) — no
+ * names, dates, or counts, so there is nothing to mistake for data. Any
+ * interaction stops auto-play; reduced motion gets the instant final state.
  */
-const CLUB_SEASON = [
+
+type Mode = "club" | "district";
+
+type SeasonStep = {
+  title: string;
+  description: string;
+  /** Product-vocabulary caption over the wireframe sketch. */
+  mark: string;
+};
+
+const CLUB_STEPS: SeasonStep[] = [
   {
     title: "Roster",
-    mark: "Join link",
     description: "A join link or a CSV. Groups for invites and the day-of list.",
+    mark: "Join link",
   },
   {
     title: "Travel or host",
-    mark: "Club is going",
     description: "Mark the club as going to a public event, or publish one here.",
+    mark: "Club is going",
   },
   {
     title: "Attendance",
-    mark: "Day of",
     description: "Who showed up, including travel events the club attended.",
+    mark: "Day of",
   },
   {
     title: "Results",
-    mark: "Season CSV",
     description: "Place or award. Export when a board asks.",
+    mark: "Season CSV",
   },
 ];
 
-/**
- * Schematic office-calendar shape for the district report: a weekday row and
- * three weeks. Hollow squares are school tournaments on their own days; the
- * full-width bar is one district-wide event across every connected school.
- * Illustrative by construction — no dates, no school names, nothing to
- * mistake for a real listing.
- */
-const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const SCHEMATIC_WEEKS = 3;
-const SCHOOL_MARK_DAYS = new Set([2, 11, 16]);
-const DISTRICT_WEEK_STARTS_AT = 14;
+const DISTRICT_STEPS: SeasonStep[] = [
+  {
+    title: "Provision",
+    description: "The district and its schools are set up with you, one at a time.",
+    mark: "Set up with you",
+  },
+  {
+    title: "School tournaments",
+    description: "Coaches run the roster and the day at each school.",
+    mark: "School tournament",
+  },
+  {
+    title: "District-wide",
+    description: "One event, every connected school.",
+    mark: "District-wide",
+  },
+  {
+    title: "District office",
+    description: "School-level totals. Never a copy of any student’s browsing.",
+    mark: "Aggregate totals only",
+  },
+];
+
+const MODE_COPY: Record<
+  Mode,
+  { heading: string; intro: string; finePrint: string; caption: string }
+> = {
+  club: {
+    heading: "Run a season from roster to results.",
+    intro:
+      "Create a club or team yourself. Invite the roster, mark who is going, take attendance, record how they finished.",
+    finePrint: "Causey is not pairings, dues, or a public club directory.",
+    caption: "Club season",
+  },
+  district: {
+    heading: "Chess for a whole district, set up with you.",
+    intro:
+      "There is no instant district signup. Causey provisions the district and its participating schools for an assisted chess pilot.",
+    finePrint:
+      "District staff, school staff, coaches, parents, and students each see the work meant for them.",
+    caption: "District pilot",
+  },
+};
+
+function Bar({ className }: { className: string }) {
+  return <span className={`block rounded-sm bg-line ${className}`} />;
+}
+
+function CheckMark() {
+  return (
+    <svg
+      viewBox="0 0 10 8"
+      className="h-2.5 w-3 text-white"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 4l2.5 2.5L9 1" />
+    </svg>
+  );
+}
+
+function Avatar() {
+  return (
+    <span className="h-7 w-7 shrink-0 rounded-full border border-line bg-surface-soft" />
+  );
+}
+
+function DateChip({ tone }: { tone: "red" | "blue" }) {
+  return (
+    <span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-line bg-surface-soft">
+      <span
+        className={`h-1 w-4 rounded-sm ${
+          tone === "red" ? "bg-brand-red/60" : "bg-brand-blue-strong/60"
+        }`}
+      />
+      <span className="h-2 w-5 rounded-sm bg-foreground/20" />
+    </span>
+  );
+}
+
+function CheckBox({
+  checked,
+  tone,
+}: {
+  checked: boolean;
+  tone: "red" | "blue";
+}) {
+  return (
+    <span
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+        checked
+          ? tone === "red"
+            ? "border-brand-red bg-brand-red"
+            : "border-brand-blue-strong bg-brand-blue-strong"
+          : "border-line bg-white"
+      }`}
+    >
+      {checked ? <CheckMark /> : null}
+    </span>
+  );
+}
+
+function AppCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex flex-1 flex-col rounded-2xl border border-line bg-white p-4 ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function WindowBar() {
+  return (
+    <div className="flex items-center gap-3 border-b border-line pb-3">
+      <Bar className="h-2.5 w-24" />
+      <span className="ml-auto h-6 w-14 rounded-lg border border-line bg-surface-soft" />
+    </div>
+  );
+}
+
+function ClubSketch({ step }: { step: number }) {
+  if (step === 0) {
+    return (
+      <AppCard>
+        <WindowBar />
+        <div className="mt-3 flex items-center gap-3 rounded-xl border border-line bg-surface-soft/70 px-3.5 py-3">
+          <Bar className="h-2 w-32" />
+          <span className="ml-auto rounded-lg border border-line bg-white px-2.5 py-1 text-2xs font-bold text-muted-strong">
+            Copy
+          </span>
+        </div>
+        <div className="mt-3 flex-1 space-y-2.5">
+          {["w-24", "w-28", "w-20", "w-24"].map((width, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <Avatar />
+              <Bar className={`h-2 ${width}`} />
+              <Bar className="ml-auto h-2 w-10" />
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-center rounded-xl border border-dashed border-line py-2.5">
+          <Bar className="h-2 w-16" />
+        </div>
+      </AppCard>
+    );
+  }
+  if (step === 1) {
+    return (
+      <div className="flex flex-1 flex-col gap-3">
+        <AppCard>
+          <div className="flex items-center gap-3">
+            <DateChip tone="red" />
+            <div className="min-w-0 space-y-1.5">
+              <Bar className="h-2.5 w-36" />
+              <Bar className="h-2 w-24" />
+            </div>
+            <span className="ml-auto rounded-xl border border-brand-red/40 bg-accent-soft px-2.5 py-1 text-2xs font-bold text-brand-red">
+              Club is going
+            </span>
+          </div>
+          <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
+            <DateChip tone="red" />
+            <div className="min-w-0 space-y-1.5">
+              <Bar className="h-2.5 w-28" />
+              <Bar className="h-2 w-16" />
+            </div>
+          </div>
+        </AppCard>
+        <div className="flex items-center justify-center rounded-xl border border-dashed border-line py-3 text-2xs font-bold text-muted-strong">
+          Host a tournament
+        </div>
+      </div>
+    );
+  }
+  if (step === 2) {
+    return (
+      <AppCard>
+        <WindowBar />
+        <div className="mt-3 flex-1 space-y-2.5">
+          {[true, true, true, true, false].map((checked, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2.5"
+            >
+              <Avatar />
+              <Bar className={`h-2 ${index % 2 === 0 ? "w-24" : "w-20"}`} />
+              <span className="ml-auto">
+                <CheckBox checked={checked} tone="red" />
+              </span>
+            </div>
+          ))}
+        </div>
+      </AppCard>
+    );
+  }
+  return (
+    <AppCard>
+      <div className="flex items-center gap-3 border-b border-line pb-3">
+        <Bar className="h-2.5 w-24" />
+        <span className="ml-auto rounded-lg border border-line px-2.5 py-1 text-2xs font-bold text-muted-strong">
+          Season CSV
+        </span>
+      </div>
+      <div className="mt-3 flex-1 space-y-2.5">
+        {["w-24", "w-20", "w-28", "w-16"].map((width, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2.5"
+          >
+            <Avatar />
+            <Bar className={`h-2 ${width}`} />
+            <span className="ml-auto flex h-6 w-12 items-center justify-center rounded-md border border-line bg-surface-soft text-2xs font-bold text-muted">
+              —
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-2xs text-muted">Blanks mean not recorded.</p>
+    </AppCard>
+  );
+}
+
+function DistrictSketch({ step }: { step: number }) {
+  if (step === 0) {
+    return (
+      <AppCard>
+        <WindowBar />
+        <div className="mt-3 flex-1 space-y-2.5">
+          <div className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2.5">
+            <CheckBox checked tone="blue" />
+            <span className="text-2xs font-bold text-muted-strong">
+              District
+            </span>
+            <Bar className="ml-auto h-2 w-16" />
+          </div>
+          {[0, 1, 2].map((index) => (
+            <div
+              key={index}
+              className="ml-6 flex items-center gap-3 rounded-xl border border-line px-3.5 py-2.5"
+            >
+              <CheckBox checked tone="blue" />
+              <span className="text-2xs font-bold text-muted-strong">
+                School
+              </span>
+              <Bar className="ml-auto h-2 w-10" />
+            </div>
+          ))}
+          <div className="ml-6 flex items-center gap-3 rounded-xl border border-dashed border-line px-3.5 py-2.5">
+            <CheckBox checked={false} tone="blue" />
+            <span className="text-2xs font-bold text-muted">School</span>
+            <Bar className="ml-auto h-2 w-10" />
+          </div>
+        </div>
+      </AppCard>
+    );
+  }
+  if (step === 1) {
+    return (
+      <AppCard>
+        <div className="flex items-center gap-3">
+          <DateChip tone="blue" />
+          <div className="min-w-0 space-y-1.5">
+            <Bar className="h-2.5 w-32" />
+            <Bar className="h-2 w-20" />
+          </div>
+          <span className="ml-auto rounded-xl border border-brand-blue/40 bg-brand-blue-soft px-2.5 py-1 text-2xs font-bold text-brand-blue-strong">
+            School tournament
+          </span>
+        </div>
+        <div className="mt-4 flex-1 space-y-2.5 border-t border-line pt-4">
+          {[true, true, false].map((checked, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <Avatar />
+              <Bar className={`h-2 ${index === 1 ? "w-24" : "w-20"}`} />
+              <span className="ml-auto">
+                <CheckBox checked={checked} tone="blue" />
+              </span>
+            </div>
+          ))}
+        </div>
+      </AppCard>
+    );
+  }
+  if (step === 2) {
+    return (
+      <AppCard>
+        <div className="flex items-center gap-3">
+          <DateChip tone="blue" />
+          <div className="min-w-0 space-y-1.5">
+            <Bar className="h-2.5 w-36" />
+            <Bar className="h-2 w-24" />
+          </div>
+          <span className="ml-auto rounded-xl border border-brand-blue/40 bg-brand-blue-soft px-2.5 py-1 text-2xs font-bold text-brand-blue-strong">
+            District-wide
+          </span>
+        </div>
+        <div className="mt-4 flex-1 border-t border-line pt-4">
+          <div className="grid grid-cols-5 gap-2.5">
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((dot) => (
+              <span
+                key={dot}
+                className="h-8 w-8 rounded-full border border-brand-blue/50 bg-brand-blue-soft"
+              />
+            ))}
+          </div>
+          <p className="mt-3 text-2xs font-bold text-brand-blue-strong">
+            Every connected school
+          </p>
+        </div>
+      </AppCard>
+    );
+  }
+  return (
+    <AppCard>
+      <div className="flex items-center gap-3 border-b border-line pb-3">
+        <Bar className="h-2.5 w-24" />
+        <span className="ml-auto text-2xs font-bold text-brand-blue-strong">
+          Aggregate totals only
+        </span>
+      </div>
+      <div className="mt-4 flex-1 space-y-3.5">
+        {["w-28", "w-20", "w-24", "w-16"].map((width, index) => (
+          <div key={index} className="flex items-center gap-3">
+            <Bar className="h-2 w-16" />
+            <span
+              className={`ml-auto h-3.5 rounded-sm bg-brand-blue-strong/70 ${width}`}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 border-t border-line pt-3">
+        <Bar className="h-2 w-32" />
+      </div>
+    </AppCard>
+  );
+}
 
 export function HomeDistrictPitch() {
+  const [mode, setMode] = useState<Mode>("club");
+  const [active, setActive] = useState(0);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const timersRef = useRef<number[]>([]);
+  const reducedRef = useRef(false);
+
+  const steps = mode === "club" ? CLUB_STEPS : DISTRICT_STEPS;
+  const copy = MODE_COPY[mode];
+
+  const clearTimers = () => {
+    timersRef.current.forEach((timer) => window.clearTimeout(timer));
+    timersRef.current = [];
+  };
+
+  const playThrough = (interval: number, lead: number) => {
+    steps.slice(1).forEach((_, index) => {
+      const stepIndex = index + 1;
+      timersRef.current.push(
+        window.setTimeout(() => setActive(stepIndex), lead + stepIndex * interval)
+      );
+    });
+  };
+
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    reducedRef.current = reduce;
+    if (reduce) {
+      setActive(CLUB_STEPS.length - 1);
+      return;
+    }
+    const el = boardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        playThrough(800, 400);
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      clearTimers();
+    };
+    // Auto-play runs once on first entry; steps never change identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const switchMode = (next: Mode) => {
+    if (next === mode) return;
+    clearTimers();
+    setMode(next);
+    if (reducedRef.current) {
+      setActive(DISTRICT_STEPS.length - 1);
+      return;
+    }
+    setActive(0);
+    playThrough(500, 350);
+  };
+
+  const selectStep = (index: number) => {
+    clearTimers();
+    setActive(index);
+  };
+
+  const isClub = mode === "club";
+  const accentText = isClub ? "text-brand-red" : "text-brand-blue-strong";
+  const nodeFill = isClub
+    ? "border-brand-red bg-brand-red"
+    : "border-brand-blue-strong bg-brand-blue-strong";
+
   return (
     <section
       className="home-band band-join band-join--soft scroll-mt-20 bg-surface-soft"
-      aria-labelledby="club-pitch-heading district-pitch-heading"
+      aria-label="Club and district programs"
     >
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-14 px-5 sm:px-8 lg:grid-cols-12 lg:items-start lg:gap-x-12">
-        <ScrollReveal className="lg:col-span-7">
-          <article>
-            <p className="text-sm font-semibold text-brand-red">
-              Clubs and teams
-            </p>
-            <h2
-              id="club-pitch-heading"
-              className="mt-3 max-w-[14ch] font-display text-display-lg tracking-tight text-foreground"
-            >
-              Run a season from roster to results.
-            </h2>
-            <p className="mt-4 max-w-prose text-sm text-muted">
-              Create a club or team yourself. Invite the roster, mark who is
-              going, take attendance, record how they finished.
-            </p>
-
-            <div className="mt-8 overflow-hidden rounded-3xl border border-line bg-surface shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-between gap-4 border-b border-line px-6 py-4 sm:px-8">
-                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-brand-red">
-                  Club season
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <ScrollReveal>
+          <div
+            ref={boardRef}
+            className="overflow-hidden rounded-3xl border border-line bg-surface shadow-[var(--shadow-panel-lg)]"
+          >
+            <div className="border-b border-line px-5 py-5 sm:px-8 sm:py-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div
+                  aria-label="Choose club or district"
+                  className="inline-flex rounded-xl border border-line bg-surface-soft p-1"
+                >
+                  {(["club", "district"] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => switchMode(option)}
+                      aria-pressed={mode === option}
+                      className={`rounded-lg px-3.5 py-2 text-sm font-bold transition-colors ${
+                        mode === option
+                          ? option === "club"
+                            ? "bg-brand-red text-white"
+                            : "bg-brand-blue-strong text-white"
+                          : "text-muted-strong hover:text-foreground"
+                      }`}
+                    >
+                      {option === "club" ? "Clubs and teams" : "School districts"}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-muted">
+                  {copy.caption}
                 </p>
-                <p className="text-2xs text-muted">Kept by the coach</p>
               </div>
-              <ol aria-label="Club season">
-                {CLUB_SEASON.map((step, index) => (
-                  <li
-                    key={step.title}
-                    className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 border-b border-line px-6 py-4 last:border-b-0 sm:grid-cols-[3rem_minmax(0,1fr)] sm:px-8 sm:py-5"
-                  >
-                    <span className="border-r border-brand-red/40 pr-3 font-display text-2xl tabular-nums leading-none text-brand-red">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                        <p className="text-lead font-bold text-foreground">
+              <h2 className="mt-4 max-w-[22ch] font-display text-display-lg tracking-tight text-foreground">
+                {copy.heading}
+              </h2>
+              <p className="mt-3 max-w-prose text-sm text-muted">
+                {copy.intro}
+              </p>
+            </div>
+
+            <div className="grid gap-8 px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
+              <ol
+                aria-label={copy.caption}
+                className="relative self-start"
+              >
+                {steps.map((step, index) => (
+                  <li key={step.title} className="relative">
+                    {index < steps.length - 1 ? (
+                      <>
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute -bottom-6 left-[15px] top-6 z-10 w-0.5 bg-line sm:left-[19px]"
+                        />
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none absolute -bottom-6 left-[15px] top-6 z-10 w-0.5 origin-top transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] sm:left-[19px] ${
+                            isClub ? "bg-brand-red" : "bg-brand-blue-strong"
+                          } ${index < active ? "scale-y-100" : "scale-y-0"}`}
+                        />
+                      </>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => selectStep(index)}
+                      aria-pressed={index === active}
+                      className={`grid w-full grid-cols-[1rem_minmax(0,1fr)] items-start gap-4 rounded-xl px-2 py-3 text-left transition-colors sm:px-3 ${
+                        index === active
+                          ? "bg-surface-soft"
+                          : "hover:bg-surface-soft/60"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`mt-1.5 h-3 w-3 rounded-full border-2 transition-colors duration-300 ${
+                          index <= active
+                            ? nodeFill
+                            : "border-line bg-surface"
+                        }`}
+                      />
+                      <span className="min-w-0">
+                        <span
+                          className={`text-xs font-bold tabular-nums ${
+                            index <= active ? accentText : "text-muted"
+                          }`}
+                        >
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span className="mt-0.5 block text-lead font-bold text-foreground">
                           {step.title}
-                        </p>
-                        <p className="rounded-xl border border-line bg-surface-soft px-2.5 py-1 text-2xs font-bold uppercase tracking-[0.1em] text-muted-strong">
-                          {step.mark}
-                        </p>
-                      </div>
-                      <p className="mt-1 max-w-md text-sm text-muted">
-                        {step.description}
-                      </p>
-                    </div>
+                        </span>
+                        <span className="mt-1 block text-sm text-muted">
+                          {step.description}
+                        </span>
+                      </span>
+                    </button>
                   </li>
                 ))}
               </ol>
-              <p className="border-t border-line px-6 py-4 text-xs text-muted sm:px-8">
-                Causey is not pairings, dues, or a public club directory.
-              </p>
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <Link href="/clubs" className="cta-outline inline-flex">
-                See the club workspace
-              </Link>
-              <Link
-                href="/signup?role=coach"
-                className="text-sm font-bold text-muted-strong hover:text-brand-red"
-              >
-                Create a club account
-              </Link>
-            </div>
-          </article>
-        </ScrollReveal>
-
-        <ScrollReveal className="lg:col-span-5 lg:mt-20" delay={70}>
-          <article className="rounded-3xl border border-brand-blue/30 bg-brand-blue-soft px-5 py-6 sm:px-7 sm:py-8">
-            <p className="text-sm font-semibold text-brand-blue-strong">
-              School districts
-            </p>
-            <h2
-              id="district-pitch-heading"
-              className="mt-3 max-w-[16ch] font-display text-display-sm tracking-tight text-foreground"
-            >
-              Chess for a whole district, set up with you.
-            </h2>
-            <p className="mt-3 max-w-prose text-sm text-muted">
-              There is no instant district signup. Causey provisions the
-              district and its participating schools for an assisted chess pilot.
-            </p>
-
-            <div className="mt-6 rounded-2xl border border-brand-blue/40 bg-white p-5 shadow-[var(--shadow-card)]">
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line pb-3">
-                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-brand-blue-strong">
-                  District office
-                </p>
-                <p className="rounded-xl border border-brand-blue/40 bg-brand-blue-soft/60 px-2.5 py-1 text-2xs font-bold uppercase tracking-[0.1em] text-brand-blue-strong">
-                  Aggregate totals only
-                </p>
-              </div>
-              <p className="mt-3 text-sm font-bold text-foreground">
-                School-level totals. A calendar of school and district
-                tournaments. Not a copy of any student’s browsing.
-              </p>
 
               <div
                 aria-hidden="true"
-                className="mt-4 overflow-hidden rounded-xl border border-line"
+                className={`rounded-2xl border p-4 sm:p-5 ${
+                  isClub
+                    ? "border-line bg-surface-soft/60"
+                    : "border-brand-blue/40 bg-brand-blue-soft/50"
+                }`}
               >
-                <div className="grid grid-cols-7 gap-px bg-line">
-                  {WEEKDAYS.map((day) => (
-                    <p
-                      key={day}
-                      className="bg-white py-1 text-center text-2xs font-semibold text-muted"
-                    >
-                      {day}
-                    </p>
-                  ))}
-                  {Array.from(
-                    { length: SCHEMATIC_WEEKS * WEEKDAYS.length },
-                    (_, day) => (
-                      <Fragment key={day}>
-                        {day === DISTRICT_WEEK_STARTS_AT ? (
-                          <div className="col-span-7 bg-white px-1.5 py-1">
-                            <div className="h-1.5 rounded-sm bg-brand-blue-strong" />
-                          </div>
-                        ) : null}
-                        <div className="flex h-7 items-center justify-center bg-white">
-                          {SCHOOL_MARK_DAYS.has(day) ? (
-                            <span className="h-2.5 w-2.5 rounded-sm border-2 border-brand-blue-strong" />
-                          ) : null}
-                        </div>
-                      </Fragment>
-                    )
+                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-muted">
+                  {steps[active].mark}
+                </p>
+                <div
+                  key={`${mode}-${active}`}
+                  className="animate-rise mt-3 flex min-h-[17rem] flex-col sm:min-h-[19rem]"
+                >
+                  {isClub ? (
+                    <ClubSketch step={active} />
+                  ) : (
+                    <DistrictSketch step={active} />
                   )}
                 </div>
               </div>
-
-              <ul className="mt-4 space-y-3 border-t border-line pt-4">
-                <li className="flex items-start gap-3">
-                  <span
-                    aria-hidden="true"
-                    className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-sm border-2 border-brand-blue-strong"
-                  />
-                  <p className="text-sm">
-                    <span className="font-bold text-foreground">
-                      School tournament.
-                    </span>{" "}
-                    <span className="text-muted">
-                      Coach runs the roster and the day.
-                    </span>
-                  </p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span
-                    aria-hidden="true"
-                    className="mt-2 h-1.5 w-5 shrink-0 rounded-sm bg-brand-blue-strong"
-                  />
-                  <p className="text-sm">
-                    <span className="font-bold text-foreground">
-                      District-wide.
-                    </span>{" "}
-                    <span className="text-muted">
-                      One event, every connected school.
-                    </span>
-                  </p>
-                </li>
-              </ul>
             </div>
 
-            <p className="mt-5 text-sm text-muted">
-              District staff, school staff, coaches, parents, and students each
-              see the work meant for them.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link href="/districts" className="cta-outline inline-flex">
-                Review the district pilot
-              </Link>
-              <a
-                href={FOUNDING_TEAM_MEETING_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Book a conversation with the Causey founding team in a new tab"
-                className="text-sm font-bold text-muted-strong hover:text-brand-red"
-              >
-                Talk with the founding team{" "}
-                <span aria-hidden="true" className="nudge-x">
-                  ↗
-                </span>
-              </a>
+            <div className="flex flex-col gap-4 border-t border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+              <p className="max-w-prose text-xs text-muted">
+                {copy.finePrint}
+              </p>
+              {isClub ? (
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link href="/clubs" className="cta-outline inline-flex">
+                    See the club workspace
+                  </Link>
+                  <Link
+                    href="/signup?role=coach"
+                    className="text-sm font-bold text-muted-strong hover:text-brand-red"
+                  >
+                    Create a club account
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link href="/districts" className="cta-outline inline-flex">
+                    Review the district pilot
+                  </Link>
+                  <a
+                    href={FOUNDING_TEAM_MEETING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Book a conversation with the Causey founding team in a new tab"
+                    className="text-sm font-bold text-muted-strong hover:text-brand-red"
+                  >
+                    Talk with the founding team{" "}
+                    <span aria-hidden="true" className="nudge-x">
+                      ↗
+                    </span>
+                  </a>
+                </div>
+              )}
             </div>
-          </article>
+          </div>
         </ScrollReveal>
       </div>
     </section>

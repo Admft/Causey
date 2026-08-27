@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canCreateOrg,
   canCreateTournament,
+  canMarkOrganizationAttending,
   canRsvpFor,
   isActiveMember,
   isDistrictAdmin,
@@ -116,6 +117,15 @@ describe("canCreateTournament", () => {
         { role: "student", status: "active" }
       )
     ).toBe(false);
+  });
+});
+
+describe("canMarkOrganizationAttending", () => {
+  it("allows roster-bearing organizations but not a rosterless district", () => {
+    expect(canMarkOrganizationAttending({ type: "club" })).toBe(true);
+    expect(canMarkOrganizationAttending({ type: "team" })).toBe(true);
+    expect(canMarkOrganizationAttending({ type: "school" })).toBe(true);
+    expect(canMarkOrganizationAttending({ type: "district" })).toBe(false);
   });
 });
 
