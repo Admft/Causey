@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-27 — **School-safe roster/manage composition**: roster invite → group → competitions with progressive GroupManager; manage replies by awaiting/going/can’t-go; individual invite picks demoted when groups exist; Family metadata drops club RSVP wording.
 - 2026-08-25 — **District announcement fan-out**: district overview audience chooser defaults to every connected school (posts per school + district copy, deduped in-app alerts); staff-only remains explicit; empty districts fail closed with “Add a school…”.
 - 2026-08-23 — **Consistent empty/error/success “what’s next” + nav terms**: `lib/portal-copy` + `PortalErrorState`; AuthNav/Account/Alerts/home/signup gates share Family / Plan / My organizations / Districts & schools; district activity/reports/readiness reuse one fail-closed retry pattern; roster-ready and school reports CTA to Competitions.
 - 2026-08-21 — **Parent first-child separate-device handoff clarity**: signed-in parents opening `/signup?role=student` (or join-student signup) see a session-safe gate back to Family instead of a form that would replace the parent session; empty Family mission leads with student setup; handoff/link copy names stay-signed-in, other-device/private-window, and student-email ownership.
@@ -87,8 +88,9 @@ _(none — ready for next audit tick)_
 - Student-data disclosure/privacy policy and DOB minimization decision (owner/legal)
 - For-profit packaging and school/district buyer journey (pricing/go-to-market)
 - README/product-state truth cleanup
-- Apply pending migrations through `0060` in each environment
-- Roster / manage still feel like admin tables, not school-safe tools
+- Apply pending migrations through latest (`0068`+) in each environment
+- Ops: prove email at school volume
+- Confirm whether district activity should later include school-admin readers (scoped subset)
 
 ### Tick 16 audit
 - Platform admin · organizations · verification status exists but `/admin/organizations` neither shows nor changes it · operators cannot complete the trust workflow that moderation already references · **P1 · done**

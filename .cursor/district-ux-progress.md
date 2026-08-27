@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] School-safe roster/manage composition: roster leads invite → group → competitions (groups section first when students exist without groups); GroupManager edits one group at a time; student rows show group membership; manage replies split into awaiting/going/can’t-go with mission-aware order; invite individual picks stay behind a disclosure when groups or invite-all exist; Family metadata drops leftover “club RSVP” wording — 2026-08-27
 - [x] Platform admin ops ledger, organizer event workspace, and parent competition alerts: `/admin` uses fail-closed global counts (never fake zero); event manage/edit share People/Listing plus a pulse; invites/schedule/cancel/results/announcements fan out to linked parents (`0067`) — 2026-08-26
 - [x] District announcement fan-out: district overview posts once to every connected school (plus a district-staff copy), with staff-only as an explicit choice; empty districts stay fail-closed until a school exists (`0043` operator access reused; no schema widen) — 2026-08-25
 - [x] Club-ready results + coordination: coaches record division/place/award after attendance (`0064`); roster names open club-scoped student history; Plan/Family/Reports show recorded outcomes (blank = not recorded); season reports include travel events the club marked as attending plus a club CSV; signed-in search chip “My club is going”; grade + typed credential IDs (uscf/nsda/other) on profile/roster; member-only org website/meeting note; leave-club success names the next step (`0065`) — 2026-08-24
@@ -264,7 +265,7 @@ Pick these before polish. One major end-to-end win per tick.
 - [x] Personal Account settings hub at `/account` (profile/alerts/family/orgs); role workspaces stay mission-first
 - [x] Header and org subnav distinguish district work with Schools / District staff / Reports / Settings — 2026-08-08
 - [x] District landing uses a two-column command center + multi-school readiness directory and is prioritized from `/orgs` — 2026-08-08
-- [ ] Roster / manage still feel like admin tables, not school-safe tools
+- [x] Roster / manage school-safe composition (progressive groups, status-grouped replies, group-first invites) — 2026-08-27
 
 ## Account settings backlog (Exists / Wire / Pilot / Legal)
 

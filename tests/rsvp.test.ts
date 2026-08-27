@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  attendanceReplyBucket,
   canTransition,
+  groupAttendanceByReplyStatus,
+  orderedAttendanceReplySections,
   rsvpLabel,
   summarizeAttendance,
   type RsvpStatus,
@@ -56,5 +59,41 @@ describe("summarizeAttendance", () => {
       awaiting: 0,
       total: 0,
     });
+  });
+});
+
+describe("groupAttendanceByReplyStatus", () => {
+  it("splits manage replies into school-safe buckets", () => {
+    const rows = [
+      { id: "a", status: "invited" as const },
+      { id: "b", status: "going" as const },
+      { id: "c", status: "attended" as const },
+      { id: "d", status: "not_going" as const },
+      { id: "e", status: "did_not_attend" as const },
+    ];
+    const grouped = groupAttendanceByReplyStatus(rows);
+    expect(grouped.awaiting.map((row) => row.id)).toEqual(["a"]);
+    expect(grouped.going.map((row) => row.id)).toEqual(["b", "c"]);
+    expect(grouped.notGoing.map((row) => row.id)).toEqual(["d", "e"]);
+  });
+
+  it("maps attendance outcomes into the same coach-facing buckets", () => {
+    expect(attendanceReplyBucket("attended")).toBe("going");
+    expect(attendanceReplyBucket("did_not_attend")).toBe("notGoing");
+    expect(attendanceReplyBucket("invited")).toBe("awaiting");
+  });
+});
+
+describe("orderedAttendanceReplySections", () => {
+  it("leads with awaiting replies when follow-up is the mission", () => {
+    expect(
+      orderedAttendanceReplySections({ isPast: false, needsReplies: true })
+    ).toEqual(["awaiting", "going", "notGoing"]);
+  });
+
+  it("leads with going/attendance after the event", () => {
+    expect(
+      orderedAttendanceReplySections({ isPast: true, needsReplies: false })
+    ).toEqual(["going", "awaiting", "notGoing"]);
   });
 });

@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Roster & groups",
-  description: "Manage your organization's members and groups.",
+  description: "Invite students, put them in groups, and get ready for competitions.",
 };
 
 function roleLabel(role: string) {
@@ -64,6 +64,15 @@ export default async function RosterPage({
   const staff = activeMembers.filter((row) => row.member_role !== "student");
   const emptyRoster = activeMembers.length === 0;
   const canOperate = view.canManageTournaments;
+  const needsGroups = !emptyRoster && groups.length === 0;
+  const groupNamesByStudent = new Map<string, string[]>();
+  for (const group of groups) {
+    for (const profileId of group.member_ids) {
+      const existing = groupNamesByStudent.get(profileId) ?? [];
+      existing.push(group.name);
+      groupNamesByStudent.set(profileId, existing);
+    }
+  }
 
   const mission = !canOperate
     ? {
@@ -74,41 +83,196 @@ export default async function RosterPage({
       }
     : emptyRoster
       ? {
-        title: "Add your first students",
-        description: org.join_code
-          ? "Share the join link, then come back to put students into groups for tournament invites."
-          : "Students appear here when they join. Ask an admin for a join code if you don’t have one.",
-        action: org.join_code
-          ? { href: "#add-students", label: "Copy join link" }
-          : { href: `/orgs/${org.slug}`, label: "Back to workspace" },
-      }
-      : groups.length === 0
-        ? {
-          title: "Create a group for invites",
-          description:
-            "Groups let you invite Varsity, JV, or a grade in one tap when you manage a tournament.",
-          action: { href: "#groups", label: "Create a group" },
-          secondary: org.join_code
-            ? { href: "#add-students", label: "Invite more students" }
-            : undefined,
+          title: "Add your first students",
+          description: org.join_code
+            ? "Share the join link, then come back to put students into groups for tournament invites."
+            : "Students appear here when they join. Ask an admin for a join code if you don’t have one.",
+          action: org.join_code
+            ? { href: "#add-students", label: "Copy join link" }
+            : { href: `/orgs/${org.slug}`, label: "Back to workspace" },
         }
+      : needsGroups
+        ? {
+            title: "Create a group for invites",
+            description:
+              "Groups let you invite Varsity, JV, or a grade in one tap when you manage a tournament.",
+            action: { href: "#groups", label: "Create a group" },
+            secondary: org.join_code
+              ? { href: "#add-students", label: "Invite more students" }
+              : undefined,
+          }
         : {
-          title: "Roster is ready for competitions",
-          description: `${students.length} ${
-            students.length === 1 ? "student" : "students"
-          } on the roster${
-            groups.length
-              ? ` · ${groups.length} ${groups.length === 1 ? "group" : "groups"}`
-              : ""
-          }. Open competitions to invite them.`,
-          action: {
-            href: orgCompetitionsHref(org.slug),
-            label: OPEN_COMPETITIONS_LABEL,
-          },
-          secondary: org.join_code
-            ? { href: "#add-students", label: "Invite more students" }
-            : undefined,
-        };
+            title: "Roster is ready for competitions",
+            description: `${students.length} ${
+              students.length === 1 ? "student" : "students"
+            } on the roster${
+              groups.length
+                ? ` · ${groups.length} ${groups.length === 1 ? "group" : "groups"}`
+                : ""
+            }. Open competitions to invite them.`,
+            action: {
+              href: orgCompetitionsHref(org.slug),
+              label: OPEN_COMPETITIONS_LABEL,
+            },
+            secondary: org.join_code
+              ? { href: "#add-students", label: "Invite more students" }
+              : undefined,
+          };
+
+  const addStudentsSection =
+    canOperate && org.join_code ? (
+      <section id="add-students" className="section-rule mt-10 scroll-mt-24 pt-8">
+        <h2 className="text-sm font-semibold text-foreground">Add students</h2>
+        <p className="mt-1 text-sm text-muted">
+          Share this once — students create their own accounts when they join.
+        </p>
+        <div className="mt-4">
+          <JoinCodePanel
+            orgId={org.id}
+            orgSlug={org.slug}
+            joinCode={org.join_code}
+          />
+        </div>
+      </section>
+    ) : null;
+
+  const studentsSection = (
+    <section id="students" className="section-rule mt-10 scroll-mt-24 pt-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-semibold text-foreground">Students</h2>
+        <p className="text-xs text-muted">{students.length} active</p>
+      </div>
+      {!students.length ? (
+        <p className="mt-3 text-sm text-muted">
+          {canOperate && org.join_code
+            ? "No students yet. Copy the join link above and send it to families."
+            : canOperate
+              ? view.isAdmin ? (
+                  <>
+                    No students have joined yet.{" "}
+                    <Link
+                      href={`/orgs/${org.slug}/people`}
+                      className="font-semibold text-brand-red hover:underline"
+                    >
+                      Open invites &amp; staff
+                    </Link>{" "}
+                    to create a join link or send claim invitations.
+                  </>
+                ) : (
+                  "No students have joined yet. Ask an administrator for a join link."
+                )
+              : "No students have joined yet. A coach or administrator shares the join link when it is ready."}
+        </p>
+      ) : (
+        <ul className="mt-4 divide-y divide-line border-y border-line">
+          {students.map((row) => {
+            const memberGroups = groupNamesByStudent.get(row.profile_id) ?? [];
+            return (
+              <li
+                key={row.profile_id}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">
+                    <Link
+                      href={`/orgs/${org.slug}/roster/${row.profile_id}`}
+                      className="hover:text-brand-red"
+                    >
+                      {row.display_name || "Unnamed student"}
+                    </Link>
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {row.age_band
+                      ? ageBandLabel(row.age_band as AgeBand)
+                      : "Age not set"}
+                    {typeof row.grade === "number"
+                      ? ` · Grade ${gradeLabel(row.grade)}`
+                      : ""}
+                    {memberGroups.length
+                      ? ` · ${memberGroups.join(" · ")}`
+                      : needsGroups
+                        ? " · not in a group yet"
+                        : ""}
+                    {` · joined ${formatDate(row.joined_at.slice(0, 10))}`}
+                  </p>
+                </div>
+                {canOperate ? (
+                  <div className="sm:shrink-0">
+                    <RemoveMemberButton
+                      orgId={org.id}
+                      orgSlug={org.slug}
+                      profileId={row.profile_id}
+                      displayName={row.display_name || "this student"}
+                    />
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+
+  const groupsSection = (
+    <section id="groups" className="section-rule mt-10 scroll-mt-24 pt-8">
+      <h2 className="text-sm font-semibold text-foreground">Groups</h2>
+      <p className="mt-1 text-sm text-muted">
+        Optional. Use groups to invite a subset of students to a tournament in
+        one step.
+      </p>
+      {canOperate ? (
+        <div className="mt-4">
+          <GroupManager
+            orgId={org.id}
+            orgSlug={org.slug}
+            groups={groups}
+            roster={students.map((row) => ({
+              profile_id: row.profile_id,
+              display_name: row.display_name,
+            }))}
+          />
+        </div>
+      ) : groups.length ? (
+        <ul className="mt-4 divide-y divide-line border-y border-line">
+          {groups.map((group) => (
+            <li
+              key={group.id}
+              className="flex items-baseline justify-between gap-4 py-3"
+            >
+              <span className="text-sm font-semibold text-foreground">
+                {group.name}
+              </span>
+              <span className="text-xs text-muted">
+                {group.member_ids.length}{" "}
+                {group.member_ids.length === 1 ? "student" : "students"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-muted">
+          No groups yet. A coach or administrator can create them.
+        </p>
+      )}
+    </section>
+  );
+
+  const workflowSections = needsGroups
+    ? (
+        <>
+          {addStudentsSection}
+          {groupsSection}
+          {studentsSection}
+        </>
+      )
+    : (
+        <>
+          {addStudentsSection}
+          {studentsSection}
+          {groupsSection}
+        </>
+      );
 
   return (
     <>
@@ -128,7 +292,8 @@ export default async function RosterPage({
           {org.name}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Students for invites and groups. Staff stay quieter below.
+          Invite students, put them in groups, then open competitions. Staff stay
+          quieter below.
         </p>
 
         <div className="mt-8">
@@ -140,139 +305,21 @@ export default async function RosterPage({
           />
         </div>
 
-        {canOperate && org.join_code ? (
-          <section id="add-students" className="section-rule mt-10 scroll-mt-24 pt-8">
-            <h2 className="text-sm font-semibold text-foreground">
-              Add students
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              Share this once — students create their own accounts when they join.
-            </p>
-            <div className="mt-4">
-              <JoinCodePanel
-                orgId={org.id}
-                orgSlug={org.slug}
-                joinCode={org.join_code}
-              />
-            </div>
-          </section>
-        ) : null}
-
-        <section id="students" className="section-rule mt-10 scroll-mt-24 pt-8">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-foreground">Students</h2>
-            <p className="text-xs text-muted">
-              {students.length} active
-            </p>
-          </div>
-          {!students.length ? (
-            <p className="mt-3 text-sm text-muted">
-              {canOperate && org.join_code
-                ? "No students yet. Copy the join link above and send it to families."
-                : canOperate
-                  ? view.isAdmin
-                    ? (
-                        <>
-                          No students have joined yet.{" "}
-                          <Link
-                            href={`/orgs/${org.slug}/people`}
-                            className="font-semibold text-brand-red hover:underline"
-                          >
-                            Open invites &amp; staff
-                          </Link>{" "}
-                          to create a join link or send claim invitations.
-                        </>
-                      )
-                    : "No students have joined yet. Ask an administrator for a join link."
-                  : "No students have joined yet. A coach or administrator shares the join link when it is ready."}
-            </p>
-          ) : (
-            <ul className="mt-4 divide-y divide-line border-y border-line">
-              {students.map((row) => (
-                <li
-                  key={row.profile_id}
-                  className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">
-                      <Link
-                        href={`/orgs/${org.slug}/roster/${row.profile_id}`}
-                        className="hover:text-brand-red"
-                      >
-                        {row.display_name || "Unnamed student"}
-                      </Link>
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {row.age_band
-                        ? ageBandLabel(row.age_band as AgeBand)
-                        : "Age not set"}
-                      {typeof row.grade === "number"
-                        ? ` · Grade ${gradeLabel(row.grade)}`
-                        : ""}
-                      {` · joined ${formatDate(row.joined_at.slice(0, 10))}`}
-                    </p>
-                  </div>
-                  {canOperate ? (
-                    <div className="sm:shrink-0">
-                      <RemoveMemberButton
-                        orgId={org.id}
-                        orgSlug={org.slug}
-                        profileId={row.profile_id}
-                        displayName={row.display_name || "this student"}
-                      />
-                    </div>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section id="groups" className="section-rule mt-10 scroll-mt-24 pt-8">
-          <h2 className="text-sm font-semibold text-foreground">Groups</h2>
-          <p className="mt-1 text-sm text-muted">
-            Optional. Use groups to invite a subset of students to a tournament
-            in one step.
-          </p>
-          {canOperate ? (
-            <div className="mt-4">
-              <GroupManager
-                orgId={org.id}
-                orgSlug={org.slug}
-                groups={groups}
-                roster={students.map((row) => ({
-                  profile_id: row.profile_id,
-                  display_name: row.display_name,
-                }))}
-              />
-            </div>
-          ) : groups.length ? (
-            <ul className="mt-4 divide-y divide-line border-y border-line">
-              {groups.map((group) => (
-                <li
-                  key={group.id}
-                  className="flex items-baseline justify-between gap-4 py-3"
-                >
-                  <span className="text-sm font-semibold text-foreground">
-                    {group.name}
-                  </span>
-                  <span className="text-xs text-muted">
-                    {group.member_ids.length}{" "}
-                    {group.member_ids.length === 1 ? "student" : "students"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 text-sm text-muted">
-              No groups yet. A coach or administrator can create them.
-            </p>
-          )}
-        </section>
+        {workflowSections}
 
         {staff.length ? (
           <section className="section-rule mt-10 pt-8">
-            <h2 className="text-sm font-semibold text-muted-strong">Staff</h2>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold text-muted-strong">Staff</h2>
+              {view.isAdmin ? (
+                <Link
+                  href={`/orgs/${org.slug}/people`}
+                  className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+                >
+                  Manage invites &amp; staff
+                </Link>
+              ) : null}
+            </div>
             <p className="mt-1 text-sm text-muted">
               Coaches and admins — not invited as tournament entrants.
             </p>

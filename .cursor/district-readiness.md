@@ -2,9 +2,9 @@
 
 Living backlog for the school-district buyer. Club/team work lives in `club-readiness.md`. Catalog: `docs/district-feature-overview.md`.
 
-## Verdict (2026-08-25)
+## Verdict (2026-08-27)
 
-Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events, and district-office announcements that fan out to connected schools. It is not self-serve procurement and not a finished FERPA/price package.
+Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events, district-office announcements that fan out to connected schools, and school-safe roster/manage composition (invite → group → competitions; replies grouped by status). It is not self-serve procurement and not a finished FERPA/price package.
 
 ## Have (ready enough for a chess pilot with Causey ops)
 
@@ -29,6 +29,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] `/districts` hero filled with setup steps; home organizer band pairs club + district without empty lanes — 2026-08-24
 - [x] Home organizer district card is a School/District peer to clubs (same chassis, glanceable heading, assisted-pilot lede, planned-next lower deck) — 2026-08-26
 - [x] District announcement fan-out to connected schools from the district overview — 2026-08-25
+- [x] School-safe roster/manage composition: invite → group → competitions; progressive group edit; manage replies by status; group-first invites — 2026-08-27
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -63,8 +64,9 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Overview calendar of school + district events | **works** | `/orgs/[slug]` “Upcoming across the district” (prior tick) |
 | Reports + CSV school- vs district-hosted; fail closed | **works** | `/orgs/[slug]/reports` + `export/route.ts`; `0046` |
 | Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
-| Family RSVP + organizer registration | **works** (club-worded copy) | `/family` |
+| Family RSVP + organizer registration | **works** | `/family` (org-agnostic RSVP copy) |
 | District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters` |
+| School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
 | District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; action inserts per school + district copy (`0043` operator access) |
 | Email at school volume | **ops / not proven** | backlog; not a UI claim on `/districts` |
 | `/districts` pitch honesty | **works** | assisted pilot; book conversation; no partner names |
@@ -73,19 +75,21 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 
 1. **P0 · District-hosted manage cannot invite school students · L · shipped 2026-08-24**  
    Surface: `/event/[slug]/manage` + `inviteConnectedSchoolRosters`. Connected-school rosters/groups load; “Invite every connected school” fans out.  
-2. **P1 · Family desk still says “Club RSVPs” · S · shipped 2026-08-24**
+2. **P1 · Family desk still says “Club RSVPs” · S · shipped 2026-08-24** (metadata club wording cleared 2026-08-27)
 3. **P1 · District announcement form does not fan out to child schools · M · shipped 2026-08-25**  
    Surface: district overview audience chooser; default posts to every connected school + district staff copy.
+4. **P1 · Roster / manage still feel like admin tables · M · shipped 2026-08-27**  
+   Surface: roster progressive groups + student group labels; manage replies by awaiting/going/can’t-go; individual invite picks demoted when groups exist.
 
-4. **Ops · Email volume + live dual-district smoke · —**  
+5. **Ops · Email volume + live dual-district smoke · —**  
    Not product UI. Keep as Legal/Ops; do not invent compliance UI.
 
-5. **Legal · Price / FERPA / retention / public school directory · —**  
+6. **Legal · Price / FERPA / retention / public school directory · —**  
    Out of scope for build; refuse.
 
 ### Recommended next shippable win
 
-**School-safe roster/manage composition**, or ops proof of email at school volume. Announcement fan-out shipped.
+**Ops proof of email at school volume**, or remaining honesty polish on manage invite/reply surfaces once email is proven. Roster/manage composition shipped.
 
 ### Out-of-scope refusals this pass
 

@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Family",
   description:
-    "See which student needs a club RSVP or organizer registration and act from one place.",
+    "See which student needs an RSVP or organizer registration and act from one place.",
 };
 
 function needsOrganizerRegistration(row: EntrantWithEvent): boolean {

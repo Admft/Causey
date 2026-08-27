@@ -28,6 +28,17 @@ export function rsvpLabel(status: RsvpStatus | AttendanceOutcome): string {
   }
 }
 
+export type AttendanceReplyBucket = "awaiting" | "going" | "notGoing";
+
+/** Map entrant status into the three coach-facing reply buckets. */
+export function attendanceReplyBucket(
+  status: RsvpStatus | AttendanceOutcome
+): AttendanceReplyBucket {
+  if (status === "going" || status === "attended") return "going";
+  if (status === "not_going" || status === "did_not_attend") return "notGoing";
+  return "awaiting";
+}
+
 export function summarizeAttendance(
   rows: { status: RsvpStatus | AttendanceOutcome }[]
 ): {
@@ -40,11 +51,43 @@ export function summarizeAttendance(
   let notGoing = 0;
   let awaiting = 0;
   for (const row of rows) {
-    if (row.status === "going" || row.status === "attended") going += 1;
-    else if (row.status === "not_going" || row.status === "did_not_attend") {
-      notGoing += 1;
-    }
+    const bucket = attendanceReplyBucket(row.status);
+    if (bucket === "going") going += 1;
+    else if (bucket === "notGoing") notGoing += 1;
     else awaiting += 1;
   }
   return { going, notGoing, awaiting, total: rows.length };
+}
+
+/**
+ * Split manage-page replies into school-safe buckets so coaches review
+ * awaiting / going / can’t-go instead of one flat admin table.
+ */
+export function groupAttendanceByReplyStatus<
+  T extends { status: RsvpStatus | AttendanceOutcome },
+>(rows: T[]): {
+  awaiting: T[];
+  going: T[];
+  notGoing: T[];
+} {
+  const awaiting: T[] = [];
+  const going: T[] = [];
+  const notGoing: T[] = [];
+  for (const row of rows) {
+    const bucket = attendanceReplyBucket(row.status);
+    if (bucket === "going") going.push(row);
+    else if (bucket === "notGoing") notGoing.push(row);
+    else awaiting.push(row);
+  }
+  return { awaiting, going, notGoing };
+}
+
+/** Mission-aware section order for manage replies / attendance. */
+export function orderedAttendanceReplySections(options: {
+  isPast: boolean;
+  needsReplies: boolean;
+}): AttendanceReplyBucket[] {
+  if (options.isPast) return ["going", "awaiting", "notGoing"];
+  if (options.needsReplies) return ["awaiting", "going", "notGoing"];
+  return ["going", "awaiting", "notGoing"];
 }

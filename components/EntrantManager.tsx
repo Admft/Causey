@@ -44,6 +44,7 @@ export function EntrantManager({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [showIndividualPicks, setShowIndividualPicks] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function toggle(profileId: string) {
@@ -184,39 +185,120 @@ export function EntrantManager({
       ) : null}
 
       <div>
-        <h3 className="text-xs font-semibold text-muted-strong">
-          {inviteAllConnected ? "Or invite selected students" : "Invite students"}
-        </h3>
         {!candidates.length ? (
           hasActiveRoster ? (
-            <p className="mt-2 text-sm text-muted">
-              {isDistrictHosted
-                ? "Everyone from connected schools is already invited. "
-                : "Everyone on your active roster is already invited. "}
-              <a
-                href="#rsvps"
-                className="font-semibold text-brand-red hover:underline"
-              >
-                Review replies
-              </a>
-            </p>
-          ) : (
-            <div className="mt-2">
-              <p className="max-w-prose text-sm text-muted">
+            <>
+              <h3 className="text-xs font-semibold text-muted-strong">
+                Invite students
+              </h3>
+              <p className="mt-2 text-sm text-muted">
                 {isDistrictHosted
-                  ? "No active students to invite yet. Share a join link on a school roster, then return here."
-                  : "No active students to invite yet. Share a join link on your roster, then return here."}
+                  ? "Everyone from connected schools is already invited. "
+                  : "Everyone on your active roster is already invited. "}
+                <a
+                  href="#rsvps"
+                  className="font-semibold text-brand-red hover:underline"
+                >
+                  Review replies
+                </a>
               </p>
-              <Link
-                href={rosterHref}
-                className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
-              >
-                {rosterLinkLabel}
-              </Link>
-            </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xs font-semibold text-muted-strong">
+                Invite students
+              </h3>
+              <div className="mt-2">
+                <p className="max-w-prose text-sm text-muted">
+                  {isDistrictHosted
+                    ? "No active students to invite yet. Share a join link on a school roster, then return here."
+                    : "No active students to invite yet. Share a join link on your roster, then return here."}
+                </p>
+                <Link
+                  href={rosterHref}
+                  className="mt-3 inline-flex text-sm font-semibold text-brand-red hover:underline"
+                >
+                  {rosterLinkLabel}
+                </Link>
+              </div>
+            </>
           )
+        ) : invitableGroups.length || inviteAllConnected ? (
+          <>
+            {!showIndividualPicks ? (
+              <button
+                type="button"
+                onClick={() => setShowIndividualPicks(true)}
+                className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                aria-expanded={false}
+              >
+                {inviteAllConnected
+                  ? "Or pick specific students"
+                  : "Or pick specific students instead of a group"}
+              </button>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-xs font-semibold text-muted-strong">
+                    Pick specific students
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowIndividualPicks(false);
+                      setSelected(new Set());
+                    }}
+                    className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                    aria-expanded={true}
+                  >
+                    Hide list
+                  </button>
+                </div>
+                <div className="mt-2 grid gap-2">
+                  {candidates.map((candidate) => (
+                    <label
+                      key={candidate.profile_id}
+                      className="flex min-h-11 items-center gap-3 rounded-lg border border-line bg-white px-3 py-2 text-sm text-foreground sm:border-0 sm:bg-transparent sm:px-0 sm:py-0"
+                    >
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-[var(--brand-red)]"
+                        disabled={isPending}
+                        checked={selected.has(candidate.profile_id)}
+                        onChange={() => toggle(candidate.profile_id)}
+                      />
+                      <span>
+                        {candidate.display_name || "Unnamed student"}
+                        {candidate.orgName ? (
+                          <span className="text-muted">
+                            {" "}
+                            · {candidate.orgName}
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  disabled={isPending || !selected.size}
+                  onClick={onInviteSelected}
+                  className="cta-enabled mt-3 w-full justify-center sm:w-auto disabled:opacity-60"
+                >
+                  {isPending
+                    ? "Inviting…"
+                    : `Invite ${selected.size || "selected"} ${
+                        selected.size === 1 ? "student" : "students"
+                      }`}
+                </button>
+              </>
+            )}
+          </>
         ) : (
           <>
+            <h3 className="text-xs font-semibold text-muted-strong">
+              Invite students
+            </h3>
             <div className="mt-2 grid gap-2">
               {candidates.map((candidate) => (
                 <label
@@ -247,7 +329,9 @@ export function EntrantManager({
             >
               {isPending
                 ? "Inviting…"
-                : `Invite ${selected.size || "selected"} ${selected.size === 1 ? "student" : "students"}`}
+                : `Invite ${selected.size || "selected"} ${
+                    selected.size === 1 ? "student" : "students"
+                  }`}
             </button>
           </>
         )}

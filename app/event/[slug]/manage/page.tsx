@@ -27,7 +27,13 @@ import {
 import { buildEventPulse } from "@/lib/event-pulse";
 import { formatDateRange } from "@/lib/format";
 import { manageEventTitle } from "@/lib/portal-copy";
-import { rsvpLabel, summarizeAttendance } from "@/lib/rsvp";
+import {
+  groupAttendanceByReplyStatus,
+  orderedAttendanceReplySections,
+  rsvpLabel,
+  summarizeAttendance,
+  type AttendanceReplyBucket,
+} from "@/lib/rsvp";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -400,6 +406,23 @@ export default async function ManageEventPage({
     </section>
   );
 
+  const replyBuckets = groupAttendanceByReplyStatus(visibleAttendance);
+  const replySectionOrder = orderedAttendanceReplySections({
+    isPast,
+    needsReplies,
+  });
+  const replySectionCopy: Record<AttendanceReplyBucket, string> = isPast
+    ? {
+        awaiting: "Still awaiting a reply",
+        going: "Going / attendance",
+        notGoing: "Can’t go / did not attend",
+      }
+    : {
+        awaiting: "Needs a reply",
+        going: "Going",
+        notGoing: "Can’t go",
+      };
+
   const rsvpSection = (
     <section id="rsvps" className="section-rule mt-10 scroll-mt-24 pt-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -420,58 +443,77 @@ export default async function ManageEventPage({
           {inviteFirst ? " above" : " below"}.
         </p>
       ) : (
-        <ul className="mt-4 divide-y divide-line border-y border-line">
-          {visibleAttendance.map((row) => (
-            <li
-              key={row.profile_id}
-              className={`flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
-                row.member_status !== "active" ? "opacity-60" : ""
-              }`}
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">
-                  {row.display_name || "Unnamed student"}
-                </p>
-                <p className="mt-0.5 text-xs text-muted">
-                  {rsvpLabel(row.status)}
-                  {row.member_status !== "active"
-                    ? " · no longer on roster"
-                    : ""}
-                </p>
+        <div className="mt-4 flex flex-col gap-8">
+          {replySectionOrder.map((bucket) => {
+            const rows = replyBuckets[bucket];
+            if (!rows.length) return null;
+            return (
+              <div key={bucket}>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-xs font-semibold text-muted-strong">
+                    {replySectionCopy[bucket]}
+                  </h3>
+                  <p className="text-xs text-muted">
+                    {rows.length}{" "}
+                    {rows.length === 1 ? "student" : "students"}
+                  </p>
+                </div>
+                <ul className="mt-2 divide-y divide-line border-y border-line">
+                  {rows.map((row) => (
+                    <li
+                      key={row.profile_id}
+                      className={`flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 ${
+                        row.member_status !== "active" ? "opacity-60" : ""
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          {row.display_name || "Unnamed student"}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted">
+                          {rsvpLabel(row.status)}
+                          {row.member_status !== "active"
+                            ? " · no longer on roster"
+                            : ""}
+                        </p>
+                      </div>
+                      <div className="sm:shrink-0">
+                        {isPast ? (
+                          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+                            <AttendanceButtons
+                              competitionId={competition.id}
+                              eventSlug={competition.slug}
+                              profileId={row.profile_id}
+                              status={row.status}
+                            />
+                            {row.status === "attended" ? (
+                              <ResultForm
+                                competitionId={competition.id}
+                                eventSlug={competition.slug}
+                                profileId={row.profile_id}
+                                sections={resultSections}
+                                sectionId={row.section_id}
+                                placement={row.placement}
+                                awardLabel={row.award_label}
+                              />
+                            ) : null}
+                          </div>
+                        ) : (
+                          <RemoveEntrantButton
+                            competitionId={competition.id}
+                            eventSlug={competition.slug}
+                            profileId={row.profile_id}
+                            displayName={row.display_name || "this student"}
+                          />
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="sm:shrink-0">
-                {isPast ? (
-                  <div className="flex flex-col items-stretch gap-2 sm:items-end">
-                    <AttendanceButtons
-                      competitionId={competition.id}
-                      eventSlug={competition.slug}
-                      profileId={row.profile_id}
-                      status={row.status}
-                    />
-                    {row.status === "attended" ? (
-                      <ResultForm
-                        competitionId={competition.id}
-                        eventSlug={competition.slug}
-                        profileId={row.profile_id}
-                        sections={resultSections}
-                        sectionId={row.section_id}
-                        placement={row.placement}
-                        awardLabel={row.award_label}
-                      />
-                    ) : null}
-                  </div>
-                ) : (
-                  <RemoveEntrantButton
-                    competitionId={competition.id}
-                    eventSlug={competition.slug}
-                    profileId={row.profile_id}
-                    displayName={row.display_name || "this student"}
-                  />
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
       )}
     </section>
   );
