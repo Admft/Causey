@@ -92,10 +92,6 @@ const MODE_COPY: Record<
   },
 };
 
-function Bar({ className }: { className: string }) {
-  return <span className={`block rounded-sm bg-line ${className}`} />;
-}
-
 function CheckMark() {
   return (
     <svg
@@ -169,11 +165,63 @@ function AppCard({
   );
 }
 
-function WindowBar() {
+function ScreenHeader({
+  title,
+  action,
+  tag,
+}: {
+  title: string;
+  action?: string;
+  tag?: string;
+}) {
   return (
     <div className="flex items-center gap-3 border-b border-line pb-3">
-      <Bar className="h-2.5 w-24" />
-      <span className="ml-auto h-6 w-14 rounded-lg border border-line bg-surface-soft" />
+      <span className="text-2xs font-bold uppercase tracking-[0.08em] text-foreground">
+        {title}
+      </span>
+      {action ? (
+        <span className="ml-auto rounded-lg border border-line px-2.5 py-1 text-2xs font-bold text-muted-strong">
+          {action}
+        </span>
+      ) : null}
+      {tag ? (
+        <span className="ml-auto rounded-lg bg-surface-soft px-2.5 py-1 text-2xs font-bold text-muted-strong">
+          {tag}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function EventRow({
+  tone,
+  title,
+  meta,
+  chip,
+}: {
+  tone: "red" | "blue";
+  title: string;
+  meta: string;
+  chip?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <DateChip tone={tone} />
+      <div className="min-w-0">
+        <p className="text-2xs font-bold text-foreground">{title}</p>
+        <p className="mt-1 text-2xs text-muted">{meta}</p>
+      </div>
+      {chip ? (
+        <span
+          className={`ml-auto rounded-xl border px-2.5 py-1 text-2xs font-bold ${
+            tone === "red"
+              ? "border-brand-red/40 bg-accent-soft text-brand-red"
+              : "border-brand-blue/40 bg-brand-blue-soft text-brand-blue-strong"
+          }`}
+        >
+          {chip}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -182,24 +230,30 @@ function ClubSketch({ step }: { step: number }) {
   if (step === 0) {
     return (
       <AppCard>
-        <WindowBar />
+        <ScreenHeader title="Roster" action="Invite" />
         <div className="mt-3 flex items-center gap-3 rounded-xl border border-line bg-surface-soft/70 px-3.5 py-3">
-          <Bar className="h-2 w-32" />
+          <span className="text-2xs font-bold text-muted-strong">
+            Join link
+          </span>
           <span className="ml-auto rounded-lg border border-line bg-white px-2.5 py-1 text-2xs font-bold text-muted-strong">
             Copy
           </span>
         </div>
         <div className="mt-3 flex-1 space-y-2.5">
-          {["w-24", "w-28", "w-20", "w-24"].map((width, index) => (
-            <div key={index} className="flex items-center gap-3">
+          {[0, 1, 2, 3].map((row) => (
+            <div key={row} className="flex items-center gap-3">
               <Avatar />
-              <Bar className={`h-2 ${width}`} />
-              <Bar className="ml-auto h-2 w-10" />
+              <span className="text-2xs font-bold text-muted-strong">
+                Student
+              </span>
+              <span className="ml-auto rounded-md border border-line px-2 py-0.5 text-2xs font-bold text-muted">
+                Group
+              </span>
             </div>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-center rounded-xl border border-dashed border-line py-2.5">
-          <Bar className="h-2 w-16" />
+        <div className="mt-3 flex items-center justify-center rounded-xl border border-dashed border-line py-2.5 text-2xs font-bold text-muted-strong">
+          Or upload a CSV
         </div>
       </AppCard>
     );
@@ -208,22 +262,18 @@ function ClubSketch({ step }: { step: number }) {
     return (
       <div className="flex flex-1 flex-col gap-3">
         <AppCard>
-          <div className="flex items-center gap-3">
-            <DateChip tone="red" />
-            <div className="min-w-0 space-y-1.5">
-              <Bar className="h-2.5 w-36" />
-              <Bar className="h-2 w-24" />
-            </div>
-            <span className="ml-auto rounded-xl border border-brand-red/40 bg-accent-soft px-2.5 py-1 text-2xs font-bold text-brand-red">
-              Club is going
-            </span>
-          </div>
-          <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
-            <DateChip tone="red" />
-            <div className="min-w-0 space-y-1.5">
-              <Bar className="h-2.5 w-28" />
-              <Bar className="h-2 w-16" />
-            </div>
+          <EventRow
+            tone="red"
+            title="Public tournament"
+            meta="Date · Location"
+            chip="Club is going"
+          />
+          <div className="mt-4 border-t border-line pt-4">
+            <EventRow
+              tone="red"
+              title="Public tournament"
+              meta="Date · Location"
+            />
           </div>
         </AppCard>
         <div className="flex items-center justify-center rounded-xl border border-dashed border-line py-3 text-2xs font-bold text-muted-strong">
@@ -235,7 +285,7 @@ function ClubSketch({ step }: { step: number }) {
   if (step === 2) {
     return (
       <AppCard>
-        <WindowBar />
+        <ScreenHeader title="Who showed up" tag="Day of" />
         <div className="mt-3 flex-1 space-y-2.5">
           {[true, true, true, true, false].map((checked, index) => (
             <div
@@ -243,7 +293,9 @@ function ClubSketch({ step }: { step: number }) {
               className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2.5"
             >
               <Avatar />
-              <Bar className={`h-2 ${index % 2 === 0 ? "w-24" : "w-20"}`} />
+              <span className="text-2xs font-bold text-muted-strong">
+                Student
+              </span>
               <span className="ml-auto">
                 <CheckBox checked={checked} tone="red" />
               </span>
@@ -255,21 +307,19 @@ function ClubSketch({ step }: { step: number }) {
   }
   return (
     <AppCard>
-      <div className="flex items-center gap-3 border-b border-line pb-3">
-        <Bar className="h-2.5 w-24" />
-        <span className="ml-auto rounded-lg border border-line px-2.5 py-1 text-2xs font-bold text-muted-strong">
-          Season CSV
-        </span>
-      </div>
+      <ScreenHeader title="Results" action="Season CSV" />
       <div className="mt-3 flex-1 space-y-2.5">
-        {["w-24", "w-20", "w-28", "w-16"].map((width, index) => (
+        {[0, 1, 2, 3].map((row) => (
           <div
-            key={index}
+            key={row}
             className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2.5"
           >
             <Avatar />
-            <Bar className={`h-2 ${width}`} />
-            <span className="ml-auto flex h-6 w-12 items-center justify-center rounded-md border border-line bg-surface-soft text-2xs font-bold text-muted">
+            <span className="text-2xs font-bold text-muted-strong">
+              Student
+            </span>
+            <span className="ml-auto text-2xs text-muted">Division</span>
+            <span className="flex h-6 w-12 items-center justify-center rounded-md border border-line bg-surface-soft text-2xs font-bold text-muted">
               —
             </span>
           </div>
@@ -284,14 +334,13 @@ function DistrictSketch({ step }: { step: number }) {
   if (step === 0) {
     return (
       <AppCard>
-        <WindowBar />
+        <ScreenHeader title="District setup" />
         <div className="mt-3 flex-1 space-y-2.5">
           <div className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2.5">
             <CheckBox checked tone="blue" />
             <span className="text-2xs font-bold text-muted-strong">
               District
             </span>
-            <Bar className="ml-auto h-2 w-16" />
           </div>
           {[0, 1, 2].map((index) => (
             <div
@@ -302,13 +351,12 @@ function DistrictSketch({ step }: { step: number }) {
               <span className="text-2xs font-bold text-muted-strong">
                 School
               </span>
-              <Bar className="ml-auto h-2 w-10" />
             </div>
           ))}
           <div className="ml-6 flex items-center gap-3 rounded-xl border border-dashed border-line px-3.5 py-2.5">
             <CheckBox checked={false} tone="blue" />
             <span className="text-2xs font-bold text-muted">School</span>
-            <Bar className="ml-auto h-2 w-10" />
+            <span className="ml-auto text-2xs font-bold text-muted">Next</span>
           </div>
         </div>
       </AppCard>
@@ -317,26 +365,28 @@ function DistrictSketch({ step }: { step: number }) {
   if (step === 1) {
     return (
       <AppCard>
-        <div className="flex items-center gap-3">
-          <DateChip tone="blue" />
-          <div className="min-w-0 space-y-1.5">
-            <Bar className="h-2.5 w-32" />
-            <Bar className="h-2 w-20" />
+        <EventRow
+          tone="blue"
+          title="School tournament"
+          meta="Hosted by one school"
+        />
+        <div className="mt-4 flex-1 border-t border-line pt-3">
+          <p className="text-2xs font-bold uppercase tracking-[0.08em] text-muted">
+            Coach runs the day
+          </p>
+          <div className="mt-2.5 space-y-2.5">
+            {[true, true, false].map((checked, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <Avatar />
+                <span className="text-2xs font-bold text-muted-strong">
+                  Student
+                </span>
+                <span className="ml-auto">
+                  <CheckBox checked={checked} tone="blue" />
+                </span>
+              </div>
+            ))}
           </div>
-          <span className="ml-auto rounded-xl border border-brand-blue/40 bg-brand-blue-soft px-2.5 py-1 text-2xs font-bold text-brand-blue-strong">
-            School tournament
-          </span>
-        </div>
-        <div className="mt-4 flex-1 space-y-2.5 border-t border-line pt-4">
-          {[true, true, false].map((checked, index) => (
-            <div key={index} className="flex items-center gap-3">
-              <Avatar />
-              <Bar className={`h-2 ${index === 1 ? "w-24" : "w-20"}`} />
-              <span className="ml-auto">
-                <CheckBox checked={checked} tone="blue" />
-              </span>
-            </div>
-          ))}
         </div>
       </AppCard>
     );
@@ -344,53 +394,50 @@ function DistrictSketch({ step }: { step: number }) {
   if (step === 2) {
     return (
       <AppCard>
-        <div className="flex items-center gap-3">
-          <DateChip tone="blue" />
-          <div className="min-w-0 space-y-1.5">
-            <Bar className="h-2.5 w-36" />
-            <Bar className="h-2 w-24" />
-          </div>
-          <span className="ml-auto rounded-xl border border-brand-blue/40 bg-brand-blue-soft px-2.5 py-1 text-2xs font-bold text-brand-blue-strong">
-            District-wide
-          </span>
+        <EventRow
+          tone="blue"
+          title="District-wide tournament"
+          meta="One event"
+        />
+        <div className="mt-4 flex-1 space-y-2 border-t border-line pt-3">
+          {[0, 1, 2, 3].map((row) => (
+            <div
+              key={row}
+              className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2"
+            >
+              <CheckBox checked tone="blue" />
+              <span className="text-2xs font-bold text-muted-strong">
+                School
+              </span>
+            </div>
+          ))}
         </div>
-        <div className="mt-4 flex-1 border-t border-line pt-4">
-          <div className="grid grid-cols-5 gap-2.5">
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((dot) => (
-              <span
-                key={dot}
-                className="h-8 w-8 rounded-full border border-brand-blue/50 bg-brand-blue-soft"
-              />
-            ))}
-          </div>
-          <p className="mt-3 text-2xs font-bold text-brand-blue-strong">
-            Every connected school
-          </p>
-        </div>
+        <p className="mt-3 border-t border-line pt-3 text-2xs font-bold text-brand-blue-strong">
+          Every connected school
+        </p>
       </AppCard>
     );
   }
   return (
     <AppCard>
-      <div className="flex items-center gap-3 border-b border-line pb-3">
-        <Bar className="h-2.5 w-24" />
-        <span className="ml-auto text-2xs font-bold text-brand-blue-strong">
-          Aggregate totals only
-        </span>
+      <ScreenHeader title="District office" />
+      <div className="mt-3 flex items-center text-2xs font-bold uppercase tracking-[0.08em] text-muted">
+        <span>School</span>
+        <span className="ml-auto">Total</span>
       </div>
-      <div className="mt-4 flex-1 space-y-3.5">
+      <div className="mt-2 flex-1 space-y-3">
         {["w-28", "w-20", "w-24", "w-16"].map((width, index) => (
           <div key={index} className="flex items-center gap-3">
-            <Bar className="h-2 w-16" />
+            <span className="text-2xs font-bold text-muted-strong">School</span>
             <span
               className={`ml-auto h-3.5 rounded-sm bg-brand-blue-strong/70 ${width}`}
             />
           </div>
         ))}
       </div>
-      <div className="mt-4 border-t border-line pt-3">
-        <Bar className="h-2 w-32" />
-      </div>
+      <p className="mt-4 border-t border-line pt-3 text-2xs text-muted">
+        Not a copy of any student’s browsing.
+      </p>
     </AppCard>
   );
 }
