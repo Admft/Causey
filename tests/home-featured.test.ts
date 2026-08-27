@@ -20,17 +20,18 @@ const migration = readFileSync(
 );
 
 describe("homepage featured listings", () => {
-  it("keeps the strip on desktop only and names a zip-aware nearby heading", () => {
+  it("keeps the strip on every breakpoint and names a zip-aware nearby heading", () => {
     expect(homePage).toContain("HomeFeaturedSection");
     expect(homePage).toContain("getHomeFeaturedCompetitions");
-    expect(featuredSection).toContain("hidden");
-    expect(featuredSection).toContain("md:block");
+    expect(featuredSection).not.toContain("hidden md:block");
     expect(featuredSection).toContain("band-join--soft");
+    expect(featuredSection).toContain("rounded-3xl");
     expect(featuredSection).toContain("lg:items-end");
     expect(featuredSection).toContain("snap-x");
-    expect(featuredSection).toContain("w-80");
+    expect(featuredSection).toContain("w-[min(20rem,calc(100vw-2.5rem))]");
+    expect(featuredSection).toContain("sm:w-80");
     expect(featuredSection).toContain('layout="grid2"');
-    expect(featuredSection).toContain("sourceFallback={false}");
+    expect(featuredSection).not.toContain("sourceFallback={false}");
     expect(featuredSection).toContain("HomeFeaturedSeeMore");
     expect(
       readFileSync(

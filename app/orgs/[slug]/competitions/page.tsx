@@ -109,7 +109,7 @@ export default async function OrgCompetitionsPage({
         showAdmin={view.isAdmin}
         orgType={view.org.type}
       />
-      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm font-semibold text-brand-red">
@@ -346,7 +346,7 @@ export default async function OrgCompetitionsPage({
             ) : null}
           </div>
         )}
-      </main>
+      </div>
     </>
   );
 }

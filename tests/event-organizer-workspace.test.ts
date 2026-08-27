@@ -23,6 +23,12 @@ describe("organizer event workspace", () => {
     expect(eventPage).toContain("Manage event");
     expect(eventPage).not.toContain("Manage entrants");
     expect(eventPage).toContain("EventPulseStrip");
+    expect(read("components/EventPulseStrip.tsx")).toContain("StatCluster");
+    expect(manage).not.toContain("OrgSubnavBar");
+    expect(edit).not.toContain("OrgSubnavBar");
+    expect(manage).toContain("PageBackLink");
+    expect(edit).toContain("PageBackLink");
+    expect(edit).toContain("EventOrganizerSubnav");
   });
 
   it("titles the workspace from the host org type", () => {

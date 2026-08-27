@@ -2,7 +2,7 @@
 
 export default function OrganizationsError({ reset }: { reset: () => void }) {
   return (
-    <main className="mx-auto max-w-3xl px-5 py-16 sm:px-8">
+    <div className="mx-auto max-w-3xl px-5 py-16 sm:px-8">
       <h1 className="font-display text-display-sm font-bold text-foreground">
         Your organization workspace could not load
       </h1>
@@ -13,6 +13,6 @@ export default function OrganizationsError({ reset }: { reset: () => void }) {
       <button type="button" onClick={reset} className="cta-enabled mt-5">
         Retry organization
       </button>
-    </main>
+    </div>
   );
 }

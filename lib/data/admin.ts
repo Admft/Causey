@@ -130,6 +130,16 @@ export type AdminIngestionSourceHealth = {
 /** Exact head count, or null when the query failed (never a fake zero). */
 export type AdminCount = number | null;
 
+export const ADMIN_OPS_SLICES = [
+  "listings",
+  "readyDrafts",
+  "organizations",
+  "accounts",
+  "ingestion",
+] as const;
+
+export type AdminOpsSlice = (typeof ADMIN_OPS_SLICES)[number];
+
 export type AdminOpsStats = {
   listings: {
     pendingReview: AdminCount;
@@ -139,14 +149,6 @@ export type AdminOpsStats = {
     archived: AdminCount;
     readyToPublish: AdminCount;
     publishedOrganizer: AdminCount;
-    publishedByCategory: {
-      chess: AdminCount;
-      debate: AdminCount;
-      stem: AdminCount;
-      arts: AdminCount;
-      writing: AdminCount;
-      other: AdminCount;
-    };
   };
   organizations: {
     total: AdminCount;
@@ -168,6 +170,48 @@ export type AdminOpsStats = {
   };
 };
 
+const UNAVAILABLE_LISTINGS: AdminOpsStats["listings"] = {
+  pendingReview: null,
+  rejected: null,
+  drafts: null,
+  published: null,
+  archived: null,
+  readyToPublish: null,
+  publishedOrganizer: null,
+};
+
+const UNAVAILABLE_ORGANIZATIONS: AdminOpsStats["organizations"] = {
+  total: null,
+  pending: null,
+  rejected: null,
+  verified: null,
+  districts: null,
+};
+
+const UNAVAILABLE_ACCOUNTS: AdminOpsStats["accounts"] = {
+  total: null,
+  platformAdmins: null,
+};
+
+const UNAVAILABLE_INGESTION: AdminOpsStats["ingestion"] = {
+  lastRunStatus: null,
+  lastRunAt: null,
+  lastRowsUpserted: null,
+  issueCount: null,
+  runsUnavailable: true,
+};
+
+export function formatIngestionLastRun(
+  lastRunStatus: AdminScrapeRunRow["status"] | null,
+  runsUnavailable: boolean
+): string | null {
+  if (runsUnavailable) return null;
+  if (!lastRunStatus) return "None yet";
+  if (lastRunStatus === "succeeded") return "Succeeded";
+  if (lastRunStatus === "failed") return "Failed";
+  return "Running";
+}
+
 type CountQuery = PromiseLike<{
   count: number | null;
   error: { message: string; code?: string } | null;
@@ -183,6 +227,15 @@ async function exactCount(query: CountQuery): Promise<AdminCount> {
     return null;
   }
   return count ?? 0;
+}
+
+export async function countPlatformAdmins(): Promise<AdminCount> {
+  const supabase = await createServerSupabaseClient();
+  return exactCount(
+    supabase
+      .from("platform_admins")
+      .select("*", { count: "exact", head: true })
+  );
 }
 
 export type AdminModerationQueueRow = {
@@ -214,24 +267,22 @@ export type AdminModerationQueueRow = {
   } | null;
 };
 
-export async function getAdminOpsStats(): Promise<AdminOpsStats> {
+export async function getAdminOpsStats(
+  slices: readonly AdminOpsSlice[]
+): Promise<AdminOpsStats> {
   const supabase = await createServerSupabaseClient();
+  const includeListings = slices.includes("listings");
+  const includeReadyDrafts = slices.includes("readyDrafts");
+  const includeOrganizations = slices.includes("organizations");
+  const includeAccounts = slices.includes("accounts");
+  const includeIngestion = slices.includes("ingestion");
+
   const listing = (status: AdminTournamentRow["status"]) =>
     exactCount(
       supabase
         .from("competitions")
         .select("*", { count: "exact", head: true })
         .eq("status", status)
-    );
-  const publishedCategory = (
-    category: AdminTournamentRow["category"]
-  ) =>
-    exactCount(
-      supabase
-        .from("competitions")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "published")
-        .eq("category", category)
     );
   const orgStatus = (
     verificationStatus: AdminOrganizationRow["verification_status"]
@@ -243,146 +294,147 @@ export async function getAdminOpsStats(): Promise<AdminOpsStats> {
         .eq("verification_status", verificationStatus)
     );
 
-  const [
-    pendingReview,
-    rejected,
-    drafts,
-    published,
-    archived,
-    publishedOrganizer,
-    chess,
-    debate,
-    stem,
-    arts,
-    writing,
-    other,
-    orgTotal,
-    orgPending,
-    orgRejected,
-    orgVerified,
-    districts,
-    platformAdmins,
-    users,
-    draftRows,
-    scrapeRuns,
-  ] = await Promise.all([
-    listing("pending_review"),
-    listing("rejected"),
-    listing("draft"),
-    listing("published"),
-    listing("archived"),
-    exactCount(
-      supabase
-        .from("competitions")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "published")
-        .eq("source", "organizer")
-    ),
-    publishedCategory("chess"),
-    publishedCategory("debate"),
-    publishedCategory("stem"),
-    publishedCategory("arts"),
-    publishedCategory("writing"),
-    publishedCategory("other"),
-    exactCount(
-      supabase.from("organizations").select("*", { count: "exact", head: true })
-    ),
-    orgStatus("pending"),
-    orgStatus("rejected"),
-    orgStatus("verified"),
-    exactCount(
-      supabase
-        .from("organizations")
-        .select("*", { count: "exact", head: true })
-        .eq("type", "district")
-    ),
-    exactCount(
-      supabase
-        .from("platform_admins")
-        .select("*", { count: "exact", head: true })
-    ),
-    getAdminUsers({ limit: 1 }),
-    supabase
-      .from("competitions")
-      .select(
-        "name, start_date, city, state, zip, lat, lng, reg_url, participation_mode"
-      )
-      .eq("status", "draft")
-      .limit(1000),
-    supabase
-      .from("scrape_runs")
-      .select(
-        "id, source, started_at, finished_at, status, rows_staged, rows_upserted, error, meta"
-      )
-      .order("started_at", { ascending: false })
-      .limit(250),
-  ]);
+  const [listingBundle, draftRows, orgBundle, accountBundle, scrapeRuns] =
+    await Promise.all([
+      includeListings
+        ? Promise.all([
+            listing("pending_review"),
+            listing("rejected"),
+            listing("draft"),
+            listing("published"),
+            listing("archived"),
+            exactCount(
+              supabase
+                .from("competitions")
+                .select("*", { count: "exact", head: true })
+                .eq("status", "published")
+                .eq("source", "organizer")
+            ),
+          ])
+        : Promise.resolve(null),
+      includeReadyDrafts
+        ? supabase
+            .from("competitions")
+            .select(
+              "name, start_date, city, state, zip, lat, lng, reg_url, participation_mode"
+            )
+            .eq("status", "draft")
+            .limit(1000)
+        : Promise.resolve(null),
+      includeOrganizations
+        ? Promise.all([
+            exactCount(
+              supabase
+                .from("organizations")
+                .select("*", { count: "exact", head: true })
+            ),
+            orgStatus("pending"),
+            orgStatus("rejected"),
+            orgStatus("verified"),
+            exactCount(
+              supabase
+                .from("organizations")
+                .select("*", { count: "exact", head: true })
+                .eq("type", "district")
+            ),
+          ])
+        : Promise.resolve(null),
+      includeAccounts
+        ? Promise.all([countPlatformAdmins(), getAdminUsers({ limit: 1 })])
+        : Promise.resolve(null),
+      includeIngestion
+        ? supabase
+            .from("scrape_runs")
+            .select(
+              "id, source, started_at, finished_at, status, rows_staged, rows_upserted, error, meta"
+            )
+            .order("started_at", { ascending: false })
+            .limit(250)
+        : Promise.resolve(null),
+    ]);
 
   let readyToPublish: AdminCount = null;
-  if (draftRows.error) {
-    console.error("Admin ready-draft count failed:", draftRows.error);
-  } else {
-    readyToPublish = ((draftRows.data ?? []) as TournamentReadinessInput[]).filter(
-      (row) => isTournamentPublishReady(row)
-    ).length;
+  if (draftRows) {
+    if (draftRows.error) {
+      console.error("Admin ready-draft count failed:", draftRows.error);
+    } else {
+      readyToPublish = (
+        (draftRows.data ?? []) as TournamentReadinessInput[]
+      ).filter((row) => isTournamentPublishReady(row)).length;
+    }
   }
 
-  const runsUnavailable = Boolean(scrapeRuns.error);
-  if (scrapeRuns.error) {
-    console.error("Admin scrape runs failed:", scrapeRuns.error);
-  }
-  const runs = (scrapeRuns.data ?? []) as AdminScrapeRunRow[];
-  const lastRun = runs[0] ?? null;
-  const health = runsUnavailable
-    ? null
-    : INGESTION_SOURCES.filter((source) => source.competitionSource).map(
-        (source) => evaluateSourceOperationalHealth(source, runs)
-      );
-  const issueCount = health
-    ? health.filter((row) =>
-        row.state === "failing" ||
-        row.state === "warning" ||
-        row.state === "blocked"
-      ).length
-    : null;
+  const listings: AdminOpsStats["listings"] = listingBundle
+    ? {
+        pendingReview: listingBundle[0],
+        rejected: listingBundle[1],
+        drafts: listingBundle[2],
+        published: listingBundle[3],
+        archived: listingBundle[4],
+        readyToPublish,
+        publishedOrganizer: listingBundle[5],
+      }
+    : { ...UNAVAILABLE_LISTINGS, readyToPublish };
 
-  return {
-    listings: {
-      pendingReview,
-      rejected,
-      drafts,
-      published,
-      archived,
-      readyToPublish,
-      publishedOrganizer,
-      publishedByCategory: { chess, debate, stem, arts, writing, other },
-    },
-    organizations: {
-      total: orgTotal,
-      pending: orgPending,
-      rejected: orgRejected,
-      verified: orgVerified,
-      districts,
-    },
-    accounts: {
-      total: users.error ? null : users.total,
-      platformAdmins,
-    },
-    ingestion: {
+  const organizations = orgBundle
+    ? {
+        total: orgBundle[0],
+        pending: orgBundle[1],
+        rejected: orgBundle[2],
+        verified: orgBundle[3],
+        districts: orgBundle[4],
+      }
+    : UNAVAILABLE_ORGANIZATIONS;
+
+  const accounts = accountBundle
+    ? {
+        total: accountBundle[1].error ? null : accountBundle[1].total,
+        platformAdmins: accountBundle[0],
+      }
+    : UNAVAILABLE_ACCOUNTS;
+
+  let ingestion = UNAVAILABLE_INGESTION;
+  if (scrapeRuns) {
+    const runsUnavailable = Boolean(scrapeRuns.error);
+    if (scrapeRuns.error) {
+      console.error("Admin scrape runs failed:", scrapeRuns.error);
+    }
+    const runs = (scrapeRuns.data ?? []) as AdminScrapeRunRow[];
+    const lastRun = runs[0] ?? null;
+    const health = runsUnavailable
+      ? null
+      : INGESTION_SOURCES.filter((source) => source.competitionSource).map(
+          (source) => evaluateSourceOperationalHealth(source, runs)
+        );
+    const issueCount = health
+      ? health.filter(
+          (row) =>
+            row.state === "failing" ||
+            row.state === "warning" ||
+            row.state === "blocked"
+        ).length
+      : null;
+    ingestion = {
       lastRunStatus: lastRun?.status ?? null,
       lastRunAt: lastRun?.started_at ?? null,
-      lastRowsUpserted: runsUnavailable
-        ? null
-        : (lastRun?.rows_upserted ?? 0),
+      lastRowsUpserted:
+        runsUnavailable || !lastRun ? null : lastRun.rows_upserted,
       issueCount,
       runsUnavailable,
-    },
+    };
+  }
+
+  return {
+    listings,
+    organizations,
+    accounts,
+    ingestion,
   };
 }
 
 /** @deprecated Prefer getAdminOpsStats — kept for a fail-open numeric snapshot. */
 export async function getAdminOverview() {
-  const stats = await getAdminOpsStats();
+  const stats = await getAdminOpsStats(["listings", "organizations"]);
   return {
     organizations: stats.organizations.total ?? 0,
     drafts: stats.listings.drafts ?? 0,

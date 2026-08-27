@@ -127,35 +127,37 @@ export default function ClubsPage() {
   return (
     <>
       <section className="access-grid overflow-x-clip">
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-10">
           <div className="relative z-10 min-w-0">
             <div className="animate-rise">
               <PageBackLink />
             </div>
-            <div className="animate-rise mt-5" data-hero-brand>
-              <CauseyLogo size="hero" />
-            </div>
-            <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[16ch] font-display text-display-xl tracking-tight text-foreground sm:mt-6">
-              A club season, from roster to results.
-            </h1>
-            <p className="animate-rise animate-rise-delay-1 mt-4 max-w-prose text-md text-muted">
-              Causey helps a club find events, get students and families to the
-              right ones, record who went and how they finished, and keep a
-              season file. Chess clubs get the most listings; a debate, STEM,
-              arts, or writing club can use the same roster and hosting tools
-              with fewer public events in the directory. A club is not a school
-              and not a district.
-            </p>
-            <div className="animate-rise animate-rise-delay-2 mt-6 flex flex-wrap items-center gap-4">
-              <Link href="/signup?role=coach" className="cta-enabled inline-flex">
-                Create a club account
-              </Link>
-              <Link
-                href="/#search"
-                className="text-sm font-bold text-muted-strong hover:text-brand-red"
-              >
-                Search tournaments
-              </Link>
+            <div className="animate-rise mt-5 rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <div data-hero-brand>
+                <CauseyLogo size="hero" />
+              </div>
+              <h1 className="mt-5 max-w-[16ch] font-display text-display md:text-display-lg tracking-tight text-foreground sm:mt-6">
+                A club season, from roster to results.
+              </h1>
+              <p className="mt-4 max-w-prose text-md text-muted">
+                Causey helps a club find events, get students and families to the
+                right ones, record who went and how they finished, and keep a
+                season file. Chess clubs get the most listings; a debate, STEM,
+                arts, or writing club can use the same roster and hosting tools
+                with fewer public events in the directory. A club is not a school
+                and not a district.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <Link href="/signup?role=coach" className="cta-enabled inline-flex">
+                  Create a club account
+                </Link>
+                <Link
+                  href="/#search"
+                  className="text-sm font-bold text-muted-strong hover:text-brand-red"
+                >
+                  Search tournaments
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -206,7 +208,7 @@ export default function ClubsPage() {
               />
             </div>
           </ScrollReveal>
-          <p className="mt-5 text-sm text-muted">
+          <p className="mt-5 rounded-3xl border border-line bg-surface p-5 text-sm text-muted shadow-[var(--shadow-card)] sm:p-6">
             School districts are provisioned by Causey, not created here.{" "}
             <Link
               href="/districts"

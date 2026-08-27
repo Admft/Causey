@@ -4,13 +4,11 @@ import { notFound, redirect } from "next/navigation";
 import { CancelTournamentButton } from "@/components/CancelTournamentButton";
 import { EventOrganizerSubnav } from "@/components/EventOrganizerSubnav";
 import { PageBackLink } from "@/components/PageBackLink";
-import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   canManageCompetitionAsViewer,
   getCompetitionBySlugAuthed,
-  getOrgBySlugForViewer,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
 import { manageEventTitle } from "@/lib/portal-copy";
@@ -53,31 +51,8 @@ export default async function EditEventPage({
   ]);
   if (!org) redirect(`/event/${slug}`);
 
-  const view = await getOrgBySlugForViewer(org.slug, user.id);
-
   return (
     <>
-      {view ? (
-        <OrgSubnavBar
-          slug={view.org.slug}
-          orgName={view.org.name}
-          tab={null}
-          showRoster={view.isCoach && view.org.type !== "district"}
-          showAdmin={view.isAdmin}
-          orgType={view.org.type}
-        />
-      ) : (
-        <div className="border-b border-line bg-surface">
-          <div className="mx-auto max-w-6xl px-5 py-2.5 sm:px-8">
-            <p className="truncate text-xs font-semibold text-muted">
-              <Link href="/orgs" className="hover:text-foreground">
-                Organizations
-              </Link>{" "}
-              / <span className="text-muted-strong">{org.name}</span>
-            </p>
-          </div>
-        </div>
-      )}
       <EventOrganizerSubnav
         slug={competition.slug}
         tab="listing"

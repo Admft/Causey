@@ -192,7 +192,7 @@ export default async function OrganizationPeoplePage({
         showAdmin={view.isAdmin}
         orgType={view.org.type}
       />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
           {isDistrict
             ? "District staffing"
@@ -255,7 +255,7 @@ export default async function OrganizationPeoplePage({
             }
           />
         </section>
-      </main>
+      </div>
     </>
   );
 }

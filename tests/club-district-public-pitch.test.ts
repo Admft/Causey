@@ -65,6 +65,27 @@ describe("club and district public pitches", () => {
     expect(districtsPage).toContain("data-hero-brand");
   });
 
+  it("houses public H1s and lists unfinished district work without fake badges", () => {
+    expect(clubsPage).toContain(
+      "rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
+    );
+    expect(clubsPage).toContain("text-display md:text-display-lg");
+    expect(clubsPage).toContain("lg:py-10");
+    expect(clubsPage).not.toContain("lg:py-12");
+    expect(clubsPage).not.toContain("Coming soon");
+    expect(clubsPage).not.toContain("Beta");
+
+    expect(districtsPage).toContain("Price and support");
+    expect(districtsPage).toContain("Privacy, retention, and security");
+    expect(districtsPage).toContain("Email at school volume");
+    expect(districtsPage).toContain("Independent clubs");
+    expect(districtsPage).toContain("See the club workspace");
+    expect(districtsPage).toContain("rounded-3xl");
+    expect(districtsPage).toContain("text-display md:text-display-lg");
+    expect(districtsPage).not.toContain("Coming soon");
+    expect(districtsPage).not.toContain("Beta");
+  });
+
   it("keeps sign-in as sign-in, not a role chooser", () => {
     const loginPage = read("app/login/page.tsx");
     expect(loginPage).not.toContain("/signup?role=");

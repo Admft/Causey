@@ -86,14 +86,14 @@ export function HomeCoveragePath() {
       aria-labelledby="coverage-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+        <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
           <h2
             id="coverage-heading"
             className="max-w-[16ch] font-display text-display-sm tracking-tight text-foreground"
           >
             Five directories, one honest map
           </h2>
-          <p className="max-w-xl text-base text-muted">
+          <p className="mt-3 max-w-xl text-base text-muted">
             There is no public API for scholastic competition calendars, so
             Causey indexes the official pages organizers already publish. How
             deep each directory goes is different, and it is printed on the

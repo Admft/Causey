@@ -63,38 +63,39 @@ export default async function LoginPage({
       <div className="relative mx-auto max-w-md px-5 py-10 sm:py-12">
         <div className="animate-rise">
           <PageBackLink />
-          <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
+        </div>
+
+        <div className="animate-rise animate-rise-delay-1 mt-6 rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
             Account
           </p>
           <h1 className="mt-2 font-display text-display-lg tracking-tight text-foreground">
             {heading}
           </h1>
           <p className="mt-3 text-md text-muted">{supporting}</p>
-        </div>
 
-        {isJoiningOrganization || isClaimingInvitation ? (
-          <div className="animate-rise animate-rise-delay-1 mt-8 rounded-2xl border border-brand-blue/45 bg-brand-blue-soft p-5 sm:p-6">
-            <h2 className="font-display text-lg text-foreground">
-              {isStaffClaim ? "New staff member?" : "New student?"}
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              {isStaffClaim
-                ? "Create a coach or organizer account with your own password. Staff invites do not need a student date of birth."
-                : isJoiningOrganization
-                  ? "Most people opening a coach invite need to create an account first."
-                  : "Create the matching account type, then you’ll return here to accept."}
-            </p>
-            <Link href={signupHref} className="cta-enabled mt-4 inline-flex">
-              {isStaffClaim ? "Create staff account" : "Create student account"}
-            </Link>
-          </div>
-        ) : null}
+          {isJoiningOrganization || isClaimingInvitation ? (
+            <div className="mt-6 rounded-2xl border border-brand-blue/45 bg-brand-blue-soft p-5 sm:p-6">
+              <h2 className="font-display text-lg text-foreground">
+                {isStaffClaim ? "New staff member?" : "New student?"}
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                {isStaffClaim
+                  ? "Create a coach or organizer account with your own password. Staff invites do not need a student date of birth."
+                  : isJoiningOrganization
+                    ? "Most people opening a coach invite need to create an account first."
+                    : "Create the matching account type, then you’ll return here to accept."}
+              </p>
+              <Link href={signupHref} className="cta-enabled mt-4 inline-flex">
+                {isStaffClaim ? "Create staff account" : "Create student account"}
+              </Link>
+            </div>
+          ) : null}
 
-        <div className="animate-rise animate-rise-delay-1 mt-8">
           {claimUnavailable ? (
             <Link
               href="/#search"
-              className="group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)]"
+              className="group mt-6 flex items-start justify-between gap-4 border-t border-line pt-6"
             >
               <div className="min-w-0">
                 <p className="text-lead font-bold text-foreground">
@@ -113,7 +114,7 @@ export default async function LoginPage({
               </span>
             </Link>
           ) : (
-            <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6">
+            <div className="mt-6 border-t border-line pt-6">
               {isJoiningOrganization || isClaimingInvitation ? (
                 <p className="mb-4 text-sm font-bold text-foreground">
                   {isStaffClaim

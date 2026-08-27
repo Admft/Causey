@@ -30,7 +30,7 @@ export default async function AdminOrganizationsPage({
 
   const [organizations, stats] = await Promise.all([
     getAdminOrganizations(),
-    getAdminOpsStats(),
+    getAdminOpsStats(["organizations"]),
   ]);
   const districtReadinessById = Object.fromEntries(
     await Promise.all(
@@ -47,7 +47,7 @@ export default async function AdminOrganizationsPage({
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Organizations
@@ -99,6 +99,6 @@ export default async function AdminOrganizationsPage({
           initialStatus={initialStatus}
         />
       </div>
-    </main>
+    </div>
   );
 }

@@ -20,10 +20,10 @@ export function AdminSubnav() {
   const pathname = usePathname();
 
   return (
-    <aside className="border-b border-line bg-surface lg:border-r lg:border-b-0 lg:bg-transparent">
+    <aside className="border-b border-line bg-surface md:min-h-[calc(100dvh-var(--home-hero-chrome))] md:border-r md:border-b-0">
       <nav
         aria-label="Administration sections"
-        className="flex items-center gap-1 overflow-x-auto px-5 py-2.5 sm:px-8 lg:hidden"
+        className="flex items-center gap-1 overflow-x-auto px-5 py-2.5 sm:px-8 md:hidden"
       >
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
@@ -44,7 +44,7 @@ export function AdminSubnav() {
         })}
       </nav>
 
-      <div className="hidden lg:sticky lg:top-6 lg:block lg:py-10 lg:pl-8 lg:pr-6">
+      <div className="hidden md:sticky md:top-6 md:block md:py-10 md:pl-8 md:pr-6">
         <p className="px-3 text-2xs font-semibold uppercase tracking-wide text-muted">
           Administration
         </p>

@@ -83,55 +83,57 @@ export default async function SignupPage({
     <section className="access-grid">
       <div className="relative mx-auto max-w-xl px-5 py-10 sm:px-8 sm:py-12">
         <PageBackLink />
-        <p className="mt-6 text-sm font-semibold text-brand-red">Account</p>
-        <h1 className="mt-2 font-display text-display-lg tracking-tight text-foreground">
-          {isJoiningOrganization
-            ? "Create a student account to join"
-            : invitation
-              ? `Create a ${
-                  invitationAccountRole === "coach" ? "staff" : "student"
-                } account for ${invitation.org_name}`
-              : "Create your Causey account"}
-        </h1>
-        <p className="mt-3 text-sm text-muted">
-          {isJoiningOrganization
-            ? "This join link is for a student roster. After confirming your email, you’ll return to review the organization before joining."
-            : invitation
-              ? `This invitation assigns the ${INVITATION_ROLE_LABELS[invitation.member_role] ?? invitation.member_role} role after you confirm your email and accept it.`
-            : "Students join schools or clubs, parents link to a student, and coaches or organizers start rosters and publish tournaments."}
-        </p>
-        <div className="mt-8 rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)] sm:p-6">
-          <SignupForm
-            initialRole={
-              isJoiningOrganization
-                ? "student"
-                : invitation
-                  ? invitationAccountRole
-                : parsedRole.success
-                  ? parsedRole.data
-                  : "student"
-            }
-            next={next}
-            joiningOrganization={isJoiningOrganization}
-            invitation={
-              invitation
-                ? {
-                    orgName: invitation.org_name,
-                    roleLabel:
-                      INVITATION_ROLE_LABELS[invitation.member_role] ??
-                      invitation.member_role,
-                    accountRole: invitationAccountRole,
-                  }
-                : undefined
-            }
-          />
+        <div className="mt-6 rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+          <p className="text-sm font-semibold text-brand-red">Account</p>
+          <h1 className="mt-2 font-display text-display-lg tracking-tight text-foreground">
+            {isJoiningOrganization
+              ? "Create a student account to join"
+              : invitation
+                ? `Create a ${
+                    invitationAccountRole === "coach" ? "staff" : "student"
+                  } account for ${invitation.org_name}`
+                : "Create your Causey account"}
+          </h1>
+          <p className="mt-3 text-sm text-muted">
+            {isJoiningOrganization
+              ? "This join link is for a student roster. After confirming your email, you’ll return to review the organization before joining."
+              : invitation
+                ? `This invitation assigns the ${INVITATION_ROLE_LABELS[invitation.member_role] ?? invitation.member_role} role after you confirm your email and accept it.`
+              : "Students join schools or clubs, parents link to a student, and coaches or organizers start rosters and publish tournaments."}
+          </p>
+          <div className="mt-8">
+            <SignupForm
+              initialRole={
+                isJoiningOrganization
+                  ? "student"
+                  : invitation
+                    ? invitationAccountRole
+                    : parsedRole.success
+                      ? parsedRole.data
+                      : "student"
+              }
+              next={next}
+              joiningOrganization={isJoiningOrganization}
+              invitation={
+                invitation
+                  ? {
+                      orgName: invitation.org_name,
+                      roleLabel:
+                        INVITATION_ROLE_LABELS[invitation.member_role] ??
+                        invitation.member_role,
+                      accountRole: invitationAccountRole,
+                    }
+                  : undefined
+              }
+            />
+          </div>
+          <p className="mt-6 text-xs text-muted">
+            You can search without creating an account.{" "}
+            <Link href="/#search" className="font-bold text-muted-strong hover:text-brand-red">
+              Keep browsing tournaments
+            </Link>
+          </p>
         </div>
-        <p className="mt-6 text-xs text-muted">
-          You can search without creating an account.{" "}
-          <Link href="/#search" className="font-bold text-muted-strong hover:text-brand-red">
-            Keep browsing tournaments
-          </Link>
-        </p>
       </div>
     </section>
   );

@@ -43,7 +43,8 @@ function SourceCoverMark({
 /**
  * Cover for a competition. Photos fill a fixed aspect box (cropped, never
  * stretched). Missing or failed photos keep that same box and show the
- * listing source mark so grid cards stay aligned.
+ * listing source mark so grid cards stay aligned. Homepage featured keeps
+ * that source mark too.
  */
 export function CompetitionCoverImage({
   src,
@@ -62,7 +63,7 @@ export function CompetitionCoverImage({
   /** Listing source used when the photo is missing or fails to load. */
   source?: string;
   compact?: boolean;
-  /** Search keeps the source mark; homepage featured does not. */
+  /** Search and homepage featured keep the source mark. */
   sourceFallback?: boolean;
 }) {
   const [failed, setFailed] = useState(false);

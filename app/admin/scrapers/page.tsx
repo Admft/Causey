@@ -4,8 +4,8 @@ import { AdminScraperControls } from "@/components/AdminScraperControls";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
+  formatIngestionLastRun,
   getAdminIngestionSourceHealth,
-  getAdminOpsStats,
   getAdminScrapeRuns,
 } from "@/lib/data/admin";
 import { getGitHubIngestionConfig } from "@/lib/github-ingestion";
@@ -28,25 +28,30 @@ export default async function AdminScrapersPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) redirect("/");
 
-  const [runResult, github, stats, health] = await Promise.all([
+  const [runResult, github, health] = await Promise.all([
     getAdminScrapeRuns(),
     Promise.resolve(getGitHubIngestionConfig()),
-    getAdminOpsStats(),
     getAdminIngestionSourceHealth(),
   ]);
 
-  const lastRunLabel = stats.ingestion.runsUnavailable
+  const lastRun = runResult.unavailable ? null : (runResult.runs[0] ?? null);
+  const lastRunLabel = formatIngestionLastRun(
+    lastRun?.status ?? null,
+    runResult.unavailable
+  );
+  const lastRowsUpserted =
+    runResult.unavailable || !lastRun ? null : lastRun.rows_upserted;
+  const issueCount = health.unavailable
     ? null
-    : stats.ingestion.lastRunStatus
-      ? stats.ingestion.lastRunStatus === "succeeded"
-        ? "Succeeded"
-        : stats.ingestion.lastRunStatus === "failed"
-          ? "Failed"
-          : "Running"
-      : "None yet";
+    : health.sources.filter(
+        (row) =>
+          row.health.state === "failing" ||
+          row.health.state === "warning" ||
+          row.health.state === "blocked"
+      ).length;
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Scrapers
@@ -68,14 +73,12 @@ export default async function AdminScrapersPage() {
             },
             {
               label: "Rows upserted last run",
-              value: stats.ingestion.runsUnavailable
-                ? null
-                : stats.ingestion.lastRowsUpserted,
+              value: lastRowsUpserted,
               href: "/admin/scrapers",
             },
             {
               label: "Sources with issues",
-              value: stats.ingestion.issueCount,
+              value: issueCount,
               href: "/admin/scrapers#source-health",
             },
           ]}
@@ -126,6 +129,6 @@ export default async function AdminScrapersPage() {
           workflowUrl={github.ok ? github.config.workflowUrl : github.workflowUrl}
         />
       </div>
-    </main>
+    </div>
   );
 }

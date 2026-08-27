@@ -21,13 +21,7 @@ import {
   resultsGridClass,
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
-import {
-  ArtsHeroGraphic,
-  ChessHeroGraphic,
-  SpeechDebateHeroGraphic,
-  StemHeroGraphic,
-  WritingHeroGraphic,
-} from "@/components/ChessHeroGraphic";
+import { SearchHeroMark } from "@/components/ChessHeroGraphic";
 import {
   discoveryCategory,
   type DiscoveryCategory,
@@ -39,8 +33,6 @@ import { competitionSourceLabel } from "@/lib/ingestion-sources";
  * Filter state mirrors into the URL so searches are shareable, and every
  * fetch goes through /api/competitions — the same endpoint external clients
  * would use. Tiles load in pages (default 20) so the first paint stays fast.
- *
- * Hero graphic size: edit CHESS_GRAPHIC_SCALE in ChessHeroGraphic.tsx
  */
 
 const RADII = ["10", "25", "50", "100", "250"];
@@ -335,40 +327,46 @@ export function SearchClient({
       {/* Zip + radius: the one bold moment on this page, on the coordinate-
           grid motif (access shouldn't depend on where you live). */}
       <section className="access-grid section-rule">
-        <div className="relative mx-auto max-w-6xl px-5 py-6 sm:px-8 sm:py-10 md:min-h-[400px] lg:min-h-[440px] lg:py-12">
+        <div className="relative mx-auto max-w-6xl px-5 py-6 sm:px-8 sm:py-10 lg:py-12">
           <PageBackLink />
-          <p className="mt-5 text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red md:mt-6">
-            {categoryDefinition.label}
-          </p>
-          <h1 className="animate-rise mt-2 max-w-[20ch] font-display text-display tracking-tight text-foreground md:text-display-lg">
-            {categoryDefinition.heading}
-          </h1>
-          <p className="mt-3 hidden max-w-lg text-md text-muted md:block">
-            {categoryDefinition.description}
-          </p>
-          {/* One search cluster: name it, or place it. Keyword applies as you
-              type; zip + radius apply on submit/blur. All three controls share
-              one label treatment so the band reads as a single tool. */}
-          <div className="mt-5 max-w-lg lg:mt-6">
-            <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
-              Tournament name
-            </label>
-            <input
-              id="tournament-search"
-              type="search"
-              className="field mt-1"
-              placeholder={categoryDefinition.searchPlaceholder}
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-          </div>
-          <form
-            className="mt-2.5 flex max-w-lg flex-col gap-2.5 sm:flex-row sm:items-end"
-            onSubmit={(e) => {
-              e.preventDefault();
-              applyZip();
-            }}
-          >
+          <div className="mt-5 max-w-xl rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6 md:max-w-2xl">
+            <div className="flex items-start gap-3">
+              <SearchHeroMark category={category} />
+              <div className="min-w-0">
+                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+                  {categoryDefinition.label}
+                </p>
+                <h1 className="animate-rise mt-2 max-w-[20ch] font-display text-display tracking-tight text-foreground md:text-display-lg">
+                  {categoryDefinition.heading}
+                </h1>
+              </div>
+            </div>
+            <p className="mt-3 text-md text-muted">
+              {categoryDefinition.description}
+            </p>
+            {/* One search cluster: name it, or place it. Keyword applies as you
+                type; zip + radius apply on submit/blur. All three controls share
+                one label treatment so the band reads as a single tool. */}
+            <div className="mt-5 lg:mt-6">
+              <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
+                Tournament name
+              </label>
+              <input
+                id="tournament-search"
+                type="search"
+                className="field mt-1"
+                placeholder={categoryDefinition.searchPlaceholder}
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+              />
+            </div>
+            <form
+              className="mt-2.5 flex flex-col gap-2.5 sm:flex-row sm:items-end"
+              onSubmit={(e) => {
+                e.preventDefault();
+                applyZip();
+              }}
+            >
             <div className="flex-1">
               <label htmlFor="zip" className="text-xs font-semibold text-muted-strong">
                 Zip code
@@ -412,12 +410,7 @@ export function SearchClient({
               Search tournaments
             </button>
           </form>
-
-          {category === "chess" ? <ChessHeroGraphic /> : null}
-          {category === "debate" ? <SpeechDebateHeroGraphic /> : null}
-          {category === "stem" ? <StemHeroGraphic /> : null}
-          {category === "arts" ? <ArtsHeroGraphic /> : null}
-          {category === "writing" ? <WritingHeroGraphic /> : null}
+          </div>
         </div>
       </section>
 
@@ -427,7 +420,7 @@ export function SearchClient({
               long results column; short viewports scroll the rail internally.
               Overlay scrollbars paint over the scrollport edge, so the inset
               lives on an inner wrapper — not padding on the overflowing aside. */}
-          <aside className="soft-scroll hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
+          <aside className="soft-scroll hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100dvh-6rem)] lg:self-start lg:overflow-y-auto">
             <div className="lg:pr-4">
               <SearchFilters
                 filters={filters}

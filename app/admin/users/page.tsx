@@ -6,7 +6,7 @@ import {
   getPlatformAdminUser,
   isCurrentUserSuperAdmin,
 } from "@/lib/auth/platform-admin";
-import { getAdminOpsStats, getAdminUsers } from "@/lib/data/admin";
+import { countPlatformAdmins, getAdminUsers } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
   title: "Admin users",
@@ -17,15 +17,15 @@ export default async function AdminUsersPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) return null;
   const isSuperAdmin = await isCurrentUserSuperAdmin();
-  const [{ users, total, error }, stats] = await Promise.all([
+  const [{ users, total, error }, platformAdmins] = await Promise.all([
     getAdminUsers({
       limit: 50,
     }),
-    getAdminOpsStats(),
+    countPlatformAdmins(),
   ]);
 
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Users &amp; access
@@ -44,12 +44,12 @@ export default async function AdminUsersPage() {
           items={[
             {
               label: "Total accounts",
-              value: stats.accounts.total,
+              value: error ? null : total,
               href: "/admin/users",
             },
             {
               label: "Platform admins",
-              value: stats.accounts.platformAdmins,
+              value: platformAdmins,
               href: "/admin/users",
             },
           ]}
@@ -77,6 +77,6 @@ export default async function AdminUsersPage() {
         </Link>{" "}
         to find a slug.
       </p>
-    </main>
+    </div>
   );
 }

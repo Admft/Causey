@@ -23,6 +23,8 @@ describe("mobile discovery and private district setup", () => {
     expect(districtPitch).toContain("Planned next");
     expect(districtPitch).toContain("Guided district setup");
     expect(districtPitch).toContain("More competition types");
+    expect(districtPitch).toContain("Illustrative season");
+    expect(districtPitch).toContain("Illustrative command center");
     expect(districtPitch).not.toContain("what is ready now");
     expect(districtPitch).not.toContain("what we plan to");
     expect(districtPitch).not.toContain("aggregate reporting");
@@ -36,7 +38,9 @@ describe("mobile discovery and private district setup", () => {
       searchClient.indexOf('idPrefix="mobile-filter"')
     );
     expect(searchClient).toContain("hidden lg:sticky");
-    expect(searchClient).toContain("hidden max-w-lg text-md text-muted md:block");
+    expect(searchClient).toContain("mt-3 text-md text-muted");
+    expect(searchClient).not.toContain("hidden max-w-lg text-md text-muted md:block");
+    expect(searchClient).not.toContain("hidden md:block");
     expect(searchFilters).toContain("grid-cols-2 gap-3");
     expect(searchFilters).toContain('idPrefix = "filter"');
   });

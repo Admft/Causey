@@ -49,7 +49,7 @@ export default async function DistrictActivityPage({
         showAdmin={view.isAdmin}
         orgType={view.org.type}
       />
-      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">District activity</p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           Recent administrative actions
@@ -132,7 +132,7 @@ export default async function DistrictActivityPage({
             </p>
           </section>
         )}
-      </main>
+      </div>
     </>
   );
 }

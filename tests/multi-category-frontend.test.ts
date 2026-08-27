@@ -189,13 +189,28 @@ describe("navigation drops the unconditional chess shortcut", () => {
     expect(siteHeader).not.toContain('href="/chess"');
   });
 
-  it("derives the single signed-in shortcut from the profile preference", () => {
+  it("derives the signed-in Find destination from the profile preference", () => {
     expect(authNav).toContain("preferred_competition_category");
     expect(authNav).toContain("parseDiscoveryCategory(");
     expect(authNav).toContain("shortLabel");
+    expect(authNav).toContain('shortcutDefinition?.href ?? "/#search"');
     // Chess pathways belong to the chess shortcut's active state.
     expect(authNav).toContain('pathname.startsWith("/pathways")');
     expect(authNav).not.toContain('href="/chess"');
+  });
+
+  it("always offers Find tournaments and a phone More chip", () => {
+    expect(authNav).toContain("Find tournaments");
+    expect(authNav).toContain("/#search");
+    expect(authNav).toContain("<details");
+    expect(authNav).toContain(">More<");
+    expect(authNav).not.toMatch(/hamburger/i);
+    expect(authNav).not.toContain("return null");
+    expect(authNav).toContain("email === undefined");
+    expect(authNav).toContain('aria-label="Checking sign-in"');
+    expect(authNav).toContain("pointer-events-none");
+    expect(authNav).toContain("invisible");
+    expect(authNav).toContain("aria-busy");
   });
 
   it("recovers to signed-out navigation when the auth lookup rejects", () => {
@@ -245,6 +260,11 @@ describe("coverage and empty states stay honest", () => {
     expect(coveragePath).toContain("Five directories, one honest map");
     expect(coveragePath).toContain("link-only");
     expect(coveragePath).toContain("referenceSources");
+    expect(coveragePath).toContain(
+      "rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6"
+    );
+    expect(coveragePath).toContain("card-lift");
+    expect(coveragePath).not.toContain("lg:flex-row lg:items-end");
     expect(coveragePath).not.toContain("use client");
     expect(coveragePath).not.toContain("Coming soon");
     expect(coveragePath).not.toContain("Beta");
@@ -332,6 +352,29 @@ describe("generalized links and return paths", () => {
     );
     expect(read("components/PageBackLink.tsx")).toContain('className="page-back"');
     expect(read("components/PageBackLink.tsx")).not.toContain("←");
+  });
+
+  it("houses directory search in a filled card with a glyph mark, not a PNG overlay", () => {
+    const heroMark = read("components/ChessHeroGraphic.tsx");
+    expect(searchClient).toContain("SearchHeroMark");
+    expect(searchClient).toContain("max-w-xl");
+    expect(searchClient).toContain("md:max-w-2xl");
+    expect(searchClient).toContain("rounded-3xl");
+    expect(searchClient).not.toMatch(
+      /<(Chess|SpeechDebate|Stem|Arts|Writing)HeroGraphic/
+    );
+    expect(searchClient).not.toContain("md:min-h-[400px]");
+    expect(searchClient).not.toContain("lg:min-h-[440px]");
+    expect(searchClient).toContain("lg:max-h-[calc(100dvh-6rem)]");
+    expect(searchClient).not.toContain("calc(100vh");
+    expect(heroMark).toContain("export function SearchHeroMark");
+    expect(heroMark).toContain("CategoryGlyph");
+    expect(heroMark).toContain("h-12 w-12");
+    expect(heroMark).toContain("rounded-2xl");
+    expect(heroMark).not.toContain("next/image");
+    expect(heroMark).not.toContain("CHESS_GRAPHIC_SCALE");
+    expect(heroMark).not.toContain("chess-pieces.png");
+    expect(heroMark).not.toContain("absolute");
   });
 
   it("puts category discipline chips on search instead of burying them in the rail", () => {

@@ -59,10 +59,10 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
   const current = panels.find((panel) => panel.id === active) ?? panels[0];
 
   return (
-    <div className="mt-8 lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-10">
+    <div className="mt-8 md:grid md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10">
       <nav
         aria-label="Settings sections"
-        className="flex gap-1 overflow-x-auto border-b border-line pb-2.5 lg:hidden"
+        className="flex gap-1 overflow-x-auto border-b border-line pb-2.5 md:hidden"
       >
         {panels.map((panel) => {
           const isActive = panel.id === active;
@@ -86,7 +86,7 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
 
       <nav
         aria-label="Settings sections"
-        className="hidden lg:block lg:border-r lg:border-line"
+        className="hidden md:block md:border-r md:border-line"
       >
         <div className="sticky top-6 grid gap-0.5 pr-6">
           {panels.map((panel) => {
@@ -111,7 +111,7 @@ export function AccountSettingsShell({ panels }: { panels: Panel[] }) {
       </nav>
 
       <section
-        className="mt-8 lg:mt-0"
+        className="mt-8 md:mt-0"
         id={current?.id}
         aria-label={current ? `${current.label} settings` : "Settings"}
       >

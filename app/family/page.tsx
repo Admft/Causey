@@ -217,7 +217,7 @@ export default async function FamilyPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_14rem]">
+      <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_14rem]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
             Family
@@ -248,7 +248,7 @@ export default async function FamilyPage() {
           {children.length ? (
             <nav
               aria-label="Family workspace sections"
-              className="mt-5 flex gap-2 overflow-x-auto border-b border-line pb-3 lg:hidden"
+              className="mt-5 flex gap-2 overflow-x-auto border-b border-line pb-3 md:hidden"
             >
               {rsvpInbox.length || registrationInbox.length ? (
                 <a
@@ -537,7 +537,7 @@ export default async function FamilyPage() {
           ) : null}
         </div>
 
-        <aside className="hidden lg:block">
+        <aside className="hidden md:block">
           <div className="sticky top-24 rounded-xl border border-line bg-surface-soft/80 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
               Students

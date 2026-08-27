@@ -1,6 +1,6 @@
 export default function AdminLoading() {
   return (
-    <main
+    <div
       className="mx-auto max-w-6xl px-5 py-10 sm:px-8"
       role="status"
       aria-label="Loading administration workspace"
@@ -16,6 +16,6 @@ export default function AdminLoading() {
         </div>
       </div>
       <span className="sr-only">Loading administration workspace…</span>
-    </main>
+    </div>
   );
 }

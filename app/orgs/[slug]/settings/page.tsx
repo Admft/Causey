@@ -53,7 +53,7 @@ export default async function OrganizationSettingsPage({
         showAdmin={view.isAdmin}
         orgType={view.org.type}
       />
-      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">Settings</p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           {view.org.type === "district"
@@ -204,7 +204,7 @@ export default async function OrganizationSettingsPage({
             ) : null}
           </section>
         ) : null}
-      </main>
+      </div>
     </>
   );
 }

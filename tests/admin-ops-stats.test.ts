@@ -6,51 +6,77 @@ const read = (path: string) =>
   readFileSync(resolve(process.cwd(), path), "utf8");
 
 describe("platform admin ops stats", () => {
-  it("counts listings globally and fails closed instead of faking zero", () => {
+  it("slices fetches so unrequested work fail-closes and drafts are opt-in", () => {
     const adminData = read("lib/data/admin.ts");
-    expect(adminData).toContain("export async function getAdminOpsStats");
-    expect(adminData).toContain('listing("archived")');
-    expect(adminData).toContain('listing("rejected")');
-    expect(adminData).toContain('eq("source", "organizer")');
-    expect(adminData).toContain("readyToPublish");
-    expect(adminData).toContain("isTournamentPublishReady");
+    expect(adminData).toContain("ADMIN_OPS_SLICES");
+    expect(adminData).toContain(
+      'export async function getAdminOpsStats(\n  slices: readonly AdminOpsSlice[]\n)'
+    );
+    expect(adminData).toContain('slices.includes("readyDrafts")');
+    expect(adminData).toContain(".limit(1000)");
+    expect(adminData).toContain("formatIngestionLastRun");
+    expect(adminData).toContain("countPlatformAdmins");
+    expect(adminData).toContain("runsUnavailable: true");
+    expect(adminData).toContain(
+      "runsUnavailable || !lastRun ? null : lastRun.rows_upserted"
+    );
     expect(adminData).toContain("return null");
-    expect(adminData).toContain("search_platform_users");
-    expect(adminData).toContain("evaluateSourceOperationalHealth");
+    expect(adminData).toContain("isTournamentPublishReady");
+    expect(adminData).toContain('eq("source", "organizer")');
+    expect(adminData).not.toContain("publishedByCategory");
+    expect(adminData).not.toContain("publishedCategory");
+    expect(adminData).not.toContain("lastRun?.rows_upserted ?? 0");
   });
 
-  it("shows a grouped ops ledger on overview with archived and ingestion", () => {
+  it("restores the grouped ops ledger in housed two-column cards", () => {
     const overview = read("app/admin/page.tsx");
-    expect(overview).toContain("getAdminOpsStats");
+    const strip = read("components/AdminStatStrip.tsx");
+
+    expect(overview).toContain(
+      'getAdminOpsStats([\n      "listings",\n      "readyDrafts",\n      "organizations",\n      "accounts",\n      "ingestion",\n    ])'
+    );
     expect(overview).toContain("AdminOpsLedger");
+    expect(overview).toContain("Awaiting review");
+    expect(overview).toContain("Next in queue");
     expect(overview).toContain("Archived");
-    expect(overview).toContain("Ready to publish");
-    expect(overview).toContain("Sources with issues");
+    expect(overview).toContain("Total accounts");
+    expect(overview).toContain("PortalMission");
     expect(overview).toContain("Moderation first");
-    expect(overview).not.toContain("lg:grid-cols-4");
+    expect(overview).toMatch(/label:\s*"Published"/);
+    expect(overview).not.toContain("AdminOpsOverview");
+    expect(overview).not.toContain("DATA_SOURCE");
+    expect(strip).toContain("AdminOpsLedger");
+    expect(strip).toContain("md:grid-cols-2");
+    expect(strip).toContain("rounded-2xl");
+    expect(strip).toContain("StatCluster");
+    expect(strip).toContain('return "Unavailable"');
+    expect(strip).not.toContain("AdminOpsOverview");
   });
 
-  it("puts a job-specific strip on every admin surface", () => {
+  it("fetches only the slice each destination needs", () => {
     const moderation = read("app/admin/moderation/page.tsx");
     const tournaments = read("app/admin/tournaments/page.tsx");
-    const scrapers = read("app/admin/scrapers/page.tsx");
     const orgs = read("app/admin/organizations/page.tsx");
     const users = read("app/admin/users/page.tsx");
+    const scrapers = read("app/admin/scrapers/page.tsx");
 
+    expect(moderation).toContain('getAdminOpsStats(["listings"])');
     expect(moderation).toContain("Published organizer listings");
-    expect(tournaments).toContain("getAdminOpsStats");
+    expect(tournaments).toContain(
+      'getAdminOpsStats(["listings", "readyDrafts"])'
+    );
     expect(tournaments).toContain('status: "archived"');
     expect(tournaments).toContain("ready: true");
-    expect(scrapers).toContain("getAdminIngestionSourceHealth");
-    expect(scrapers).toContain("Source health");
+    expect(orgs).toContain('getAdminOpsStats(["organizations"])');
     expect(orgs).toContain("initialStatus");
     expect(orgs).toContain("/admin/organizations?status=pending");
+    expect(users).not.toContain("getAdminOpsStats");
+    expect(users).toContain("countPlatformAdmins");
+    expect(users).toContain("error ? null : total");
     expect(users).toContain("Platform admins");
-  });
-
-  it("does not mock the /admin overview route for these counts", () => {
-    const overview = read("app/admin/page.tsx");
-    expect(overview).toContain("getAdminOpsStats");
-    expect(overview).not.toContain("DATA_SOURCE");
+    expect(scrapers).not.toContain("getAdminOpsStats");
+    expect(scrapers).toContain("getAdminIngestionSourceHealth");
+    expect(scrapers).toContain("runResult");
+    expect(scrapers).toContain("Source health");
   });
 });

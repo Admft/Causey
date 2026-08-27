@@ -9,7 +9,6 @@ import {
 } from "@/components/EntrantManager";
 import { EventOrganizerSubnav } from "@/components/EventOrganizerSubnav";
 import { EventPulseStrip } from "@/components/EventPulseStrip";
-import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PageBackLink } from "@/components/PageBackLink";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
@@ -180,8 +179,6 @@ export default async function ManageEventPage({
   let orgShell: {
     slug: string;
     name: string;
-    showRoster: boolean;
-    showAdmin: boolean;
     orgType: "school" | "district" | "club" | "team";
   } | null = null;
   let moderationNote: string | null = null;
@@ -213,8 +210,6 @@ export default async function ManageEventPage({
         orgShell = {
           slug: view.org.slug,
           name: view.org.name,
-          showRoster: view.isCoach && view.org.type !== "district",
-          showAdmin: view.isAdmin,
           orgType: view.org.type,
         };
       }
@@ -483,16 +478,6 @@ export default async function ManageEventPage({
 
   return (
     <>
-      {orgShell ? (
-        <OrgSubnavBar
-          slug={orgShell.slug}
-          orgName={orgShell.name}
-          tab={null}
-          showRoster={orgShell.showRoster}
-          showAdmin={orgShell.showAdmin}
-          orgType={orgShell.orgType}
-        />
-      ) : null}
       <EventOrganizerSubnav
         slug={competition.slug}
         tab="people"

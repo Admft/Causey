@@ -6,6 +6,7 @@ import { PortalMission } from "@/components/PortalPrimitives";
 import { adminTournamentsHref } from "@/lib/admin-tournament-filters";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
+  formatIngestionLastRun,
   getAdminAuditLog,
   getAdminModerationQueue,
   getAdminOpsStats,
@@ -22,13 +23,22 @@ export default async function AdminOverviewPage() {
   if (!admin) redirect("/");
 
   const [stats, auditRows, moderation] = await Promise.all([
-    getAdminOpsStats(),
+    getAdminOpsStats([
+      "listings",
+      "readyDrafts",
+      "organizations",
+      "accounts",
+      "ingestion",
+    ]),
     getAdminAuditLog(8),
     getAdminModerationQueue(),
   ]);
 
   const pending = stats.listings.pendingReview;
-  const queuePreview = moderation.queue.slice(0, 3);
+  const queuePreview = moderation.error
+    ? []
+    : moderation.queue.slice(0, 3);
+  const showQueue = Boolean(moderation.error || queuePreview.length);
   const mission =
     pending === null
       ? {
@@ -66,18 +76,8 @@ export default async function AdminOverviewPage() {
             },
           };
 
-  const lastRunLabel = stats.ingestion.runsUnavailable
-    ? null
-    : stats.ingestion.lastRunStatus
-      ? stats.ingestion.lastRunStatus === "succeeded"
-        ? "Succeeded"
-        : stats.ingestion.lastRunStatus === "failed"
-          ? "Failed"
-          : "Running"
-      : "None yet";
-
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Moderation first
@@ -213,7 +213,10 @@ export default async function AdminOverviewPage() {
                 items: [
                   {
                     label: "Last run",
-                    value: lastRunLabel,
+                    value: formatIngestionLastRun(
+                      stats.ingestion.lastRunStatus,
+                      stats.ingestion.runsUnavailable
+                    ),
                     href: "/admin/scrapers",
                   },
                   {
@@ -235,7 +238,7 @@ export default async function AdminOverviewPage() {
         </div>
       </section>
 
-      {queuePreview.length > 0 ? (
+      {showQueue ? (
         <section className="section-rule mt-10 pt-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-sm font-semibold text-foreground">
@@ -248,20 +251,38 @@ export default async function AdminOverviewPage() {
               {pending === null ? "See all" : `See all ${pending}`}
             </Link>
           </div>
-          <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
-            {queuePreview.map((row) => (
-              <li key={row.id} className="px-4 py-3">
-                <p className="text-sm font-semibold text-foreground">{row.name}</p>
-                <p className="mt-0.5 text-xs text-muted">
-                  {row.organizations?.name ?? row.organizer_name ?? "Organizer"}
-                  {" · "}
-                  {formatDateRange(row.start_date, row.end_date)}
-                  {" · "}
-                  {row.city}, {row.state}
-                </p>
-              </li>
-            ))}
-          </ul>
+          {moderation.error ? (
+            <p
+              className="mt-4 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-muted"
+              role="alert"
+            >
+              {moderation.error}{" "}
+              <Link
+                href="/admin/moderation"
+                className="font-semibold text-brand-red hover:underline"
+              >
+                Try loading it again
+              </Link>
+              .
+            </p>
+          ) : (
+            <ul className="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+              {queuePreview.map((row) => (
+                <li key={row.id} className="px-4 py-3">
+                  <p className="text-sm font-semibold text-foreground">
+                    {row.name}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {row.organizations?.name ?? row.organizer_name ?? "Organizer"}
+                    {" · "}
+                    {formatDateRange(row.start_date, row.end_date)}
+                    {" · "}
+                    {row.city}, {row.state}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ) : null}
 
@@ -298,7 +319,7 @@ export default async function AdminOverviewPage() {
             No administrative changes have been recorded yet.
           </p>
         ) : (
-          <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
+          <ul className="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
             {auditRows.map((row) => {
               const name =
                 typeof row.details.name === "string"
@@ -337,6 +358,6 @@ export default async function AdminOverviewPage() {
           </ul>
         )}
       </section>
-    </main>
+    </div>
   );
 }

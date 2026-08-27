@@ -58,7 +58,7 @@ export default async function AdminTournamentsPage({
   const [tournaments, totalTournamentCount, ops] = await Promise.all([
     getAdminTournaments(filters),
     getAdminTournamentCount(),
-    getAdminOpsStats(),
+    getAdminOpsStats(["listings", "readyDrafts"]),
   ]);
   const draftSourceGroup =
     filters.status === "draft" && filters.source
@@ -103,7 +103,7 @@ export default async function AdminTournamentsPage({
   ).length;
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-brand-red">Platform admin</p>
@@ -407,6 +407,6 @@ export default async function AdminTournamentsPage({
           </div>
         )}
       </section>
-    </main>
+    </div>
   );
 }

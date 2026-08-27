@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
@@ -35,6 +35,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
   },
 };
+
+export const viewport: Viewport = { viewportFit: "cover" };
 
 function ExternalMark() {
   return (

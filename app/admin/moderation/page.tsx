@@ -21,11 +21,11 @@ export default async function ModerationPage() {
 
   const [{ queue, error }, stats] = await Promise.all([
     getAdminModerationQueue(),
-    getAdminOpsStats(),
+    getAdminOpsStats(["listings"]),
   ]);
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Public competition review
@@ -128,6 +128,6 @@ export default async function ModerationPage() {
           }))}
         />
       )}
-    </main>
+    </div>
   );
 }

@@ -26,7 +26,7 @@ export default async function AdminNewTournamentPage({
   const draftId = randomUUID();
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
       <PageBackLink href="/admin/tournaments">Tournaments</PageBackLink>
       <p className="mt-6 text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
@@ -91,6 +91,6 @@ export default async function AdminNewTournamentPage({
           />
         </div>
       )}
-    </main>
+    </div>
   );
 }

@@ -28,6 +28,12 @@ const CLUB_SEASON = [
   },
 ];
 
+const CLUB_BOARD = [
+  { chip: "Sat", title: "Public weekend swiss", meta: "Club is going · invite the roster" },
+  { chip: "Sun", title: "Club-hosted dual", meta: "Attendance, then record place" },
+  { chip: "CSV", title: "Season file", meta: "Places and awards when a board asks" },
+];
+
 const PILOT_STEPS = [
   {
     title: "Guided district setup",
@@ -69,64 +75,95 @@ const PRIVATE_SETUP_GATES = [
   },
 ];
 
+const DISTRICT_READINESS = [
+  { title: "Administrator claimed", status: "Ready" },
+  { title: "Roster started", status: "Ready" },
+  { title: "Needs an administrator", status: "Next" },
+];
+
 export function HomeDistrictPitch() {
   return (
     <section
-      className="home-band band-join band-join--surface bg-surface"
+      className="home-band band-join band-join--soft bg-surface-soft"
       aria-labelledby="organizer-pitch-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-14">
-          <ScrollReveal>
-            <p className="text-sm font-semibold text-brand-red">Clubs and teams</p>
-            <h2
-              id="organizer-pitch-heading"
-              className="mt-2 max-w-[18ch] font-display text-display tracking-tight text-foreground"
-            >
-              Run a season from roster to results.
-            </h2>
-            <p className="mt-3 max-w-prose text-sm text-muted">
-              Coaches create a club or team themselves. Causey is coordination
-              and discovery, not pairings, dues, or a public club directory.
-              Chess listings are the densest; other types can use the same
-              roster tools.
-            </p>
-            <ol className="mt-5 divide-y divide-line border-y border-line">
-              {CLUB_SEASON.map((step, index) => (
-                <li
-                  key={step.title}
-                  className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 py-3"
-                >
-                  <span className="text-xs font-bold tabular-nums text-brand-red">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <p className="text-sm font-bold text-foreground">
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2 lg:gap-8">
+          <ScrollReveal className="h-full">
+            <div className="flex h-full flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <p className="text-sm font-semibold text-brand-red">Clubs and teams</p>
+              <h2
+                id="organizer-pitch-heading"
+                className="mt-2 max-w-[18ch] font-display text-display tracking-tight text-foreground"
+              >
+                Run a season from roster to results.
+              </h2>
+              <p className="mt-3 max-w-prose text-sm text-muted">
+                Coaches create a club or team themselves. Causey is coordination
+                and discovery, not pairings, dues, or a public club directory.
+                Chess listings are the densest; other types can use the same
+                roster tools.
+              </p>
+
+              <ol className="relative mt-6 flex-1 border-l-2 border-brand-red">
+                {CLUB_SEASON.map((step, index) => (
+                  <li key={step.title} className="relative pb-5 pl-6 last:pb-0">
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-1.5 left-[-5px] h-3 w-3 rounded-full border-2 border-brand-red bg-brand-red"
+                    />
+                    <p className="text-xs font-bold tabular-nums tracking-wide text-brand-red">
+                      {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <p className="mt-1 text-sm font-bold text-foreground">
                       {step.title}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {step.description}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-5">
-              <Link href="/clubs" className="cta-outline inline-flex">
-                See the club workspace
-              </Link>
+                    <p className="mt-0.5 text-xs text-muted">{step.description}</p>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="mt-6 rounded-2xl border border-line bg-surface-soft p-4">
+                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
+                  Illustrative season
+                </p>
+                <ul className="mt-3 divide-y divide-line border-y border-line">
+                  {CLUB_BOARD.map((row) => (
+                    <li
+                      key={row.title}
+                      className="flex items-baseline gap-3 py-2.5"
+                    >
+                      <span className="w-10 shrink-0 rounded-xl border border-line bg-surface px-2 py-1 text-center text-2xs font-bold tabular-nums text-foreground">
+                        {row.chip}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                          {row.title}
+                        </p>
+                        <p className="text-xs text-muted">{row.meta}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-5">
+                <Link href="/clubs" className="cta-outline inline-flex">
+                  See the club workspace
+                </Link>
+              </div>
             </div>
           </ScrollReveal>
 
-          <ScrollReveal delay={60}>
-            <div className="rounded-2xl border border-line bg-surface-soft p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-red">
+          <ScrollReveal delay={60} className="h-full">
+            <div className="flex h-full flex-col rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <p className="text-sm font-semibold text-brand-red">
                 Ready for an assisted pilot
               </p>
-              <h3 className="mt-3 font-display text-xl text-foreground">
+              <h3 className="mt-2 font-display text-display tracking-tight text-foreground">
                 The district foundation is in place.
               </h3>
-              <p className="mt-2 text-sm text-muted">
+              <p className="mt-3 max-w-prose text-sm text-muted">
                 Causey already has the foundation for an assisted district
                 pilot: connected schools, separate access for each role,
                 tournament coordination, and school-level participation totals.
@@ -135,6 +172,39 @@ export function HomeDistrictPitch() {
                 Causey already supports the structure and permissions needed to
                 connect a district with its participating schools.
               </p>
+
+              <div className="mt-6 rounded-2xl border border-line bg-surface-soft p-4">
+                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-muted">
+                  Illustrative command center
+                </p>
+                <p className="mt-3 text-sm font-bold text-foreground">
+                  Next: invite a named school administrator
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  Three connected schools. Totals only — no student browsing.
+                </p>
+                <div
+                  className="mt-3 h-1.5 overflow-hidden rounded-xl bg-line"
+                  aria-hidden="true"
+                >
+                  <div className="h-full w-2/3 bg-brand-red" />
+                </div>
+                <ul className="mt-3 divide-y divide-line border-y border-line">
+                  {DISTRICT_READINESS.map((row) => (
+                    <li
+                      key={row.title}
+                      className="flex items-baseline justify-between gap-3 py-2.5"
+                    >
+                      <p className="text-sm font-semibold text-foreground">
+                        {row.title}
+                      </p>
+                      <p className="shrink-0 text-xs font-bold text-muted-strong">
+                        {row.status}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               <ul className="mt-5 divide-y divide-line border-y border-l-2 border-line border-l-brand-blue/40 pl-4">
                 {PRIVATE_SETUP_GATES.map((gate) => (
@@ -169,19 +239,18 @@ export function HomeDistrictPitch() {
           </ScrollReveal>
         </div>
 
-        <div className="mt-8 border-t border-line pt-6">
+        <div className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
             Planned next
           </p>
-          <ul className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-            {PILOT_STEPS.map((step, index) => (
-              <li key={step.title}>
-                <ScrollReveal delay={index * 60}>
-                  <h3 className="text-base font-bold text-foreground">
-                    {step.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted">{step.description}</p>
-                </ScrollReveal>
+          <ul className="mt-3 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+            {PILOT_STEPS.map((step) => (
+              <li
+                key={step.title}
+                className="border-l-2 border-line pl-4"
+              >
+                <p className="text-sm font-bold text-foreground">{step.title}</p>
+                <p className="mt-0.5 text-xs text-muted">{step.description}</p>
               </li>
             ))}
           </ul>

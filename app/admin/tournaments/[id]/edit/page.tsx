@@ -24,7 +24,7 @@ export default async function AdminEditTournamentPage({
   if (!tournament) notFound();
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
       <PageBackLink href="/admin/tournaments">Tournaments</PageBackLink>
       <p className="mt-6 text-sm font-semibold text-brand-red">Platform admin</p>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
@@ -92,6 +92,6 @@ export default async function AdminEditTournamentPage({
           returnTo="/admin/tournaments"
         />
       </div>
-    </main>
+    </div>
   );
 }

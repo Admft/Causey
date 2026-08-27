@@ -2,6 +2,10 @@
 
 Living backlog for the club/team buyer. District hierarchy lives in `district-readiness.md`.
 
+## Verdict (2026-08-26 source walk)
+
+A coach can run a **coordination club** once they are inside a club workspace: roster, travel + hosted events, RSVP, attendance, typed results, family follow-through, season CSV. First 20 minutes still feel like an organization product that also does clubs: create/nav say school/organization, and a filled roster is pushed to **host** before **find chess**. Causey is not a pairing engine, tab system, or dues product.
+
 ## Verdict (2026-08-24)
 
 A coach can run a **coordination club**: roster, travel + hosted events, RSVP, attendance, typed results, family follow-through, season CSV. Causey is not a pairing engine, tab system, or dues product. Chess discovery is the densest; other types can be hosted with thinner public indexes.
@@ -33,11 +37,47 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Directory cards keep a source-logo cover when a listing has no photo, so mixed search rows stay aligned; club-hosted create still requires a cover — 2026-08-25
 - [ ] Recurring practice night as a first-class object (today: meeting note string only)
 - [ ] Email proven at club volume (wired, not load-tested)
+- [ ] First-session club mission after roster leads travel clubs to search, not only “Create your first competition”
+- [ ] Create-club chrome: Club/Team copy, no School type, no “organization” H1 after `/clubs`
+- [ ] Competitions tab lists travel events the club marked as attending (today: hosted-only)
+- [ ] Club/team People does not offer School administrator; host publish CTA says Club/Team, not school
 - [ ] Owner/legal: public club directory, dues, messaging — see skill `out-of-scope.md`
 
 ## Out (do not build unless asked)
 
 Needs for a professional club (not building unless you ask): recurring practice nights, a public club directory, live USCF/NSDA lookup, pairings/ballots, dues, coach–parent DMs.
+
+## Findings — 2026-08-26 club-owner source walk
+
+Persona: paid chess club / team owner, first-time coach. Source only (no live UI).
+
+### Works (re-verified)
+- `/clubs` season path + honest out-of-scope; home club column 01–04 roster→results (`app/clubs/page.tsx`, `HomeDistrictPitch`)
+- Create club/team without a district option (`OrgCreateForm` filters district)
+- Join link, CSV/email invites, assistants, groups (`roster`, `JoinCodePanel`, `OrganizationPeopleManager`, `GroupManager`)
+- “My club is going”, mark attending, teammate names (`SearchFilters`, `OrgAttendancePanel`, `getClubGoing`)
+- Host draft → cover → Club/Team-only label → review/publish; .ics; edit/cancel (`TournamentCreateForm`, `event/[slug]/ics`, `CancelTournamentButton`)
+- Attendance + results on hosted and travel manage; pulse; roster history; Plan/Family blanks (`manage`, `EntrantManager`, `roster/[profileId]`, `me`, `family`)
+- Season report + CSV includes travel (`reports`, `reports/export`); overview “This season” + “Season is underway” after travel starts
+- Announcements, leave club, member-only website/meeting note
+
+### Remaining P0/P1
+- Club owner · first session after roster · overview still “Create your first competition”; roster-ready CTA is Open competitions · chess clubs travel first · **P1 · M**
+- Club owner · `/orgs/new` + `/orgs` + AuthNav · “Start an organization”, School type, “Create a school or club”, nav “My organizations”/“Orgs” · `/clubs` promised a club · **P1 · S**
+- Club owner · People · role picker still offers School administrator; copy says “whole class” · **P1 · S**
+- Club owner · host publish · Club-only audience still submits as `school` and CTA “Publish to school” · **P1 · S**
+- Club owner · Competitions tab · hosted records only; travel lives on overview “We’re attending” and event pages · season walk splits · **P1 · M**
+- Club owner · email · outbox wired, not club-volume proven · **P1 · M**
+- Club owner · practice nights · meeting_note string only · **P1 · L** (later / out unless asked)
+
+### P2
+- Event page coach panel title “Take your organization” (`OrgAttendancePanel`)
+- Settings type helper cites “district hierarchy”; H1 “Organization controls”
+- Roster history eyebrow always “Club record” (teams included)
+- Result award placeholder “Broke to elims” (debate language on chess manage)
+
+### Out (refused this pass)
+Pairings/boards/clocks, Tabroom ballots, dues/Stripe, coach–parent DMs, public club directory / public `/u/` pages, LMS/Lichess, standings import.
 
 ## Findings — 2026-08-26
 

@@ -99,7 +99,7 @@ function AccountPitchPanel({
 }) {
   return (
     <div className="min-w-0 w-full max-w-md md:max-w-none md:self-center">
-      <div className="rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow-panel)]">
+      <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
         {heading ? (
           <p className="text-sm font-bold text-foreground">{heading}</p>
         ) : null}
@@ -172,17 +172,19 @@ export async function HomeAccountPitch() {
         */}
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
           <div className="min-w-0 max-w-xl md:self-center">
-            <h2
-              id="account-heading"
-              className="font-display text-display font-bold tracking-tight text-foreground"
-            >
-              {next.heading}
-            </h2>
-            <p className="mt-4 max-w-prose text-base text-muted">{next.blurb}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <Link href={next.primary.href} className="cta-enabled inline-flex">
-                {next.primary.label}
-              </Link>
+            <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <h2
+                id="account-heading"
+                className="font-display text-display font-bold tracking-tight text-foreground"
+              >
+                {next.heading}
+              </h2>
+              <p className="mt-4 max-w-prose text-base text-muted">{next.blurb}</p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <Link href={next.primary.href} className="cta-enabled inline-flex">
+                  {next.primary.label}
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -209,27 +211,29 @@ export async function HomeAccountPitch() {
       */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
         <div className="min-w-0 max-w-xl md:self-center">
-          <h2
-            id="account-heading"
-            className="max-w-[20ch] font-display text-display font-bold tracking-tight text-foreground"
-          >
-            Search without an account today. Sign in when you need a plan.
-          </h2>
-          <p className="mt-4 max-w-prose text-base text-muted">
-            You can browse without signing in. Create an account when you want
-            to save events, RSVP to club invites, and keep your plan in one
-            place.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <Link href="/signup?role=student" className="cta-enabled inline-flex">
-              Create a student account
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+          <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+            <h2
+              id="account-heading"
+              className="max-w-[20ch] font-display text-display font-bold tracking-tight text-foreground"
             >
-              Sign in
-            </Link>
+              Search without an account today. Sign in when you need a plan.
+            </h2>
+            <p className="mt-4 max-w-prose text-base text-muted">
+              You can browse without signing in. Create an account when you want
+              to save events, RSVP to club invites, and keep your plan in one
+              place.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <Link href="/signup?role=student" className="cta-enabled inline-flex">
+                Create a student account
+              </Link>
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+              >
+                Sign in
+              </Link>
+            </div>
           </div>
         </div>
 

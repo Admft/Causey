@@ -127,7 +127,7 @@ export function SiteHeader() {
         </Link>
         <nav
           ref={navRef}
-          className={`site-header-nav flex min-w-0 items-center gap-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:min-w-max sm:overflow-visible sm:gap-6 [&::-webkit-scrollbar]:hidden ${
+          className={`site-header-nav flex min-w-0 items-center gap-3 sm:min-w-max sm:gap-6 ${
             showHeaderBrand ? "sm:pr-2.5" : ""
           }`}
           aria-label="Primary"

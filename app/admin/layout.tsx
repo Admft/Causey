@@ -10,7 +10,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (!admin) redirect("/");
 
   return (
-    <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)]">
+    <div className="md:grid md:grid-cols-[13rem_minmax(0,1fr)]">
       <AdminSubnav />
       {children}
     </div>

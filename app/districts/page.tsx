@@ -34,6 +34,29 @@ const pilotSteps = [
   },
 ];
 
+const unfinished = [
+  {
+    title: "Price and support",
+    description:
+      "Before a paid student rollout, Causey and the district still have to settle price and support.",
+  },
+  {
+    title: "Privacy, retention, and security",
+    description:
+      "Privacy, how long data is kept, and security still have to be settled with the district.",
+  },
+  {
+    title: "Email at school volume",
+    description:
+      "Causey has to prove its email delivery at school volume.",
+  },
+  {
+    title: "Independent clubs",
+    description:
+      "Independent clubs use a separate self-serve workspace. This is a pilot, not a finished procurement package.",
+  },
+];
+
 const roleSplit = [
   {
     title: "District office",
@@ -57,44 +80,46 @@ export default function DistrictsPage() {
   return (
     <>
       <section className="access-grid overflow-x-clip">
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-12">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12 lg:py-10">
           <div className="relative z-10 min-w-0">
             <div className="animate-rise">
               <PageBackLink />
             </div>
-            <div className="animate-rise mt-5" data-hero-brand>
-              <CauseyLogo size="hero" />
-            </div>
-            <h1 className="animate-rise animate-rise-delay-1 mt-5 max-w-[16ch] font-display text-display-xl tracking-tight text-foreground sm:mt-6">
-              Chess for a whole district, set up with you.
-            </h1>
-            <p className="animate-rise animate-rise-delay-1 mt-4 max-w-prose text-md text-muted">
-              Anyone can search tournaments on Causey for free. A district pilot
-              adds what a school program actually runs on: getting students and
-              staff onto the right teams, telling families about each event,
-              recording who attended, and giving the district participation
-              numbers. Setup is hands-on today, and live email verification and
-              legal review come before any student rollout.
-            </p>
-            <div className="animate-rise animate-rise-delay-2 mt-6 flex flex-wrap items-center gap-4">
-              <a
-                href={FOUNDING_TEAM_MEETING_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Book a district pilot conversation with Causey in a new tab"
-                className="cta-enabled inline-flex"
-              >
-                Book a district pilot conversation{" "}
-                <span aria-hidden="true" className="ml-2 nudge-x">
-                  ↗
-                </span>
-              </a>
-              <Link
-                href="/privacy"
-                className="text-sm font-bold text-muted-strong hover:text-brand-red"
-              >
-                Review student data practices
-              </Link>
+            <div className="animate-rise mt-5 rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <div data-hero-brand>
+                <CauseyLogo size="hero" />
+              </div>
+              <h1 className="mt-5 max-w-[16ch] font-display text-display md:text-display-lg tracking-tight text-foreground sm:mt-6">
+                Chess for a whole district, set up with you.
+              </h1>
+              <p className="mt-4 max-w-prose text-md text-muted">
+                Anyone can search tournaments on Causey for free. A district pilot
+                adds what a school program actually runs on: getting students and
+                staff onto the right teams, telling families about each event,
+                recording who attended, and giving the district participation
+                numbers. Setup is hands-on today, and live email verification and
+                legal review come before any student rollout.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <a
+                  href={FOUNDING_TEAM_MEETING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Book a district pilot conversation with Causey in a new tab"
+                  className="cta-enabled inline-flex"
+                >
+                  Book a district pilot conversation{" "}
+                  <span aria-hidden="true" className="ml-2 nudge-x">
+                    ↗
+                  </span>
+                </a>
+                <Link
+                  href="/privacy"
+                  className="text-sm font-bold text-muted-strong hover:text-brand-red"
+                >
+                  Review student data practices
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -135,7 +160,7 @@ export default function DistrictsPage() {
       <section className="home-band band-join band-join--blue bg-brand-blue-soft/50">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 sm:px-8 lg:grid-cols-2 lg:gap-10">
           <ScrollReveal>
-            <div className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
+            <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
               <h2 className="font-display text-display tracking-tight text-foreground">
                 Everyone sees only their own part
               </h2>
@@ -152,20 +177,23 @@ export default function DistrictsPage() {
             </div>
           </ScrollReveal>
           <ScrollReveal delay={60}>
-            <div className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
+            <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
               <h2 className="font-display text-display tracking-tight text-foreground">
                 What we have not finished
               </h2>
-              <p className="mt-3 text-sm text-muted">
-                Before a paid student rollout, Causey and the district still
-                have to settle price, support, privacy, how long data is kept,
-                and security, and Causey has to prove its email delivery at
-                school volume. This is a pilot, not a finished procurement
-                package. Independent clubs use a separate self-serve workspace.
-              </p>
+              <ul className="mt-4 divide-y divide-line border-y border-line">
+                {unfinished.map((item) => (
+                  <li key={item.title} className="py-3">
+                    <p className="text-sm font-bold text-foreground">
+                      {item.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">{item.description}</p>
+                  </li>
+                ))}
+              </ul>
               <Link
                 href="/clubs"
-                className="mt-5 text-sm font-bold text-muted-strong hover:text-brand-red"
+                className="mt-5 inline-block text-sm font-bold text-muted-strong hover:text-brand-red"
               >
                 See the club workspace →
               </Link>
