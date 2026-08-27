@@ -1,67 +1,102 @@
-"use client";
-
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
 import { LIVE_SOURCES } from "@/lib/tournament-sources";
 
 /**
- * Homepage coverage story as one progress path (design system §8.11): which
- * directories are searchable, which one is deepest, and which sources stay
- * reference-only. The scroll-triggered line draw is the section's ONE motion
- * moment: it shows how far the indexing work has actually gotten. Text is
- * never hidden by the reveal; only the line and node fills animate, and
- * reduced motion skips it.
+ * Homepage coverage lanes. The open ledger on the left is what search can
+ * actually reach today, one tick per indexed source, so "chess is the broadest
+ * directory" is visible instead of asserted. The closed panel on the right is
+ * the other half of the same truth: directories Causey may not index. Names
+ * stay plain text here; per-source status and the link out live on each
+ * directory page, which is where the row title goes.
  */
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-// Restricted directories that remain outbound references across categories,
-// taken from the governed source metadata rather than restated by hand.
-const REFERENCE_ONLY_SOURCES = DISCOVERY_CATEGORIES.flatMap((category) =>
-  category.referenceSources.map((source) => ({
-    category: category.label,
-    name: source.name,
-  }))
+type CoverageRow = {
+  id: string;
+  label: string;
+  href: string;
+  indexed: readonly string[];
+  restricted: readonly string[];
+};
+
+const COVERAGE_ROWS: readonly CoverageRow[] = DISCOVERY_CATEGORIES.map(
+  (category) => ({
+    id: category.id,
+    label: category.label,
+    href: category.href,
+    // Chess metadata carries a single pointer row for its six live feeds, so
+    // the names and the count come from the feed list itself.
+    indexed: (category.id === "chess"
+      ? LIVE_SOURCES
+      : category.activeSources
+    ).map((source) => source.name),
+    restricted: category.referenceSources.map((source) => source.name),
+  })
 );
 
-function activeSourceSummary(categoryId: string): string {
-  if (categoryId === "chess") {
-    return LIVE_SOURCES.map((source) => source.name).join(", ");
-  }
-  const definition = DISCOVERY_CATEGORIES.find(
-    (category) => category.id === categoryId
-  );
+const RESTRICTED_ROWS = COVERAGE_ROWS.filter(
+  (row) => row.restricted.length > 0
+);
+
+/**
+ * Separators trail their own name inside one flex item, so a wrapped run
+ * never starts a line with an orphaned middot.
+ */
+function SourceNames({
+  names,
+  tone,
+}: {
+  names: readonly string[];
+  tone: "indexed" | "restricted";
+}) {
   return (
-    definition?.activeSources.map((source) => source.name).join(", ") ?? ""
+    <ul
+      className={
+        tone === "indexed"
+          ? "flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-muted-strong"
+          : "flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-muted"
+      }
+    >
+      {names.map((name, index) => (
+        <li key={name} className="min-w-0">
+          {name}
+          {index < names.length - 1 ? (
+            <span aria-hidden="true" className="ml-2 text-muted">
+              ·
+            </span>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * One mark per indexed source, right-aligned so the five rows compare at a
+ * glance. The marks are inline-block rather than flex children: an empty
+ * inline-block's baseline is its bottom margin edge in every engine, so the
+ * bars sit on the row's text baseline without relying on flex baseline
+ * synthesis, which Safari and Chrome have resolved differently.
+ */
+function SourceTally({ count }: { count: number }) {
+  return (
+    <span className="whitespace-nowrap">
+      {Array.from({ length: count }, (_, index) => (
+        <span
+          key={index}
+          aria-hidden="true"
+          className="ml-1 inline-block h-3 w-0.5 bg-brand-red"
+        />
+      ))}
+      <span className="sr-only">
+        {count} indexed {count === 1 ? "source" : "sources"}
+      </span>
+    </span>
   );
 }
 
 export function HomeCoveragePath() {
-  const pathRef = useRef<HTMLOListElement>(null);
-
-  useIsomorphicLayoutEffect(() => {
-    const path = pathRef.current;
-    if (!path) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    // Set the pre-draw state before first paint so there is no flash of the
-    // finished path; the observer then plays the draw once, on entry.
-    path.setAttribute("data-pending", "");
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          path.setAttribute("data-revealed", "");
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "0px 0px -30% 0px", threshold: 0 }
-    );
-    observer.observe(path);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
       id="coverage"
@@ -69,131 +104,100 @@ export function HomeCoveragePath() {
       aria-labelledby="coverage-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <h2
-          id="coverage-heading"
-          className="max-w-[24ch] font-display text-display-sm font-bold tracking-tight text-foreground"
-        >
-          What Causey indexes today, and where coverage remains limited
-        </h2>
-        <p className="mt-3 max-w-2xl text-base text-muted">
-          There is no single public API for scholastic competition calendars,
-          so Causey indexes official pages organizers already publish to.
-          Coverage varies sharply by category, and some well-known directories
-          stay reference links until their organizers permit indexing.
-        </p>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+          <h2
+            id="coverage-heading"
+            className="max-w-[14ch] font-display text-display-sm tracking-tight text-foreground"
+          >
+            What search covers today
+          </h2>
+          <p className="max-w-xl text-base text-muted">
+            There is no public API for scholastic competition calendars, so
+            Causey indexes the official pages organizers already publish. Chess
+            draws on six of them. The other directories index fewer, and
+            several well-known ones stay links instead of listings.
+          </p>
+        </div>
 
-        <ol ref={pathRef} className="coverage-path mt-6">
-          <li className="coverage-step coverage-step--reached">
-            <span
-              aria-hidden="true"
-              className="coverage-node coverage-node--done"
-            />
-            <p className="text-xs font-semibold text-brand-red">
-              Indexed today
-            </p>
-            <h3 className="mt-1 text-base font-semibold text-foreground">
-              Five public competition directories
-            </h3>
-            <ul className="mt-5 divide-y divide-line border-y border-line">
-              {DISCOVERY_CATEGORIES.map((category) => (
-                <li key={category.id} className="py-3">
-                  <Link
-                    href={category.href}
-                    className="text-sm font-semibold text-foreground transition-colors hover:text-brand-red"
-                  >
-                    {category.label}
-                  </Link>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {activeSourceSummary(category.id)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </li>
-
-          <li className="coverage-step coverage-step--reached">
-            <span
-              aria-hidden="true"
-              className="coverage-node coverage-node--done"
-            />
-            <p className="text-xs font-semibold text-brand-red">
-              Broadest coverage
-            </p>
-            <h3 className="mt-1 text-base font-semibold text-foreground">
-              Chess draws on six published calendars
-            </h3>
-            <ul className="mt-5 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-              {LIVE_SOURCES.map((source) => {
-                const external = source.href.startsWith("http");
-                return (
-                  <li key={source.id}>
-                    <a
-                      href={source.href}
-                      {...(external
-                        ? {
-                            target: "_blank",
-                            rel: "noopener noreferrer",
-                            "aria-label": `${source.name} opens in a new tab`,
-                          }
-                        : {})}
-                      className="group flex items-center gap-2.5"
-                    >
-                      <Image
-                        src={source.logoUrl}
-                        alt=""
-                        width={28}
-                        height={28}
-                        unoptimized
-                        className="h-7 w-7 shrink-0 rounded-lg"
-                      />
-                      <span className="text-sm font-semibold text-foreground transition-colors group-hover:text-brand-red">
-                        {source.name}
-                        {external ? (
-                          <span
-                            aria-hidden="true"
-                            className="nudge-x ml-1 text-xs font-medium text-muted"
-                          >
-                            ↗
-                          </span>
-                        ) : null}
-                      </span>
-                    </a>
-                    <p className="mt-1.5 text-xs text-muted">{source.blurb}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          </li>
-
-          <li className="coverage-step">
-            <span
-              aria-hidden="true"
-              className="coverage-node coverage-node--planned"
-            />
-            <p className="text-xs font-semibold text-muted">Limited coverage</p>
-            <h3 className="mt-1 text-base font-semibold text-foreground">
-              Restricted sources stay links, not listings
-            </h3>
-            <p className="mt-2 max-w-2xl text-sm text-muted">
-              Several directories organizers rely on prohibit automated indexing
-              or have not granted it. Causey links to them instead of copying
-              their listings, so those categories return fewer events.
-            </p>
-            <ul className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-              {REFERENCE_ONLY_SOURCES.map((source) => (
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-12">
+          <ScrollReveal className="min-w-0 lg:pt-6">
+            <div className="flex items-baseline justify-between gap-4">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-red">
+                Indexed now
+              </h3>
+              {/* Legend for the tick column: one mark per indexed source. */}
+              <span className="text-2xs uppercase tracking-[0.1em] text-muted">
+                Sources
+              </span>
+            </div>
+            <ul
+              className="mt-4 divide-y divide-line border-y border-line"
+              aria-label="Directories Causey indexes"
+            >
+              {COVERAGE_ROWS.map((row) => (
                 <li
-                  key={`${source.category}-${source.name}`}
-                  className="text-sm text-muted"
+                  key={row.id}
+                  className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-x-6"
                 >
-                  <span className="font-semibold text-foreground">
-                    {source.name}
-                  </span>{" "}
-                  <span className="text-xs">({source.category})</span>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <Link
+                      href={row.href}
+                      className="group text-lead font-bold text-foreground transition-colors hover:text-brand-red"
+                    >
+                      {row.label}
+                      <span
+                        aria-hidden="true"
+                        className="nudge-x ml-2 text-sm text-muted group-hover:text-brand-red"
+                      >
+                        →
+                      </span>
+                    </Link>
+                    <span className="sm:hidden">
+                      <SourceTally count={row.indexed.length} />
+                    </span>
+                  </div>
+                  <SourceNames names={row.indexed} tone="indexed" />
+                  <span className="hidden sm:inline">
+                    <SourceTally count={row.indexed.length} />
+                  </span>
                 </li>
               ))}
             </ul>
-          </li>
-        </ol>
+            <p className="mt-4 text-xs text-muted">
+              Each directory page names every source it indexes, its current
+              status, and a link out to it.
+            </p>
+          </ScrollReveal>
+
+          <ScrollReveal className="min-w-0" delay={60}>
+            <div className="rounded-2xl border border-line bg-surface-soft p-5 sm:p-6">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-strong">
+                Not indexed
+              </h3>
+              <p className="mt-3 text-sm text-muted">
+                Some prohibit automated indexing. Others block ordinary
+                requests, have not granted permission, or have not published
+                complete dates. Causey links to them from each directory
+                instead of copying their listings.
+              </p>
+              <dl className="mt-4 space-y-3 border-t border-line pt-4">
+                {RESTRICTED_ROWS.map((row) => (
+                  <div
+                    key={row.id}
+                    className="grid grid-cols-1 gap-1 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-4"
+                  >
+                    <dt className="text-xs font-semibold text-muted-strong">
+                      {row.label}
+                    </dt>
+                    <dd className="min-w-0">
+                      <SourceNames names={row.restricted} tone="restricted" />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </ScrollReveal>
+        </div>
       </div>
     </section>
   );

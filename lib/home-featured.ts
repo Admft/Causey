@@ -60,8 +60,8 @@ export function homeFeaturedCopy(
   const searchLabel = "See more chess tournaments";
   if (mode === "nearby" && zip) {
     return {
-      heading: `Browse tournaments near ${zip}`,
-      blurb: `Upcoming chess listings within about ${HOME_FEATURED_RADIUS_MILES} miles of the zip on your account. Coverage is still incomplete.`,
+      heading: `Chess near ${zip}`,
+      blurb: `Upcoming listings within about ${HOME_FEATURED_RADIUS_MILES} miles of the zip on your account. Coverage is still incomplete.`,
       searchHref: discoveryCategoryHref("chess", {
         zip,
         radius: String(HOME_FEATURED_RADIUS_MILES),
@@ -70,9 +70,9 @@ export function homeFeaturedCopy(
     };
   }
   return {
-    heading: "Browse tournaments",
+    heading: "Upcoming chess",
     blurb:
-      "A sample of upcoming chess listings. Coverage is still incomplete.",
+      "A preview of listings with organizer photos. Chess is the broadest directory today; coverage is still incomplete.",
     searchHref: discoveryCategoryHref("chess"),
     searchLabel,
   };

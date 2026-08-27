@@ -25,8 +25,11 @@ describe("homepage featured listings", () => {
     expect(homePage).toContain("getHomeFeaturedCompetitions");
     expect(featuredSection).toContain("hidden");
     expect(featuredSection).toContain("md:block");
-    expect(featuredSection).toContain("section-rule");
-    expect(featuredSection).toContain("justify-center");
+    expect(featuredSection).toContain("band-join--soft");
+    expect(featuredSection).toContain("lg:items-end");
+    expect(featuredSection).toContain("snap-x");
+    expect(featuredSection).toContain("w-80");
+    expect(featuredSection).toContain('layout="grid2"');
     expect(featuredSection).toContain("sourceFallback={false}");
     expect(featuredSection).toContain("HomeFeaturedSeeMore");
     expect(
@@ -51,10 +54,9 @@ describe("homepage featured listings", () => {
       )
     ).toContain("is-cta-attention");
     expect(featuredSection).toContain("{featured.copy.searchLabel}");
-    expect(homeFeaturedCopy("nearby", "75201").heading).toBe(
-      "Browse tournaments near 75201"
-    );
-    expect(homeFeaturedCopy("photos", null).heading).toBe("Browse tournaments");
+    expect(homeFeaturedCopy("nearby", "75201").heading).toBe("Chess near 75201");
+    expect(homeFeaturedCopy("photos", null).heading).toBe("Upcoming chess");
+    expect(homeFeaturedCopy("photos", null).blurb).toMatch(/preview/i);
     expect(homeFeaturedCopy("photos", null).searchHref).toBe("/chess");
     expect(homeFeaturedCopy("photos", null).searchLabel).toBe(
       "See more chess tournaments"

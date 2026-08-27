@@ -101,7 +101,14 @@ export default async function CompetitionTypesPage({
             </nav>
           </div>
         </div>
-        <HomeHeroNext targetId="coverage" />
+        <HomeHeroNext
+          targetId={featured.results.length > 0 ? "featured" : "coverage"}
+          label={
+            featured.results.length > 0
+              ? "Browse tournaments"
+              : "Coverage today"
+          }
+        />
       </section>
 
       {profile && !profile.zip ? (

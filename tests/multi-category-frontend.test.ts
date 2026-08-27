@@ -53,15 +53,17 @@ describe("homepage leads with multi-category discovery", () => {
     expect(heroCard).toContain("md:rounded-3xl");
   });
 
-  it("fills the remaining viewport on desktop and scrolls into coverage", () => {
+  it("fills the remaining viewport on desktop and scrolls into the listing preview", () => {
     const globals = read("app/globals.css");
     const cue = read("components/HomeHeroNext.tsx");
     expect(homePage).toContain("home-hero access-grid");
     expect(homePage).toContain("md:min-h-[calc(100dvh-var(--home-hero-chrome))]");
-    expect(homePage).toContain('<HomeHeroNext targetId="coverage" />');
+    expect(homePage).toContain('targetId={featured.results.length > 0 ? "featured" : "coverage"}');
+    expect(homePage).toContain("Browse tournaments");
     expect(coveragePath).toContain('id="coverage"');
     expect(globals).toContain("@keyframes home-hero-cue-bob");
-    expect(cue).toContain("See what Causey indexes");
+    expect(globals).toContain("#featured");
+    expect(cue).toContain("{label}");
     expect(cue).toContain("max-md:hidden");
     expect(cue).toContain("scrollIntoView");
     expect(cue).toContain("prefers-reduced-motion");
@@ -238,9 +240,12 @@ describe("multi-category interests", () => {
 describe("coverage and empty states stay honest", () => {
   it("coverage panel indexes all five directories from shared metadata", () => {
     expect(coveragePath).toContain("DISCOVERY_CATEGORIES.map");
-    expect(coveragePath).toContain("Indexed today");
-    expect(coveragePath).toContain("Broadest coverage");
-    expect(coveragePath).toContain("Limited coverage");
+    expect(coveragePath).toContain("LIVE_SOURCES");
+    expect(coveragePath).toContain("What search covers today");
+    expect(coveragePath).toContain("Indexed now");
+    expect(coveragePath).toContain("Not indexed");
+    expect(coveragePath).toContain("referenceSources");
+    expect(coveragePath).not.toContain("use client");
     expect(coveragePath).not.toContain("Coming soon");
     expect(coveragePath).not.toContain("Beta");
   });

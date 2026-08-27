@@ -11,49 +11,48 @@ export function HomeFeaturedSection({
 }) {
   if (featured.results.length === 0) return null;
 
+  const blurb =
+    featured.nearbyEmpty && zip
+      ? `No upcoming chess listings within range of ${zip} yet. Showing a wider preview instead.`
+      : featured.copy.blurb;
+
   return (
     <section
       id="featured"
-      className="home-band band-join band-join--surface hidden bg-surface-soft md:block"
+      className="home-band band-join band-join--soft hidden bg-surface-soft md:block"
       aria-labelledby="featured-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <h2
-          id="featured-heading"
-          className="max-w-[24ch] font-display text-display-sm font-bold tracking-tight text-foreground"
-        >
-          {featured.copy.heading}
-        </h2>
-        <p className="mt-3 max-w-2xl text-base text-muted">
-          {featured.nearbyEmpty && zip
-            ? `No upcoming chess listings within range of ${zip} yet. Showing a sample instead.`
-            : featured.copy.blurb}
-        </p>
-        <ul
-          className={`mt-8 grid gap-4 ${
-            featured.results.length === 1
-              ? "max-w-sm grid-cols-1"
-              : featured.results.length === 2
-                ? "grid-cols-2"
-                : "grid-cols-3"
-          }`}
-        >
-          {featured.results.map((result) => (
-            <li key={result.id}>
-              <CompetitionCard
-                result={result}
-                layout="grid3"
-                sourceFallback={false}
-              />
-            </li>
-          ))}
-        </ul>
-        <p className="section-rule mt-8 flex justify-center pt-6">
-          <HomeFeaturedSeeMore
-            href={featured.copy.searchHref}
-            label={featured.copy.searchLabel}
-          />
-        </p>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+          <div className="min-w-0 max-w-xl">
+            <h2
+              id="featured-heading"
+              className="max-w-[16ch] font-display text-display-sm font-bold tracking-tight text-foreground"
+            >
+              {featured.copy.heading}
+            </h2>
+            <p className="mt-3 max-w-prose text-base text-muted">{blurb}</p>
+          </div>
+          <div className="self-start lg:self-auto">
+            <HomeFeaturedSeeMore
+              href={featured.copy.searchHref}
+              label={featured.copy.searchLabel}
+            />
+          </div>
+        </div>
+        <div className="soft-scroll mt-8 snap-x snap-mandatory overflow-x-auto overscroll-x-contain py-3">
+          <ul className="flex w-max gap-4" aria-label="Listing preview">
+            {featured.results.map((result) => (
+              <li key={result.id} className="w-80 shrink-0 snap-start">
+                <CompetitionCard
+                  result={result}
+                  layout="grid2"
+                  sourceFallback={false}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

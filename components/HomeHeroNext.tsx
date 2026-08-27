@@ -6,7 +6,13 @@ import { useLayoutEffect, useState } from "react";
  * Writes --home-hero-chrome from the sticky header (auth row and mobile
  * URL-bar can change it) and scrolls the next homepage band into view.
  */
-export function HomeHeroNext({ targetId }: { targetId: string }) {
+export function HomeHeroNext({
+  targetId,
+  label,
+}: {
+  targetId: string;
+  label: string;
+}) {
   const [away, setAway] = useState(false);
 
   useLayoutEffect(() => {
@@ -52,7 +58,7 @@ export function HomeHeroNext({ targetId }: { targetId: string }) {
       aria-controls={targetId}
       onClick={goToNext}
     >
-      <span>See what Causey indexes</span>
+      <span>{label}</span>
       <svg
         width="16"
         height="16"

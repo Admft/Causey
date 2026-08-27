@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 /**
- * Primary closer for the homepage browse strip. Looks like a normal CTA at
- * rest; one sheen plays when the control first enters the viewport.
+ * Primary action for the homepage listing preview. Looks like a normal CTA
+ * at rest; one sheen plays when the control first enters the viewport.
  */
 export function HomeFeaturedSeeMore({
   href,

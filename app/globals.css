@@ -584,7 +584,8 @@ textarea.field {
     transform: translateY(6px);
   }
 }
-#coverage {
+#coverage,
+#featured {
   scroll-margin-top: var(--home-hero-chrome, 4rem);
 }
 
@@ -607,71 +608,6 @@ textarea.field {
 }
 .animate-rise-delay-2 {
   animation-delay: 180ms;
-}
-
-/* Coverage path — homepage §8.11 progress metaphor. One continuous vertical
- * line: red where the index has reached, muted where it has not. The draw on
- * scroll-entry is the section's ONE motion moment (it shows how far the work
- * has gotten); text never hides, and `data-pending` is only set by JS when
- * reduced motion is off, so no-JS / reduced-motion get the finished path. */
-.coverage-step {
-  position: relative;
-  padding-left: 2rem;
-  padding-bottom: 2.5rem;
-}
-.coverage-step:last-child {
-  padding-bottom: 0;
-}
-/* Segment connecting this node down to the next. Tucks 6px under the next
- * node's solid center so the joint reads as one unbroken line. */
-.coverage-step:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 1.125rem;
-  bottom: -0.375rem;
-  width: 2px;
-  background: color-mix(in srgb, var(--muted) 30%, transparent);
-}
-.coverage-step--reached::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 1.125rem;
-  bottom: -0.375rem;
-  width: 2px;
-  background: var(--brand-red);
-  transform-origin: top;
-  transition: transform 640ms var(--ease-structured) 120ms;
-}
-.coverage-node {
-  position: absolute;
-  left: 0;
-  top: 0.25rem;
-  height: 0.75rem;
-  width: 0.75rem;
-  border-radius: 999px;
-  border: 2px solid color-mix(in srgb, var(--muted) 45%, transparent);
-  background: var(--surface);
-  transition: background-color 240ms var(--ease-brand),
-    border-color 240ms var(--ease-brand);
-}
-.coverage-node--done {
-  border-color: var(--brand-red);
-  background: var(--brand-red);
-}
-/* The active node flips red only when the drawn line reaches it. */
-.coverage-node--active {
-  border-color: var(--brand-red);
-  transition-delay: 640ms;
-}
-.coverage-path[data-pending]:not([data-revealed]) .coverage-step--reached::after {
-  transform: scaleY(0);
-}
-.coverage-path[data-pending]:not([data-revealed]) .coverage-node--done,
-.coverage-path[data-pending]:not([data-revealed]) .coverage-node--active {
-  background: var(--surface);
-  border-color: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
 /* The ONE shared scroll-reveal pattern (anti-vibecode §5.2): 12px rise +
@@ -718,8 +654,6 @@ textarea.field {
   .cta-sheen.is-cta-attention::before {
     animation: none;
   }
-  .coverage-step--reached::after,
-  .coverage-node,
   .scroll-reveal {
     transition: none;
   }
