@@ -14,6 +14,7 @@ import {
   evaluateSourceBatchHealth,
   evaluateSourceOperationalHealth,
   sourceByCompetitionSource,
+  sourceNeedsOperationalAttention,
 } from "@/lib/ingestion-sources";
 import {
   COMPETITION_DETAILS_SCHEMA_VERSION,
@@ -199,7 +200,24 @@ describe("district tournament expansion foundation", () => {
     ).toBe("failing");
   });
 
-  it("keeps the corrected workflow manual, least-privilege, and permitted-only", () => {
+  it("counts only enabled sources as operational attention", () => {
+    const enabled = sourceByCompetitionSource("txsef_scrape")!;
+    const blocked = sourceByCompetitionSource("vex_events_scrape")!;
+    expect(
+      sourceNeedsOperationalAttention(
+        enabled,
+        evaluateSourceOperationalHealth(enabled, [])
+      )
+    ).toBe(true);
+    expect(
+      sourceNeedsOperationalAttention(
+        blocked,
+        evaluateSourceOperationalHealth(blocked, [])
+      )
+    ).toBe(false);
+  });
+
+  it("keeps the corrected workflow least-privilege and permitted-only", () => {
     const workflow = repositoryFile(".github/workflows/ingest.yml");
     expect(workflow).toContain("actions/checkout@v7");
     expect(workflow).toContain("actions/setup-node@v7");
@@ -207,7 +225,11 @@ describe("district tournament expansion foundation", () => {
     expect(workflow).toContain("permissions:\n  contents: read");
     expect(workflow).toContain("Check Supabase secrets");
     expect(workflow).toContain("workflow_dispatch:");
-    expect(workflow).not.toMatch(/^\s+schedule:/m);
+    expect(workflow).toMatch(/^\s+schedule:/m);
+    expect(workflow).toContain('cron: "0 11 * * 1,4"');
+    expect(workflow).toContain(
+      "github.event_name == 'schedule' && 'dev' || github.ref"
+    );
     expect(workflow).not.toContain("- tabroom_scrape");
     expect(workflow).not.toContain("- vex_events_scrape");
     expect(workflow).not.toContain("- doe_science_bowl_scrape");

@@ -125,6 +125,7 @@ export function AdminScraperControls({
             ? `${adminScraperLabel(dispatched[0])} was sent to GitHub Actions. It can take a minute to appear below.`
             : `${dispatched.length} scrapers were sent to one GitHub Actions run. They run sequentially and can take a minute to appear below.`
       );
+      if (result.auditWarning) setError(result.auditWarning);
       router.refresh();
     } finally {
       setPending(false);

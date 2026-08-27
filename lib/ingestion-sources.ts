@@ -459,6 +459,16 @@ export type SourceHealthRun = {
   rows_staged?: number | null;
 };
 
+export function sourceNeedsOperationalAttention(
+  source: IngestionSource,
+  health: SourceHealth
+): boolean {
+  return (
+    source.governance.automationState === "enabled" &&
+    health.state !== "healthy"
+  );
+}
+
 export function sourceAutomationKillSwitch(sourceId: string): string {
   return `SCRAPE_DISABLE_${sourceId.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`;
 }

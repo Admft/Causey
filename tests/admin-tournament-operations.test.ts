@@ -114,6 +114,39 @@ describe("admin scraper dispatch", () => {
     });
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("explains that a 404 can mean a disabled workflow", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404 });
+    const { adminRunScraper } = await import("@/lib/actions/admin-operations");
+
+    await expect(
+      adminRunScraper({ sources: ["tla_scrape"] })
+    ).resolves.toEqual({
+      ok: false,
+      error:
+        "GitHub could not dispatch this request. The workflow may be disabled, missing on the configured ref, or inaccessible to the token.",
+    });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("returns a warning when GitHub accepts a run but dispatch auditing fails", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { code: "P0001", message: "invalid_scraper_source" },
+    });
+    const { adminRunScraper } = await import("@/lib/actions/admin-operations");
+
+    await expect(
+      adminRunScraper({ sources: ["purple_comet_scrape"] })
+    ).resolves.toEqual({
+      ok: true,
+      sources: ["purple_comet_scrape"],
+      workflowUrl:
+        "https://github.com/causey/app/actions/workflows/ingest.yml",
+      auditWarning:
+        "GitHub accepted the scraper request, but Causey could not save its admin audit record.",
+    });
+  });
 });
 
 describe("admin tournament operations migration", () => {
@@ -121,6 +154,13 @@ describe("admin tournament operations migration", () => {
     resolve(
       process.cwd(),
       "supabase/migrations/0039_admin_tournament_operations.sql"
+    ),
+    "utf8"
+  );
+  const dispatchSourceSql = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/0068_admin_scraper_dispatch_sources.sql"
     ),
     "utf8"
   );
@@ -147,6 +187,21 @@ describe("admin tournament operations migration", () => {
     expect(sql).not.toMatch(
       /grant (insert|update|delete)[^;]*scrape_runs/i
     );
+  });
+
+  it("audits every governed admin scraper source", () => {
+    for (const source of [...ADMIN_RUNNABLE_SCRAPER_SOURCES, "all"]) {
+      expect(dispatchSourceSql).toContain(`'${source}'`);
+    }
+    for (const source of [
+      "tabroom_scrape",
+      "vex_events_scrape",
+      "doe_science_bowl_scrape",
+    ]) {
+      expect(dispatchSourceSql).not.toContain(`'${source}'`);
+    }
+    expect(dispatchSourceSql).toContain("security definer");
+    expect(dispatchSourceSql).toContain("not public.is_platform_admin()");
   });
 });
 
@@ -209,5 +264,15 @@ describe("manual ingestion workflow", () => {
   it("queues overlapping ingestion requests instead of racing them", () => {
     expect(workflow).toContain("group: causey-tournament-ingestion");
     expect(workflow).toContain("cancel-in-progress: false");
+  });
+
+  it("schedules twice-weekly ingestion from the released main workflow using dev code", () => {
+    expect(workflow).toContain('cron: "0 11 * * 1,4"');
+    expect(workflow).toContain(
+      "github.event_name == 'schedule' && 'dev' || github.ref"
+    );
+    expect(workflow).toContain(
+      "github.event_name == 'workflow_dispatch' && github.ref_name != 'dev'"
+    );
   });
 });

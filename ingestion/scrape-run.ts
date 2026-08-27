@@ -78,3 +78,36 @@ export async function finishScrapeRun(
     .eq("id", runId);
   if (error) console.warn(`scrape_runs finish failed: ${error.message}`);
 }
+
+/**
+ * Record a successful source check that intentionally produced no rows.
+ * This keeps operational freshness honest without staging an empty snapshot or
+ * retracting previously indexed listings.
+ */
+export async function recordSuccessfulNoopScrapeRun(
+  client: SupabaseClient | null,
+  source: Exclude<ScrapeRunSource, "all">,
+  meta: Record<string, unknown> = {}
+): Promise<void> {
+  if (!client) {
+    if (process.env.REQUIRE_SUPABASE === "1" || process.env.CI === "true") {
+      throw new Error(
+        `Cannot record the ${source} source check because Supabase is not configured.`
+      );
+    }
+    return;
+  }
+  const runId = await startScrapeRun(client, source, meta);
+  if (!runId) {
+    throw new Error(`Could not start the ${source} scrape run log.`);
+  }
+  await finishScrapeRun(client, runId, "succeeded", {
+    rows_staged: 0,
+    rows_upserted: 0,
+    meta: {
+      ...meta,
+      no_complete_cycle: true,
+      existing_data_unchanged: true,
+    },
+  });
+}
