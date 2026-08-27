@@ -488,7 +488,7 @@ export function HomeDistrictPitch() {
       ([entry]) => {
         if (!entry.isIntersecting) return;
         observer.disconnect();
-        playThrough(800, 400);
+        playThrough(1500, 600);
       },
       { threshold: 0.3 }
     );
@@ -511,7 +511,7 @@ export function HomeDistrictPitch() {
       return;
     }
     setActive(0);
-    playThrough(500, 350);
+    playThrough(950, 450);
   };
 
   const startWindowDrag = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -672,7 +672,7 @@ export function HomeDistrictPitch() {
                         />
                         <span
                           aria-hidden="true"
-                          className={`pointer-events-none absolute -bottom-6 left-[15px] top-6 z-10 w-0.5 origin-top transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] sm:left-[19px] ${
+                          className={`pointer-events-none absolute -bottom-6 left-[15px] top-6 z-10 w-0.5 origin-top transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] sm:left-[19px] ${
                             isClub ? "bg-brand-red" : "bg-brand-blue-strong"
                           } ${index < active ? "scale-y-100" : "scale-y-0"}`}
                         />
