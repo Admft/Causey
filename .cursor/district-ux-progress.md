@@ -39,6 +39,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
+- [x] Event page hosts see the same attendee view as everyone else: the “You’re hosting this event” panel and aside Hosting block are gone; a slim gold host bar under the back link carries Manage event / Edit listing, and RSVP/register/invite stays the primary next step (host pulse lives on the manage page) — 2026-08-26
 - [x] Home organizer band breaks the twin-card recipe: club season is a printed scoresheet; district is a nested office on the blue wash, offset on desktop — 2026-08-26
 - [x] Admin `/admin/tournaments` is work queues (needs review, ready to publish, archived) instead of one mixed dump; All records groups by that same system; complete archived listings are marked ready to restore — 2026-08-26
 - [x] Homepage listing preview peeks the next card then yanks back once so the horizontal rail reads as scrollable — 2026-08-26
