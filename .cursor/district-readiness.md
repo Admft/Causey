@@ -30,6 +30,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Home organizer district card is a School/District peer to clubs (same chassis, glanceable heading, assisted-pilot lede, planned-next lower deck) — 2026-08-26
 - [x] District announcement fan-out to connected schools from the district overview — 2026-08-25
 - [x] School-safe roster/manage composition: invite → group → competitions; progressive group edit; manage replies by status; group-first invites — 2026-08-27
+- [x] Home organizer board: district path is unmissable — massive sliding Club/District window switch (drag or click, midpoint live-switch) with a sheen prompt on the district half until tried — 2026-08-27
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 

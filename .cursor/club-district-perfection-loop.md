@@ -34,6 +34,7 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Last tick
 
+- 2026-08-27 — Home organizer switch: massive draggable window slider (red/blue halves, mirrored white labels, midpoint live-switch) with a district sheen prompt until first try; board copy/body slides in the thumb's travel direction.
 - 2026-08-27 — School-safe roster/manage: progressive group edit, status-grouped replies, group-first invites; Family metadata honesty.
 - 2026-08-26 — Event travel control: “Bring your roster,” one organization chooser, and no rosterless district attendance.
 - 2026-08-26 — Home organizer: club season as a printed scoresheet, district as a nested blue office panel; drop twin cards and Planned next.
