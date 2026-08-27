@@ -633,6 +633,91 @@ textarea.field {
   }
 }
 
+/* Home organizer board mode switch: a sliding "window" thumb carries white
+ * mirrored labels across the red/blue halves (drag or click to switch), and
+ * the district half sheens on a slow loop until the visitor tries it once.
+ * Positioning lives on Tailwind classes in HomeDistrictPitch; transitions
+ * live here so reduced motion can kill them in one place. */
+.mode-thumb {
+  transition: transform 480ms var(--ease-brand),
+    background-color 240ms var(--ease-brand);
+  box-shadow: 0 14px 40px rgba(27, 33, 32, 0.1);
+  will-change: transform;
+}
+.mode-thumb-mirror {
+  transition: transform 480ms var(--ease-brand);
+  will-change: transform;
+}
+.mode-thumb[data-dragging],
+.mode-thumb[data-dragging] .mode-thumb-mirror {
+  transition: none;
+}
+.mode-sheen {
+  overflow: hidden;
+  pointer-events: none;
+}
+.mode-sheen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  width: 40%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    color-mix(in srgb, #ffffff 85%, transparent) 42%,
+    color-mix(in srgb, #ffffff 60%, transparent) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  animation: mode-sheen-sweep 4.8s var(--ease-brand) infinite;
+}
+@keyframes mode-sheen-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  5% {
+    opacity: 0.95;
+  }
+  24% {
+    opacity: 0;
+    transform: translateX(280%);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(280%);
+  }
+}
+/* Mode changes slide the board copy/body in the thumb's travel direction. */
+@keyframes mode-slide-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes mode-slide-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.animate-mode-slide-from-left {
+  animation: mode-slide-from-left 480ms var(--ease-brand) both;
+}
+.animate-mode-slide-from-right {
+  animation: mode-slide-from-right 480ms var(--ease-brand) both;
+}
+
 /* Hero first-paint rise — §10. Guide attention into the first viewport. */
 @keyframes rise {
   from {
@@ -699,6 +784,15 @@ textarea.field {
     animation: none;
   }
   .home-featured-rail[data-hint] > ul {
+    animation: none;
+  }
+  .mode-thumb,
+  .mode-thumb-mirror {
+    transition: none;
+  }
+  .mode-sheen::before,
+  .animate-mode-slide-from-left,
+  .animate-mode-slide-from-right {
     animation: none;
   }
   .scroll-reveal {

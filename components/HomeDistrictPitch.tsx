@@ -7,13 +7,18 @@ import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
 
 /**
  * Organizer band under discovery: ONE board that demonstrates the product
- * instead of two brochures describing it. A Club/District switch on top
- * re-runs the board; on first scroll entry the season path draws itself and
- * the board auto-plays the four steps once, resting on the finished season.
- * The preview pane is an aria-hidden wireframe labeled with real product
- * vocabulary (join link, club is going, season CSV, aggregate totals) — no
- * names, dates, or counts, so there is nothing to mistake for data. Any
- * interaction stops auto-play; reduced motion gets the instant final state.
+ * instead of two brochures describing it. A massive Club/District "window"
+ * switch on top re-runs the board: the sliding thumb carries white mirrored
+ * labels across the red/blue halves, can be dragged past the midpoint to
+ * live-switch modes, and the district half sheens on a slow loop until the
+ * visitor tries it once. Mode changes slide the copy and board in the
+ * thumb's travel direction. On first scroll entry the season path draws
+ * itself and the board auto-plays the four steps once, resting on the
+ * finished season. The preview pane is an aria-hidden wireframe labeled
+ * with real product vocabulary (join link, club is going, season CSV,
+ * aggregate totals) — no names, dates, or counts, so there is nothing to
+ * mistake for data. Any interaction stops auto-play; reduced motion gets
+ * the instant final state.
  */
 
 type Mode = "club" | "district";
@@ -445,7 +450,11 @@ function DistrictSketch({ step }: { step: number }) {
 export function HomeDistrictPitch() {
   const [mode, setMode] = useState<Mode>("club");
   const [active, setActive] = useState(0);
+  const [dragPos, setDragPos] = useState<number | null>(null);
+  const [districtPrompt, setDistrictPrompt] = useState(true);
   const boardRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ startX: number; startPos: number } | null>(null);
   const timersRef = useRef<number[]>([]);
   const reducedRef = useRef(false);
 
@@ -495,6 +504,7 @@ export function HomeDistrictPitch() {
   const switchMode = (next: Mode) => {
     if (next === mode) return;
     clearTimers();
+    setDistrictPrompt(false);
     setMode(next);
     if (reducedRef.current) {
       setActive(DISTRICT_STEPS.length - 1);
@@ -504,12 +514,44 @@ export function HomeDistrictPitch() {
     playThrough(500, 350);
   };
 
+  const startWindowDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!trackRef.current) return;
+    const startPos = mode === "club" ? 0 : 1;
+    dragRef.current = { startX: e.clientX, startPos };
+    setDragPos(startPos);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const moveWindowDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const track = trackRef.current;
+    if (!drag || !track) return;
+    const half = track.offsetWidth / 2;
+    if (half <= 0) return;
+    const next = Math.min(
+      1,
+      Math.max(0, drag.startPos + (e.clientX - drag.startX) / half)
+    );
+    setDragPos(next);
+    if (next >= 0.5 && mode === "club") switchMode("district");
+    else if (next < 0.5 && mode === "district") switchMode("club");
+  };
+
+  const endWindowDrag = () => {
+    dragRef.current = null;
+    setDragPos(null);
+  };
+
   const selectStep = (index: number) => {
     clearTimers();
     setActive(index);
   };
 
   const isClub = mode === "club";
+  const windowPos = dragPos ?? (isClub ? 0 : 1);
+  const slideClass = isClub
+    ? "animate-mode-slide-from-left"
+    : "animate-mode-slide-from-right";
   const accentText = isClub ? "text-brand-red" : "text-brand-blue-strong";
   const nodeFill = isClub
     ? "border-brand-red bg-brand-red"
@@ -527,42 +569,95 @@ export function HomeDistrictPitch() {
             className="overflow-hidden rounded-3xl border border-line bg-surface shadow-[var(--shadow-panel-lg)]"
           >
             <div className="border-b border-line px-5 py-5 sm:px-8 sm:py-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div
-                  aria-label="Choose club or district"
-                  className="inline-flex rounded-xl border border-line bg-surface-soft p-1"
-                >
-                  {(["club", "district"] as const).map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => switchMode(option)}
-                      aria-pressed={mode === option}
-                      className={`rounded-lg px-3.5 py-2 text-sm font-bold transition-colors ${
-                        mode === option
-                          ? option === "club"
-                            ? "bg-brand-red text-white"
-                            : "bg-brand-blue-strong text-white"
-                          : "text-muted-strong hover:text-foreground"
+              <div
+                ref={trackRef}
+                aria-label="Choose club or district"
+                className="relative grid grid-cols-2 rounded-2xl border border-line bg-surface p-1.5 focus-within:ring-2 focus-within:ring-accent/25"
+              >
+                {(["club", "district"] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => switchMode(option)}
+                    aria-pressed={mode === option}
+                    className={`flex flex-col items-center justify-center rounded-xl px-3 py-3.5 text-center transition-colors sm:py-4 ${
+                      option === "club"
+                        ? "bg-accent-soft/60 hover:bg-accent-soft"
+                        : "bg-brand-blue-soft/60 hover:bg-brand-blue-soft"
+                    }`}
+                  >
+                    <span
+                      className={`block text-base font-bold sm:text-lead ${
+                        option === "club"
+                          ? "text-brand-red"
+                          : "text-brand-blue-strong"
                       }`}
                     >
                       {option === "club" ? "Clubs and teams" : "School districts"}
-                    </button>
-                  ))}
+                    </span>
+                    <span className="mt-0.5 block text-2xs font-semibold text-muted sm:text-xs">
+                      {option === "club"
+                        ? "Run it yourself"
+                        : "Set up with you"}
+                    </span>
+                  </button>
+                ))}
+                {districtPrompt && isClub ? (
+                  <span
+                    aria-hidden="true"
+                    className="mode-sheen absolute inset-y-1.5 right-1.5 z-10 w-[calc(50%-0.375rem)] rounded-xl"
+                  />
+                ) : null}
+                <div
+                  aria-hidden="true"
+                  data-dragging={dragPos !== null ? "" : undefined}
+                  className={`mode-thumb absolute inset-y-1.5 left-1.5 z-20 w-[calc(50%-0.375rem)] cursor-grab touch-pan-y select-none overflow-hidden rounded-xl active:cursor-grabbing ${
+                    isClub ? "bg-brand-red" : "bg-brand-blue-strong"
+                  }`}
+                  style={{ transform: `translateX(${windowPos * 100}%)` }}
+                  onPointerDown={startWindowDrag}
+                  onPointerMove={moveWindowDrag}
+                  onPointerUp={endWindowDrag}
+                  onPointerCancel={endWindowDrag}
+                >
+                  <div
+                    className="mode-thumb-mirror flex h-full w-[200%]"
+                    style={{ transform: `translateX(${-windowPos * 50}%)` }}
+                  >
+                    {(["club", "district"] as const).map((option) => (
+                      <span
+                        key={option}
+                        className="flex h-full w-1/2 flex-col items-center justify-center px-3 text-center"
+                      >
+                        <span className="block text-base font-bold text-white sm:text-lead">
+                          {option === "club"
+                            ? "Clubs and teams"
+                            : "School districts"}
+                        </span>
+                        <span className="mt-0.5 block text-2xs font-semibold text-white sm:text-xs">
+                          {option === "club"
+                            ? "Run it yourself"
+                            : "Set up with you"}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-muted">
-                  {copy.caption}
+              </div>
+              <div key={`${mode}-copy`} className={slideClass}>
+                <h2 className="mt-5 max-w-[22ch] font-display text-display-lg tracking-tight text-foreground">
+                  {copy.heading}
+                </h2>
+                <p className="mt-3 max-w-prose text-sm text-muted">
+                  {copy.intro}
                 </p>
               </div>
-              <h2 className="mt-4 max-w-[22ch] font-display text-display-lg tracking-tight text-foreground">
-                {copy.heading}
-              </h2>
-              <p className="mt-3 max-w-prose text-sm text-muted">
-                {copy.intro}
-              </p>
             </div>
 
-            <div className="grid gap-8 px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
+            <div
+              key={`${mode}-grid`}
+              className={`${slideClass} grid gap-8 px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12`}
+            >
               <ol
                 aria-label={copy.caption}
                 className="relative self-start"
@@ -645,7 +740,10 @@ export function HomeDistrictPitch() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 border-t border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <div
+              key={`${mode}-foot`}
+              className={`${slideClass} flex flex-col gap-4 border-t border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8`}
+            >
               <p className="max-w-prose text-xs text-muted">
                 {copy.finePrint}
               </p>
