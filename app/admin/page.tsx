@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminBarChart, AdminMixChart } from "@/components/AdminCharts";
 import { AdminOpsLedger } from "@/components/AdminStatStrip";
 import { PortalMission } from "@/components/PortalPrimitives";
+import { remainderCount, scrapeRunBarValue, scrapeRunTone } from "@/lib/admin-charts";
 import { adminTournamentsHref } from "@/lib/admin-tournament-filters";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
@@ -10,6 +12,7 @@ import {
   getAdminAuditLog,
   getAdminModerationQueue,
   getAdminOpsStats,
+  getAdminScrapeRuns,
 } from "@/lib/data/admin";
 import { formatDateRange } from "@/lib/format";
 
@@ -22,7 +25,7 @@ export default async function AdminOverviewPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) redirect("/");
 
-  const [stats, auditRows, moderation] = await Promise.all([
+  const [stats, auditRows, moderation, scrapeRuns] = await Promise.all([
     getAdminOpsStats([
       "listings",
       "readyDrafts",
@@ -32,6 +35,7 @@ export default async function AdminOverviewPage() {
     ]),
     getAdminAuditLog(8),
     getAdminModerationQueue(),
+    getAdminScrapeRuns(8),
   ]);
 
   const pending = stats.listings.pendingReview;
@@ -132,6 +136,28 @@ export default async function AdminOverviewPage() {
                     }),
                   },
                 ],
+                chart: (
+                  <AdminMixChart
+                    title="Organizer pipeline"
+                    segments={[
+                      {
+                        label: "Awaiting",
+                        value: stats.listings.pendingReview,
+                        tone: "attention",
+                      },
+                      {
+                        label: "Rejected",
+                        value: stats.listings.rejected,
+                        tone: "progress",
+                      },
+                      {
+                        label: "Published",
+                        value: stats.listings.publishedOrganizer,
+                        tone: "ok",
+                      },
+                    ]}
+                  />
+                ),
               },
               {
                 title: "Tournaments",
@@ -162,6 +188,33 @@ export default async function AdminOverviewPage() {
                     href: adminTournamentsHref({ status: "draft", ready: true }),
                   },
                 ],
+                chart: (
+                  <AdminMixChart
+                    title="Record status"
+                    segments={[
+                      {
+                        label: "Published",
+                        value: stats.listings.published,
+                        tone: "ok",
+                      },
+                      {
+                        label: "Drafts",
+                        value: stats.listings.drafts,
+                        tone: "quiet",
+                      },
+                      {
+                        label: "Pending",
+                        value: stats.listings.pendingReview,
+                        tone: "attention",
+                      },
+                      {
+                        label: "Archived",
+                        value: stats.listings.archived,
+                        tone: "quiet",
+                      },
+                    ]}
+                  />
+                ),
               },
               {
                 title: "Organizations",
@@ -192,6 +245,28 @@ export default async function AdminOverviewPage() {
                     href: "/admin/organizations",
                   },
                 ],
+                chart: (
+                  <AdminMixChart
+                    title="Verification"
+                    segments={[
+                      {
+                        label: "Need review",
+                        value: stats.organizations.pending,
+                        tone: "attention",
+                      },
+                      {
+                        label: "Corrections",
+                        value: stats.organizations.rejected,
+                        tone: "progress",
+                      },
+                      {
+                        label: "Verified",
+                        value: stats.organizations.verified,
+                        tone: "ok",
+                      },
+                    ]}
+                  />
+                ),
               },
               {
                 title: "Accounts",
@@ -207,6 +282,26 @@ export default async function AdminOverviewPage() {
                     href: "/admin/users",
                   },
                 ],
+                chart: (
+                  <AdminMixChart
+                    title="Access"
+                    segments={[
+                      {
+                        label: "Platform admins",
+                        value: stats.accounts.platformAdmins,
+                        tone: "ok",
+                      },
+                      {
+                        label: "Everyone else",
+                        value: remainderCount(
+                          stats.accounts.total,
+                          stats.accounts.platformAdmins
+                        ),
+                        tone: "quiet",
+                      },
+                    ]}
+                  />
+                ),
               },
               {
                 title: "Scrapers",
@@ -232,6 +327,26 @@ export default async function AdminOverviewPage() {
                     href: "/admin/scrapers",
                   },
                 ],
+                chart: scrapeRuns.unavailable ? (
+                  <AdminBarChart
+                    title="Rows upserted"
+                    segments={[{ label: "Runs", value: null, tone: "quiet" }]}
+                    unit="rows"
+                  />
+                ) : (
+                  <AdminBarChart
+                    title="Rows upserted"
+                    unit="rows"
+                    segments={[...scrapeRuns.runs].reverse().map((run) => ({
+                      label: new Date(run.started_at).toLocaleDateString(
+                        "en-US",
+                        { month: "numeric", day: "numeric" }
+                      ),
+                      value: scrapeRunBarValue(run),
+                      tone: scrapeRunTone(run.status),
+                    }))}
+                  />
+                ),
               },
             ]}
           />

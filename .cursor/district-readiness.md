@@ -27,6 +27,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Phone discovery is search-first: directory pages search before filters; home uses type tiles — 2026-08-26
 - [x] Homepage hero fills the remaining viewport; coverage is one scroll from the public pitch — 2026-08-26
 - [x] `/districts` hero filled with setup steps; home organizer band pairs club + district without empty lanes — 2026-08-24
+- [x] Home organizer district card is a School/District peer to clubs (same chassis, glanceable heading, assisted-pilot lede, planned-next lower deck) — 2026-08-26
 - [x] District announcement fan-out to connected schools from the district overview — 2026-08-25
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory

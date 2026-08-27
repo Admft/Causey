@@ -203,6 +203,12 @@ textarea.field {
   box-shadow: none;
 }
 
+/* Homepage search submit: one step larger than the default h-12 CTA. */
+.cta-enabled.cta-hero {
+  height: 3.5rem;
+  font-size: var(--text-lg);
+}
+
 /* Homepage “see more”: normal red CTA at rest; one sheen when it enters. */
 .cta-sheen {
   position: relative;
@@ -460,6 +466,18 @@ textarea.field {
   to {
     background-position: 46px 23px, 23px 46px;
   }
+}
+
+/* Homepage type tiles: 3D marks need a light lift on white. Directory
+ * heroes reuse the heavier .search-hero-graphic when both classes apply. */
+.category-graphic {
+  filter: drop-shadow(0 3px 6px rgba(27, 33, 32, 0.16));
+}
+
+/* Directory heroes: glossy black 3D marks need lift on the cream grid.
+ * Filter (not box-shadow) so the transparent PNG silhouette still casts. */
+.search-hero-graphic {
+  filter: drop-shadow(0 14px 28px rgba(27, 33, 32, 0.18));
 }
 
 /* Skeleton shimmer for result loading — one job: show data is on its way. */

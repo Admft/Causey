@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminMixChart } from "@/components/AdminCharts";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { AdminTournamentBulkList } from "@/components/AdminTournamentBulkList";
 import {
@@ -151,6 +152,33 @@ export default async function AdminTournamentsPage({
               href: adminTournamentsHref({ status: "draft", ready: true }),
             },
           ]}
+          chart={
+            <AdminMixChart
+              title="Record status"
+              segments={[
+                {
+                  label: "Published",
+                  value: ops.listings.published,
+                  tone: "ok",
+                },
+                {
+                  label: "Drafts",
+                  value: ops.listings.drafts,
+                  tone: "quiet",
+                },
+                {
+                  label: "Pending",
+                  value: ops.listings.pendingReview,
+                  tone: "attention",
+                },
+                {
+                  label: "Archived",
+                  value: ops.listings.archived,
+                  tone: "quiet",
+                },
+              ]}
+            />
+          }
         />
       </div>
 

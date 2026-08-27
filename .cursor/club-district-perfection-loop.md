@@ -30,10 +30,14 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- **Shared visual language:** scholastic competition density — filled panels, rounder controls, heavier type, club `/clubs` peer to `/districts`.
+- **Home organizer chassis:** one housed band for club season + district pilot + planned next.
 
 ## Last tick
 
+- 2026-08-26 — Home organizer band: one chassis (club season spine + district ledger + planned-next lower deck), not two stamped cards.
+- 2026-08-26 — Home hero type picker uses the section graphics (equal-size cropped marks) for Chess, Debate, STEM, Arts, and Writing.
+- 2026-08-26 — Directory search heroes restore the type-specific 3D PNGs beside the filled search card (compact overlay on phones).
+- 2026-08-26 — Home organizer band: club vs school-district peer cards (subgrid, compact 01–04, district copy names the assisted pilot).
 - 2026-08-26 — Platform admin ops stats, organizer event pulse/workspace, parent competition alerts (`0067`).
 
 - 2026-08-26 — Event comments, desktop home featured listings (photos or saved zip), zip/location capture on signup and role landings.

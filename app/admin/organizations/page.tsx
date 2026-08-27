@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AdminBarChart, AdminMixChart } from "@/components/AdminCharts";
 import { AdminOrganizationsExplorer } from "@/components/AdminOrganizationsExplorer";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
@@ -46,6 +47,19 @@ export default async function AdminOrganizationsPage({
     )
   );
 
+  const typeCounts = {
+    district: 0,
+    school: 0,
+    club: 0,
+    team: 0,
+  };
+  for (const organization of organizations) {
+    typeCounts[organization.type] += 1;
+  }
+  const typeChartReady =
+    stats.organizations.total !== null &&
+    organizations.length === stats.organizations.total;
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
@@ -88,6 +102,55 @@ export default async function AdminOrganizationsPage({
               href: "/admin/organizations",
             },
           ]}
+          chart={
+            <div className="grid gap-6 sm:grid-cols-2">
+              <AdminMixChart
+                title="Verification"
+                segments={[
+                  {
+                    label: "Need review",
+                    value: stats.organizations.pending,
+                    tone: "attention",
+                  },
+                  {
+                    label: "Corrections",
+                    value: stats.organizations.rejected,
+                    tone: "progress",
+                  },
+                  {
+                    label: "Verified",
+                    value: stats.organizations.verified,
+                    tone: "ok",
+                  },
+                ]}
+              />
+              <AdminBarChart
+                title="By type"
+                segments={[
+                  {
+                    label: "District",
+                    value: typeChartReady ? typeCounts.district : null,
+                    tone: "ok",
+                  },
+                  {
+                    label: "School",
+                    value: typeChartReady ? typeCounts.school : null,
+                    tone: "quiet",
+                  },
+                  {
+                    label: "Club",
+                    value: typeChartReady ? typeCounts.club : null,
+                    tone: "quiet",
+                  },
+                  {
+                    label: "Team",
+                    value: typeChartReady ? typeCounts.team : null,
+                    tone: "quiet",
+                  },
+                ]}
+              />
+            </div>
+          }
         />
       </div>
 

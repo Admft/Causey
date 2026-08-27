@@ -11,26 +11,33 @@ const searchFilters = read("components/SearchFilters.tsx");
 
 describe("mobile discovery and private district setup", () => {
   it("does not put example schools in the public district pitch", () => {
-    expect(districtPitch).toContain("Ready for an assisted pilot");
+    expect(districtPitch).toContain("School districts");
     expect(districtPitch).toContain("participating schools");
     expect(districtPitch).not.toContain("Washington Elementary");
     expect(districtPitch).not.toContain("Jefferson Middle School");
     expect(districtPitch).not.toContain("Lincoln High School");
   });
 
-  it("separates current district readiness from future plans", () => {
-    expect(districtPitch).toContain("The district foundation is in place");
+  it("houses club and district as peers in one chassis, with planned next as the lower deck", () => {
+    const districtsPage = read("app/districts/page.tsx");
+    expect(districtPitch).toContain("Chess for a whole district, set up with you.");
+    expect(districtPitch).toContain("assisted chess pilot");
+    expect(districtPitch).toContain("lg:grid-rows-subgrid");
+    expect(districtPitch).toContain("shadow-[var(--shadow-panel-lg)]");
+    expect(districtPitch).toContain("See the club workspace");
+    expect(districtPitch).toContain("Create a club account");
+    expect(districtPitch).toContain("Review the district pilot");
     expect(districtPitch).toContain("Planned next");
     expect(districtPitch).toContain("Guided district setup");
     expect(districtPitch).toContain("More competition types");
-    expect(districtPitch).toContain("Illustrative season");
-    expect(districtPitch).toContain("Illustrative command center");
+    expect(districtPitch).not.toContain("Ready for an assisted pilot");
+    expect(districtPitch).not.toContain("The district foundation is in place");
+    expect(districtPitch).not.toContain("Illustrative season");
+    expect(districtPitch).not.toContain("Illustrative command center");
     expect(districtPitch).not.toContain("what is ready now");
-    expect(districtPitch).not.toContain("what we plan to");
     expect(districtPitch).not.toContain("aggregate reporting");
-    expect(districtPitch).not.toContain("staff handoff");
-    expect(districtPitch).not.toContain("Provision and verify");
     expect((districtPitch.match(/padStart/g) ?? []).length).toBe(1);
+    expect(districtsPage).toContain("What we have not finished");
   });
 
   it("puts zip and name search before mobile filters", () => {

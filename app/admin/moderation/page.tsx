@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminBarChart, AdminMixChart } from "@/components/AdminCharts";
 import { AdminModerationBulkQueue } from "@/components/AdminModerationBulkQueue";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { adminTournamentsHref } from "@/lib/admin-tournament-filters";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
+import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
+import type { AdminChartSegment } from "@/lib/admin-charts";
 import {
   getAdminModerationQueue,
   getAdminOpsStats,
@@ -23,6 +26,18 @@ export default async function ModerationPage() {
     getAdminModerationQueue(),
     getAdminOpsStats(["listings"]),
   ]);
+
+  const categoryCounts = Object.fromEntries(
+    [...DISCOVERY_CATEGORIES.map((category) => category.id), "other"].map(
+      (id) => [id, 0]
+    )
+  ) as Record<string, number>;
+  if (!error) {
+    for (const row of queue) {
+      const key = row.category in categoryCounts ? row.category : "other";
+      categoryCounts[key] += 1;
+    }
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -61,6 +76,47 @@ export default async function ModerationPage() {
               }),
             },
           ]}
+          chart={
+            <div className="grid gap-6 sm:grid-cols-2">
+              <AdminMixChart
+                title="Organizer pipeline"
+                segments={[
+                  {
+                    label: "Awaiting",
+                    value: stats.listings.pendingReview,
+                    tone: "attention",
+                  },
+                  {
+                    label: "Rejected",
+                    value: stats.listings.rejected,
+                    tone: "progress",
+                  },
+                  {
+                    label: "Published",
+                    value: stats.listings.publishedOrganizer,
+                    tone: "ok",
+                  },
+                ]}
+              />
+              <AdminBarChart
+                title="Waiting by type"
+                segments={[
+                  ...DISCOVERY_CATEGORIES.map(
+                    (category): AdminChartSegment => ({
+                      label: category.shortLabel,
+                      value: error ? null : categoryCounts[category.id],
+                      tone: category.id === "chess" ? "ok" : "quiet",
+                    })
+                  ),
+                  {
+                    label: "Other",
+                    value: error ? null : categoryCounts.other,
+                    tone: "quiet",
+                  },
+                ]}
+              />
+            </div>
+          }
         />
       </div>
 

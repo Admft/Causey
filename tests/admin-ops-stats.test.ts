@@ -53,6 +53,34 @@ describe("platform admin ops stats", () => {
     expect(strip).not.toContain("AdminOpsOverview");
   });
 
+  it("puts a fail-closed mix or bar chart on every admin section", () => {
+    const charts = read("components/AdminCharts.tsx");
+    const helpers = read("lib/admin-charts.ts");
+    const overview = read("app/admin/page.tsx");
+    const moderation = read("app/admin/moderation/page.tsx");
+    const tournaments = read("app/admin/tournaments/page.tsx");
+    const orgs = read("app/admin/organizations/page.tsx");
+    const users = read("app/admin/users/page.tsx");
+    const scrapers = read("app/admin/scrapers/page.tsx");
+
+    expect(helpers).toContain("adminChartUnavailable");
+    expect(helpers).toContain("scrapeRunBarValue");
+    expect(charts).toContain("AdminMixChart");
+    expect(charts).toContain("AdminBarChart");
+    expect(charts).toContain("missing counts are not");
+    expect(charts).not.toContain("recharts");
+    expect(overview).toContain("AdminMixChart");
+    expect(overview).toContain("AdminBarChart");
+    expect(overview).toContain("Organizer pipeline");
+    expect(moderation).toContain("Waiting by type");
+    expect(moderation).toContain("AdminBarChart");
+    expect(tournaments).toContain("Record status");
+    expect(orgs).toContain("By type");
+    expect(users).toContain("remainderCount");
+    expect(scrapers).toContain("Rows upserted");
+    expect(scrapers).toContain("AdminMixChart");
+  });
+
   it("fetches only the slice each destination needs", () => {
     const moderation = read("app/admin/moderation/page.tsx");
     const tournaments = read("app/admin/tournaments/page.tsx");

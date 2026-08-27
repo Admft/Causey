@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { CategoryGlyph } from "@/components/CategoryGlyph";
+import { CategoryGraphic } from "@/components/CategoryGraphic";
 import { requestNearestZip } from "@/lib/browser-zip";
 import {
   DISCOVERY_CATEGORIES,
@@ -102,7 +102,7 @@ export function HomeHeroSearch({
       onSubmit={onSubmit}
       className="flex w-full min-w-0 flex-col"
     >
-      <p className="hidden text-sm text-muted md:mb-4 md:block">
+      <p className="hidden text-xs text-muted md:mb-3 md:block">
         Pick a competition type, then optionally narrow by zip and distance.
         Each directory also has name and category-specific filters.
       </p>
@@ -140,15 +140,16 @@ export function HomeHeroSearch({
                     setCategory(option.id);
                     setCategoryError(null);
                   }}
-                  className={`flex h-14 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-1 text-center transition-colors md:h-16 ${tilePlace} ${
+                  className={`flex min-h-20 touch-manipulation flex-col items-center justify-center gap-1 rounded-xl border px-1 py-1 text-center transition-colors ${tilePlace} ${
                     selected
                       ? "border-brand-red/45 bg-accent-soft text-brand-red"
                       : "border-line bg-white text-foreground hover:border-brand-red/35 hover:text-brand-red"
                   }`}
                 >
-                  <CategoryGlyph
+                  <CategoryGraphic
                     category={option.id}
-                    className="h-5 w-5 shrink-0 md:h-7 md:w-7"
+                    className="h-12 w-12 md:h-10 md:w-10"
+                    sizes="(min-width: 768px) 40px, 48px"
                   />
                   <span className="max-w-full text-2xs font-bold leading-tight">
                     {option.shortLabel}
@@ -246,7 +247,7 @@ export function HomeHeroSearch({
         <button
           type="submit"
           disabled={pending}
-          className="cta-enabled w-full touch-manipulation disabled:opacity-60"
+          className="cta-enabled cta-hero w-full touch-manipulation disabled:opacity-60"
         >
           {pending ? "Searching…" : "Search tournaments"}
         </button>
@@ -263,11 +264,6 @@ export function HomeHeroSearch({
         ) : zipTrimmed && category && !zipComplete ? (
           <p className="mt-3 text-2xs text-muted">
             Enter a 5-digit zip, or clear the field to browse without one.
-          </p>
-        ) : !category ? (
-          <p className="mt-3 hidden text-2xs text-muted md:block">
-            Every directory lists the official sources it indexes, including the
-            ones still link-only.
           </p>
         ) : null}
       </div>

@@ -39,6 +39,12 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
+- [x] Homepage Find card: drop the source-index caption under Search tournaments; helper copy is smaller; the submit is one step larger than the site CTA — 2026-08-26
+- [x] Home organizer band is one chassis: club season spine (01–04) beside district capabilities, planned-next as the lower deck — 2026-08-26
+- [x] Home hero type tiles use equal-size cropped section graphics (Chess, Debate, STEM, Arts, Writing); coverage cards reuse the same marks — 2026-08-26
+- [x] Directory search heroes (`/chess`, `/debate`, `/stem`, `/arts`, `/writing`) restore the type-specific 3D PNGs (chess pieces, gavel/mic, STEM tools, arts, writing) beside a filled search card; phones keep a compact overlay so the mark is not desktop-only — 2026-08-26
+- [x] Each platform-admin section has a fail-closed mix or bar chart from real counts (pipeline, record status, verification/type, access, scrape health/rows); missing counts stay Unavailable, never a drawn zero — 2026-08-26
+- [x] Home organizer band is one chassis: club season spine (01–04) beside district capabilities, planned-next as the lower deck — 2026-08-26
 - [x] Platform admin overview restores the grouped ops ledger (moderation, tournaments, orgs, accounts, scrapers) in housed two-column cards instead of the compact 5-KPI snapshot; queue, mission, and fail-closed Unavailable stay — 2026-08-26
 - [x] Signed-in home account band uses the same white destination panel as the signed-out role chooser (lead titles, sentence helpers, red arrows) instead of a floating hairline list; copy names zip search and profile/alerts instead of “indexed feeds” — 2026-08-26
 - [x] Home coverage is the five-directory set as cards, not a ledger: each card reuses the hero’s `CategoryGlyph`, a one-line depth statement, and a six-notch coverage bar so “chess is broadest” is visible, plus a sixth soft cell carrying the link-only honesty. Cards link into each directory (status + outbound link live there); shared `ScrollReveal` stagger replaces the bespoke line-draw. 578px, holds at 360/768/1280/1440 — 2026-08-26

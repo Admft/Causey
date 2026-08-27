@@ -26,7 +26,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Overview tells the owner to **record results** after attendance (not only invite/create) — 2026-08-24
 - [x] Homepage Find card has a My tournaments tab: sign-in returns here; signed-in preview of Going / traveling / hosted — 2026-08-26
 - [x] Desktop home samples real nearby/photo listings; event pages take comments; zip/location capture on signup and landings — 2026-08-26
-- [x] Phone homepage hero is a page-width form (3+2 type tiles) so Find stays on one screen with My tournaments — 2026-08-26
+- [x] Phone homepage hero is a page-width form (3+2 type tiles with equal section graphics) so Find stays on one screen with My tournaments — 2026-08-26
 - [x] Phone homepage is search-first: type tiles, optional zip, club/district as text links — 2026-08-26
 - [x] Homepage hero fills the remaining viewport and a cue scrolls to what Causey indexes — 2026-08-26
 - [x] Event manage workspace: pulse + People/Listing + cover re-upload on edit — 2026-08-26
@@ -52,7 +52,7 @@ Needs for a professional club (not building unless you ask): recurring practice 
 Persona: paid chess club / team owner, first-time coach. Source only (no live UI).
 
 ### Works (re-verified)
-- `/clubs` season path + honest out-of-scope; home club column 01–04 roster→results (`app/clubs/page.tsx`, `HomeDistrictPitch`)
+- `/clubs` season path + honest out-of-scope; home organizer chassis: club 01–04 spine beside school-district ledger, planned-next lower deck (`app/clubs/page.tsx`, `HomeDistrictPitch`)
 - Create club/team without a district option (`OrgCreateForm` filters district)
 - Join link, CSV/email invites, assistants, groups (`roster`, `JoinCodePanel`, `OrganizationPeopleManager`, `GroupManager`)
 - “My club is going”, mark attending, teammate names (`SearchFilters`, `OrgAttendancePanel`, `getClubGoing`)

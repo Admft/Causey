@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminMixChart } from "@/components/AdminCharts";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { AdminUserDirectory } from "@/components/AdminUserDirectory";
+import { remainderCount } from "@/lib/admin-charts";
 import {
   getPlatformAdminUser,
   isCurrentUserSuperAdmin,
@@ -53,6 +55,23 @@ export default async function AdminUsersPage() {
               href: "/admin/users",
             },
           ]}
+          chart={
+            <AdminMixChart
+              title="Access"
+              segments={[
+                {
+                  label: "Platform admins",
+                  value: platformAdmins,
+                  tone: "ok",
+                },
+                {
+                  label: "Everyone else",
+                  value: remainderCount(error ? null : total, platformAdmins),
+                  tone: "quiet",
+                },
+              ]}
+            />
+          }
         />
       </div>
 

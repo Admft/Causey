@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AdminBarChart, AdminMixChart } from "@/components/AdminCharts";
 import { AdminScraperControls } from "@/components/AdminScraperControls";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
+import { scrapeRunBarValue, scrapeRunTone } from "@/lib/admin-charts";
 import {
   formatIngestionLastRun,
   getAdminIngestionSourceHealth,
@@ -50,6 +52,44 @@ export default async function AdminScrapersPage() {
           row.health.state === "blocked"
       ).length;
 
+  const healthCounts: Record<string, number> = {
+    healthy: 0,
+    warning: 0,
+    failing: 0,
+    blocked: 0,
+    paused: 0,
+    not_configured: 0,
+  };
+  if (!health.unavailable) {
+    for (const row of health.sources) {
+      healthCounts[row.health.state] += 1;
+    }
+  }
+  const healthSegments = (
+    [
+      ["healthy", "ok"],
+      ["warning", "progress"],
+      ["failing", "attention"],
+      ["blocked", "attention"],
+      ["paused", "quiet"],
+      ["not_configured", "quiet"],
+    ] as const
+  ).map(([state, tone]) => ({
+    label: HEALTH_LABEL[state],
+    value: health.unavailable ? null : healthCounts[state],
+    tone,
+  }));
+  const runSegments = runResult.unavailable
+    ? [{ label: "Runs", value: null as number | null, tone: "quiet" as const }]
+    : [...runResult.runs].slice(0, 12).reverse().map((run) => ({
+        label: new Date(run.started_at).toLocaleDateString("en-US", {
+          month: "numeric",
+          day: "numeric",
+        }),
+        value: scrapeRunBarValue(run),
+        tone: scrapeRunTone(run.status),
+      }));
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
@@ -82,6 +122,16 @@ export default async function AdminScrapersPage() {
               href: "/admin/scrapers#source-health",
             },
           ]}
+          chart={
+            <div className="grid gap-6 sm:grid-cols-2">
+              <AdminMixChart title="Source health" segments={healthSegments} />
+              <AdminBarChart
+                title="Rows upserted"
+                unit="rows"
+                segments={runSegments}
+              />
+            </div>
+          }
         />
       </div>
 

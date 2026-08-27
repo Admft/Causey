@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -97,6 +97,8 @@ describe("homepage leads with multi-category discovery", () => {
     expect(heroCard).toContain("shadow-[var(--shadow-panel)]");
     expect(heroSearch).toContain("grid grid-cols-6 gap-2 md:grid-cols-5");
     expect(heroSearch).toContain("col-span-2 col-start-2 md:col-span-1 md:col-start-auto");
+    expect(heroSearch).toContain("h-12 w-12 md:h-10 md:w-10");
+    expect(heroSearch).toContain("min-h-20");
     expect(heroSearch).toContain("{option.shortLabel}");
     expect(heroSearch).toContain('placeholder="Optional"');
     expect(heroSearch).toContain("md:grid-cols-2");
@@ -138,18 +140,21 @@ describe("hero search requires an explicit category", () => {
     expect(heroSearch).toContain('aria-describedby={categoryError ? "hero-category-error" : undefined}');
     expect(heroSearch).toContain('role="alert"');
     expect(heroSearch).toContain('role="radiogroup"');
-    expect(heroSearch).toContain("CategoryGlyph");
+    expect(heroSearch).toContain("CategoryGraphic");
     expect(heroSearch).not.toContain("<option value=\"\">Choose a competition type</option>");
     expect(heroSearch).toContain("discoveryCategoryHref(");
     expect(heroSearch).toContain("Search tournaments");
+    expect(heroSearch).toContain("cta-hero");
     expect(heroSearch).toContain("optionally narrow by zip and distance");
+    expect(heroSearch).toContain("text-xs text-muted");
+    expect(heroSearch).not.toContain("Every directory lists the official sources");
     expect(heroSearch).not.toContain("search by name or zip");
   });
 
   it("offers browse-without-zip only when the zip field is empty", () => {
     expect(heroSearch).toContain("Browse {discoveryCategoryLabel(category)} without a zip");
     expect(heroSearch).toContain("category && !zipTrimmed");
-    expect(heroSearch).toContain("CategoryGlyph");
+    expect(heroSearch).toContain("CategoryGraphic");
   });
 });
 
@@ -256,7 +261,7 @@ describe("coverage and empty states stay honest", () => {
   it("coverage panel indexes all five directories from shared metadata", () => {
     expect(coveragePath).toContain("DISCOVERY_CATEGORIES.map");
     expect(coveragePath).toContain("LIVE_SOURCES");
-    expect(coveragePath).toContain("CategoryGlyph");
+    expect(coveragePath).toContain("CategoryGraphic");
     expect(coveragePath).toContain("Five directories, one honest map");
     expect(coveragePath).toContain("link-only");
     expect(coveragePath).toContain("referenceSources");
@@ -354,27 +359,51 @@ describe("generalized links and return paths", () => {
     expect(read("components/PageBackLink.tsx")).not.toContain("←");
   });
 
-  it("houses directory search in a filled card with a glyph mark, not a PNG overlay", () => {
+  it("houses directory search beside the type graphic and keeps the homepage picker on equal-size marks", () => {
     const heroMark = read("components/ChessHeroGraphic.tsx");
-    expect(searchClient).toContain("SearchHeroMark");
-    expect(searchClient).toContain("max-w-xl");
-    expect(searchClient).toContain("md:max-w-2xl");
+    const categoryGraphic = read("components/CategoryGraphic.tsx");
+    expect(searchClient).toContain("SearchHeroGraphic");
     expect(searchClient).toContain("rounded-3xl");
-    expect(searchClient).not.toMatch(
-      /<(Chess|SpeechDebate|Stem|Arts|Writing)HeroGraphic/
-    );
-    expect(searchClient).not.toContain("md:min-h-[400px]");
-    expect(searchClient).not.toContain("lg:min-h-[440px]");
     expect(searchClient).toContain("lg:max-h-[calc(100dvh-6rem)]");
     expect(searchClient).not.toContain("calc(100vh");
-    expect(heroMark).toContain("export function SearchHeroMark");
-    expect(heroMark).toContain("CategoryGlyph");
-    expect(heroMark).toContain("h-12 w-12");
-    expect(heroMark).toContain("rounded-2xl");
-    expect(heroMark).not.toContain("next/image");
-    expect(heroMark).not.toContain("CHESS_GRAPHIC_SCALE");
-    expect(heroMark).not.toContain("chess-pieces.png");
-    expect(heroMark).not.toContain("absolute");
+    expect(searchClient).toContain('variant="compact"');
+    expect(searchClient).toContain('variant="stage"');
+    expect(searchClient).toContain(
+      "md:grid-cols-[minmax(0,32rem)_minmax(14rem,1fr)]"
+    );
+    expect(heroMark).toContain("export function SearchHeroGraphic");
+    expect(heroMark).toContain("SEARCH_HERO_GRAPHIC_SCALE");
+    expect(heroMark).toContain("/chess-pieces.png");
+    expect(heroMark).toContain("/speech-debate.png");
+    expect(heroMark).toContain("/stem.png");
+    expect(heroMark).toContain("/arts.png");
+    expect(heroMark).toContain("/writing.png");
+    expect(heroMark).toContain("CategoryGraphic");
+    expect(existsSync(resolve(process.cwd(), "public/chess-pieces.png"))).toBe(
+      true
+    );
+    expect(heroSearch).toContain("CategoryGraphic");
+    expect(heroSearch).toContain("h-12 w-12 md:h-10 md:w-10");
+    expect(categoryGraphic).toContain("/category-marks/chess.png");
+    expect(categoryGraphic).toContain("/category-marks/debate.png");
+    expect(categoryGraphic).toContain("/category-marks/stem.png");
+    expect(categoryGraphic).toContain("/category-marks/arts.png");
+    expect(categoryGraphic).toContain("/category-marks/writing.png");
+    expect(existsSync(resolve(process.cwd(), "public/category-marks/chess.png"))).toBe(
+      true
+    );
+    expect(existsSync(resolve(process.cwd(), "public/category-marks/debate.png"))).toBe(
+      true
+    );
+    expect(existsSync(resolve(process.cwd(), "public/category-marks/stem.png"))).toBe(
+      true
+    );
+    expect(existsSync(resolve(process.cwd(), "public/category-marks/arts.png"))).toBe(
+      true
+    );
+    expect(existsSync(resolve(process.cwd(), "public/category-marks/writing.png"))).toBe(
+      true
+    );
   });
 
   it("puts category discipline chips on search instead of burying them in the rail", () => {

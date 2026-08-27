@@ -21,7 +21,7 @@ import {
   resultsGridClass,
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
-import { SearchHeroMark } from "@/components/ChessHeroGraphic";
+import { SearchHeroGraphic } from "@/components/ChessHeroGraphic";
 import {
   discoveryCategory,
   type DiscoveryCategory,
@@ -33,6 +33,8 @@ import { competitionSourceLabel } from "@/lib/ingestion-sources";
  * Filter state mirrors into the URL so searches are shareable, and every
  * fetch goes through /api/competitions — the same endpoint external clients
  * would use. Tiles load in pages (default 20) so the first paint stays fast.
+ *
+ * Hero graphic size: edit SEARCH_HERO_GRAPHIC_SCALE in ChessHeroGraphic.tsx
  */
 
 const RADII = ["10", "25", "50", "100", "250"];
@@ -326,90 +328,89 @@ export function SearchClient({
     <>
       {/* Zip + radius: the one bold moment on this page, on the coordinate-
           grid motif (access shouldn't depend on where you live). */}
-      <section className="access-grid section-rule">
+      <section className="access-grid section-rule overflow-x-clip">
         <div className="relative mx-auto max-w-6xl px-5 py-6 sm:px-8 sm:py-10 lg:py-12">
           <PageBackLink />
-          <div className="mt-5 max-w-xl rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6 md:max-w-2xl">
-            <div className="flex items-start gap-3">
-              <SearchHeroMark category={category} />
-              <div className="min-w-0">
-                <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
-                  {categoryDefinition.label}
-                </p>
-                <h1 className="animate-rise mt-2 max-w-[20ch] font-display text-display tracking-tight text-foreground md:text-display-lg">
-                  {categoryDefinition.heading}
-                </h1>
+          <div className="relative mt-5 md:grid md:grid-cols-[minmax(0,32rem)_minmax(14rem,1fr)] md:items-center md:gap-6 lg:grid-cols-[minmax(0,34rem)_minmax(16rem,1fr)] lg:gap-8">
+            <div className="relative z-10 rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+              <SearchHeroGraphic category={category} variant="compact" />
+              <p className="text-2xs font-semibold uppercase tracking-[0.06em] text-brand-red">
+                {categoryDefinition.label}
+              </p>
+              <h1 className="animate-rise mt-2 max-w-[20ch] font-display text-display tracking-tight text-foreground md:text-display-lg">
+                {categoryDefinition.heading}
+              </h1>
+              <p className="mt-3 text-md text-muted">
+                {categoryDefinition.description}
+              </p>
+              {/* One search cluster: name it, or place it. Keyword applies as you
+                  type; zip + radius apply on submit/blur. All three controls share
+                  one label treatment so the band reads as a single tool. */}
+              <div className="mt-5 lg:mt-6">
+                <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
+                  Tournament name
+                </label>
+                <input
+                  id="tournament-search"
+                  type="search"
+                  className="field mt-1"
+                  placeholder={categoryDefinition.searchPlaceholder}
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                />
               </div>
-            </div>
-            <p className="mt-3 text-md text-muted">
-              {categoryDefinition.description}
-            </p>
-            {/* One search cluster: name it, or place it. Keyword applies as you
-                type; zip + radius apply on submit/blur. All three controls share
-                one label treatment so the band reads as a single tool. */}
-            <div className="mt-5 lg:mt-6">
-              <label htmlFor="tournament-search" className="text-xs font-semibold text-muted-strong">
-                Tournament name
-              </label>
-              <input
-                id="tournament-search"
-                type="search"
-                className="field mt-1"
-                placeholder={categoryDefinition.searchPlaceholder}
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-            </div>
-            <form
-              className="mt-2.5 flex flex-col gap-2.5 sm:flex-row sm:items-end"
-              onSubmit={(e) => {
-                e.preventDefault();
-                applyZip();
-              }}
-            >
-            <div className="flex-1">
-              <label htmlFor="zip" className="text-xs font-semibold text-muted-strong">
-                Zip code
-              </label>
-              <input
-                id="zip"
-                className="field mt-1"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                placeholder="Optional"
-                value={zipInput}
-                onChange={(e) => setZipInput(e.target.value)}
-                onBlur={applyZip}
-                aria-invalid={zipError !== null}
-                aria-describedby={zipError ? "zip-error" : undefined}
-              />
-              {zipError && (
-                <p id="zip-error" role="alert" className="mt-1 text-2xs text-error">
-                  {zipError}
-                </p>
-              )}
-            </div>
-            <div className={zipInput.trim() ? undefined : "max-md:hidden"}>
-              <label htmlFor="radius" className="text-xs font-semibold text-muted-strong">
-                Distance
-              </label>
-              <select
-                id="radius"
-                className="field mt-1 sm:w-36"
-                value={radius}
-                onChange={(e) => setRadius(e.target.value)}
+              <form
+                className="mt-2.5 flex flex-col gap-2.5 sm:flex-row sm:items-end"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  applyZip();
+                }}
               >
-                {RADII.map((r) => (
-                  <option key={r} value={r}>
-                    within {r} mi
-                  </option>
-                ))}
-              </select>
+                <div className="flex-1">
+                  <label htmlFor="zip" className="text-xs font-semibold text-muted-strong">
+                    Zip code
+                  </label>
+                  <input
+                    id="zip"
+                    className="field mt-1"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    placeholder="Optional"
+                    value={zipInput}
+                    onChange={(e) => setZipInput(e.target.value)}
+                    onBlur={applyZip}
+                    aria-invalid={zipError !== null}
+                    aria-describedby={zipError ? "zip-error" : undefined}
+                  />
+                  {zipError && (
+                    <p id="zip-error" role="alert" className="mt-1 text-2xs text-error">
+                      {zipError}
+                    </p>
+                  )}
+                </div>
+                <div className={zipInput.trim() ? undefined : "max-md:hidden"}>
+                  <label htmlFor="radius" className="text-xs font-semibold text-muted-strong">
+                    Distance
+                  </label>
+                  <select
+                    id="radius"
+                    className="field mt-1 sm:w-36"
+                    value={radius}
+                    onChange={(e) => setRadius(e.target.value)}
+                  >
+                    {RADII.map((r) => (
+                      <option key={r} value={r}>
+                        within {r} mi
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="cta-enabled touch-manipulation">
+                  Search tournaments
+                </button>
+              </form>
             </div>
-            <button type="submit" className="cta-enabled touch-manipulation">
-              Search tournaments
-            </button>
-          </form>
+            <SearchHeroGraphic category={category} variant="stage" />
           </div>
         </div>
       </section>

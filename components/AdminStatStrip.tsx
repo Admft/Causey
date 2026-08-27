@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 export type AdminStatItem = {
@@ -106,9 +107,11 @@ export function StatCluster({
 export function AdminStatStrip({
   items,
   label,
+  chart,
 }: {
   items: AdminStatItem[];
   label?: string;
+  chart?: ReactNode;
 }) {
   return (
     <section
@@ -125,6 +128,9 @@ export function AdminStatStrip({
           <StatRow key={item.label} item={item} />
         ))}
       </dl>
+      {chart ? (
+        <div className="border-t border-line px-4 py-3">{chart}</div>
+      ) : null}
     </section>
   );
 }
@@ -132,7 +138,7 @@ export function AdminStatStrip({
 export function AdminOpsLedger({
   groups,
 }: {
-  groups: { title: string; items: AdminStatItem[] }[];
+  groups: { title: string; items: AdminStatItem[]; chart?: ReactNode }[];
 }) {
   return (
     <div className="grid gap-5 md:grid-cols-2">
@@ -141,6 +147,7 @@ export function AdminOpsLedger({
           key={group.title}
           label={group.title}
           items={group.items}
+          chart={group.chart}
         />
       ))}
     </div>

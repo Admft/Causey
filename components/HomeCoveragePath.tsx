@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { CategoryGlyph } from "@/components/CategoryGlyph";
+import { CategoryGraphic } from "@/components/CategoryGraphic";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
+import {
+  DISCOVERY_CATEGORIES,
+  type DiscoveryCategory,
+} from "@/lib/category-discovery";
 import { LIVE_SOURCES } from "@/lib/tournament-sources";
 
 /**
  * Homepage coverage as the five-directory set the hero only hints at. Each
- * card is one directory: the same glyph the search picker uses, a one-line
+ * card is one directory: the same section graphic the search picker uses, a one-line
  * depth statement, and a bar that makes "chess is the broadest" visible
  * instead of asserted. The honesty lives on the card as a fact, not in a
  * paragraph. Cards link into their directory, where per-source status and the
@@ -14,7 +17,7 @@ import { LIVE_SOURCES } from "@/lib/tournament-sources";
  */
 
 type CoverageCard = {
-  id: string;
+  id: DiscoveryCategory;
   label: string;
   href: string;
   indexed: number;
@@ -113,10 +116,11 @@ export function HomeCoveragePath() {
                   className="card-lift group flex h-full min-w-0 flex-col rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-brand-red/40"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-soft text-foreground transition-colors group-hover:border-brand-red/40 group-hover:text-brand-red">
-                      <CategoryGlyph
-                        category={card.id as never}
-                        className="h-6 w-6"
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-soft transition-colors group-hover:border-brand-red/40">
+                      <CategoryGraphic
+                        category={card.id}
+                        className="h-9 w-9"
+                        sizes="36px"
                       />
                     </span>
                     <CoverageBar indexed={card.indexed} />
