@@ -676,7 +676,7 @@ export default async function EventPage({ params }: Params) {
           />
         </div>
 
-        <aside className="flex flex-col gap-5 lg:pt-8">
+        <aside className="flex flex-col gap-5">
           {showRsvpInAside ? (
             <div className="border-b border-line pb-5">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
@@ -734,30 +734,42 @@ export default async function EventPage({ params }: Params) {
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
               Save &amp; rate
             </h2>
-            <div className="mt-3 flex flex-col gap-4">
-              <SaveCompetitionButton
-                competitionId={competition.id}
-                initiallySaved={initiallySaved}
-                signedIn={Boolean(user)}
-                returnPath={`/event/${competition.slug}`}
-              />
-              <DifficultyRating
-                competitionId={competition.id}
-                initialScore={initialScore}
-                signedIn={Boolean(user)}
-                returnPath={`/event/${competition.slug}`}
-              />
-              {ratingSummary ? (
-                <p className="text-xs text-muted">
-                  Students rate this{" "}
-                  <span className="font-semibold text-foreground">
-                    {ratingSummary.avg_score}/10
-                  </span>{" "}
-                  ({ratingSummary.rating_count}{" "}
-                  {ratingSummary.rating_count === 1 ? "rating" : "ratings"})
-                </p>
-              ) : null}
-            </div>
+            {user ? (
+              <div className="mt-3 flex flex-col gap-4">
+                <SaveCompetitionButton
+                  competitionId={competition.id}
+                  initiallySaved={initiallySaved}
+                  signedIn
+                  returnPath={`/event/${competition.slug}`}
+                />
+                <DifficultyRating
+                  competitionId={competition.id}
+                  initialScore={initialScore}
+                  signedIn
+                  returnPath={`/event/${competition.slug}`}
+                />
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-muted">
+                <Link
+                  href={`/login?next=${encodeURIComponent(`/event/${competition.slug}`)}`}
+                  className="font-semibold text-brand-red hover:underline"
+                >
+                  Sign in
+                </Link>{" "}
+                to save this tournament and rate its difficulty.
+              </p>
+            )}
+            {ratingSummary ? (
+              <p className="mt-3 text-xs text-muted">
+                Students rate this{" "}
+                <span className="font-semibold text-foreground">
+                  {ratingSummary.avg_score}/10
+                </span>{" "}
+                ({ratingSummary.rating_count}{" "}
+                {ratingSummary.rating_count === 1 ? "rating" : "ratings"})
+              </p>
+            ) : null}
           </div>
           {isChess ? (
             <PathwayStatusPanel

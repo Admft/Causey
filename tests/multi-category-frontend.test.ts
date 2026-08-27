@@ -159,9 +159,10 @@ describe("hero search requires an explicit category", () => {
 });
 
 describe("event difficulty rating layout", () => {
-  it("places 1–10 in two rows of five", () => {
-    expect(ratingActions).toContain("grid w-full grid-cols-5 gap-1");
-    expect(ratingActions).not.toContain("flex flex-wrap gap-1");
+  it("places 1–10 in one segmented row", () => {
+    expect(ratingActions).toContain("grid-cols-10");
+    expect(ratingActions).toContain("aria-pressed");
+    expect(ratingActions).not.toContain("grid w-full grid-cols-5 gap-1");
     expect(eventPage).toContain("DifficultyRating");
   });
 });
