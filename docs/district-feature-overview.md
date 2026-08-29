@@ -27,6 +27,7 @@ Chess is the working surface. Other competition types exist in the product but a
 - Host a **district-wide competition** when that is the real host, or leave hosting with a school.
 - After schools are provisioned, open a **competitions calendar** of district-hosted and school-hosted events (host name on each row) instead of stopping at empty totals.
 - On a district-hosted event, **invite students from connected school rosters** (or every connected school at once). Districts have no student roster of their own.
+- After inviting across schools, **follow RSVPs and attendance by school** on the same manage page (organizer-registration status included when the listing has an external registration URL).
 
 ### School administrators
 - Receive a **named invitation** and claim a school account. No shared passwords.
@@ -70,7 +71,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Role-based access | District, school, coach, assistant, parent, student each see their own work | Yes |
 | Claim-link provisioning | Email or copyable invite; CSV import/export; reissue | Yes |
 | Rosters and groups | School/club roster, groups for invites and attendance | Yes |
-| Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters | Yes |
+| Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters and labels replies by school | Yes |
 | Event audiences | Public, district-only, school-only, invite-only | Yes |
 | RSVP and attendance | Going / not going, attendance on the day, season view | Yes |
 | Organizer registration tracking | Families mark when they finished the external registration | Yes |

@@ -23,6 +23,30 @@ describe("district-hosted multi-school invite", () => {
     expect(form).toContain("Invite every connected school");
   });
 
+  it("labels district-hosted replies by connected school for follow-up", () => {
+    const manage = source("app/event/[slug]/manage/page.tsx");
+    const rsvp = source("lib/rsvp.ts");
+
+    expect(manage).toContain("schoolNameByProfileId");
+    expect(manage).toContain("labeledAttendance");
+    expect(manage).toContain("sortAttendanceBySchool");
+    expect(manage).toContain("formatManageReplyMeta");
+    expect(manage).toContain(
+      "Each reply names the connected school so multi-school follow-up stays"
+    );
+    expect(manage).toContain(
+      "Replies name each school so you can follow up without leaving this page."
+    );
+    expect(rsvp).toContain("export function sortAttendanceBySchool");
+    expect(rsvp).toContain("export function formatManageReplyMeta");
+    // Single-host manage still omits school labels unless isDistrictHost.
+    expect(manage).toContain("schoolNameByProfileId.get(row.profile_id)");
+    expect(manage).toContain("isDistrictHost");
+    expect(manage).toMatch(
+      /orgName:\s*isDistrictHost[\s\S]*\? schoolNameByProfileId\.get\(row\.profile_id\) \?\? null[\s\S]*: null/
+    );
+  });
+
   it("keeps family follow-through copy org-agnostic", () => {
     expect(source("app/family/page.tsx")).not.toContain("Club RSVPs");
     expect(source("app/family/page.tsx")).toContain(

@@ -2,9 +2,9 @@
 
 Living backlog for the school-district buyer. Club/team work lives in `club-readiness.md`. Catalog: `docs/district-feature-overview.md`.
 
-## Verdict (2026-08-27)
+## Verdict (2026-08-29)
 
-Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events, district-office announcements that fan out to connected schools, and school-safe roster/manage composition (invite → group → competitions; replies grouped by status). It is not self-serve procurement and not a finished FERPA/price package.
+Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events, district-office announcements that fan out to connected schools, school-safe roster/manage composition, and district-hosted manage replies labeled by connected school. It is not self-serve procurement and not a finished FERPA/price package.
 
 ## Have (ready enough for a chess pilot with Causey ops)
 
@@ -31,6 +31,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] District announcement fan-out to connected schools from the district overview — 2026-08-25
 - [x] School-safe roster/manage composition: invite → group → competitions; progressive group edit; manage replies by status; group-first invites — 2026-08-27
 - [x] Home organizer board: district path is unmissable — massive sliding Club/District window switch (drag or click, midpoint live-switch) with a sheen prompt on the district half until tried — 2026-08-27
+- [x] District-hosted manage replies name each connected school (sorted by school) and surface unfinished organizer registration on going rows — 2026-08-29
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -68,6 +69,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Family RSVP + organizer registration | **works** | `/family` (org-agnostic RSVP copy) |
 | District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters` |
 | School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
+| District-hosted reply follow-up by school | **works** | manage labels RSVP/attendance rows with connected-school name; sorts by school; going rows show organizer-registration status |
 | District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; action inserts per school + district copy (`0043` operator access) |
 | Email at school volume | **ops / not proven** | backlog; not a UI claim on `/districts` |
 | `/districts` pitch honesty | **works** | assisted pilot; book conversation; no partner names |
@@ -82,15 +84,18 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 4. **P1 · Roster / manage still feel like admin tables · M · shipped 2026-08-27**  
    Surface: roster progressive groups + student group labels; manage replies by awaiting/going/can’t-go; individual invite picks demoted when groups exist.
 
-5. **Ops · Email volume + live dual-district smoke · —**  
+5. **P0 · District-hosted manage replies hide school · S–M · shipped 2026-08-29**  
+   Surface: `/event/[slug]/manage` reply rows now include connected-school name, school-then-name sort, and organizer-registration follow-up on going rows.
+
+6. **Ops · Email volume + live dual-district smoke · —**  
    Not product UI. Keep as Legal/Ops; do not invent compliance UI.
 
-6. **Legal · Price / FERPA / retention / public school directory · —**  
+7. **Legal · Price / FERPA / retention / public school directory · —**  
    Out of scope for build; refuse.
 
 ### Recommended next shippable win
 
-**Ops proof of email at school volume**, or remaining honesty polish on manage invite/reply surfaces once email is proven. Roster/manage composition shipped.
+**Ops proof of email at school volume** (and apply migrations through latest in each environment). Remaining product honesty polish: Family desk still says “club” in a few lines; school student history eyebrow still says “Club record.”
 
 ### Out-of-scope refusals this pass
 

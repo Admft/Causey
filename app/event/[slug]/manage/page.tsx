@@ -28,9 +28,10 @@ import { buildEventPulse } from "@/lib/event-pulse";
 import { formatDateRange } from "@/lib/format";
 import { manageEventTitle } from "@/lib/portal-copy";
 import {
+  formatManageReplyMeta,
   groupAttendanceByReplyStatus,
   orderedAttendanceReplySections,
-  rsvpLabel,
+  sortAttendanceBySchool,
   summarizeAttendance,
   type AttendanceReplyBucket,
 } from "@/lib/rsvp";
@@ -146,6 +147,20 @@ export default async function ManageEventPage({
   const visibleAttendance = canManage
     ? attendance
     : attendance.filter((row) => travelProfileIds.has(row.profile_id));
+  const schoolNameByProfileId = new Map<string, string>();
+  if (isDistrictHost) {
+    for (const row of roster) {
+      const schoolName = row.orgName?.trim();
+      if (!schoolName || schoolNameByProfileId.has(row.profile_id)) continue;
+      schoolNameByProfileId.set(row.profile_id, schoolName);
+    }
+  }
+  const labeledAttendance = visibleAttendance.map((row) => ({
+    ...row,
+    orgName: isDistrictHost
+      ? schoolNameByProfileId.get(row.profile_id) ?? null
+      : null,
+  }));
   const candidates = activeStudents
     .filter((row) => {
       if (invitedIds.has(row.profile_id)) return false;
@@ -158,14 +173,14 @@ export default async function ManageEventPage({
       display_name: row.display_name,
       orgName: isDistrictHost ? row.orgName : null,
     }));
-  const summary = summarizeAttendance(visibleAttendance);
+  const summary = summarizeAttendance(labeledAttendance);
   const isPast =
     (competition.end_date ?? competition.start_date) <
     new Date().toISOString().slice(0, 10);
   const isDraft = canManage && competition.status === "draft";
   const needsInvite = !isDraft && !visibleAttendance.length;
   const needsReplies = !isDraft && summary.awaiting > 0;
-  const missingResults = visibleAttendance.filter(
+  const missingResults = labeledAttendance.filter(
     (row) =>
       row.status === "attended" &&
       row.placement == null &&
@@ -239,7 +254,7 @@ export default async function ManageEventPage({
     string,
     "opened" | "registered" | "not_registered"
   >();
-  if (competition.reg_url && visibleAttendance.length) {
+  if (competition.reg_url && labeledAttendance.length) {
     const supabase = await createServerSupabaseClient();
     const { data: registrations } = await supabase
       .from("external_registrations")
@@ -253,7 +268,7 @@ export default async function ManageEventPage({
     );
   }
   const pulse = buildEventPulse(
-    visibleAttendance.map((row) => ({
+    labeledAttendance.map((row) => ({
       ...row,
       registration_status: registrationByUser.get(row.profile_id) ?? null,
     })),
@@ -346,7 +361,9 @@ export default async function ManageEventPage({
       title: `${summary.awaiting} ${
         summary.awaiting === 1 ? "reply is" : "replies are"
       } still open`,
-      description: `${summary.going} going · ${summary.notGoing} can’t go. Follow up, or invite more students if the roster grew.`,
+      description: isDistrictHost
+        ? `${summary.going} going · ${summary.notGoing} can’t go. Replies name each school so you can follow up without leaving this page.`
+        : `${summary.going} going · ${summary.notGoing} can’t go. Follow up, or invite more students if the roster grew.`,
       action: { href: "#rsvps", label: "Review replies" },
       secondary:
         candidates.length > 0
@@ -406,7 +423,7 @@ export default async function ManageEventPage({
     </section>
   );
 
-  const replyBuckets = groupAttendanceByReplyStatus(visibleAttendance);
+  const replyBuckets = groupAttendanceByReplyStatus(labeledAttendance);
   const replySectionOrder = orderedAttendanceReplySections({
     isPast,
     needsReplies,
@@ -422,6 +439,7 @@ export default async function ManageEventPage({
         going: "Going",
         notGoing: "Can’t go",
       };
+  const hasRegUrl = Boolean(competition.reg_url);
 
   const rsvpSection = (
     <section id="rsvps" className="section-rule mt-10 scroll-mt-24 pt-8">
@@ -437,7 +455,13 @@ export default async function ManageEventPage({
           {summary.notGoing} can&rsquo;t go · {summary.awaiting} awaiting
         </p>
       </div>
-      {!visibleAttendance.length ? (
+      {isDistrictHost && labeledAttendance.length ? (
+        <p className="mt-2 text-xs text-muted">
+          Each reply names the connected school so multi-school follow-up stays
+          on this page.
+        </p>
+      ) : null}
+      {!labeledAttendance.length ? (
         <p className="mt-3 text-sm text-muted">
           Nobody is invited yet — invite students or a group
           {inviteFirst ? " above" : " below"}.
@@ -445,7 +469,9 @@ export default async function ManageEventPage({
       ) : (
         <div className="mt-4 flex flex-col gap-8">
           {replySectionOrder.map((bucket) => {
-            const rows = replyBuckets[bucket];
+            const rows = isDistrictHost
+              ? sortAttendanceBySchool(replyBuckets[bucket])
+              : replyBuckets[bucket];
             if (!rows.length) return null;
             return (
               <div key={bucket}>
@@ -471,10 +497,15 @@ export default async function ManageEventPage({
                           {row.display_name || "Unnamed student"}
                         </p>
                         <p className="mt-0.5 text-xs text-muted">
-                          {rsvpLabel(row.status)}
-                          {row.member_status !== "active"
-                            ? " · no longer on roster"
-                            : ""}
+                          {formatManageReplyMeta({
+                            status: row.status,
+                            orgName: row.orgName,
+                            memberStatus: row.member_status,
+                            hasRegUrl,
+                            registrationStatus: registrationByUser.get(
+                              row.profile_id
+                            ),
+                          })}
                         </p>
                       </div>
                       <div className="sm:shrink-0">

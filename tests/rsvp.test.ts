@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   attendanceReplyBucket,
   canTransition,
+  formatManageReplyMeta,
   groupAttendanceByReplyStatus,
   orderedAttendanceReplySections,
   rsvpLabel,
+  sortAttendanceBySchool,
   summarizeAttendance,
   type RsvpStatus,
 } from "@/lib/rsvp";
@@ -95,5 +97,68 @@ describe("orderedAttendanceReplySections", () => {
     expect(
       orderedAttendanceReplySections({ isPast: true, needsReplies: false })
     ).toEqual(["going", "awaiting", "notGoing"]);
+  });
+});
+
+describe("sortAttendanceBySchool", () => {
+  it("orders district-hosted replies by school then name", () => {
+    const sorted = sortAttendanceBySchool([
+      { display_name: "Zoe", orgName: "West Middle" },
+      { display_name: "Ann", orgName: "East Middle" },
+      { display_name: "Bo", orgName: null },
+      { display_name: "Cal", orgName: "East Middle" },
+    ]);
+    expect(sorted.map((row) => row.display_name)).toEqual([
+      "Ann",
+      "Cal",
+      "Zoe",
+      "Bo",
+    ]);
+  });
+});
+
+describe("formatManageReplyMeta", () => {
+  it("names the school on district-hosted replies", () => {
+    expect(
+      formatManageReplyMeta({
+        status: "invited",
+        orgName: "East Middle",
+      })
+    ).toBe("No response yet · East Middle");
+  });
+
+  it("adds organizer-registration follow-up only for going students", () => {
+    expect(
+      formatManageReplyMeta({
+        status: "going",
+        orgName: "East Middle",
+        hasRegUrl: true,
+        registrationStatus: null,
+      })
+    ).toBe("Going · East Middle · organizer registration unfinished");
+    expect(
+      formatManageReplyMeta({
+        status: "going",
+        orgName: "East Middle",
+        hasRegUrl: true,
+        registrationStatus: "registered",
+      })
+    ).toBe("Going · East Middle · organizer registration marked complete");
+    expect(
+      formatManageReplyMeta({
+        status: "invited",
+        orgName: "East Middle",
+        hasRegUrl: true,
+      })
+    ).toBe("No response yet · East Middle");
+  });
+
+  it("stays school-free for single-host manage rows", () => {
+    expect(
+      formatManageReplyMeta({
+        status: "going",
+        memberStatus: "inactive",
+      })
+    ).toBe("Going · no longer on roster");
   });
 });

@@ -91,3 +91,63 @@ export function orderedAttendanceReplySections(options: {
   if (options.needsReplies) return ["awaiting", "going", "notGoing"];
   return ["going", "awaiting", "notGoing"];
 }
+
+/**
+ * Keep district-hosted reply lists scannable by school, then name.
+ * Rows without a school stay last so connected-school follow-up stays obvious.
+ */
+export function sortAttendanceBySchool<
+  T extends { orgName?: string | null; display_name?: string | null },
+>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => {
+    const aSchool = a.orgName?.trim() || "";
+    const bSchool = b.orgName?.trim() || "";
+    if (aSchool && !bSchool) return -1;
+    if (!aSchool && bSchool) return 1;
+    const schoolCmp = aSchool.localeCompare(bSchool, undefined, {
+      sensitivity: "base",
+    });
+    if (schoolCmp !== 0) return schoolCmp;
+    return (a.display_name ?? "").localeCompare(b.display_name ?? "", undefined, {
+      sensitivity: "base",
+    });
+  });
+}
+
+export type ManageReplyRegistrationStatus =
+  | "opened"
+  | "registered"
+  | "not_registered"
+  | null
+  | undefined;
+
+/**
+ * Plain-language meta under a manage reply row. District hosts see the school
+ * name; organizer-registration follow-up only appears for students marked going
+ * when the listing has an external registration URL.
+ */
+export function formatManageReplyMeta(options: {
+  status: RsvpStatus | AttendanceOutcome;
+  orgName?: string | null;
+  memberStatus?: string | null;
+  hasRegUrl?: boolean;
+  registrationStatus?: ManageReplyRegistrationStatus;
+}): string {
+  const parts = [rsvpLabel(options.status)];
+  const school = options.orgName?.trim();
+  if (school) parts.push(school);
+  if (options.memberStatus && options.memberStatus !== "active") {
+    parts.push("no longer on roster");
+  }
+  if (
+    options.hasRegUrl &&
+    (options.status === "going" || options.status === "attended")
+  ) {
+    parts.push(
+      options.registrationStatus === "registered"
+        ? "organizer registration marked complete"
+        : "organizer registration unfinished"
+    );
+  }
+  return parts.join(" · ");
+}
