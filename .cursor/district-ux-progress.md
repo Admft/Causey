@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] District Schools settings readiness: `#schools` uses the same pilot readiness model as the command center (invite admin / claim / ownership / provision / ready), with ready counts and fail-closed retry — not verification-only labels — 2026-08-31
 - [x] District-hosted manage replies by school: after multi-school invite, RSVP/attendance rows show the connected school, sort school-then-name, and name unfinished/complete organizer registration on going rows so district coordinators follow up without leaving manage — 2026-08-29
 - [x] School-safe roster/manage composition: roster leads invite → group → competitions (groups section first when students exist without groups); GroupManager edits one group at a time; student rows show group membership; manage replies split into awaiting/going/can’t-go with mission-aware order; invite individual picks stay behind a disclosure when groups or invite-all exist; Family metadata drops leftover “club RSVP” wording — 2026-08-27
 - [x] Platform admin ops ledger, organizer event workspace, and parent competition alerts: `/admin` uses fail-closed global counts (never fake zero); event manage/edit share People/Listing plus a pulse; invites/schedule/cancel/results/announcements fan out to linked parents (`0067`) — 2026-08-26

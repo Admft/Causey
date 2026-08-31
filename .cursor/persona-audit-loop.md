@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-08-31 — **District Schools settings readiness**: `#schools` uses the same pilot readiness model as the command center (invite/claim/ownership/provision/ready + fail-closed retry), not verification-only labels.
 - 2026-08-27 — **School-safe roster/manage composition**: roster invite → group → competitions with progressive GroupManager; manage replies by awaiting/going/can’t-go; individual invite picks demoted when groups exist; Family metadata drops club RSVP wording.
 - 2026-08-25 — **District announcement fan-out**: district overview audience chooser defaults to every connected school (posts per school + district copy, deduped in-app alerts); staff-only remains explicit; empty districts fail closed with “Add a school…”.
 - 2026-08-23 — **Consistent empty/error/success “what’s next” + nav terms**: `lib/portal-copy` + `PortalErrorState`; AuthNav/Account/Alerts/home/signup gates share Family / Plan / My organizations / Districts & schools; district activity/reports/readiness reuse one fail-closed retry pattern; roster-ready and school reports CTA to Competitions.

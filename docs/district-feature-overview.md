@@ -17,7 +17,7 @@ Chess is the working surface. Other competition types exist in the product but a
 
 ### District office
 - Hold a **district account** that oversees connected schools, not a single club page pretending to be a district.
-- **Add schools** and see each school’s setup status (administrator assigned, ownership handed off, roster started).
+- **Add schools** and see each school’s setup status (administrator assigned, ownership handed off, roster started) on the district overview **and** on Schools settings — not verification labels alone.
 - Follow **one next action** on the district overview instead of a dump of every setting.
 - Invite **district staff** without giving them student-by-student browsing access.
 - Open **Reports** for school-level totals: students on roster, upcoming events, pending RSVPs, going, and attendance.

@@ -178,6 +178,34 @@ describe("district command center competitions calendar", () => {
   });
 });
 
+describe("district Schools settings readiness", () => {
+  const settings = readFileSync(
+    resolve(process.cwd(), "app/orgs/[slug]/settings/page.tsx"),
+    "utf8"
+  );
+
+  it("loads the same pilot readiness model as the command center", () => {
+    expect(settings).toContain("getDistrictPilotReadiness(view.org.id)");
+    expect(settings).toContain("getDistrictSchoolReadinessStatus");
+    expect(settings).toContain("Retry school readiness");
+  });
+
+  it("surfaces invite/handoff/provision actions instead of verification-only labels", () => {
+    expect(settings).toContain("status.actionLabel");
+    expect(settings).toContain("readySchoolCount");
+    // Verification section still names pending review; the schools list must not.
+    const schoolsSection = settings.slice(settings.indexOf('id="schools"'));
+    expect(schoolsSection).not.toContain("Platform review pending");
+    expect(schoolsSection).not.toContain(
+      "Needs correction — correct school details"
+    );
+    expect(schoolsSection).not.toContain("verification_status");
+    expect(schoolsSection).toContain("status.label");
+    expect(schoolsSection).toContain("status.href");
+    expect(schoolsSection).toContain("activeStudents");
+  });
+});
+
 describe("district school bulk verification guardrails", () => {
   const migration = readFileSync(
     resolve(

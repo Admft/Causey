@@ -4,12 +4,15 @@ import { notFound, redirect } from "next/navigation";
 import { DistrictSchoolForm } from "@/components/DistrictSchoolForm";
 import { OrganizationSettingsForm } from "@/components/OrganizationSettingsForm";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
+import { PortalErrorState } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
+import { getDistrictPilotReadiness } from "@/lib/data/district";
 import {
   getOrganizationVerificationReview,
   getOrgBySlugForViewer,
   getOrgRoster,
 } from "@/lib/data/portal";
+import { getDistrictSchoolReadinessStatus } from "@/lib/district-readiness";
 
 export const metadata: Metadata = {
   title: "Organization settings",
@@ -30,10 +33,22 @@ export default async function OrganizationSettingsPage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
-  const [roster, verificationReview] = await Promise.all([
-    getOrgRoster(view.org.id),
-    getOrganizationVerificationReview(view.org.id),
-  ]);
+  const [roster, verificationReview, districtReadinessResult] =
+    await Promise.all([
+      getOrgRoster(view.org.id),
+      getOrganizationVerificationReview(view.org.id),
+      view.isDistrictAdmin
+        ? getDistrictPilotReadiness(view.org.id)
+        : Promise.resolve(null),
+    ]);
+  const districtReadiness =
+    districtReadinessResult?.ok === true ? districtReadinessResult.data : null;
+  const districtReadinessError = districtReadinessResult?.ok === false;
+  const readySchoolCount =
+    districtReadiness?.schools.filter(
+      (school) =>
+        getDistrictSchoolReadinessStatus(school, view.org.slug).ready
+    ).length ?? 0;
   const districtSlug =
     query.district && /^[a-z0-9-]+$/.test(query.district)
       ? query.district
@@ -157,13 +172,23 @@ export default async function OrganizationSettingsPage({
 
         {view.isDistrictAdmin ? (
           <section id="schools" className="section-rule mt-10 scroll-mt-24 pt-8">
-            <h2 className="font-display text-xl font-bold text-foreground">
-              District schools
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-muted">
-              Create the school workspace first. Then open it to delegate a
-              school administrator and provision staff or students.
-            </p>
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  District schools
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm text-muted">
+                  Create a school workspace, then follow each school’s next
+                  setup action — the same readiness path as the district
+                  overview, not verification status alone.
+                </p>
+              </div>
+              {districtReadiness ? (
+                <p className="text-xs text-muted">
+                  {readySchoolCount} of {districtReadiness.schools.length} ready
+                </p>
+              ) : null}
+            </div>
             <div className="mt-5">
               <DistrictSchoolForm
                 districtId={view.org.id}
@@ -171,35 +196,61 @@ export default async function OrganizationSettingsPage({
                 defaultState={view.org.state}
               />
             </div>
-            {view.schools.length ? (
+            {districtReadinessError ? (
+              <PortalErrorState
+                title="School readiness could not load"
+                description="Retry this list before inviting administrators or provisioning students, so you do not act on incomplete information."
+                action={{
+                  href: `/orgs/${view.org.slug}/settings?retry=readiness#schools`,
+                  label: "Retry school readiness",
+                }}
+              />
+            ) : null}
+            {districtReadiness && !districtReadiness.schools.length ? (
+              <p className="mt-6 max-w-prose text-sm text-muted">
+                No school workspaces yet. Create the first school above, then
+                delegate its administrator before provisioning students.
+              </p>
+            ) : null}
+            {districtReadiness?.schools.length ? (
               <ul className="mt-6 divide-y divide-line border-y border-line">
-                {view.schools.map((school) => (
-                  <li
-                    key={school.id}
-                    className="flex items-baseline justify-between gap-3 py-3"
-                  >
-                    <Link
-                      href={`/orgs/${school.slug}`}
-                      className="text-sm font-semibold text-foreground hover:text-brand-red"
+                {districtReadiness.schools.map((school) => {
+                  const status = getDistrictSchoolReadinessStatus(
+                    school,
+                    view.org.slug
+                  );
+                  return (
+                    <li
+                      key={school.id}
+                      className="flex flex-wrap items-center justify-between gap-3 py-3"
                     >
-                      {school.name}
-                    </Link>
-                    {school.verification_status === "rejected" ? (
+                      <div>
+                        <Link
+                          href={`/orgs/${school.slug}`}
+                          className="text-sm font-semibold text-foreground hover:text-brand-red"
+                        >
+                          {school.name}
+                        </Link>
+                        <p className="mt-1 text-xs text-muted">
+                          {status.label}
+                          {school.activeStudents
+                            ? ` · ${school.activeStudents} ${
+                                school.activeStudents === 1
+                                  ? "student"
+                                  : "students"
+                              }`
+                            : ""}
+                        </p>
+                      </div>
                       <Link
-                        href={`/orgs/${school.slug}/settings#verification`}
+                        href={status.href}
                         className="text-xs font-semibold text-brand-red hover:underline"
                       >
-                        Needs correction — correct school details
+                        {status.actionLabel}
                       </Link>
-                    ) : (
-                      <span className="text-xs text-muted">
-                        {school.verification_status === "verified"
-                          ? "Verified"
-                          : "Platform review pending"}
-                      </span>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             ) : null}
           </section>
