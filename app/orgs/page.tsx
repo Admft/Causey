@@ -17,10 +17,11 @@ import {
 } from "@/lib/data/portal";
 import { canCreateOrg } from "@/lib/org-permissions";
 import { formatDateRange } from "@/lib/format";
+import { studentOrgChromeFromTypes } from "@/lib/portal-copy";
 
 export const metadata: Metadata = {
   title: "Your organizations",
-  description: "Clubs and schools you belong to on Causey, plus your invites.",
+  description: "Schools and clubs you belong to on Causey, plus your invites.",
 };
 
 const ORG_TYPE_LABEL: Record<string, string> = {
@@ -48,7 +49,7 @@ export default async function OrgsPage({
 }: {
   searchParams?: Promise<{ left?: string }>;
 }) {
-  const leftClub = (await searchParams)?.left === "1";
+  const leftOrg = (await searchParams)?.left === "1";
   if (!isSupabaseConfigured()) {
     return (
       <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
@@ -131,6 +132,9 @@ export default async function OrgsPage({
   const primaryNeedsStudents = Boolean(
     primaryOrg && staffOrgsNeedingStudents.has(primaryOrg.org.id)
   );
+  const studentChrome = studentOrgChromeFromTypes(
+    myOrgs.map(({ org }) => org.type)
+  );
 
   const invitationsSection = (
     <section id="rsvps" className="mt-10 scroll-mt-24">
@@ -184,12 +188,12 @@ export default async function OrgsPage({
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-      {leftClub ? (
+      {leftOrg ? (
         <p
           className="mb-6 rounded-xl border border-accent/25 bg-accent-soft p-4 text-sm text-foreground"
           role="status"
         >
-          You left that club. Join another with a code below, or{" "}
+          {studentChrome.leftBanner}{" "}
           <Link href="/me" className="font-semibold text-brand-red hover:underline">
             open Plan
           </Link>
@@ -280,7 +284,7 @@ export default async function OrgsPage({
       ) : (
         <>
           <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
-            Your clubs
+            {studentChrome.heading}
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
             Join with the code your coach shared. RSVPs and organizer
@@ -303,14 +307,14 @@ export default async function OrgsPage({
                     } your RSVP`
                   : myOrgs.length
                     ? "You’re on a roster"
-                    : "Join your school or club"
+                    : studentChrome.emptyJoinTitle
               }
               description={
                 pendingInviteCount
-                  ? "Answer on your tournament plan, then come back here for club codes and membership."
+                  ? studentChrome.codesAndMembershipDescription
                   : myOrgs.length
-                    ? "Open a club to see teammates and public org pages. Use a join code to add another."
-                    : "Ask your coach for a join code and enter it below."
+                    ? studentChrome.openRosterDescription
+                    : studentChrome.emptyJoinDescription
               }
               action={
                 pendingInviteCount
@@ -318,13 +322,13 @@ export default async function OrgsPage({
                   : myOrgs.length
                     ? {
                         href: `/orgs/${myOrgs[0].org.slug}`,
-                        label: "Open club",
+                        label: studentChrome.openOneLabel,
                       }
                     : { href: "#join-code", label: "Enter a join code" }
               }
               secondary={
                 pendingInviteCount
-                  ? { href: "#join-code", label: "Join another club" }
+                  ? { href: "#join-code", label: studentChrome.joinAnotherLabel }
                   : { href: "/me", label: "Back to my tournaments" }
               }
             />

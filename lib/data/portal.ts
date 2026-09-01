@@ -868,7 +868,7 @@ export async function getOrgAttendedEvents(
 export type ChildSummary = {
   profile_id: string;
   display_name: string;
-  orgs: { id: string; name: string; slug: string }[];
+  orgs: { id: string; name: string; slug: string; type: string }[];
   entrants: EntrantWithEvent[];
 };
 
@@ -884,7 +884,7 @@ export async function getChildrenWithEvents(
   const [membershipsRes, entrantsRes, registrationsRes] = await Promise.all([
     supabase
       .from("org_memberships")
-      .select("profile_id, status, organizations(id, name, slug)")
+      .select("profile_id, status, organizations(id, name, slug, type)")
       .in("profile_id", childIds)
       .eq("status", "active"),
     supabase
@@ -916,6 +916,7 @@ export async function getChildrenWithEvents(
           id: string;
           name: string;
           slug: string;
+          type: string;
         } | null;
         return org ? [org] : [];
       }),

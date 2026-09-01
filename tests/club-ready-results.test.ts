@@ -56,6 +56,12 @@ describe("club-ready results and history", () => {
     expect(source("lib/data/mock.ts")).not.toContain("club_going");
   });
 
+  it("uses type-aware history eyebrows instead of a hard-coded Club record", () => {
+    const history = source("app/orgs/[slug]/roster/[profileId]/page.tsx");
+    expect(history).toContain("membershipHistoryEyebrow");
+    expect(history).not.toContain("Club record");
+  });
+
   it("extends season reports beyond hosted-only rows", () => {
     const reports = source("app/orgs/[slug]/reports/page.tsx");
     const season = source("lib/data/district.ts");

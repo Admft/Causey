@@ -2,9 +2,9 @@
 
 Living backlog for the school-district buyer. Club/team work lives in `club-readiness.md`. Catalog: `docs/district-feature-overview.md`.
 
-## Verdict (2026-08-31)
+## Verdict (2026-09-01)
 
-Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events, district-office announcements that fan out to connected schools, school-safe roster/manage composition, district-hosted manage replies labeled by connected school, and Schools settings that surface the same readiness next actions as the command center. It is not self-serve procurement and not a finished FERPA/price package.
+Causey can run an **assisted chess district pilot**: platform-created district, child schools, claim-link staffing, family RSVP, aggregate reports, district vs school hosted events, district-office announcements that fan out to connected schools, school-safe roster/manage composition, district-hosted manage replies labeled by connected school, Schools settings that surface the same readiness next actions as the command center, and Family/Plan/Orgs chrome that says School when the student is on a school roster. It is not self-serve procurement and not a finished FERPA/price package.
 
 ## Have (ready enough for a chess pilot with Causey ops)
 
@@ -33,6 +33,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Home organizer board: district path is unmissable — massive sliding Club/District window switch (drag or click, midpoint live-switch) with a sheen prompt on the district half until tried — 2026-08-27
 - [x] District-hosted manage replies name each connected school (sorted by school) and surface unfinished organizer registration on going rows — 2026-08-29
 - [x] District Schools settings (`#schools`) shows readiness next actions (same model as overview), not verification-only labels — 2026-08-31
+- [x] Family/Plan/Orgs/school history use School nouns for school students (not club-first leftovers) — 2026-09-01
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -59,7 +60,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Add school → invite named admin → claim → ownership; district retains authority | **works** | `createDistrictSchool` / `0045`; `/orgs/[slug]/settings#schools` readiness actions; `/people`; ownership settings; effective-org authority tests |
 | Command center: one next action + per-school readiness | **works** | `lib/district-readiness.ts` → `run_competitions`; `/orgs/[slug]` school list |
 | N=2 isolation (readiness/reports/CSV/activity) | **works** in repo; live env still ops-gated | `tests/multi-district-isolation.test.ts`; runbook §7 |
-| School chrome says School account | **works** | `components/OrgSubnav.tsx` |
+| School chrome says School account | **works** | `components/OrgSubnav.tsx`; Family/Plan/Orgs/`membershipHistoryEyebrow` type-aware nouns |
 | School roster / groups / CSV / join link; assistants read-only | **works** | `/orgs/[slug]/roster`, `/people`; coach mission read-only branch |
 | District can host district-wide or leave host with a school | **works** | `/orgs/[slug]/competitions/new` host chooser |
 | Competitions inventory + host filter across district + schools | **works** | `getOrgCompetitionWorkspace`; `/orgs/[slug]/competitions` |
@@ -91,15 +92,18 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 6. **P1 · District Schools tab shows verification only · M · shipped 2026-08-31**  
    Surface: `/orgs/[slug]/settings#schools` now loads `getDistrictPilotReadiness` and lists invite/handoff/provision/ready actions with fail-closed retry.
 
-7. **Ops · Email volume + live dual-district smoke · —**  
+7. **P1 · Family/school chrome still club-first · S–M · shipped 2026-09-01**  
+   Surface: Family mission/membership empty copy; Plan + student Orgs derive school/club/org chrome from memberships; roster history eyebrow uses `membershipHistoryEyebrow`.
+
+8. **Ops · Email volume + live dual-district smoke · —**  
    Not product UI. Keep as Legal/Ops; do not invent compliance UI.
 
-8. **Legal · Price / FERPA / retention / public school directory · —**  
+9. **Legal · Price / FERPA / retention / public school directory · —**  
    Out of scope for build; refuse.
 
 ### Recommended next shippable win
 
-**Family/school chrome honesty leftovers** (“tell the club”, “Club record” on school student history; student Plan/Orgs still club-first for school students). Then ops proof of email at school volume (and apply migrations through latest in each environment).
+Ops proof of email at school volume (and apply migrations through latest in each environment). Otherwise defer to owner/legal gates — do not invent FERPA/price UI.
 
 ### Out-of-scope refusals this pass
 

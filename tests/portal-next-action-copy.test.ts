@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   OPEN_COMPETITIONS_LABEL,
-  OPEN_MY_CLUBS_LABEL,
+  OPEN_MY_ORGANIZATIONS_LABEL,
   SEARCH_TOURNAMENTS_LABEL,
   accountOrganizationsEmptyCta,
   organizationNavLabels,
@@ -84,7 +84,7 @@ describe("portal next-action vocabulary", () => {
       label: "Open Districts & schools",
     });
     expect(accountOrganizationsEmptyCta({ role: "student", canCreate: false }))
-      .toEqual({ href: "/orgs", label: OPEN_MY_CLUBS_LABEL });
+      .toEqual({ href: "/orgs", label: OPEN_MY_ORGANIZATIONS_LABEL });
     expect(
       accountOrganizationsEmptyCta({ role: "coach", canCreate: true })
     ).toEqual({ href: "/orgs/new", label: "Create an organization" });

@@ -37,6 +37,9 @@ describe("school-safe roster and manage composition", () => {
   });
 
   it("keeps Family metadata free of club-only RSVP wording", () => {
-    expect(source("app/family/page.tsx")).not.toMatch(/club RSVP/i);
+    const family = source("app/family/page.tsx");
+    expect(family).not.toMatch(/club RSVP/i);
+    expect(family).not.toMatch(/tell the club/i);
+    expect(family).not.toContain("Not in any club yet.");
   });
 });

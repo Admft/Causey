@@ -14,7 +14,10 @@ import {
   isUpcomingEvent,
 } from "@/lib/data/portal";
 import { formatDateRange, formatRecordedResult, gradeLabel } from "@/lib/format";
-import { organizationKindLabel } from "@/lib/portal-copy";
+import {
+  membershipHistoryEyebrow,
+  organizationKindLabel,
+} from "@/lib/portal-copy";
 import { rsvpLabel } from "@/lib/rsvp";
 import { CompetitionCategorySchema } from "@/lib/schemas";
 
@@ -22,7 +25,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Student competition history",
-  description: "Club-scoped events this student entered, attended, or placed in.",
+  description:
+    "Organization-scoped events this student entered, attended, or placed in.",
 };
 
 export default async function RosterMemberHistoryPage({
@@ -120,7 +124,7 @@ export default async function RosterMemberHistoryPage({
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <PageBackLink href={`/orgs/${org.slug}/roster`}>Roster</PageBackLink>
         <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
-          Club record
+          {membershipHistoryEyebrow(org.type)}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           {displayName}
@@ -149,7 +153,7 @@ export default async function RosterMemberHistoryPage({
           </h2>
           {!history.length ? (
             <p className="mt-3 text-sm text-muted">
-              No hosted or club-attending events for this person yet.
+              No hosted or attending events for this person yet.
             </p>
           ) : (
             <ul className="mt-4 divide-y divide-line border-y border-line">

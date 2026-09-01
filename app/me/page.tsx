@@ -16,13 +16,14 @@ import {
 } from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
+import { studentOrgChromeFromTypes } from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Plan",
   description:
-    "Your Causey invitations, club RSVPs, and organizer registration follow-through.",
+    "Your Causey invitations, RSVPs, and organizer registration follow-through.",
 };
 
 type AccountTournament = {
@@ -83,9 +84,9 @@ const ROLE_NEXT_ACTION: Record<
   student: {
     title: "Join your school or club",
     description:
-      "Ask your coach for a join link or code. Club invitations and RSVPs show up here after you join.",
+      "Ask your coach for a join link or code. School and club invitations and RSVPs show up here after you join.",
     href: "/orgs",
-    label: "Open my clubs",
+    label: "Open my organizations",
     // Filled in per account below so the shortcut follows the saved category.
     secondary: { href: "/#search", label: "Search tournaments" },
   },
@@ -260,6 +261,7 @@ export default async function MePage() {
 
   const isStudent = profile.role === "student";
   const nextAction = ROLE_NEXT_ACTION[profile.role];
+  const orgChrome = studentOrgChromeFromTypes(myOrgs.map(({ org }) => org.type));
   // Generic discovery links follow the account's saved directory shortcut;
   // without one they land on the homepage chooser instead of chess.
   const searchHref = profile.preferred_competition_category
@@ -273,12 +275,11 @@ export default async function MePage() {
             pendingParentLinks.length === 1
               ? "A parent wants to link"
               : `${pendingParentLinks.length} parents want to link`,
-          description:
-            "Accept so they can see your clubs and help with RSVPs. Nothing is shared until you approve.",
+          description: `Accept so they can ${orgChrome.parentVisibility}. Nothing is shared until you approve.`,
           action: { href: "#family", label: "Review family requests" },
           secondary:
             myOrgs.length === 0
-              ? { href: "/orgs", label: "Join a club" }
+              ? { href: "/orgs", label: "Join a school or club" }
               : searchAction,
         }
       : actionCount > 0
@@ -310,17 +311,16 @@ export default async function MePage() {
           }
         : myOrgs.length === 0
           ? {
-              title: nextAction.title,
-              description: nextAction.description,
-              action: { href: nextAction.href, label: nextAction.label },
+              title: orgChrome.emptyJoinTitle,
+              description: orgChrome.invitationsWaitDescription,
+              action: { href: "/orgs", label: orgChrome.openLabel },
               secondary: isStudent ? searchAction : nextAction.secondary,
             }
           : {
               title: "Find your next tournament",
-              description:
-                "You’re on a roster. Search public events, or wait here for club invitations.",
+              description: orgChrome.onRosterDescription,
               action: searchAction,
-              secondary: { href: "/orgs", label: "Open my clubs" },
+              secondary: { href: "/orgs", label: orgChrome.openLabel },
             };
 
   return (
@@ -384,7 +384,7 @@ export default async function MePage() {
                   </span>
                   <span className="mt-0.5 block text-xs text-muted">
                     {link.status === "pending"
-                      ? "wants to link as your parent — they’ll see your clubs and can RSVP for you"
+                      ? `wants to link as your parent — they’ll ${orgChrome.parentVisibility}`
                       : "linked as your parent"}
                   </span>
                 </div>
@@ -403,20 +403,19 @@ export default async function MePage() {
           Upcoming and past
         </h2>
         <p className="mt-2 max-w-prose text-sm text-muted">
-          Club RSVP tells your organization who is coming. Organizer
-          registration and payment still happen on the event&rsquo;s own site
-          when a link is listed.
+          {orgChrome.rsvpExplainer}
         </p>
         {!hasTournamentWorkspace ? (
           <p className="mt-4 text-sm text-muted">
             {isStudent && myOrgs.length === 0 ? (
               <>
-                No invitations yet — join your school or club first.{" "}
+                No invitations yet — {orgChrome.emptyJoinTitle.toLowerCase()}{" "}
+                first.{" "}
                 <Link
                   href="/orgs"
                   className="font-semibold text-brand-red hover:underline"
                 >
-                  Open my clubs
+                  {orgChrome.openLabel}
                 </Link>
               </>
             ) : (

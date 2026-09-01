@@ -15,6 +15,7 @@ import { getNotificationPreferences } from "@/lib/data/district";
 import { getChildrenWithEvents, getMyRecommendations, getPendingChildRequestCount, isSupabaseConfigured, isUpcomingEvent, type EntrantWithEvent } from "@/lib/data/portal";
 import { todayIsoInTimeZone } from "@/lib/competition-timing";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
+import { studentOrgChromeFromTypes } from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -155,10 +156,14 @@ export default async function FamilyPage() {
         }`
       );
     }
+    const childOrgTypes = childrenByPriority.flatMap((child) =>
+      child.orgs.map((org) => org.type)
+    );
+    const familyChrome = studentOrgChromeFromTypes(childOrgTypes);
     missionTitle = `${parts.join(" and ")} need attention`;
     missionDescription = `Start with ${
       firstChildNeedingAction?.display_name ?? "your student"
-    }. RSVPs tell the club who’s coming; organizer registration finishes entry on the tournament site.`;
+    }. ${familyChrome.familyRsvpMission}`;
     missionAction = {
       href: "#needs-response",
       label:
@@ -421,7 +426,9 @@ export default async function FamilyPage() {
                           </Link>
                         </span>
                       ))
-                    : "Not in any club yet."}
+                    : studentOrgChromeFromTypes(
+                        child.orgs.map((org) => org.type)
+                      ).notYetMembership}
                 </p>
 
                 {!child.upcoming.length && !past.length ? (
