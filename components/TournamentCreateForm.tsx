@@ -139,8 +139,8 @@ export function TournamentCreateForm({
       ? { type: orgType, parent_org_id: parentOrgId ?? null }
       : null
   );
-  const [category, setCategory] = useState<CompetitionCategory>(
-    savedDraft?.category ?? initial?.category ?? "chess"
+  const [category, setCategory] = useState<CompetitionCategory | "">(
+    savedDraft?.category ?? initial?.category ?? ""
   );
   const [customCategoryName, setCustomCategoryName] = useState(
     savedDraft?.customCategoryName ?? initial?.custom_category_name ?? ""
@@ -243,7 +243,7 @@ export function TournamentCreateForm({
 
   function currentDraftData(): TournamentDraftData {
     return {
-      category,
+      category: category || "chess",
       customCategoryName,
       participationMode,
       name,
@@ -509,6 +509,11 @@ export function TournamentCreateForm({
     e.preventDefault();
     setError(null);
 
+    if (!category) {
+      setError("Choose a competition type.");
+      return;
+    }
+
     const fee = feeToCents(entryFee);
     if ("error" in fee) {
       setError(fee.error);
@@ -634,7 +639,11 @@ export function TournamentCreateForm({
       : audience === "district"
         ? "Publish to district"
         : audience === "school"
-          ? "Publish to school"
+          ? orgType === "club"
+            ? "Publish to club"
+            : orgType === "team"
+              ? "Publish to team"
+              : "Publish to school"
           : "Publish invite-only competition";
   const publishingLabel = publicReview ? "Submitting…" : "Publishing…";
   const fee = feeToCents(entryFee);
@@ -680,10 +689,12 @@ export function TournamentCreateForm({
           description:
             category === "other"
               ? "Public link after platform review; custom types are not added to a category directory."
-              : `Listed in the ${competitionTypeLabel({
-                  category,
-                  customCategoryName: null,
-                })} directory after platform review.`,
+              : category
+                ? `Listed in the ${competitionTypeLabel({
+                    category,
+                    customCategoryName: null,
+                  })} directory after platform review.`
+                : "Choose a competition type. Public listings join that directory after review.",
         }
       : opt.value === "school"
         ? {
@@ -899,8 +910,13 @@ export function TournamentCreateForm({
                 Custom types stay off the public directories. Approved public
                 listings are shared by direct link.
               </p>
+            ) : !category ? (
+              <p className="mt-3 text-xs text-muted">
+                Pick a type. Chess is the densest public index; other types can
+                still be hosted.
+              </p>
             ) : null}
-            {primaryFacetsForCategory(category).length > 0 ? (
+            {category && primaryFacetsForCategory(category).length > 0 ? (
               <div className="mt-4 grid max-w-lg gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="text-xs font-semibold text-muted-strong">
@@ -1318,10 +1334,12 @@ export function TournamentCreateForm({
               <div>
                 <dt className="text-xs font-semibold text-muted-strong">Type</dt>
                 <dd className="mt-1 text-sm text-foreground">
-                  {competitionTypeLabel({
-                    category,
-                    customCategoryName,
-                  })}
+                  {category
+                    ? competitionTypeLabel({
+                        category,
+                        customCategoryName,
+                      })
+                    : "Choose a type"}
                 </dd>
               </div>
               <div>

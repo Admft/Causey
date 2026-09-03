@@ -18,7 +18,7 @@ export type RateLimitBucket =
   | "geo";
 
 const LIMITS: Record<RateLimitBucket, { max: number; windowSeconds: number }> = {
-  search: { max: 60, windowSeconds: 60 },
+  search: { max: 180, windowSeconds: 60 },
   signup: { max: 5, windowSeconds: 60 },
   join_code: { max: 10, windowSeconds: 60 },
   claim: { max: 10, windowSeconds: 60 },
@@ -39,6 +39,8 @@ export async function hashedRequestActorKey(userId?: string | null): Promise<str
   const forwarded =
     headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     headerList.get("x-real-ip")?.trim() ||
+    headerList.get("cf-connecting-ip")?.trim() ||
+    headerList.get("x-vercel-forwarded-for")?.trim() ||
     "unknown";
   const digest = createHash("sha256")
     .update(`causey-rate:${forwarded}`)
@@ -48,13 +50,15 @@ export async function hashedRequestActorKey(userId?: string | null): Promise<str
 
 /**
  * Returns true when the caller may proceed. Local mock mode is unlimited.
- * Missing RPC/schema fails closed in supabase mode.
+ * `next dev` skips the RPC so filter typing does not share one "unknown" IP
+ * bucket. Missing RPC/schema fails closed in production supabase mode.
  */
 export async function consumeRateLimit(
   bucket: RateLimitBucket,
   actorKey: string
 ): Promise<boolean> {
   if ((process.env.DATA_SOURCE ?? "mock") !== "supabase") return true;
+  if (process.env.NODE_ENV !== "production") return true;
   if (!supabaseConfigured()) return true;
 
   const limit = LIMITS[bucket];

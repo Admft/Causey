@@ -13,6 +13,9 @@ export const OPEN_COMPETITIONS_LABEL = "Open competitions";
 export const OPEN_MY_CLUBS_LABEL = "Open my clubs";
 export const OPEN_MY_ORGANIZATIONS_LABEL = "Open my organizations";
 export const CREATE_ORGANIZATION_LABEL = "Create an organization";
+export const CREATE_CLUB_LABEL = "Create a club";
+export const START_A_CLUB_LABEL = "Start a club";
+export const START_CLUB_SIGNUP_HREF = "/signup?role=coach&next=/orgs/new";
 
 /** Plain noun for copy: club, team, school, or district. */
 export function organizationKindLabel(
@@ -195,6 +198,8 @@ export function manageEventTitle(
 
 export type OrganizationNavAccess = {
   hasDistrictAccess?: boolean;
+  hasSchoolAccess?: boolean;
+  hasClubAccess?: boolean;
 };
 
 /** Primary header labels for the organizations portal link. */
@@ -205,7 +210,13 @@ export function organizationNavLabels(access: OrganizationNavAccess = {}): {
   if (access.hasDistrictAccess) {
     return { label: "Districts & schools", shortLabel: "District" };
   }
-  return { label: "My organizations", shortLabel: "Orgs" };
+  if (access.hasSchoolAccess && access.hasClubAccess) {
+    return { label: "My organizations", shortLabel: "Orgs" };
+  }
+  if (access.hasSchoolAccess) {
+    return { label: "My schools", shortLabel: "Schools" };
+  }
+  return { label: "My clubs", shortLabel: "Clubs" };
 }
 
 /**
@@ -225,7 +236,11 @@ export function workspaceOpenCta(
       href,
       label: access.hasDistrictAccess
         ? "Open Districts & schools"
-        : "Open my organizations",
+        : access.hasSchoolAccess && access.hasClubAccess
+          ? OPEN_MY_ORGANIZATIONS_LABEL
+          : access.hasSchoolAccess
+            ? "Open my schools"
+            : OPEN_MY_CLUBS_LABEL,
     };
   }
   return { href, label: "Open Plan" };
@@ -244,9 +259,87 @@ export function accountOrganizationsEmptyCta(options: {
     return { href: "/orgs", label: "Open Districts & schools" };
   }
   if (options.canCreate) {
-    return { href: "/orgs/new", label: CREATE_ORGANIZATION_LABEL };
+    return { href: "/orgs/new", label: CREATE_CLUB_LABEL };
   }
-  return { href: "/orgs", label: "Open my organizations" };
+  return { href: "/orgs", label: OPEN_MY_CLUBS_LABEL };
+}
+
+export type StaffOrgListChrome = {
+  heading: string;
+  listHeading: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  emptyIntro: string;
+  createCta: string;
+  anotherCta: string;
+};
+
+/** Coach /orgs list chrome from membership types. Empty self-serve is clubs. */
+export function staffOrgListChromeFromTypes(
+  types: Iterable<string>
+): StaffOrgListChrome {
+  const kinds = new Set(
+    [...types]
+      .map((t) => organizationKindLabel(t))
+      .filter((k) => k === "school" || k === "club" || k === "team" || k === "district")
+  );
+  const hasDistrict = kinds.has("district");
+  const hasSchool = kinds.has("school");
+  const hasClubOrTeam = kinds.has("club") || kinds.has("team");
+
+  if (hasDistrict) {
+    return {
+      heading: "Districts and schools",
+      listHeading: "Districts, schools, and clubs",
+      emptyTitle: "No organization access yet",
+      emptyDescription:
+        "Staff invitations come from an organization administrator.",
+      emptyIntro:
+        "Ask an administrator for a staff invitation, then come back here.",
+      createCta: START_A_CLUB_LABEL,
+      anotherCta: "Start a club or team",
+    };
+  }
+
+  if (hasSchool && hasClubOrTeam) {
+    return {
+      heading: "Your organizations",
+      listHeading: "All organizations",
+      emptyTitle: "Start your first club",
+      emptyDescription:
+        "You’ll get a join link for students and a place to publish club tournaments.",
+      emptyIntro:
+        "Create a club or team to get a join link, roster, and tournament tools.",
+      createCta: START_A_CLUB_LABEL,
+      anotherCta: "Start another club or team",
+    };
+  }
+
+  if (hasSchool) {
+    return {
+      heading: "Your schools",
+      listHeading: "All schools",
+      emptyTitle: "No school access yet",
+      emptyDescription:
+        "Staff invitations come from a school or district administrator.",
+      emptyIntro:
+        "Ask an administrator for a staff invitation, then come back here.",
+      createCta: START_A_CLUB_LABEL,
+      anotherCta: "Start a club or team",
+    };
+  }
+
+  return {
+    heading: "Your clubs",
+    listHeading: "All clubs",
+    emptyTitle: "Start your first club",
+    emptyDescription:
+      "You’ll get a join link for students and a place to publish club tournaments.",
+    emptyIntro:
+      "Create a club or team to get a join link, roster, and tournament tools.",
+    createCta: START_A_CLUB_LABEL,
+    anotherCta: "Start another club",
+  };
 }
 
 export function orgCompetitionsHref(orgSlug: string): string {

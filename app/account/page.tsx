@@ -110,7 +110,17 @@ export default async function AccountPage() {
     (row) =>
       row.org.type === "district" || row.memberRole === "district_admin"
   );
-  const workspace = workspaceOpenCta(profile.role, { hasDistrictAccess });
+  const hasSchoolAccess = myOrgs.some((row) => row.org.type === "school");
+  const hasClubAccess = myOrgs.some(
+    (row) => row.org.type === "club" || row.org.type === "team"
+  );
+  const workspace = workspaceOpenCta(profile.role, {
+    hasDistrictAccess,
+    hasSchoolAccess,
+    hasClubAccess:
+      hasClubAccess ||
+      (profile.role === "coach" && !hasDistrictAccess && !hasSchoolAccess),
+  });
   const organizationsEmpty = accountOrganizationsEmptyCta({
     role: profile.role,
     canCreate: canCreateOrg(profile),
@@ -323,14 +333,16 @@ export default async function AccountPage() {
         Organizations
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        Rename, ownership, and staff invites live on each org&rsquo;s Settings.
+        Rename, ownership, and staff invites live on each workspace&rsquo;s Settings.
       </p>
       {!myOrgs.length ? (
         <PortalEmptyState
           title={
             profile.role === "student"
               ? "Not on a club yet"
-              : "No organizations yet"
+              : hasDistrictAccess
+                ? "No organizations yet"
+                : "No clubs yet"
           }
           description={
             profile.role === "student"
@@ -339,7 +351,7 @@ export default async function AccountPage() {
                 ? "District and school workspaces you administer appear here."
                 : canCreateOrg(profile)
                   ? "Create a club or team workspace, or wait for a staff invitation claim link."
-                  : "Organization workspaces appear here after you join or claim a staff invitation."
+                  : "Clubs appear here after you join or claim a staff invitation."
           }
           action={organizationsEmpty}
         />
@@ -414,7 +426,7 @@ export default async function AccountPage() {
             href="/orgs/new"
             className="text-sm font-semibold text-brand-red hover:underline"
           >
-            Create another organization
+            Create another club or team
           </Link>
         </p>
       ) : null}
@@ -430,7 +442,7 @@ export default async function AccountPage() {
       : []),
     {
       id: "organizations" as const,
-      label: "Organizations",
+      label: hasDistrictAccess || hasSchoolAccess ? "Organizations" : "Clubs",
       content: orgsPanel,
     },
     { id: "data" as const, label: "Your data", content: dataPanel },

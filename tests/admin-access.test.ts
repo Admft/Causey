@@ -173,3 +173,24 @@ describe("platform user directory migration", () => {
     expect(typeFixSql).toContain("p.role::text");
   });
 });
+
+describe("platform admin count migration", () => {
+  const sql = readFileSync(
+    resolve(process.cwd(), "supabase/migrations/0071_count_platform_admins.sql"),
+    "utf8"
+  );
+
+  it("counts through a definer RPC and keeps the table revoked", () => {
+    expect(sql).toContain("create or replace function public.count_platform_admins()");
+    expect(sql).toContain("security definer");
+    expect(sql).toContain("platform_admin_required");
+    expect(sql).toContain("select count(*) from public.platform_admins");
+    expect(sql).toContain(
+      "revoke execute on function public.count_platform_admins() from public, anon"
+    );
+    expect(sql).toContain(
+      "grant execute on function public.count_platform_admins() to authenticated"
+    );
+    expect(sql).not.toMatch(/grant select[^;]*platform_admins/i);
+  });
+});

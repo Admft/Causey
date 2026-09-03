@@ -218,25 +218,85 @@ type CountQuery = PromiseLike<{
   error: { message: string; code?: string } | null;
 }>;
 
+function logAdminCountFailure(error: unknown) {
+  const record =
+    error && typeof error === "object"
+      ? (error as {
+          code?: string;
+          message?: string;
+          details?: string;
+          hint?: string;
+        })
+      : null;
+  console.error("Admin ops count failed:", {
+    code: record?.code ?? null,
+    message: record?.message || (error == null ? null : String(error)),
+    details: record?.details ?? null,
+    hint: record?.hint ?? null,
+  });
+}
+
+function isMissingAdminRpc(
+  error: { code?: string; message?: string } | null,
+  fn: string
+) {
+  const message = error?.message?.toLowerCase() ?? "";
+  return (
+    error?.code === "PGRST202" ||
+    (message.includes(fn) &&
+      (message.includes("not found") || message.includes("could not find")))
+  );
+}
+
 async function exactCount(query: CountQuery): Promise<AdminCount> {
   const { count, error } = await query;
   if (error) {
-    console.error("Admin ops count failed:", {
-      code: error.code,
-      message: error.message,
-    });
+    logAdminCountFailure(error);
     return null;
   }
   return count ?? 0;
 }
 
+async function countPlatformAdminsFromDirectory(): Promise<AdminCount> {
+  const pageSize = 100;
+  const maxPages = 20;
+  let offset = 0;
+  let counted = 0;
+  let total = 0;
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const result = await getAdminUsers({
+      query: "",
+      limit: pageSize,
+      offset,
+    });
+    if (result.error) return null;
+    total = result.total;
+    counted += result.users.filter((user) => user.platform_admin).length;
+    offset += pageSize;
+    if (result.users.length === 0 || offset >= total) {
+      return counted;
+    }
+  }
+
+  return null;
+}
+
 export async function countPlatformAdmins(): Promise<AdminCount> {
   const supabase = await createServerSupabaseClient();
-  return exactCount(
-    supabase
-      .from("platform_admins")
-      .select("*", { count: "exact", head: true })
-  );
+  const { data, error } = await supabase.rpc("count_platform_admins");
+  if (!error) {
+    const n = Number(data);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // Table grants are revoked (0015). Until 0071 is applied, count from the
+  // directory RPC that already loads each admin flag.
+  const fromDirectory = await countPlatformAdminsFromDirectory();
+  if (fromDirectory !== null) return fromDirectory;
+
+  logAdminCountFailure(error);
+  return null;
 }
 
 export type AdminModerationQueueRow = {
@@ -533,10 +593,7 @@ export async function getAdminUsers({
       code: error.code,
       message: error.message,
     });
-    const missingMigration =
-      error.code === "PGRST202" ||
-      (error.message.includes("search_platform_users") &&
-        error.message.toLowerCase().includes("not found"));
+    const missingMigration = isMissingAdminRpc(error, "search_platform_users");
     return {
       users: [],
       total: 0,

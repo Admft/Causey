@@ -17,11 +17,14 @@ import {
 } from "@/lib/data/portal";
 import { canCreateOrg } from "@/lib/org-permissions";
 import { formatDateRange } from "@/lib/format";
-import { studentOrgChromeFromTypes } from "@/lib/portal-copy";
+import {
+  staffOrgListChromeFromTypes,
+  studentOrgChromeFromTypes,
+} from "@/lib/portal-copy";
 
 export const metadata: Metadata = {
-  title: "Your organizations",
-  description: "Schools and clubs you belong to on Causey, plus your invites.",
+  title: "Your clubs",
+  description: "Clubs, teams, and schools you belong to on Causey, plus your invites.",
 };
 
 const ORG_TYPE_LABEL: Record<string, string> = {
@@ -57,7 +60,7 @@ export default async function OrgsPage({
           Organizations
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Organization workspaces are unavailable in this build. You can still
+          Club workspaces are unavailable in this build. You can still
           search public tournament listings while account access is restored.
         </p>
         <Link href="/#search" className="cta-enabled mt-6 inline-flex">
@@ -135,6 +138,9 @@ export default async function OrgsPage({
   const studentChrome = studentOrgChromeFromTypes(
     myOrgs.map(({ org }) => org.type)
   );
+  const staffChrome = staffOrgListChromeFromTypes(
+    myOrgs.map(({ org }) => org.type)
+  );
 
   const invitationsSection = (
     <section id="rsvps" className="mt-10 scroll-mt-24">
@@ -208,16 +214,16 @@ export default async function OrgsPage({
       {isStaffWorkspace ? (
         <>
           <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
-            {hasDistrictWorkspace ? "Districts and schools" : "Your organizations"}
+            {staffChrome.heading}
           </h1>
           <p className="mt-2 max-w-prose text-sm text-muted">
             {!myOrgs.length
               ? canStartOrganization
-                ? "Create a school or club to get a join link, roster, and tournament tools."
+                ? staffChrome.emptyIntro
                 : "Ask an administrator for a staff invitation, then come back here."
               : hasDistrictWorkspace && districtOrg
                 ? `Open ${districtOrg.org.name} to provision schools, complete administrator handoffs, and review aggregate participation.`
-              : primaryNeedsStudents && primaryOrg
+                : primaryNeedsStudents && primaryOrg
                 ? `${primaryOrg.org.name} has an empty roster. Invite students before you create tournaments.`
                 : "Rosters, invites, and tournaments live inside each workspace."}
           </p>
@@ -228,17 +234,17 @@ export default async function OrgsPage({
               <PortalMission
                 title={
                   canStartOrganization
-                    ? "Start your first organization"
-                    : "No organization access yet"
+                    ? staffChrome.emptyTitle
+                    : "No club access yet"
                 }
                 description={
                   canStartOrganization
-                    ? "You’ll get a join link for students and a place to publish club tournaments."
-                    : "Staff invitations come from an organization administrator."
+                    ? staffChrome.emptyDescription
+                    : "Staff invitations come from a club owner."
                 }
                 action={
                   canStartOrganization
-                    ? { href: "/orgs/new", label: "Start an organization" }
+                    ? { href: "/orgs/new", label: staffChrome.createCta }
                     : undefined
                 }
               />
@@ -339,9 +345,7 @@ export default async function OrgsPage({
       <section id="organizations" className="mt-10 scroll-mt-24">
         <h2 className="text-sm font-semibold text-foreground">
           {isStaffWorkspace
-            ? hasDistrictWorkspace
-              ? "Districts, schools, and clubs"
-              : "All organizations"
+            ? staffChrome.listHeading
             : "Where you belong"}
         </h2>
 
@@ -349,7 +353,7 @@ export default async function OrgsPage({
           <p className="mt-3 text-sm text-muted">
             {isStaffWorkspace
               ? "None yet — use the next step above."
-              : "You haven’t joined an organization yet."}
+              : "You haven’t joined a club yet."}
           </p>
         ) : (
           <ul className="mt-2">
@@ -400,9 +404,7 @@ export default async function OrgsPage({
               href="/orgs/new"
               className="text-sm font-semibold text-muted-strong hover:text-brand-red"
             >
-              {myOrgs.length
-                ? "Start another organization"
-                : "Start an organization"}
+              {myOrgs.length ? staffChrome.anotherCta : staffChrome.createCta}
             </Link>
           </p>
         ) : null}

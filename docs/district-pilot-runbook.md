@@ -14,12 +14,14 @@ the verified `mail.causey.dev` Resend integration.
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0066_competition_comments_and_home_geo.sql` (including
+   `0071_count_platform_admins.sql` (including
    `0045_atomic_district_school_creation.sql`,
    `0046_district_hosted_reporting.sql`,
    `0060_district_admin_activity.sql`,
-   `0061_search_competitions_radius.sql`, and
-   `0062_rate_limits.sql`). A clean filename check alone
+   `0061_search_competitions_radius.sql`,
+   `0062_rate_limits.sql`,
+   `0069_p1_isolation_email_comments.sql`, and
+   `0070_p2_origin_reports_invites.sql`). A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch
    file.
@@ -200,6 +202,10 @@ Tell pilot participants before onboarding:
 - Causey does not provide payments or student-to-student messaging.
 ## 9. Backup restore drill
 
+On Supabase Pro, daily backups are retained 7 days. PITR is off unless
+the project enables it. Confirm the current backup and PITR settings in
+the dashboard before a paid cohort; do not assume PITR is on.
+
 Before a paid student cohort:
 
 1. In the Supabase dashboard, take a backup of the target project (or confirm
@@ -209,6 +215,7 @@ Before a paid student cohort:
    `search_competitions_in_radius` returns a zip search.
 4. Record the date, operator, source project, restore project, and pass/fail
    in the private deployment log. Do not copy student rows into chat or git.
+   Completing this checklist in git is not a completed drill.
 
 ## 10. Production hostname and observability
 

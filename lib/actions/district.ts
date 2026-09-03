@@ -373,7 +373,9 @@ export async function inviteOrganizationMember(input: {
       error:
         orgType === "district"
           ? "Invite district staff here. Students and school administrators belong in a school workspace."
-          : "District administrators can only be invited to a district workspace.",
+          : orgType === "club" || orgType === "team"
+            ? "Invite a coach, assistant, or student. School administrator is a school role."
+            : "District administrators can only be invited to a district workspace.",
     };
   }
   const result = await createInvitationRecord(parsed.data);
@@ -520,7 +522,9 @@ export async function bulkInviteOrganizationMembers(input: {
           ? "Invalid email"
           : orgType === "district"
             ? "Use a district staff role"
-            : "Invalid role",
+            : orgType === "club" || orgType === "team"
+              ? "Use a club or team role"
+              : "Invalid role",
       });
       continue;
     }
@@ -532,35 +536,48 @@ export async function bulkInviteOrganizationMembers(input: {
     });
   }
 
-  const INVITE_CONCURRENCY = 20;
-  for (let start = 0; start < pending.length; start += INVITE_CONCURRENCY) {
-    const chunk = pending.slice(start, start + INVITE_CONCURRENCY);
-    const outcomes = await Promise.all(
-      chunk.map(async (row) => {
-        const result = await createInvitationRecord({
-          orgId: parsed.data.orgId,
-          email: row.email,
-          displayName: row.displayName,
-          role: row.role,
-          batchId: batch.id,
-        });
-        return { row, result };
-      })
+  if (pending.length) {
+    const { data: createdRows, error: inviteError } = await supabase.rpc(
+      "create_org_invitations",
+      {
+        p_org_id: parsed.data.orgId,
+        p_emails: pending.map((row) => row.email),
+        p_roles: pending.map((row) => row.role),
+        p_display_names: pending.map((row) => row.displayName),
+        p_batch_id: batch.id,
+      }
     );
-    for (const outcome of outcomes) {
-      if (outcome.result.ok) {
+    if (inviteError) {
+      revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
+      return {
+        ok: false,
+        error: "Could not create the invitations. Apply the latest database update and try again.",
+      };
+    }
+    const byEmail = new Map(
+      pending.map((row) => [row.email.toLowerCase(), row] as const)
+    );
+    for (const created of (createdRows ?? []) as {
+      email: string;
+      invitation_id: string | null;
+      claim_token: string | null;
+      expires_at: string | null;
+      error_text: string | null;
+    }[]) {
+      const source = byEmail.get((created.email ?? "").toLowerCase());
+      if (created.invitation_id && created.claim_token && created.expires_at) {
         invited += 1;
         claims.push({
-          email: outcome.row.email,
-          role: outcome.row.role,
-          claimPath: outcome.result.claimPath,
-          expiresAt: outcome.result.expiresAt,
+          email: created.email,
+          role: source?.role ?? "student",
+          claimPath: buildClaimPath(created.claim_token),
+          expiresAt: created.expires_at,
         });
       } else {
         failed.push({
-          row: outcome.row.row,
-          email: outcome.row.email,
-          error: outcome.result.error,
+          row: source?.row ?? 0,
+          email: created.email,
+          error: created.error_text || "Could not create this invitation.",
         });
       }
     }

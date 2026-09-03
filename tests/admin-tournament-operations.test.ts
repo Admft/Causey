@@ -107,7 +107,7 @@ describe("admin scraper dispatch", () => {
     const { adminRunScraper } = await import("@/lib/actions/admin-operations");
 
     await expect(
-      adminRunScraper({ sources: ["doe_science_bowl_scrape"] })
+      adminRunScraper({ sources: ["vex_events_scrape"] })
     ).resolves.toEqual({
       ok: false,
       error: "Choose at least one valid tournament scraper.",
@@ -160,7 +160,7 @@ describe("admin tournament operations migration", () => {
   const dispatchSourceSql = readFileSync(
     resolve(
       process.cwd(),
-      "supabase/migrations/0068_admin_scraper_dispatch_sources.sql"
+      "supabase/migrations/0072_doe_science_bowl_dispatch.sql"
     ),
     "utf8"
   );
@@ -196,7 +196,6 @@ describe("admin tournament operations migration", () => {
     for (const source of [
       "tabroom_scrape",
       "vex_events_scrape",
-      "doe_science_bowl_scrape",
     ]) {
       expect(dispatchSourceSql).not.toContain(`'${source}'`);
     }
@@ -235,7 +234,8 @@ describe("manual ingestion workflow", () => {
       group.options.map((option) => option.value)
     );
     expect(groupedSources).toEqual(ADMIN_RUNNABLE_SCRAPER_SOURCES);
-    expect(groupedSources).not.toContain("doe_science_bowl_scrape");
+    expect(groupedSources).toContain("doe_science_bowl_scrape");
+    expect(groupedSources).not.toContain("vex_events_scrape");
   });
 
   it("runs multi-source admin requests sequentially in one workflow", () => {
@@ -249,7 +249,6 @@ describe("manual ingestion workflow", () => {
     for (const source of [
       "tabroom_scrape",
       "vex_events_scrape",
-      "doe_science_bowl_scrape",
     ]) {
       expect(workflow).not.toContain(`- ${source}`);
       expect(workflow).not.toContain(`${source}) npm run scrape:`);

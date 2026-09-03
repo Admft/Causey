@@ -158,7 +158,7 @@ const INGESTION_SOURCE_PRESENTATION: Omit<
     href: "https://events.vex.com/robot-competitions/vex-robotics-competition",
     logoUrl: "/sources/state-affiliates.svg",
     blurb:
-      "Official public VEX robotics event directory. Automated refresh is blocked by the source's current HTTP 403 response.",
+      "Official public VEX robotics event directory. Ordinary requests still hit a Cloudflare challenge (HTTP 403); Causey does not bypass that.",
     status: "soon",
     category: "stem",
   },
@@ -169,8 +169,8 @@ const INGESTION_SOURCE_PRESENTATION: Omit<
     href: "https://science.osti.gov/wdts/nsb/Key-Dates",
     logoUrl: "/sources/state-affiliates.svg",
     blurb:
-      "Reference link only. Automated refresh is blocked because the source currently returns HTTP 403 to ordinary public requests.",
-    status: "soon",
+      "Official national-event dates from the Office of Science Key Dates page. Regional qualifying bowls are not indexed.",
+    status: "live",
     category: "stem",
   },
   {
@@ -272,6 +272,7 @@ const FACTUAL_LISTING_FIELDS = [
 
 const OWNER = "Causey data operations";
 const REVIEWED_2026_08_13 = "2026-08-13";
+const REVIEWED_2026_09_02 = "2026-09-02";
 
 function enabledGovernance(
   permissionBasis: string,
@@ -349,8 +350,8 @@ const SOURCE_GOVERNANCE: Record<string, SourceGovernance> = {
   vex_events_scrape: {
     owner: OWNER,
     permissionBasis:
-      "Blocked after an ordinary public request returned HTTP 403; no bypass or private API is permitted.",
-    permissionReviewedOn: "2026-08-12",
+      "Ordinary public HTML still returns HTTP 403 (Cloudflare challenge). Causey will not bypass that or use a private API.",
+    permissionReviewedOn: REVIEWED_2026_09_02,
     allowedFields: FACTUAL_LISTING_FIELDS,
     cadence: "manual",
     crawlDelayMs: 350,
@@ -369,19 +370,11 @@ const SOURCE_GOVERNANCE: Record<string, SourceGovernance> = {
     { min: 0, max: 1 },
     { permissionReviewedOn: REVIEWED_2026_08_13 }
   ),
-  doe_science_bowl_scrape: {
-    owner: OWNER,
-    permissionBasis:
-      "Blocked after an ordinary public request returned HTTP 403; no bypass or alternate private endpoint is permitted.",
-    permissionReviewedOn: REVIEWED_2026_08_13,
-    allowedFields: FACTUAL_LISTING_FIELDS,
-    cadence: "manual",
-    crawlDelayMs: 350,
-    expectedRows: null,
-    freshnessThresholdHours: null,
-    killSwitchEnv: null,
-    automationState: "blocked",
-  },
+  doe_science_bowl_scrape: enabledGovernance(
+    "Office of Science robots.txt allows Key Dates and About; Web Policies mark site materials public domain with source acknowledgment and no implied endorsement. Ordinary public HTML returned HTTP 200 on 2026-09-02.",
+    { min: 1, max: 8 },
+    { permissionReviewedOn: REVIEWED_2026_09_02 }
+  ),
   afsa_essay_scrape: enabledGovernance(
     "First-party public contest pages; conditions reviewed without an applicable automation or commercial-use prohibition.",
     { min: 0, max: 2 },

@@ -40,7 +40,7 @@ const COVERAGE_CARDS: readonly CoverageCard[] = DISCOVERY_CATEGORIES.map(
     const depth: Record<string, string> = {
       chess: "Six live calendars, from local clubs to FIDE.",
       debate: "UIL invitationals with explicit speech or debate.",
-      stem: "Two contests; the big directories stay link-only.",
+      stem: "Three contests; VEX and other big directories stay link-only.",
       arts: "VASE, theatre, and marching band state dates.",
       writing: "Two awards; one cycle has already closed.",
     };

@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { FOUNDING_TEAM_MEETING_URL } from "@/lib/founding-team";
+import {
+  START_A_CLUB_LABEL,
+  START_CLUB_SIGNUP_HREF,
+} from "@/lib/portal-copy";
 
 /**
  * Organizer band under discovery: ONE board that demonstrates the product
@@ -90,7 +94,7 @@ const MODE_COPY: Record<
   district: {
     heading: "Chess for a whole district, set up with you.",
     intro:
-      "There is no instant district signup. Causey provisions the district and its participating schools for an assisted chess pilot.",
+      "There is no instant district signup. Causey provisions the district and its participating schools in the same organization workspace as clubs — not a custom portal. Chess is the working surface; other types can be hosted. This remains an assisted chess pilot.",
     finePrint:
       "District staff, school staff, coaches, parents, and students each see the work meant for them.",
     caption: "District pilot",
@@ -753,10 +757,10 @@ export function HomeDistrictPitch() {
                     See the club workspace
                   </Link>
                   <Link
-                    href="/signup?role=coach"
+                    href={START_CLUB_SIGNUP_HREF}
                     className="text-sm font-bold text-muted-strong hover:text-brand-red"
                   >
-                    Create a club account
+                    {START_A_CLUB_LABEL}
                   </Link>
                 </div>
               ) : (

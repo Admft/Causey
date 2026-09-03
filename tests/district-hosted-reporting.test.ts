@@ -38,12 +38,12 @@ describe("district-hosted reporting attribution", () => {
     );
   });
 
-  it("labels district and school attribution separately in CSV", () => {
+  it("labels district, school, and origin attribution separately in CSV", () => {
     expect(exportRoute).toContain('"Attribution"');
+    expect(exportRoute).toContain('"Type"');
     expect(exportRoute).toContain('"District-hosted"');
     expect(exportRoute).toContain('"School-hosted"');
-    expect(exportRoute).toContain(
-      '"District-hosted",\n      "",\n      "",'
-    );
+    expect(exportRoute).toContain('"District-hosted by school"');
+    expect(exportRoute).toContain("typeLabel");
   });
 });

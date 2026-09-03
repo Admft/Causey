@@ -20,7 +20,7 @@ describe("pathway picker, anonymous search cache, and CSV batching", () => {
       "s-maxage=60, stale-while-revalidate=300"
     );
     expect(read("app/api/competitions/route.ts")).toContain("private, no-store");
-    expect(read("lib/actions/district.ts")).toContain("INVITE_CONCURRENCY");
+    expect(read("lib/actions/district.ts")).toContain("create_org_invitations");
     expect(read("lib/actions/district.ts")).toContain("Promise.all");
   });
 });

@@ -24,6 +24,13 @@ describe("abuse controls and public-path cost", () => {
     expect(read("lib/rate-limit.ts")).toContain('"comment"');
     expect(read("lib/rate-limit.ts")).toContain('"geo"');
     expect(read("app/api/competitions/route.ts")).toContain('consumeRateLimit(\n    "search"');
+    expect(read("app/api/competitions/route.ts")).toContain(
+      "hashedRequestActorKey(user?.id)"
+    );
+    expect(read("lib/rate-limit.ts")).toContain("search: { max: 180");
+    expect(read("lib/rate-limit.ts")).toContain(
+      'process.env.NODE_ENV !== "production"'
+    );
     expect(read("lib/actions/signup-guard.ts")).toContain('"signup"');
     expect(read("lib/actions/orgs.ts")).toContain('"join_code"');
     expect(read("lib/actions/district.ts")).toContain('"claim"');

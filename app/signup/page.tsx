@@ -18,7 +18,7 @@ import { getOrganizationInvitationPreview } from "@/lib/data/portal";
 export const metadata: Metadata = {
   title: "Sign up",
   description:
-    "Create a Causey account as a student, parent, coach, or organizer.",
+    "Create a Causey account as a student, parent, or coach. Coaches start a club after signup.",
 };
 
 const INVITATION_ROLE_LABELS: Record<string, string> = {
@@ -46,6 +46,11 @@ export default async function SignupPage({
   const invitationAccountRole = invitation
     ? accountRoleForOrgInvitationRole(invitation.member_role)
     : "student";
+  const startingClub =
+    !invitation &&
+    !isJoiningOrganization &&
+    parsedRole.success &&
+    parsedRole.data === "coach";
 
   const user = await getSessionUser();
   if (user) {
@@ -92,14 +97,18 @@ export default async function SignupPage({
                 ? `Create a ${
                     invitationAccountRole === "coach" ? "staff" : "student"
                   } account for ${invitation.org_name}`
-                : "Create your Causey account"}
+                : startingClub
+                  ? "Create a coach account to start a club"
+                  : "Create your Causey account"}
           </h1>
           <p className="mt-3 text-sm text-muted">
             {isJoiningOrganization
               ? "This join link is for a student roster. After confirming your email, you’ll return to review the organization before joining."
               : invitation
                 ? `This invitation assigns the ${INVITATION_ROLE_LABELS[invitation.member_role] ?? invitation.member_role} role after you confirm your email and accept it.`
-              : "Students join schools or clubs, parents link to a student, and coaches or organizers start rosters and publish tournaments."}
+                : startingClub
+                  ? "Coach is the account type — not a fourth club login. After you confirm email, you create the club, then invite students with a join code and other coaches as staff."
+                  : "Students join schools or clubs, parents link to a student, and coaches start a club or team."}
           </p>
           <div className="mt-8">
             <SignupForm

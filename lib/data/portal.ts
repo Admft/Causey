@@ -136,6 +136,7 @@ export type OrgForViewer = {
 
 export type OrgWorkspaceEventRow = OrgEventRow & {
   host: { id: string; name: string; slug: string } | null;
+  relation?: "hosted" | "travel";
 };
 
 export type OrgCompetitionWorkspace = {
@@ -449,6 +450,7 @@ export async function getOrgCompetitionWorkspace(
     return {
       ...(event as OrgEventRow),
       host: relation as OrgWorkspaceEventRow["host"],
+      relation: "hosted" as const,
     };
   });
 
@@ -583,6 +585,8 @@ export async function getEventAttendance(
     section_name: row.section_name ?? null,
     placement: row.placement ?? null,
     award_label: row.award_label ?? null,
+    origin_org_id: row.origin_org_id ?? null,
+    origin_org_name: row.origin_org_name ?? null,
   }));
 }
 
@@ -849,18 +853,36 @@ export async function getCoachOrgsWithAttendance(
 /** Public events this org has marked as "we're going". */
 export async function getOrgAttendedEvents(
   orgId: string
-): Promise<OrgEventRow[]> {
+): Promise<OrgWorkspaceEventRow[]> {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from("org_competition_attendance")
     .select(
-      "competitions(id, slug, name, category, custom_category_name, participation_mode, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status, moderation_note)"
+      "competitions(id, slug, name, category, custom_category_name, participation_mode, city, state, start_date, end_date, visibility, audience, entry_fee_cents, status, moderation_note, organizations!competitions_org_id_fkey(id, name, slug))"
     )
     .eq("org_id", orgId);
   return (data ?? [])
     .flatMap((row) => {
-      const event = row.competitions as unknown as OrgEventRow | null;
-      return event ? [event] : [];
+      const raw = row.competitions as unknown as
+        | (OrgEventRow & {
+            organizations?:
+              | { id: string; name: string; slug: string }
+              | { id: string; name: string; slug: string }[]
+              | null;
+          })
+        | null;
+      if (!raw) return [];
+      const { organizations, ...event } = raw;
+      const host = Array.isArray(organizations)
+        ? organizations[0] ?? null
+        : organizations ?? null;
+      return [
+        {
+          ...(event as OrgEventRow),
+          host,
+          relation: "travel" as const,
+        },
+      ];
     })
     .sort((a, b) => a.start_date.localeCompare(b.start_date));
 }

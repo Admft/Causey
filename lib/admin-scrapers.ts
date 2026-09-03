@@ -47,6 +47,11 @@ export const ADMIN_SCRAPER_OPTIONS = [
     category: "stem",
   },
   {
+    value: "doe_science_bowl_scrape",
+    label: "DOE National Science Bowl",
+    category: "stem",
+  },
+  {
     value: "txsef_scrape",
     label: "Texas Science & Engineering Fair",
     category: "stem",

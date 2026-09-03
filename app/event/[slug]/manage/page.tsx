@@ -12,6 +12,7 @@ import { EventPulseStrip } from "@/components/EventPulseStrip";
 import { PageBackLink } from "@/components/PageBackLink";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
+import { isCompetitionStarted } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
 import {
   canManageCompetitionAsViewer,
@@ -149,6 +150,10 @@ export default async function ManageEventPage({
     : attendance.filter((row) => travelProfileIds.has(row.profile_id));
   const schoolNameByProfileId = new Map<string, string>();
   if (isDistrictHost) {
+    for (const row of visibleAttendance) {
+      const originName = row.origin_org_name?.trim();
+      if (originName) schoolNameByProfileId.set(row.profile_id, originName);
+    }
     for (const row of roster) {
       const schoolName = row.orgName?.trim();
       if (!schoolName || schoolNameByProfileId.has(row.profile_id)) continue;
@@ -158,7 +163,9 @@ export default async function ManageEventPage({
   const labeledAttendance = visibleAttendance.map((row) => ({
     ...row,
     orgName: isDistrictHost
-      ? schoolNameByProfileId.get(row.profile_id) ?? null
+      ? row.origin_org_name?.trim() ||
+        schoolNameByProfileId.get(row.profile_id) ||
+        null
       : null,
   }));
   const candidates = activeStudents
@@ -174,9 +181,8 @@ export default async function ManageEventPage({
       orgName: isDistrictHost ? row.orgName : null,
     }));
   const summary = summarizeAttendance(labeledAttendance);
-  const isPast =
-    (competition.end_date ?? competition.start_date) <
-    new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const attendanceOpen = isCompetitionStarted(competition, today);
   const isDraft = canManage && competition.status === "draft";
   const needsInvite = !isDraft && !visibleAttendance.length;
   const needsReplies = !isDraft && summary.awaiting > 0;
@@ -190,7 +196,7 @@ export default async function ManageEventPage({
   const inviteFirst =
     !isDraft &&
     (needsInvite ||
-      (candidates.length > 0 && !needsReplies && !isPast));
+      (candidates.length > 0 && !needsReplies && !attendanceOpen));
   const resultSections = competition.sections.map((section) => ({
     id: section.id,
     name: section.name,
@@ -296,7 +302,7 @@ export default async function ManageEventPage({
       },
       secondary: { href: workspaceHref, label: "Back to workspace" },
     };
-  } else if (isPast && missingResults > 0) {
+  } else if (attendanceOpen && missingResults > 0) {
     mission = {
       title: "Record a result",
       description: `${missingResults} ${
@@ -305,7 +311,7 @@ export default async function ManageEventPage({
       action: { href: "#rsvps", label: "Record a result" },
       secondary: { href: workspaceHref, label: "Back to workspace" },
     };
-  } else if (isPast) {
+  } else if (attendanceOpen) {
     mission = {
       title: "Mark who attended",
       description: `${summary.going} ${
@@ -425,10 +431,10 @@ export default async function ManageEventPage({
 
   const replyBuckets = groupAttendanceByReplyStatus(labeledAttendance);
   const replySectionOrder = orderedAttendanceReplySections({
-    isPast,
+    isPast: attendanceOpen,
     needsReplies,
   });
-  const replySectionCopy: Record<AttendanceReplyBucket, string> = isPast
+  const replySectionCopy: Record<AttendanceReplyBucket, string> = attendanceOpen
     ? {
         awaiting: "Still awaiting a reply",
         going: "Going / attendance",
@@ -445,7 +451,7 @@ export default async function ManageEventPage({
     <section id="rsvps" className="section-rule mt-10 scroll-mt-24 pt-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold text-foreground">
-          {isPast ? "Attendance" : "Replies"}
+          {attendanceOpen ? "Attendance" : "Replies"}
         </h2>
         <p className="text-xs text-muted">
           <span className="font-semibold text-foreground">
@@ -509,7 +515,7 @@ export default async function ManageEventPage({
                         </p>
                       </div>
                       <div className="sm:shrink-0">
-                        {isPast ? (
+                        {attendanceOpen ? (
                           <div className="flex flex-col items-stretch gap-2 sm:items-end">
                             <AttendanceButtons
                               competitionId={competition.id}
@@ -646,7 +652,7 @@ export default async function ManageEventPage({
           <div className="mt-8">
             <EventPulseStrip
               pulse={pulse}
-              isPast={isPast}
+              isPast={attendanceOpen}
               hasRegUrl={Boolean(competition.reg_url)}
             />
           </div>

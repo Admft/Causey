@@ -12,12 +12,14 @@ import {
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
+import { COMPETITION_TYPES } from "@/lib/competition-types";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
 import {
   OPEN_COMPETITIONS_LABEL,
   orgCompetitionsHref,
   organizationKindLabel,
 } from "@/lib/portal-copy";
+import { CompetitionCategorySchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "Organization reporting",
@@ -26,29 +28,39 @@ export const metadata: Metadata = {
 
 export default async function OrganizationReportsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ category?: string }>;
 }) {
   const { slug } = await params;
+  const filters = await searchParams;
   const user = await getSessionUser();
   if (!user) redirect(`/login?next=/orgs/${slug}/reports`);
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
 
-  const [districtReportResult, attendance] = await Promise.all([
+  const categoryParse = CompetitionCategorySchema.safeParse(filters.category);
+  const reportCategory = categoryParse.success ? categoryParse.data : null;
+
+  const [districtReportResult, attendanceResult] = await Promise.all([
     view.isDistrictAdmin
-      ? getDistrictParticipationReport(view.org.id)
+      ? getDistrictParticipationReport(view.org.id, reportCategory)
       : Promise.resolve(null),
     view.org.type === "district"
-      ? Promise.resolve([])
+      ? Promise.resolve({ ok: true as const, data: [] })
       : getOrgSeasonAttendance(view.org.id),
   ]);
   const districtReport =
     districtReportResult?.ok === true ? districtReportResult.data : null;
   const districtRollup = districtReport?.schools ?? [];
   const districtHosted = districtReport?.districtHosted ?? null;
+  const hostedBySchool = districtReport?.hostedBySchool ?? [];
   const districtReportError = districtReportResult?.ok === false;
+  const attendanceError = attendanceResult.ok === false;
+  const attendance =
+    attendanceResult.ok === true ? attendanceResult.data : [];
   const orgKind = organizationKindLabel(view.org.type);
   const hasDistrictHostedActivity = districtHosted
     ? districtHosted.upcoming_tournaments +
@@ -59,6 +71,10 @@ export default async function OrganizationReportsPage({
     : false;
   const attended = attendance.filter((row) => row.status === "attended").length;
   const absent = attendance.filter((row) => row.status === "did_not_attend").length;
+  const exportQuery = reportCategory ? `?category=${reportCategory}` : "";
+  const retryReportHref = reportCategory
+    ? `/orgs/${view.org.slug}/reports?retry=report&category=${reportCategory}`
+    : `/orgs/${view.org.slug}/reports?retry=report`;
 
   return (
     <>
@@ -88,16 +104,57 @@ export default async function OrganizationReportsPage({
             ? "School-hosted and district-hosted activity stay separate. This aggregate view does not expose students’ private searches, saves, or browsing activity."
             : `Review who attended events this ${orgKind} hosted or marked as attending this calendar year, plus any place or award a coach recorded.`}
         </p>
+        {view.isDistrictAdmin ? (
+          <form
+            method="get"
+            className="mt-6 flex flex-wrap items-end gap-3"
+          >
+            <label>
+              <span className="text-xs font-semibold text-muted-strong">
+                Competition type
+              </span>
+              <select
+                name="category"
+                className="field mt-1 w-auto min-w-[12rem]"
+                defaultValue={reportCategory ?? ""}
+              >
+                <option value="">All types</option>
+                {COMPETITION_TYPES.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="submit"
+              className="rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+            >
+              Show
+            </button>
+            {reportCategory ? (
+              <Link
+                href={`/orgs/${view.org.slug}/reports`}
+                className="py-3 text-sm font-semibold text-muted-strong hover:text-brand-red"
+              >
+                All types
+              </Link>
+            ) : null}
+          </form>
+        ) : null}
+
         {view.isDistrictAdmin &&
         !districtReportError &&
-        (districtRollup.length || hasDistrictHostedActivity) ? (
+        (districtRollup.length ||
+          hasDistrictHostedActivity ||
+          hostedBySchool.length) ? (
           <a
-            href={`/orgs/${view.org.slug}/reports/export`}
+            href={`/orgs/${view.org.slug}/reports/export${exportQuery}`}
             className="mt-5 inline-flex rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
           >
             Download participation CSV
           </a>
-        ) : !view.isDistrictAdmin && attendance.length ? (
+        ) : !view.isDistrictAdmin && !attendanceError && attendance.length ? (
           <a
             href={`/orgs/${view.org.slug}/reports/export`}
             className="mt-5 inline-flex rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
@@ -112,7 +169,7 @@ export default async function OrganizationReportsPage({
               title="District reporting could not load"
               description="No totals or CSV were generated. Retry the report before using participation numbers."
               action={{
-                href: `/orgs/${view.org.slug}/reports?retry=report`,
+                href: retryReportHref,
                 label: "Retry district reporting",
               }}
             />
@@ -219,8 +276,80 @@ export default async function OrganizationReportsPage({
                   </table>
                 </section>
               )}
+
+              <section className="section-rule mt-8 pt-8">
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  District-hosted by participating school
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm text-muted">
+                  These counts use the school recorded when the student was
+                  invited. Students without a recorded school stay in the
+                  district-hosted totals above, not in this table.
+                </p>
+                {!hostedBySchool.length ? (
+                  <p className="mt-4 text-sm text-muted">
+                    No participating-school origin has been recorded on
+                    district-hosted invitations yet.
+                  </p>
+                ) : (
+                  <div className="mt-5 overflow-x-auto rounded-xl border border-line bg-surface">
+                    <table className="w-full min-w-[36rem] text-left text-sm">
+                      <caption className="sr-only">
+                        District-hosted invitations grouped by participating
+                        school of origin for {view.org.name}
+                      </caption>
+                      <thead className="border-b border-line bg-surface-soft text-xs text-muted-strong">
+                        <tr>
+                          <th scope="col" className="px-4 py-3 font-semibold">
+                            School
+                          </th>
+                          <th scope="col" className="px-4 py-3 font-semibold">
+                            Needs RSVP
+                          </th>
+                          <th scope="col" className="px-4 py-3 font-semibold">
+                            Going
+                          </th>
+                          <th scope="col" className="px-4 py-3 font-semibold">
+                            Attended
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line">
+                        {hostedBySchool.map((school) => (
+                          <tr key={school.school_id}>
+                            <th
+                              scope="row"
+                              className="px-4 py-3 font-semibold text-foreground"
+                            >
+                              {school.school_name}
+                            </th>
+                            <td className="px-4 py-3 text-muted-strong">
+                              {school.invitations_pending}
+                            </td>
+                            <td className="px-4 py-3 text-muted-strong">
+                              {school.going_count}
+                            </td>
+                            <td className="px-4 py-3 text-muted-strong">
+                              {school.attended_this_season}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
             </>
           )
+        ) : attendanceError ? (
+          <PortalErrorState
+            title="Season attendance could not load"
+            description="No totals or CSV were generated. Retry before using attendance numbers."
+            action={{
+              href: `/orgs/${view.org.slug}/reports?retry=attendance`,
+              label: "Retry season attendance",
+            }}
+          />
         ) : (
           <>
             <dl className="mt-8 grid gap-x-6 gap-y-3 sm:grid-cols-3">

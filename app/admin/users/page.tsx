@@ -19,12 +19,14 @@ export default async function AdminUsersPage() {
   const admin = await getPlatformAdminUser();
   if (!admin) return null;
   const isSuperAdmin = await isCurrentUserSuperAdmin();
-  const [{ users, total, error }, platformAdmins] = await Promise.all([
-    getAdminUsers({
-      limit: 50,
-    }),
-    countPlatformAdmins(),
-  ]);
+  const { users, total, error } = await getAdminUsers({
+    limit: 50,
+  });
+  const platformAdmins = error
+    ? null
+    : users.length === total
+      ? users.filter((user) => user.platform_admin).length
+      : await countPlatformAdmins();
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">

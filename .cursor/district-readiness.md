@@ -13,7 +13,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - Audiences: public / district-only / school-only / invite-only
 - Competitions inventory with host filter across district + schools
 - Family desk, alerts (in-app; email configured not volume-proven); linked parents get invite/change/result/announcement copies
-- Reports + CSV (school-hosted vs district-hosted split); scoped Activity
+- Reports + CSV (school-hosted vs district-hosted split, type filter, participating-school origin); scoped Activity
 - Announcements including district → child schools
 
 ## Need for a district that wants school tournaments (priority)
@@ -35,6 +35,9 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] District Schools settings (`#schools`) shows readiness next actions (same model as overview), not verification-only labels — 2026-08-31
 - [x] Family/Plan/Orgs/school history use School nouns for school students (not club-first leftovers) — 2026-09-01
 - [x] Unauthorized school hitchhike blocked; district rollup and invite-all no longer cartesian; invitation mail flushes without waiting for the reminder sweep (`0069`) — 2026-09-02
+- [x] Type-sliced district Reports/CSV plus participating-school origin on district-hosted invites (`0070`) — 2026-09-02
+- [x] CSV staff invites use one set-based RPC; restore-drill runbook names Pro backups, PITR-off, and verify steps without claiming a logged drill — 2026-09-02
+- [x] January story copy: shared `/orgs` workspace, chess working surface, other types hostable, not custom portals — 2026-09-02
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -67,10 +70,11 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Competitions inventory + host filter across district + schools | **works** | `getOrgCompetitionWorkspace`; `/orgs/[slug]/competitions` |
 | District-only audience hierarchy + public review | **works** | `0057` + `lib/competition-audience.ts`; publish/review panels |
 | Overview calendar of school + district events | **works** | `/orgs/[slug]` “Upcoming across the district” (prior tick) |
-| Reports + CSV school- vs district-hosted; fail closed | **works** | `/orgs/[slug]/reports` + `export/route.ts`; `0046` |
+| Reports + CSV school- vs district-hosted; fail closed | **works** | `/orgs/[slug]/reports` + `export/route.ts`; `0046`; type filter + origin-school table (`0070`); school attendance fails closed |
+| District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters`; `origin_org_id` stamped (`0070`) |
+| Claim-link provisioning | **works** | Email or copyable invite; CSV import via `create_org_invitations`; reissue |
 | Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
 | Family RSVP + organizer registration | **works** | `/family` (org-agnostic RSVP copy) |
-| District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters` |
 | School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
 | District-hosted reply follow-up by school | **works** | manage labels RSVP/attendance rows with connected-school name; sorts by school; going rows show organizer-registration status |
 | District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; action inserts per school + district copy (`0043` operator access) |

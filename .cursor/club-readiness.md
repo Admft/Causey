@@ -4,7 +4,7 @@ Living backlog for the club/team buyer. District hierarchy lives in `district-re
 
 ## Verdict (2026-08-26 source walk)
 
-A coach can run a **coordination club** once they are inside a club workspace: roster, travel + hosted events, RSVP, attendance, typed results, family follow-through, season CSV. First 20 minutes still feel like an organization product that also does clubs: create/nav say school/organization, and a filled roster is pushed to **host** before **find chess**. Causey is not a pairing engine, tab system, or dues product.
+A coach can run a **coordination club** once they are inside a club workspace: roster, travel + hosted events, RSVP, attendance, typed results, family follow-through, season CSV. `/clubs` → coach signup → create club/team (School is not self-serve). Causey is not a pairing engine, tab system, or dues product.
 
 ## Verdict (2026-08-24)
 
@@ -32,16 +32,17 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Event manage workspace: pulse + People/Listing + cover re-upload on edit — 2026-08-26
 - [x] Public `/clubs` and `/districts` pitches include a compact “All competition types” back control to the homepage chooser — 2026-08-26
 - [x] Event travel control says “Bring your roster,” uses one org chooser, and excludes rosterless district offices — 2026-08-26
-- [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Create a club account — 2026-08-24
+- [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Start a club → coach signup → `/orgs/new` — 2026-08-24 / create path 2026-09-02
 - [x] Season trophy board on overview (recorded places from Reports data) — 2026-08-24
 - [x] Mid-season overview no longer says “Create your first competition” — 2026-08-24
 - [x] Directory cards keep a source-logo cover when a listing has no photo, so mixed search rows stay aligned; club-hosted create still requires a cover — 2026-08-25
 - [ ] Recurring practice night as a first-class object (today: meeting note string only)
 - [ ] Email proven at club volume (wired, not load-tested)
-- [ ] First-session club mission after roster leads travel clubs to search, not only “Create your first competition”
-- [ ] Create-club chrome: Club/Team copy, no School type, no “organization” H1 after `/clubs`
-- [ ] Competitions tab lists travel events the club marked as attending (today: hosted-only)
-- [ ] Club/team People does not offer School administrator; host publish CTA says Club/Team, not school
+- [x] First-session club mission after roster leads travel clubs to search, not only “Create your first competition” — 2026-09-02
+- [x] Create-club chrome: Club/Team copy, no School type, no “organization” H1 after `/clubs` — 2026-09-02
+- [x] Competitions tab lists travel events the club marked as attending — 2026-09-02
+- [x] Club/team People does not offer School administrator — 2026-09-02
+- [x] Host publish CTA says Club/Team, not school — 2026-09-02
 - [ ] Owner/legal: public club directory, dues, messaging — see skill `out-of-scope.md`
 
 ## Out (do not build unless asked)
@@ -63,19 +64,19 @@ Persona: paid chess club / team owner, first-time coach. Source only (no live UI
 - Announcements, leave club, member-only website/meeting note
 
 ### Remaining P0/P1
-- Club owner · first session after roster · overview still “Create your first competition”; roster-ready CTA is Open competitions · chess clubs travel first · **P1 · M**
-- Club owner · `/orgs/new` + `/orgs` + AuthNav · “Start an organization”, School type, “Create a school or club”, nav “My organizations”/“Orgs” · `/clubs` promised a club · **P1 · S**
-- Club owner · People · role picker still offers School administrator; copy says “whole class” · **P1 · S**
-- Club owner · host publish · Club-only audience still submits as `school` and CTA “Publish to school” · **P1 · S**
-- Club owner · Competitions tab · hosted records only; travel lives on overview “We’re attending” and event pages · season walk splits · **P1 · M**
+- Club owner · first session after roster · overview still “Create your first competition”; roster-ready CTA is Open competitions · chess clubs travel first · **P1 · M · shipped 2026-09-02** (Find a tournament for the roster)
+- Club owner · `/orgs/new` + `/orgs` + AuthNav · “Start an organization”, School type, “Create a school or club”, nav “My organizations”/“Orgs” · `/clubs` promised a club · **P1 · S · shipped 2026-09-02**
+- Club owner · People · role picker still offers School administrator; copy says “whole class” · **P1 · S · shipped 2026-09-02**
+- Club owner · host publish · Club-only audience still submits as `school` and CTA “Publish to school” · **P1 · S · shipped 2026-09-02**
+- Club owner · Competitions tab · hosted records only; travel lives on overview “We’re attending” and event pages · season walk splits · **P1 · M · shipped 2026-09-02**
 - Club owner · email · outbox wired, not club-volume proven · **P1 · M**
 - Club owner · practice nights · meeting_note string only · **P1 · L** (later / out unless asked)
 
 ### P2
 - Event page coach panel title “Take your organization” (`OrgAttendancePanel`) — **shipped 2026-08-26** as roster-first copy and a single chooser; districts cannot be marked as traveling
-- Settings type helper cites “district hierarchy”; H1 “Organization controls”
-- Roster history eyebrow always “Club record” (teams included)
-- Result award placeholder “Broke to elims” (debate language on chess manage)
+- Settings type helper cites “district hierarchy”; H1 “Organization controls” — **shipped 2026-09-02** (Club/Team controls; club/team helper omits district hierarchy)
+- Roster history eyebrow always “Club record” (teams included) — **shipped 2026-09-01** (`membershipHistoryEyebrow`)
+- Result award placeholder “Broke to elims” (debate language on chess manage) — **shipped 2026-09-02** (`Trophy or honor`)
 
 ### Out (refused this pass)
 Pairings/boards/clocks, Tabroom ballots, dues/Stripe, coach–parent DMs, public club directory / public `/u/` pages, LMS/Lichess, standings import.

@@ -13,6 +13,7 @@ import {
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
 import { competitionTypeLabel } from "@/lib/competition-types";
+import { isCompetitionStarted } from "@/lib/competition-timing";
 import {
   getDistrictPilotReadiness,
   getOrgSeasonAttendance,
@@ -129,7 +130,7 @@ export default async function OrgPage({
     roster,
     districtReadinessResult,
     competitionWorkspace,
-    seasonAttendance,
+    seasonAttendanceResult,
     connectedSchools,
   ] =
     await Promise.all([
@@ -146,13 +147,16 @@ export default async function OrgPage({
       : Promise.resolve(null),
     isCoach && org.type !== "district"
       ? getOrgSeasonAttendance(org.id)
-      : Promise.resolve([]),
+      : Promise.resolve({ ok: true as const, data: [] }),
     org.type === "district" && canManageTournaments
       ? getChildSchoolsForDistrict(org.id)
       : Promise.resolve([]),
   ]);
   const events = competitionWorkspace?.events ?? directEvents;
   const drafts = competitionWorkspace?.drafts ?? directDrafts;
+  const seasonAttendanceError = seasonAttendanceResult.ok === false;
+  const seasonAttendance =
+    seasonAttendanceResult.ok === true ? seasonAttendanceResult.data : [];
   const myRsvpByCompetition = new Map(
     entrantRows.map((row) => [row.competition_id, row])
   );
@@ -193,6 +197,10 @@ export default async function OrgPage({
   const past = activeEvents.filter((e) => !isUpcomingEvent(e, today));
   const attendingUpcoming = attendedEvents.filter((e) =>
     isUpcomingEvent(e, today)
+  );
+  const attendingPast = attendedEvents.filter(
+    (event) =>
+      event.status === "published" && !isUpcomingEvent(event, today)
   );
 
   const sortedDrafts = [...drafts].sort((a, b) =>
@@ -380,6 +388,21 @@ export default async function OrgPage({
         },
       };
     }
+    if (seasonAttendanceError) {
+      return {
+        title: "Season attendance could not load",
+        description:
+          "Attendance and recorded results are unavailable until this report loads. Retry before treating the season as empty.",
+        action: {
+          href: `/orgs/${org.slug}?retry=attendance`,
+          label: "Retry season attendance",
+        },
+        secondary: {
+          href: `/orgs/${org.slug}/competitions`,
+          label: "Open competitions",
+        },
+      };
+    }
     const needsResult = seasonAttendance.find(
       (row) =>
         row.status === "attended" &&
@@ -408,6 +431,7 @@ export default async function OrgPage({
     }
     const seasonHasStarted =
       past.length > 0 ||
+      attendingPast.length > 0 ||
       seasonAttendance.length > 0 ||
       attendingUpcoming.length > 0;
     if (seasonHasStarted) {
@@ -415,6 +439,18 @@ export default async function OrgPage({
         title: "Season is underway",
         description:
           "No hosted event needs invites right now. Find a public tournament for the roster, or host the next competition here.",
+        action: { href: "/#search", label: SEARCH_TOURNAMENTS_LABEL },
+        secondary: {
+          href: `/orgs/${org.slug}/competitions/new`,
+          label: "Host a competition",
+        },
+      };
+    }
+    if (org.type === "club" || org.type === "team") {
+      return {
+        title: "Find a tournament for the roster",
+        description:
+          "Students are on the roster. Search public listings, mark this club as going, then invite from the event. Host here when you run your own tournament.",
         action: { href: "/#search", label: SEARCH_TOURNAMENTS_LABEL },
         secondary: {
           href: `/orgs/${org.slug}/competitions/new`,
@@ -1025,17 +1061,19 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {attendingUpcoming.length ? (
+        {attendingUpcoming.length || attendingPast.length ? (
           <section className="mt-10 border-t border-line pt-8">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
               We&rsquo;re attending
             </h2>
             <p className="mt-1 text-xs text-muted">
-              Public competitions this organization is going to.
+              Public competitions this organization is going to, including
+              past travel so attendance and results stay reachable.
             </p>
             <ul className="mt-2">
-              {attendingUpcoming.map((event) => {
+              {[...attendingUpcoming, ...attendingPast].map((event) => {
                 const rsvp = myRsvpByCompetition.get(event.id);
+                const started = isCompetitionStarted(event, today);
                 return (
                   <PortalListRow
                     key={event.id}
@@ -1046,9 +1084,13 @@ export default async function OrgPage({
                       event.end_date
                     )}${
                       event.city ? ` · ${event.city}, ${event.state}` : ""
-                    } · ${formatFeeCents(event.entry_fee_cents)}`}
+                    } · ${formatFeeCents(event.entry_fee_cents)}${
+                      started && !isUpcomingEvent(event, today)
+                        ? " · past travel"
+                        : ""
+                    }`}
                     trailing={
-                      rsvp ? (
+                      rsvp && isUpcomingEvent(event, today) ? (
                         <RsvpButtons
                           competitionId={event.id}
                           profileId={user.id}
@@ -1060,7 +1102,7 @@ export default async function OrgPage({
                           href={`/event/${event.slug}/manage`}
                           className="text-sm font-semibold text-brand-red hover:underline"
                         >
-                          Manage event
+                          {started ? "Manage attendance" : "Manage event"}
                         </Link>
                       ) : null
                     }
@@ -1087,6 +1129,16 @@ export default async function OrgPage({
                     category: event.category,
                     customCategoryName: event.custom_category_name,
                   })} · ${formatDateRange(event.start_date, event.end_date)}`}
+                  trailing={
+                    canManageTournaments && event.status !== "archived" ? (
+                      <Link
+                        href={`/event/${event.slug}/manage`}
+                        className="text-sm font-semibold text-brand-red hover:underline"
+                      >
+                        Manage attendance
+                      </Link>
+                    ) : null
+                  }
                 />
               ))}
             </ul>

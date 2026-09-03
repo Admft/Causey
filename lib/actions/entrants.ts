@@ -88,7 +88,8 @@ export async function setRsvp(input: {
 export async function inviteEntrants(
   competitionId: string,
   eventSlug: string,
-  profileIds: string[]
+  profileIds: string[],
+  originByProfile?: Record<string, string>
 ): Promise<ActionResult<{ invited: number }>> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: "Sign in to continue." };
@@ -96,6 +97,22 @@ export async function inviteEntrants(
   if (!uniqueProfileIds.length) return { ok: true, invited: 0 };
 
   const supabase = await createServerSupabaseClient();
+  const { data: hostRow } = await supabase
+    .from("competitions")
+    .select("org_id, organizations!competitions_org_id_fkey(type)")
+    .eq("id", competitionId)
+    .maybeSingle();
+  const hostRelation = hostRow?.organizations as
+    | { type?: string }
+    | { type?: string }[]
+    | null
+    | undefined;
+  const hostType = Array.isArray(hostRelation)
+    ? hostRelation[0]?.type
+    : hostRelation?.type;
+  const defaultOrigin =
+    hostType && hostType !== "district" ? (hostRow?.org_id ?? null) : null;
+
   const invitedIds: string[] = [];
   const INVITE_CHUNK = 200;
   for (let start = 0; start < uniqueProfileIds.length; start += INVITE_CHUNK) {
@@ -108,6 +125,7 @@ export async function inviteEntrants(
           profile_id: profileId,
           status: "invited",
           invited_by: user.id,
+          origin_org_id: originByProfile?.[profileId] ?? defaultOrigin,
         })),
         { onConflict: "competition_id,profile_id", ignoreDuplicates: true }
       )
@@ -212,7 +230,7 @@ export async function inviteGroup(
   const supabase = await createServerSupabaseClient();
   const { data: members, error } = await supabase
     .from("org_group_members")
-    .select("profile_id")
+    .select("profile_id, org_groups(org_id)")
     .eq("group_id", groupId);
   if (error) {
     return {
@@ -221,11 +239,19 @@ export async function inviteGroup(
     };
   }
 
-  return inviteEntrants(
-    competitionId,
-    eventSlug,
-    (members ?? []).map((m) => m.profile_id)
-  );
+  const originByProfile: Record<string, string> = {};
+  const profileIds: string[] = [];
+  for (const row of members ?? []) {
+    const profileId = row.profile_id as string;
+    profileIds.push(profileId);
+    const group = row.org_groups as { org_id?: string } | { org_id?: string }[] | null;
+    const orgId = Array.isArray(group) ? group[0]?.org_id : group?.org_id;
+    if (orgId && !originByProfile[profileId]) {
+      originByProfile[profileId] = orgId;
+    }
+  }
+
+  return inviteEntrants(competitionId, eventSlug, profileIds, originByProfile);
 }
 
 export async function inviteConnectedSchoolRosters(
@@ -296,13 +322,16 @@ export async function inviteConnectedSchoolRosters(
       ),
     };
   }
-  const profileIds = [
-    ...new Set(
-      ((profileRows ?? []) as { profile_id: string }[]).map(
-        (row) => row.profile_id
-      )
-    ),
-  ];
+  const originByProfile: Record<string, string> = {};
+  const profileIds: string[] = [];
+  for (const row of (profileRows ?? []) as {
+    profile_id: string;
+    school_id?: string;
+  }[]) {
+    if (originByProfile[row.profile_id]) continue;
+    profileIds.push(row.profile_id);
+    if (row.school_id) originByProfile[row.profile_id] = row.school_id;
+  }
   if (!profileIds.length) {
     return {
       ok: false,
@@ -311,7 +340,7 @@ export async function inviteConnectedSchoolRosters(
     };
   }
 
-  return inviteEntrants(competitionId, eventSlug, profileIds);
+  return inviteEntrants(competitionId, eventSlug, profileIds, originByProfile);
 }
 
 export async function removeEntrant(

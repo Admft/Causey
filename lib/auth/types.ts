@@ -36,7 +36,7 @@ export const ROLE_OPTIONS: {
     label: "Coach / Organizer",
     accountLabel: "coach or organizer",
     description:
-      "Start a school or club roster, invite students, and publish tournaments.",
+      "Start a club or team, invite students with a join code, and publish tournaments.",
   },
   {
     value: "parent",

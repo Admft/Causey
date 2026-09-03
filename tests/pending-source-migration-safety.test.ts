@@ -290,14 +290,12 @@ describe("pending source migration batch safety", () => {
     const adminValues = ADMIN_SCRAPER_OPTIONS.map((option) => option.value);
     for (const source of categorySources.filter(
       (source) =>
-        source !== "tabroom_scrape" &&
-        source !== "vex_events_scrape" &&
-        source !== "doe_science_bowl_scrape"
+        source !== "tabroom_scrape" && source !== "vex_events_scrape"
     )) {
       expect(adminValues).toContain(source);
     }
     expect(adminValues).not.toContain("vex_events_scrape");
-    expect(adminValues).not.toContain("doe_science_bowl_scrape");
+    expect(adminValues).toContain("doe_science_bowl_scrape");
 
     const preflight = readFileSync(
       resolve(process.cwd(), "scripts", "check-scrape-ready.ts"),

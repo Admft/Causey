@@ -73,9 +73,9 @@ describe("two-district tenant isolation", () => {
     );
     expect(exportRoute).toContain("if (view.org.type !== \"district\")");
     expect(exportRoute).toContain("if (!view.isDistrictAdmin)");
-    expect(exportRoute).toContain(
-      "getDistrictParticipationReport(view.org.id)"
-    );
+     expect(exportRoute).toContain(
+       "getDistrictParticipationReport(view.org.id, reportCategory)"
+     );
     expect(exportRoute).toContain('"Cache-Control": "private, no-store"');
   });
 

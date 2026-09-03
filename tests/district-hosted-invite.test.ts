@@ -20,6 +20,8 @@ describe("district-hosted multi-school invite", () => {
     expect(action).toContain("export async function inviteConnectedSchoolRosters");
     expect(action).toContain('host?.type !== "district"');
     expect(action).toContain("list_connected_school_student_ids");
+    expect(action).toContain("origin_org_id");
+    expect(action).toContain("school_id");
     expect(action).not.toContain("getOrgRoster");
     expect(form).toContain("inviteConnectedSchoolRosters");
     expect(form).toContain("Invite every connected school");
@@ -44,8 +46,9 @@ describe("district-hosted multi-school invite", () => {
     // Single-host manage still omits school labels unless isDistrictHost.
     expect(manage).toContain("schoolNameByProfileId.get(row.profile_id)");
     expect(manage).toContain("isDistrictHost");
+    expect(manage).toContain("origin_org_name");
     expect(manage).toMatch(
-      /orgName:\s*isDistrictHost[\s\S]*\? schoolNameByProfileId\.get\(row\.profile_id\) \?\? null[\s\S]*: null/
+      /orgName:\s*isDistrictHost[\s\S]*\? row\.origin_org_name\?\.trim\(\)[\s\S]*: null/
     );
   });
 

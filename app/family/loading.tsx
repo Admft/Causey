@@ -17,7 +17,7 @@ export default function FamilyLoading() {
           <div className="skeleton mt-5 h-11 w-36" />
         </section>
 
-        {/* Matches a child section: name, club line, group label, event rows. */}
+        {/* Matches a child section: name, membership line, group label, event rows. */}
         <section className="section-rule mt-10 pt-8">
           <div className="skeleton h-7 w-44" />
           <div className="skeleton mt-2 h-4 w-64 max-w-full" />

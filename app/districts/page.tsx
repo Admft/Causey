@@ -93,12 +93,14 @@ export default function DistrictsPage() {
                 Chess for a whole district, set up with you.
               </h1>
               <p className="mt-4 max-w-prose text-md text-muted">
-                Anyone can search tournaments on Causey for free. A district pilot
-                adds what a school program actually runs on: getting students and
-                staff onto the right teams, telling families about each event,
-                recording who attended, and giving the district participation
-                numbers. Setup is hands-on today, and live email verification and
-                legal review come before any student rollout.
+                Anyone can search tournaments on Causey for free. A district
+                pilot uses the same organization workspace as schools — not a custom portal.
+                Chess is the working surface; other types can be hosted. The
+                pilot still adds what a school program actually runs on: getting
+                students and staff onto the right teams, telling families about
+                each event, recording who attended, and giving the district
+                participation numbers. Setup is hands-on today, and live email
+                verification and legal review come before any student rollout.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-4">
                 <a
