@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- P2 club/district hardening (`0070`): travel inventory, day-of attendance, type-sliced reports + origin school, set-based CSV invites, January `/orgs` story — 2026-09-02
+- School-student chrome on Account profile, homepage My tournaments, search org-going filter, and event teammate heading — 2026-09-03
 
 ## Last tick
 
+- 2026-09-03 — District school-student chrome: grade help on Account, My tournaments empty copy, search “My school is going,” event “Going from your school” derive nouns from org memberships.
 - 2026-09-02 — P2: Competitions lists past travel; attendance opens on start date; district Reports filter by type and show participating-school origin; CSV invites are one RPC; `/districts` names the shared org workspace (chess working surface, other types hostable). Apply `0070` on hosted Supabase.
 - 2026-09-02 — Club owner · first session: Start a club (not a fourth account type) → coach signup copy → `/orgs/new` club/team only; empty `/orgs` and nav say clubs; People hides School administrator on club/team.
 - 2026-08-31 — District Schools settings (`#schools`): same pilot readiness next actions as the command center (invite/handoff/provision), fail-closed retry — not verification-only labels.

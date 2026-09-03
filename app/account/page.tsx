@@ -160,7 +160,10 @@ export default async function AccountPage() {
         .
       </p>
       <div className="mt-6">
-        <ProfileEditor profile={profile} />
+        <ProfileEditor
+          profile={profile}
+          orgTypes={myOrgs.map((row) => row.org.type)}
+        />
       </div>
       <p className="mt-4">
         <Link

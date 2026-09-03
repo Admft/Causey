@@ -1,7 +1,10 @@
 import type { OrganizationType } from "@/lib/auth/orgs";
 import type { AccountRole } from "@/lib/auth/types";
 import { formatDateRange } from "@/lib/format";
-import { organizationKindLabel } from "@/lib/portal-copy";
+import {
+  organizationKindLabel,
+  type OrganizationNavAccess,
+} from "@/lib/portal-copy";
 
 export const HOME_MY_TOURNAMENTS_LIMIT = 5;
 export const HOME_MY_TOURNAMENTS_PATH = "/?view=mine";
@@ -72,7 +75,7 @@ export function eventListMeta(
 
 export function homeMyTournamentsEmptyCopy(
   role: AccountRole,
-  hasDistrictAccess: boolean
+  access: OrganizationNavAccess = {}
 ): { title: string; description: string } {
   if (role === "parent") {
     return {
@@ -81,7 +84,7 @@ export function homeMyTournamentsEmptyCopy(
         "Invitations and Going RSVPs show here after a coach adds a student to an event.",
     };
   }
-  if (hasDistrictAccess) {
+  if (access.hasDistrictAccess) {
     return {
       title: "No upcoming school or district competitions",
       description:
@@ -95,10 +98,24 @@ export function homeMyTournamentsEmptyCopy(
         "Hosted competitions and events your club or team is traveling to appear here.",
     };
   }
+  if (access.hasSchoolAccess && !access.hasClubAccess) {
+    return {
+      title: "No upcoming school RSVPs or events yet",
+      description:
+        "Events you marked Going, and tournaments your school hosts or travels to, show up here.",
+    };
+  }
+  if (access.hasClubAccess && !access.hasSchoolAccess) {
+    return {
+      title: "No upcoming club RSVPs or org events yet",
+      description:
+        "Events you marked Going, and tournaments your club or team hosts or travels to, show up here.",
+    };
+  }
   return {
-    title: "No upcoming club RSVPs or org events yet",
+    title: "No upcoming RSVPs or org events yet",
     description:
-      "Events you marked Going, and tournaments your club or team hosts or travels to, show up here.",
+      "Events you marked Going, and tournaments your schools or clubs host or travel to, show up here.",
   };
 }
 
