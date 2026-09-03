@@ -151,7 +151,9 @@ async function enqueueAttentionEmails(
 ): Promise<number> {
   const service = getServiceRoleClient();
   if (!service) return 0;
-  const { data, error } = await service.rpc("get_email_reminder_candidates");
+  const { data, error } = await service.rpc("get_email_reminder_candidates", {
+    p_limit: 500,
+  });
   if (error) throw new Error(`Could not load reminder candidates: ${error.message}`);
 
   const grouped = new Map<string, ReminderCandidate[]>();
@@ -217,7 +219,9 @@ async function enqueueStoredNotificationEmails(
 ): Promise<number> {
   const service = getServiceRoleClient();
   if (!service) return 0;
-  const { data, error } = await service.rpc("get_pending_notification_emails");
+  const { data, error } = await service.rpc("get_pending_notification_emails", {
+    p_limit: 200,
+  });
   if (error) {
     throw new Error(`Could not load notification emails: ${error.message}`);
   }

@@ -8,6 +8,7 @@ const SCRIPTS = [
   "ingestion/scrape-uil-theatre.ts",
   "ingestion/scrape-uil-speech-debate.ts",
   "ingestion/scrape-purple-comet.ts",
+  "ingestion/scrape-doe-science-bowl.ts",
   "ingestion/scrape-uil-music-marching.ts",
   "ingestion/scrape-txsef.ts",
 ] as const;
@@ -29,7 +30,7 @@ function run(script: string): Promise<void> {
 async function main() {
   for (const script of SCRIPTS) await run(script);
   console.log(
-    "Skipped VEX Events and DOE National Science Bowl because ordinary public requests currently return HTTP 403. Their direct adapters also fail closed; never bypass source controls."
+    "Skipped VEX Events because ordinary public requests currently return HTTP 403 (Cloudflare challenge). The direct adapter also fails closed; never bypass source controls."
   );
   console.log(
     "Skipped Tabroom because NSDA Terms prohibit automated access and commercial/public reuse. Run scrape:tabroom only after obtaining written NSDA permission and setting TABROOM_WRITTEN_PERMISSION=1."

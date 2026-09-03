@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { PageBackLink } from "@/components/PageBackLink";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { START_A_CLUB_LABEL, START_CLUB_SIGNUP_HREF } from "@/lib/portal-copy";
 
 export const metadata: Metadata = {
   title: "Clubs and teams",
@@ -148,8 +149,8 @@ export default function ClubsPage() {
                 and not a district.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-4">
-                <Link href="/signup?role=coach" className="cta-enabled inline-flex">
-                  Create a club account
+                <Link href={START_CLUB_SIGNUP_HREF} className="cta-enabled inline-flex">
+                  {START_A_CLUB_LABEL}
                 </Link>
                 <Link
                   href="/#search"

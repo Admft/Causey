@@ -39,6 +39,8 @@ describe("product email delivery", () => {
     expect(cronRoute).toContain("timingSafeEqual");
     expect(cronRoute).toContain("process.env.CRON_SECRET");
     expect(cronRoute).toContain("while (Date.now() < deadline)");
+    expect(cronRoute).toContain("280_000");
+    expect(cronRoute).toContain("remaining");
     expect(vercelConfig).toContain("/api/cron/product-email");
   });
 });

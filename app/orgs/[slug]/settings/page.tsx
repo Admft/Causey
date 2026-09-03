@@ -75,12 +75,16 @@ export default async function OrganizationSettingsPage({
             ? "District controls"
             : view.org.type === "school"
               ? "School controls"
-              : "Organization controls"}
+              : view.org.type === "team"
+                ? "Team controls"
+                : "Club controls"}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           {view.org.type === "district"
             ? "Keep the district record accurate, provision school workspaces, and make ownership changes deliberately."
-            : "Keep the organization record accurate and make ownership changes deliberately. Coaches manage tournaments; administrators manage the organization itself."}
+            : view.org.type === "school"
+              ? "Keep the school record accurate and make ownership changes deliberately. Coaches manage tournaments; administrators manage the school itself."
+              : "Keep the club or team record accurate and make ownership changes deliberately. Coaches manage tournaments; administrators manage the workspace itself."}
         </p>
         {isOwnershipSetup ? (
           <section className="mt-8 border-l-2 border-brand-red pl-5">

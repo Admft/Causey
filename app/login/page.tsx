@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AlreadySignedInSignup } from "@/components/AlreadySignedInSignup";
 import { LoginForm } from "@/components/LoginForm";
 import { PageBackLink } from "@/components/PageBackLink";
+import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { sanitizeNextPath } from "@/lib/auth/next-path";
 import {
   accountRoleForOrgInvitationRole,
@@ -23,6 +25,13 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const next = sanitizeNextPath(params.next);
+  const user = await getSessionUser();
+  if (user && !isClaimNextPath(next) && !isJoinCodeNextPath(next)) {
+    const profile = await getCurrentProfile();
+    if (profile) {
+      return <AlreadySignedInSignup role={profile.role} surface="signin" />;
+    }
+  }
   const isJoiningOrganization = isJoinCodeNextPath(next);
   const claimToken = extractClaimToken(next);
   const invitation = claimToken

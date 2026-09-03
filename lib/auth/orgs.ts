@@ -118,6 +118,8 @@ export type AttendanceRow = {
   section_name: string | null;
   placement: number | null;
   award_label: string | null;
+  origin_org_id: string | null;
+  origin_org_name: string | null;
 };
 
 /** Return shape of get_org_member_competition_history. */
@@ -140,6 +142,11 @@ export const ORG_TYPE_OPTIONS: { value: OrganizationType; label: string }[] = [
   { value: "team", label: "Team" },
   { value: "district", label: "District" },
 ];
+
+/** Coaches create clubs/teams themselves. Schools and districts are provisioned. */
+export const COACH_SELF_SERVE_ORG_TYPES = ORG_TYPE_OPTIONS.filter(
+  (option) => option.value === "club" || option.value === "team"
+);
 
 export const ORG_ROLE_LABELS: Record<OrgMemberRole, string> = {
   student: "Student",

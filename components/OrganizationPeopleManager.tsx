@@ -9,7 +9,11 @@ import {
   reissueOrganizationInvitation,
   type BulkInviteClaimRow,
 } from "@/lib/actions/district";
-import { ORG_ROLE_LABELS, type OrgMemberRole } from "@/lib/auth/orgs";
+import {
+  ORG_ROLE_LABELS,
+  type OrgMemberRole,
+} from "@/lib/auth/orgs";
+import { invitationRoleFitsOrganization } from "@/lib/invitations/claim-path";
 import type { OrgInvitationRow } from "@/lib/data/district";
 
 const INVITABLE_ROLES: OrgMemberRole[] = [
@@ -242,9 +246,7 @@ export function OrganizationPeopleManager({
   }
 
   const availableRoles = INVITABLE_ROLES.filter((candidate) =>
-    orgType === "district"
-      ? candidate !== "student" && candidate !== "school_admin"
-      : candidate !== "district_admin"
+    invitationRoleFitsOrganization(orgType, candidate)
   );
 
   return (
@@ -258,7 +260,7 @@ export function OrganizationPeopleManager({
             "District invitations are for district staff. Create or open a school workspace for school administrators and students."
           ) : (
             <>
-              Best for staff and one-off students. For a whole class,{" "}
+              Best for staff and one-off students. For a whole roster,{" "}
               <Link
                 href={rosterHref ?? `/orgs/${orgSlug}/roster`}
                 className="font-semibold text-brand-red hover:underline"

@@ -137,8 +137,9 @@ export function OrganizationSettingsForm({
               {TYPE_LABELS[org.type]}
             </p>
             <p className="mt-1 text-xs text-muted">
-              Organization type is fixed after creation because it controls
-              access and district hierarchy.
+              {org.type === "club" || org.type === "team"
+                ? "Type is fixed after creation because it controls who can join and which staff roles you can invite."
+                : "Organization type is fixed after creation because it controls access and district hierarchy."}
             </p>
           </div>
           <label>

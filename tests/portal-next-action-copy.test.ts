@@ -55,15 +55,25 @@ const orgOverview = readFileSync(
 
 describe("portal next-action vocabulary", () => {
   it("keeps AuthNav labels aligned with organizationNavLabels", () => {
-    expect(organizationNavLabels().label).toBe("My organizations");
-    expect(organizationNavLabels().shortLabel).toBe("Orgs");
+    expect(organizationNavLabels().label).toBe("My clubs");
+    expect(organizationNavLabels().shortLabel).toBe("Clubs");
     expect(organizationNavLabels({ hasDistrictAccess: true }).label).toBe(
       "Districts & schools"
     );
     expect(organizationNavLabels({ hasDistrictAccess: true }).shortLabel).toBe(
       "District"
     );
+    expect(
+      organizationNavLabels({ hasSchoolAccess: true }).label
+    ).toBe("My schools");
+    expect(
+      organizationNavLabels({
+        hasSchoolAccess: true,
+        hasClubAccess: true,
+      }).label
+    ).toBe("My organizations");
     expect(authNav).toContain("organizationNavLabels");
+    expect(authNav).toContain("hasClubAccess");
   });
 
   it("names role workspace CTAs the same way as the header", () => {
@@ -77,7 +87,7 @@ describe("portal next-action vocabulary", () => {
     });
     expect(workspaceOpenCta("coach")).toEqual({
       href: "/orgs",
-      label: "Open my organizations",
+      label: "Open my clubs",
     });
     expect(workspaceOpenCta("coach", { hasDistrictAccess: true })).toEqual({
       href: "/orgs",
@@ -87,7 +97,7 @@ describe("portal next-action vocabulary", () => {
       .toEqual({ href: "/orgs", label: OPEN_MY_ORGANIZATIONS_LABEL });
     expect(
       accountOrganizationsEmptyCta({ role: "coach", canCreate: true })
-    ).toEqual({ href: "/orgs/new", label: "Create an organization" });
+    ).toEqual({ href: "/orgs/new", label: "Create a club" });
     expect(orgCompetitionsHref("lincoln")).toBe("/orgs/lincoln/competitions");
     expect(OPEN_COMPETITIONS_LABEL).toBe("Open competitions");
     expect(SEARCH_TOURNAMENTS_LABEL).toBe("Search tournaments");
@@ -118,6 +128,7 @@ describe("portal next-action vocabulary", () => {
     expect(accountPage).toContain("No parent links yet");
     expect(notificationsPage).toContain("workspaceOpenCta");
     expect(mePage).toContain('label: "Open my organizations"');
+    expect(mePage).toContain('label: "Open my clubs"');
     expect(mePage).not.toContain('label: "Manage organizations"');
   });
 

@@ -614,7 +614,7 @@ export function ResultForm({
             value={award}
             disabled={isPending}
             maxLength={80}
-            placeholder="Broke to elims"
+            placeholder="Trophy or honor"
             onChange={(event) => setAward(event.target.value)}
           />
         </label>

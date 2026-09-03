@@ -10,6 +10,7 @@ export type CompetitionCommentRow = {
   authorLabel: string;
   createdAt: string;
   userId: string;
+  hiddenAt: string | null;
 };
 
 export async function listCompetitionComments(
@@ -19,7 +20,7 @@ export async function listCompetitionComments(
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("competition_comments")
-    .select("id, body, author_label, created_at, user_id")
+    .select("id, body, author_label, created_at, user_id, hidden_at")
     .eq("competition_id", competitionId)
     .order("created_at", { ascending: false })
     .limit(COMPETITION_COMMENTS_PAGE_LIMIT);
@@ -30,5 +31,6 @@ export async function listCompetitionComments(
     authorLabel: row.author_label as string,
     createdAt: row.created_at as string,
     userId: row.user_id as string,
+    hiddenAt: (row.hidden_at as string | null) ?? null,
   }));
 }

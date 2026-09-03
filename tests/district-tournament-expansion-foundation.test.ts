@@ -144,9 +144,10 @@ describe("district tournament expansion foundation", () => {
     expect(() =>
       assertSourceAutomationAllowed("vex_events_scrape", {})
     ).toThrow(/blocked/i);
-    expect(() =>
-      assertSourceAutomationAllowed("doe_science_bowl_scrape", {})
-    ).toThrow(/blocked/i);
+    expect(
+      assertSourceAutomationAllowed("doe_science_bowl_scrape", {}).governance
+        .automationState
+    ).toBe("enabled");
     expect(() =>
       assertSourceAutomationAllowed("txsef_scrape", {
         SCRAPE_DISABLE_TXSEF_SCRAPE: "1",
@@ -232,12 +233,13 @@ describe("district tournament expansion foundation", () => {
     );
     expect(workflow).not.toContain("- tabroom_scrape");
     expect(workflow).not.toContain("- vex_events_scrape");
-    expect(workflow).not.toContain("- doe_science_bowl_scrape");
-    expect(workflow).not.toContain("doe_science_bowl_scrape)");
+    expect(workflow).toContain("- doe_science_bowl_scrape");
+    expect(workflow).toContain("doe_science_bowl_scrape) npm run scrape:doe-science-bowl");
     expect(workflow).toContain("IFS=',' read -ra SELECTED_SOURCES");
     expect(workflow).toContain("PURGE_DRY_RUN=1 npm run purge:stale");
 
     const discovery = repositoryFile("ingestion/scrape-discovery.ts");
-    expect(discovery).not.toContain("ingestion/scrape-doe-science-bowl.ts");
+    expect(discovery).toContain("ingestion/scrape-doe-science-bowl.ts");
+    expect(discovery).not.toContain("ingestion/scrape-vex-events.ts");
   });
 });

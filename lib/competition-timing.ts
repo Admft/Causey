@@ -43,6 +43,14 @@ export function isCompetitionEnded(
   return effectiveEndDate(competition) < asOf;
 }
 
+/** True from the first calendar day of the event (day-of attendance). */
+export function isCompetitionStarted(
+  competition: { start_date: string },
+  asOf: string = todayIsoDate()
+): boolean {
+  return competition.start_date <= asOf;
+}
+
 /** True when the event ended more than one calendar year before asOf. */
 export function isPastRetention(
   competition: { start_date: string; end_date: string | null },

@@ -123,9 +123,9 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window and the Texas state science fair.",
+      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window, DOE National Science Bowl national dates, and the Texas state science fair.",
     emptyDescription:
-      "Published STEM coverage is currently limited to Purple Comet and the Texas state science fair. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
+      "Published STEM coverage is currently limited to Purple Comet, DOE National Science Bowl national dates, and the Texas state science fair. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
     searchPlaceholder: "Try mathematics, biology, robotics, or a competition name",
     facetLabel: "Discipline",
     facets: [
@@ -165,6 +165,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         note: "Official online team mathematics dates for middle- and high-school students. Causey retains factual event and eligibility metadata only, never contest problems, participant data, or login content.",
       },
       {
+        name: "U.S. Department of Energy National Science Bowl",
+        href: "https://science.osti.gov/wdts/nsb/Key-Dates",
+        status: "Active for published national-event dates",
+        note: "Official Office of Science national dates in Washington, D.C. Regional qualifying bowls, registration portals, and fees are not indexed. Causey uses no DOE or National Science Bowl logo.",
+      },
+      {
         name: "Texas Science & Engineering Fair",
         href: "https://txsef.tamu.edu/",
         status: "Active for the published 2027 state-fair dates",
@@ -173,16 +179,10 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     ],
     referenceSources: [
       {
-        name: "U.S. Department of Energy National Science Bowl",
-        href: "https://science.osti.gov/wdts/nsb/Key-Dates",
-        status: "Reference only: ordinary public requests returned HTTP 403",
-        note: "The retained adapter fails closed and aggregate/admin workflows exclude it. Causey will not bypass source controls; previously reviewed public-domain terms do not override the current access block.",
-      },
-      {
         name: "VEX Events",
         href: "https://events.vex.com/robot-competitions/vex-robotics-competition",
-        status: "Not indexed: repository fetch received HTTP 403 on August 12, 2026",
-        note: "Official public VEX event pages remain link-only unless normal public access succeeds without a bypass.",
+        status: "Not indexed: ordinary public requests still return HTTP 403",
+        note: "The public directory currently serves a Cloudflare challenge. Causey will not bypass that; official VEX pages remain link-only until ordinary access succeeds.",
       },
       {
         name: "FIRST",

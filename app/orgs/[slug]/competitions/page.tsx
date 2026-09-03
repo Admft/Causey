@@ -6,6 +6,7 @@ import { PortalEmptyState, PortalListRow } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import { competitionTypeLabel } from "@/lib/competition-types";
 import {
+  getOrgAttendedEvents,
   getOrgBySlugForViewer,
   getOrgCompetitionWorkspace,
   isSupabaseConfigured,
@@ -62,7 +63,12 @@ export default async function OrgCompetitionsPage({
 
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
-  const workspace = await getOrgCompetitionWorkspace(view.org);
+  const [workspace, attendedEvents] = await Promise.all([
+    getOrgCompetitionWorkspace(view.org),
+    view.org.type === "district"
+      ? Promise.resolve([])
+      : getOrgAttendedEvents(view.org.id),
+  ]);
   const today = new Date().toISOString().slice(0, 10);
   const category = CompetitionCategorySchema.safeParse(filters.category);
   const status =
@@ -75,19 +81,28 @@ export default async function OrgCompetitionsPage({
       ? filters.timing
       : "all";
 
-  const events = workspace.events.filter((event) => {
+  function matchesEventFilters(
+    event: (typeof workspace.events)[number],
+    options: { ignoreHost?: boolean; ignoreStatus?: boolean } = {}
+  ) {
     if (category.success && event.category !== category.data) return false;
-    if (status && event.status !== status) return false;
-    if (filters.host && event.host?.id !== filters.host) return false;
-    if (
-      timing === "upcoming" &&
-      !isUpcomingEvent(event, today)
-    ) {
+    if (!options.ignoreStatus && status && event.status !== status) return false;
+    if (!options.ignoreHost && filters.host && event.host?.id !== filters.host) {
       return false;
     }
+    if (timing === "upcoming" && !isUpcomingEvent(event, today)) return false;
     if (timing === "past" && isUpcomingEvent(event, today)) return false;
     return true;
-  });
+  }
+
+  const hostedIds = new Set(workspace.events.map((event) => event.id));
+  const events = workspace.events.filter((event) => matchesEventFilters(event));
+  const travelEvents = attendedEvents.filter(
+    (event) =>
+      event.status === "published" &&
+      !hostedIds.has(event.id) &&
+      matchesEventFilters(event, { ignoreHost: true, ignoreStatus: true })
+  );
   const hostById = new Map(workspace.hosts.map((host) => [host.id, host]));
   const drafts = workspace.drafts.filter((draft) => {
     if (category.success && draft.data.category !== category.data) return false;
@@ -127,7 +142,7 @@ export default async function OrgCompetitionsPage({
             <p className="mt-2 max-w-2xl text-sm text-muted">
               {view.org.type === "district"
                 ? "Review competitions hosted by the district and each connected school."
-                : "Review every draft, published competition, returned listing, and past event hosted here."}
+                : "Review hosted drafts and events, plus public tournaments this organization marked as attending."}
             </p>
           </div>
           {view.canManageTournaments ? (
@@ -233,7 +248,7 @@ export default async function OrgCompetitionsPage({
           ) : null}
         </form>
 
-        {!drafts.length && !events.length ? (
+        {!drafts.length && !events.length && !travelEvents.length ? (
           <div className="mt-8">
             <PortalEmptyState
               title={hasFilters ? "No competitions match" : "No competitions yet"}
@@ -241,15 +256,22 @@ export default async function OrgCompetitionsPage({
                 hasFilters
                   ? "Clear a filter or choose a different type, status, or time."
                   : view.canManageTournaments
-                    ? "Create a competition, choose who can see it, then invite your roster."
+                    ? view.org.type === "club" || view.org.type === "team"
+                      ? "Find a public tournament for the roster, or host one here."
+                      : "Create a competition, choose who can see it, then invite your roster."
                     : "Competitions you can view will appear here after staff publish them."
               }
               action={
                 view.canManageTournaments && !hasFilters
-                  ? {
-                      href: `/orgs/${view.org.slug}/competitions/new`,
-                      label: "Create competition",
-                    }
+                  ? view.org.type === "club" || view.org.type === "team"
+                    ? {
+                        href: "/#search",
+                        label: "Search tournaments",
+                      }
+                    : {
+                        href: `/orgs/${view.org.slug}/competitions/new`,
+                        label: "Create competition",
+                      }
                   : hasFilters
                     ? {
                         href: `/orgs/${view.org.slug}/competitions`,
@@ -336,6 +358,56 @@ export default async function OrgCompetitionsPage({
                             {event.status === "rejected"
                               ? "Fix and resubmit"
                               : "Manage"}
+                          </Link>
+                        ) : null
+                      }
+                    />
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
+            {travelEvents.length ? (
+              <section
+                className={
+                  drafts.length || events.length ? "mt-10" : undefined
+                }
+              >
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+                  Travel
+                </h2>
+                <p className="mt-1 text-xs text-muted">
+                  Public competitions this organization marked as attending,
+                  including past events so attendance and results stay reachable.
+                </p>
+                <ul className="mt-2">
+                  {travelEvents.map((event) => (
+                    <PortalListRow
+                      key={event.id}
+                      href={`/event/${event.slug}`}
+                      title={event.name}
+                      meta={`${competitionTypeLabel({
+                        category: event.category,
+                        customCategoryName: event.custom_category_name,
+                      })}${
+                        event.host ? ` · hosted by ${event.host.name}` : ""
+                      } · ${formatDateRange(
+                        event.start_date,
+                        event.end_date
+                      )}${
+                        event.city && event.state
+                          ? ` · ${event.city}, ${event.state}`
+                          : event.participation_mode === "online"
+                            ? " · online"
+                            : ""
+                      } · ${formatFeeCents(event.entry_fee_cents)}`}
+                      trailing={
+                        view.canManageTournaments ? (
+                          <Link
+                            href={`/event/${event.slug}/manage`}
+                            className="text-sm font-semibold text-brand-red hover:underline"
+                          >
+                            Manage
                           </Link>
                         ) : null
                       }

@@ -34,6 +34,10 @@ describe("SQL radius search", () => {
     expect(radiusSql).toContain("to anon, authenticated");
     expect(supabaseSource).toContain("search_competitions_in_radius");
     expect(supabaseSource).not.toContain("radiusBoundingBox");
+    expect(supabaseSource).toContain("totalFromRpc");
+    expect(supabaseSource).not.toMatch(
+      /needsJsWindow\s*=\s*[\s\S]*preferredOrgIds\.size > 0/
+    );
   });
 
   it("caps public page size at 100 and drops load-all", () => {

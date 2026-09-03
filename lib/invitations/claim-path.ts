@@ -50,5 +50,8 @@ export function invitationRoleFitsOrganization(
   if (orgType === "district") {
     return role !== "student" && role !== "school_admin";
   }
+  if (orgType === "club" || orgType === "team") {
+    return role !== "district_admin" && role !== "school_admin";
+  }
   return role !== "district_admin";
 }

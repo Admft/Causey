@@ -16,8 +16,8 @@ import {
 } from "@/lib/rate-limit";
 
 const OrgCreateSchema = z.object({
-  name: z.string().trim().min(2, "Name your organization.").max(80),
-  type: z.enum(["school", "club", "team"]),
+  name: z.string().trim().min(2, "Name your club or team.").max(80),
+  type: z.enum(["club", "team"]),
   state: z
     .string()
     .trim()
@@ -40,12 +40,12 @@ export async function createOrg(input: {
   const profile = await getCurrentProfile();
   if (!profile) return { ok: false, error: "Sign in to continue." };
   if (!canCreateOrg(profile)) {
-    return { ok: false, error: "Only coach / organizer accounts can start an organization." };
+    return { ok: false, error: "Only coach accounts can start a club or team." };
   }
 
   const supabase = await createServerSupabaseClient();
   const base = slugifyName(parsed.data.name);
-  if (!base) return { ok: false, error: "Name your organization." };
+  if (!base) return { ok: false, error: "Name your club or team." };
 
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     const slug = attempt === 1 ? base : withSlugSuffix(base, attempt);
@@ -64,7 +64,7 @@ export async function createOrg(input: {
 
     if (error) {
       if (error.code === "23505") continue; // slug taken — retry with suffix
-      return { ok: false, error: "Could not create the organization. Try again." };
+      return { ok: false, error: "Could not create the club. Try again." };
     }
 
     const { data: membership, error: memberError } = await supabase
@@ -82,7 +82,7 @@ export async function createOrg(input: {
       return {
         ok: false,
         error:
-          "The organization was created, but your staff membership could not be set up. Contact support before retrying.",
+          "The club was created, but your staff membership could not be set up. Contact support before retrying.",
       };
     }
 

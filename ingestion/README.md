@@ -65,7 +65,7 @@ TABROOM_WRITTEN_PERMISSION=1 npm run scrape:tabroom # Only after written NSDA pe
 npm run scrape:vex              # Official public VEX Events directory
 npm run scrape:taea-vase        # Official public TAEA VASE dates
 npm run scrape:bennington-writers # Official Bennington cycle, when year-specific
-npm run scrape:doe-science-bowl # Fails closed while ordinary DOE requests return HTTP 403
+npm run scrape:doe-science-bowl # Official DOE National Science Bowl national dates
 npm run scrape:afsa-essay       # Official AFSA year-specific essay cycle
 npm run scrape:uil-theatre      # Official UIL theatre state-meet dates
 npm run scrape:uil-speech-debate # Official UIL invitationals with explicit speech/debate offerings
@@ -193,9 +193,9 @@ with a similar title. Series matching and pathway enrichment run only for
   absent from scheduled/admin dispatch and its live/upsert path permission
   gated, later runs cannot republish those rows while permission is absent.
 - **VEX Events (`vex_events_scrape`, STEM / `robotics`):** public HTML event
-  directory. No private API or token is used. The repository fetcher received
-  HTTP 403 on 2026-08-12, so live refresh remains blocked unless ordinary
-  public access succeeds later; no bypass is attempted.
+  directory. No private API or token is used. Ordinary public requests still
+  receive HTTP 403 from a Cloudflare challenge (re-checked 2026-09-02), so live
+  refresh remains blocked; no bypass is attempted.
 - **TAEA VASE (`taea_vase_scrape`, Arts / `visual_arts`):** official directors'
   dates and state overview. Rows without a specific date remain unstaged.
 - **Bennington Young Writers Awards (`bennington_writers_scrape`, Writing):**
@@ -209,9 +209,9 @@ with a similar title. Series matching and pathway enrichment run only for
   `robots.txt` allows both pages, and its Web Policies identify site materials
   as public domain while requesting source acknowledgment and prohibiting
   implied endorsement. Causey uses no DOE or National Science Bowl logo.
-  Automation is currently blocked because ordinary public requests return HTTP
-  403; the adapter remains fail-closed and is excluded from aggregate, admin,
-  and GitHub workflow runs until access and governance are reviewed again.
+  Ordinary public HTML for Key Dates and About returned HTTP 200 on
+  2026-09-02, so the adapter is enabled in aggregate discovery, admin dispatch,
+  and GitHub workflow runs. Regional qualifying bowls are not indexed.
 - **Texas Science & Engineering Fair (`txsef_scrape`, STEM /
   `science_fair`):** Texas A&M's official public homepage must publish an exact
   year-specific state-fair date range and College Station venue, while its
@@ -305,15 +305,16 @@ page should produce no fabricated fixture or event.
   `dev` before running ingestion.
 - Runs `npm run scrape:all && npm run scrape:discovery`; the discovery runner
   skips Tabroom pending written NSDA permission and skips VEX while ordinary
-  public requests return HTTP 403. DOE National Science Bowl is also skipped
-  while ordinary public access remains blocked.
+  public requests return HTTP 403. DOE National Science Bowl runs with the
+  other permitted STEM adapters.
 - Manual: Actions → **Ingest tournaments** on `dev` → choose one permitted
   source or all
 - Tabroom is intentionally absent from Actions/admin/source-filter choices
   while permission is unresolved; it remains an outbound reference link only
 - VEX is also absent from Actions/admin dispatch while ordinary access is
-  blocked. Source governance, count gates, kill switches, and freshness
-  thresholds live in `lib/ingestion-sources.ts`.
+  blocked. DOE National Science Bowl is runnable again after ordinary public
+  HTML returned HTTP 200 on 2026-09-02. Source governance, count gates, kill
+  switches, and freshness thresholds live in `lib/ingestion-sources.ts`.
 
 Secrets required:
 

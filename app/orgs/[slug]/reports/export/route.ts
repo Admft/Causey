@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
+import { competitionType } from "@/lib/competition-types";
 import {
   getDistrictParticipationReport,
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
+import {
+  CompetitionCategorySchema,
+  type CompetitionCategory,
+} from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +22,19 @@ function csvCell(value: string | number): string {
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
+function typeColumn(category: CompetitionCategory | null): string {
+  return category ? competitionType(category).label : "All types";
+}
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
+  const categoryParse = CompetitionCategorySchema.safeParse(
+    new URL(request.url).searchParams.get("category")
+  );
+  const reportCategory = categoryParse.success ? categoryParse.data : null;
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ error: "Sign in to export reports." }, { status: 401 });
@@ -39,7 +52,20 @@ export async function GET(
   }
 
   if (view.org.type !== "district") {
-    const attendance = await getOrgSeasonAttendance(view.org.id);
+    const attendanceResult = await getOrgSeasonAttendance(view.org.id);
+    if (!attendanceResult.ok) {
+      return NextResponse.json(
+        {
+          error:
+            "Season attendance is temporarily unavailable. Retry from the Reports page.",
+        },
+        {
+          status: 503,
+          headers: { "Cache-Control": "private, no-store" },
+        }
+      );
+    }
+    const attendance = attendanceResult.data;
     const header = [
       "Student",
       "Event",
@@ -83,7 +109,7 @@ export async function GET(
     );
   }
 
-  const report = await getDistrictParticipationReport(view.org.id);
+  const report = await getDistrictParticipationReport(view.org.id, reportCategory);
   if (!report.ok) {
     return NextResponse.json(
       {
@@ -96,9 +122,11 @@ export async function GET(
       }
     );
   }
-  const { schools, districtHosted } = report.data;
+  const { schools, districtHosted, hostedBySchool, category } = report.data;
+  const typeLabel = typeColumn(category);
   const header = [
     "Attribution",
+    "Type",
     "School",
     "Active students",
     "Upcoming tournaments",
@@ -110,6 +138,7 @@ export async function GET(
     header.map(csvCell).join(","),
     [
       "District-hosted",
+      typeLabel,
       "",
       "",
       districtHosted.upcoming_tournaments,
@@ -122,9 +151,24 @@ export async function GET(
     ...schools.map((school) =>
       [
         "School-hosted",
+        typeLabel,
         school.school_name,
         school.active_students,
         school.upcoming_tournaments,
+        school.invitations_pending,
+        school.going_count,
+        school.attended_this_season,
+      ]
+        .map(csvCell)
+        .join(",")
+    ),
+    ...hostedBySchool.map((school) =>
+      [
+        "District-hosted by school",
+        typeLabel,
+        school.school_name,
+        "",
+        "",
         school.invitations_pending,
         school.going_count,
         school.attended_this_season,

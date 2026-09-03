@@ -1,4 +1,5 @@
 import { pathToFileURL } from "node:url";
+import { assertSourceAutomationAllowed } from "../lib/ingestion-sources";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import { createZipGeo } from "./geo";
 import { normalizeCategorySourceEvent } from "./normalize-category-source";
@@ -28,6 +29,7 @@ async function main() {
     return;
   }
 
+  assertSourceAutomationAllowed(SOURCE);
   const keyDatesHtml = await loadListingHtml({ url: KEY_DATES_URL });
   if (!process.env.SCRAPE_HTML_FILE) await sleep(350);
   const aboutHtml = await loadListingHtml({ url: ABOUT_URL });

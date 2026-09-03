@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { AccountRole } from "@/lib/auth/types";
+import { START_CLUB_SIGNUP_HREF } from "@/lib/portal-copy";
 
 /**
  * Signed-out account routing: which account type do you create? Shared by the
@@ -27,7 +28,7 @@ const ROLE_ROUTES: {
 
 const COACH_ROUTE = {
   role: "coach" as AccountRole,
-  title: "Coach or organizer",
+  title: "Coach",
   description:
     "Start a club, invite students with a join code, and publish your own tournaments next to the indexed feeds.",
 };
@@ -48,7 +49,11 @@ export function RoleRouteCards({
       {routes.map((option) => (
         <li key={option.role}>
           <Link
-            href={`/signup?role=${option.role}`}
+            href={
+              option.role === "coach"
+                ? START_CLUB_SIGNUP_HREF
+                : `/signup?role=${option.role}`
+            }
             className="card-lift group flex items-start justify-between gap-4 rounded-2xl border border-line bg-surface px-4 py-3"
           >
             <div className="min-w-0">

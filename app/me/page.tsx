@@ -98,11 +98,11 @@ const ROLE_NEXT_ACTION: Record<
     label: "Open family desk",
   },
   coach: {
-    title: "Run your next team task",
+    title: "Run your next club task",
     description:
-      "Open your organization workspace to manage rosters, invitations, and competitions.",
+      "Open your club workspace to manage rosters, invitations, and competitions.",
     href: "/orgs",
-    label: "Open my organizations",
+    label: "Open my clubs",
   },
 };
 

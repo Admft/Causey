@@ -45,8 +45,8 @@ const ROLE_SIGNUP_COPY: Record<
   },
   coach: {
     nameLabel: "Your name",
-    nameHelp: "Use the name your school or club knows you by.",
-    confirmationNext: "open My organizations to start a roster.",
+    nameHelp: "Use the name your club knows you by.",
+    confirmationNext: "create your club from My clubs.",
   },
 };
 

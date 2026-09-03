@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createOrg } from "@/lib/actions/orgs";
-import { ORG_TYPE_OPTIONS } from "@/lib/auth/orgs";
+import { COACH_SELF_SERVE_ORG_TYPES } from "@/lib/auth/orgs";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -11,9 +11,6 @@ const STATES = [
   "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
   "VA","WA","WV","WI","WY","DC",
 ];
-const COACH_ORG_TYPES = ORG_TYPE_OPTIONS.filter(
-  (option) => option.value !== "district"
-);
 
 export function OrgCreateForm() {
   const router = useRouter();
@@ -43,13 +40,15 @@ export function OrgCreateForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-muted-strong">Organization name</span>
+        <span className="text-xs font-semibold text-muted-strong">
+          Club or team name
+        </span>
         <input
           className="field"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Lincoln Elementary Chess Club"
+          placeholder="Riverside Chess Club"
         />
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -60,15 +59,15 @@ export function OrgCreateForm() {
             value={type}
             onChange={(e) => setType(e.target.value)}
           >
-            {COACH_ORG_TYPES.map((opt) => (
+            {COACH_SELF_SERVE_ORG_TYPES.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
           </select>
           <span className="text-2xs text-muted">
-            District workspaces are provisioned by Causey platform
-            administrators.
+            Schools and districts are provisioned by Causey with the district
+            office, not created here.
           </span>
         </label>
         <label className="flex flex-col gap-1">
@@ -93,7 +92,11 @@ export function OrgCreateForm() {
         </p>
       ) : null}
       <button type="submit" disabled={pending} className="cta-enabled disabled:opacity-60">
-        {pending ? "Creating…" : "Create organization"}
+        {pending
+          ? "Creating…"
+          : type === "team"
+            ? "Create team"
+            : "Create club"}
       </button>
     </form>
   );

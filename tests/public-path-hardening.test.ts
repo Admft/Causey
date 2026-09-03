@@ -10,7 +10,9 @@ describe("abuse controls and public-path cost", () => {
     const cron = read("app/api/cron/product-email/route.ts");
     expect(cron).toContain("while (Date.now() < deadline)");
     expect(cron).toContain("deliverPendingEmailOutbox(25)");
-    expect(read("vercel.json")).toContain('"0 14 * * *"');
+    expect(cron).toContain("countReadyEmailOutbox");
+    expect(cron).toContain("maxDuration = 300");
+    expect(read("vercel.json")).toContain('"*/5 * * * *"');
   });
 
   it("rate-limits search, signup, join, claim, CSV, comments, and geo through an allowlisted RPC", () => {
@@ -22,6 +24,13 @@ describe("abuse controls and public-path cost", () => {
     expect(read("lib/rate-limit.ts")).toContain('"comment"');
     expect(read("lib/rate-limit.ts")).toContain('"geo"');
     expect(read("app/api/competitions/route.ts")).toContain('consumeRateLimit(\n    "search"');
+    expect(read("app/api/competitions/route.ts")).toContain(
+      "hashedRequestActorKey(user?.id)"
+    );
+    expect(read("lib/rate-limit.ts")).toContain("search: { max: 180");
+    expect(read("lib/rate-limit.ts")).toContain(
+      'process.env.NODE_ENV !== "production"'
+    );
     expect(read("lib/actions/signup-guard.ts")).toContain('"signup"');
     expect(read("lib/actions/orgs.ts")).toContain('"join_code"');
     expect(read("lib/actions/district.ts")).toContain('"claim"');
@@ -51,5 +60,9 @@ describe("abuse controls and public-path cost", () => {
     expect(proxy).toContain("isAnonymousPublicGet");
     expect(proxy).toContain('cookie.name.includes("-auth-token")');
     expect(proxy).toContain("/chess");
+    expect(proxy).toContain("/login");
+    expect(proxy).toContain("/signup");
+    expect(proxy).toContain("/join");
+    expect(proxy).toContain("/claim");
   });
 });

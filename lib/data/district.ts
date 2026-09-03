@@ -10,6 +10,8 @@ import type {
   DistrictSchoolReadiness,
 } from "@/lib/district-readiness";
 import type { AttentionSourceEvent } from "@/lib/notifications";
+import type { CompetitionCategory } from "@/lib/schemas";
+import { CompetitionCategorySchema } from "@/lib/schemas";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type DistrictSchoolRollup = {
@@ -29,9 +31,19 @@ export type DistrictHostedRollup = {
   attended_this_season: number;
 };
 
+export type DistrictHostedOriginRollup = {
+  school_id: string;
+  school_name: string;
+  invitations_pending: number;
+  going_count: number;
+  attended_this_season: number;
+};
+
 export type DistrictParticipationReport = {
   schools: DistrictSchoolRollup[];
   districtHosted: DistrictHostedRollup;
+  hostedBySchool: DistrictHostedOriginRollup[];
+  category: CompetitionCategory | null;
 };
 
 export type DistrictAdminActivitySummary = {
@@ -128,32 +140,51 @@ export type ModerationQueueRow = {
 };
 
 export async function getDistrictSchoolRollup(
-  districtId: string
+  districtId: string,
+  category?: CompetitionCategory | null
 ): Promise<DistrictReadResult<DistrictSchoolRollup[]>> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.rpc("get_district_school_rollup", {
     p_district_id: districtId,
+    p_category: category ?? null,
   });
   if (error) return { ok: false };
   return { ok: true, data: (data ?? []) as DistrictSchoolRollup[] };
 }
 
 export async function getDistrictParticipationReport(
-  districtId: string
+  districtId: string,
+  category?: CompetitionCategory | null
 ): Promise<DistrictReadResult<DistrictParticipationReport>> {
   const supabase = await createServerSupabaseClient();
-  const [schoolsResult, districtHostedResult] = await Promise.all([
+  const parsedCategory = category
+    ? CompetitionCategorySchema.safeParse(category)
+    : null;
+  const p_category =
+    parsedCategory && parsedCategory.success ? parsedCategory.data : null;
+  const [schoolsResult, districtHostedResult, originResult] = await Promise.all([
     supabase.rpc("get_district_school_rollup", {
       p_district_id: districtId,
+      p_category,
     }),
     supabase.rpc("get_district_hosted_rollup", {
       p_district_id: districtId,
+      p_category,
+    }),
+    supabase.rpc("get_district_hosted_origin_rollup", {
+      p_district_id: districtId,
+      p_category,
     }),
   ]);
   const districtHosted = districtHostedResult.data?.[0] as
     | DistrictHostedRollup
     | undefined;
-  if (schoolsResult.error || districtHostedResult.error || !districtHosted) {
+  if (
+    schoolsResult.error ||
+    districtHostedResult.error ||
+    originResult.error ||
+    !districtHosted
+  ) {
     return { ok: false };
   }
   return {
@@ -161,6 +192,8 @@ export async function getDistrictParticipationReport(
     data: {
       schools: (schoolsResult.data ?? []) as DistrictSchoolRollup[],
       districtHosted,
+      hostedBySchool: (originResult.data ?? []) as DistrictHostedOriginRollup[],
+      category: p_category,
     },
   };
 }
@@ -241,8 +274,12 @@ export async function getDistrictPilotReadiness(
   }
 
   const schoolIds = typedSchools.map((school) => school.id);
-  const [districtMembershipsResult, schoolMembershipsResult, invitationsResult] =
-    await Promise.all([
+  const [
+    districtMembershipsResult,
+    schoolMembershipsResult,
+    invitationsResult,
+    rollupResult,
+  ] = await Promise.all([
     supabase
       .from("org_memberships")
       .select("org_id, profile_id, role")
@@ -253,7 +290,8 @@ export async function getDistrictPilotReadiness(
       .from("org_memberships")
       .select("org_id, profile_id, role")
       .in("org_id", schoolIds)
-      .eq("status", "active"),
+      .eq("status", "active")
+      .in("role", ["school_admin", "admin"]),
     supabase
       .from("org_invitations")
       .select("org_id")
@@ -261,17 +299,28 @@ export async function getDistrictPilotReadiness(
       .eq("role", "school_admin")
       .eq("status", "pending")
       .gt("expires_at", new Date().toISOString()),
+    supabase.rpc("get_district_school_rollup", {
+      p_district_id: districtId,
+      p_category: null,
+    }),
   ]);
   if (
     districtMembershipsResult.error ||
     schoolMembershipsResult.error ||
-    invitationsResult.error
+    invitationsResult.error ||
+    rollupResult.error
   ) {
     return { ok: false };
   }
   const districtMemberships = districtMembershipsResult.data;
   const schoolMemberships = schoolMembershipsResult.data;
   const pendingInvitations = invitationsResult.data;
+  const studentsBySchool = new Map(
+    ((rollupResult.data ?? []) as DistrictSchoolRollup[]).map((row) => [
+      row.school_id,
+      Number(row.active_students ?? 0),
+    ])
+  );
 
   const districtOperatorIds = new Set<string>();
   if (typedDistrict.owner_profile_id) {
@@ -311,8 +360,7 @@ export async function getDistrictPilotReadiness(
         name: school.name,
         slug: school.slug,
         verificationStatus: school.verification_status,
-        activeStudents: members.filter((member) => member.role === "student")
-          .length,
+        activeStudents: studentsBySchool.get(school.id) ?? 0,
         activeDelegatedAdmins: delegatedAdmins.length,
         pendingAdminInvites: pendingBySchool.get(school.id) ?? 0,
         ownershipTransferred: Boolean(
@@ -353,13 +401,13 @@ export async function getOrgInvitations(
 
 export async function getOrgSeasonAttendance(
   orgId: string
-): Promise<OrgSeasonAttendanceRow[]> {
+): Promise<DistrictReadResult<OrgSeasonAttendanceRow[]>> {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.rpc("get_org_season_attendance", {
     p_org_id: orgId,
   });
-  if (error) return [];
-  return (data ?? []) as OrgSeasonAttendanceRow[];
+  if (error) return { ok: false };
+  return { ok: true, data: (data ?? []) as OrgSeasonAttendanceRow[] };
 }
 
 export async function getNotificationPreferences(

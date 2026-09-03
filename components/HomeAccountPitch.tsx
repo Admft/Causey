@@ -5,6 +5,7 @@ import { getCurrentProfile } from "@/lib/auth/session";
 import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import {
   SEARCH_TOURNAMENTS_LABEL,
+  START_CLUB_SIGNUP_HREF,
   workspaceOpenCta,
 } from "@/lib/portal-copy";
 
@@ -70,7 +71,7 @@ const SIGNED_IN_NEXT = (
       ],
     },
     coach: {
-      heading: "You are signed in as a coach or organizer",
+      heading: "You are signed in as a coach",
       blurb:
         "Invite students with a join code, publish club tournaments, and track who is going.",
       primary: coachWorkspace,
@@ -244,8 +245,8 @@ export async function HomeAccountPitch() {
             description="Link your child’s account, answer RSVPs, and finish organizer registration from one desk."
           />
           <AccountPitchRow
-            href="/signup?role=coach"
-            label="Coach or organizer"
+            href={START_CLUB_SIGNUP_HREF}
+            label="Coach"
             description="Start a club, invite students with a join code, and publish your own tournaments next to public listings."
           />
         </AccountPitchPanel>

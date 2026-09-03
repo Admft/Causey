@@ -14,12 +14,13 @@ const proxy = read("proxy.ts");
 describe("club and district public pitches", () => {
   it("gives clubs a peer surface to /districts with Club/Team language", () => {
     expect(clubsPage).toContain("A club season, from roster to results.");
-    expect(clubsPage).toContain("Create a club account");
+    expect(clubsPage).toContain("Start a club");
+    expect(clubsPage).toContain("START_CLUB_SIGNUP_HREF");
+    expect(clubsPage).not.toContain("Create a club account");
     expect(clubsPage).toContain("PageBackLink");
     expect(districtsPage).toContain("PageBackLink");
     expect(read("components/PageBackLink.tsx")).toContain('className="page-back"');
     expect(read("app/globals.css")).toContain(".page-back {");
-    expect(clubsPage).toContain("/signup?role=coach");
     expect(clubsPage).toContain("Club/Team-only");
     expect(clubsPage).not.toContain("School/District");
     expect(clubsPage).not.toContain("Book a district");
@@ -41,6 +42,7 @@ describe("club and district public pitches", () => {
     expect(districtsPage).toContain("Book a district pilot conversation");
     expect(districtsPage).toContain("There is no instant district signup");
     expect(districtsPage).not.toContain("Create a club account");
+    expect(districtsPage).not.toContain("START_CLUB_SIGNUP_HREF");
     expect(districtsPage).toContain("href=\"/clubs\"");
   });
 

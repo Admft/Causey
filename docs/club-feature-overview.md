@@ -42,12 +42,13 @@ A club is not a school and not a district. Coaches create club or team workspace
 
 | Feature | What it does | Ready for a club season? |
 | --- | --- | --- |
-| Public club pitch `/clubs` | Season path + honest out-of-scope; not a directory | Yes |
+| Public club pitch `/clubs` | Season path + honest out-of-scope; Start a club creates a coach login then a club | Yes |
 | Roster, groups, staff/student invites | Claim links; assistants read-only | Yes |
 | Public chess search | Zip/radius/date/grade filters | Yes, coverage incomplete |
 | Other-type directories | Debate, STEM, arts, writing search | Hosting yes; indexes thin |
 | “My club is going” | Signed-in directory chip | Yes (live data, not mock) |
 | Hosted competitions | Draft → review → publish | Yes |
+| Competitions inventory | Hosted records plus travel events the club marked as attending | Yes |
 | RSVP + organizer registration | Distinct from paying the organizer | Yes |
 | Attendance + recorded results | Place/award; blanks are honest; overview lists this season’s recorded places | Yes |
 | Family desk + alerts | Per-child actions; in-app alerts | Yes; email not volume-proven |

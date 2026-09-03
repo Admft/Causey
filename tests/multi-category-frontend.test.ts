@@ -285,11 +285,14 @@ describe("coverage and empty states stay honest", () => {
       "only the limited official sources listed below"
     );
     const stem = DISCOVERY_CATEGORIES.find((category) => category.id === "stem")!;
-    expect(stem.activeSources.map((source) => source.name)).not.toContain(
+    expect(stem.activeSources.map((source) => source.name)).toContain(
+      "U.S. Department of Energy National Science Bowl"
+    );
+    expect(stem.referenceSources.map((source) => source.name)).not.toContain(
       "U.S. Department of Energy National Science Bowl"
     );
     expect(stem.referenceSources.map((source) => source.name)).toContain(
-      "U.S. Department of Energy National Science Bowl"
+      "VEX Events"
     );
     const writing = DISCOVERY_CATEGORIES.find(
       (category) => category.id === "writing"

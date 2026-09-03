@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   effectiveEndDate,
   isCompetitionEnded,
+  isCompetitionStarted,
   isPastRetention,
   matchesTimingFilter,
   retentionCutoffDate,
@@ -13,6 +14,15 @@ describe("competition timing", () => {
     expect(effectiveEndDate({ start_date: "2026-03-01", end_date: null })).toBe(
       "2026-03-01"
     );
+  });
+
+  it("opens day-of attendance on the start date", () => {
+    expect(
+      isCompetitionStarted({ start_date: "2026-09-02" }, "2026-09-02")
+    ).toBe(true);
+    expect(
+      isCompetitionStarted({ start_date: "2026-09-03" }, "2026-09-02")
+    ).toBe(false);
   });
 
   it("marks past events as ended", () => {

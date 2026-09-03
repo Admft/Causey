@@ -78,8 +78,12 @@ describe("club-ready results and history", () => {
     expect(overview).toContain("getOrgSeasonAttendance");
     expect(overview).toContain("Record a result");
     expect(overview).toContain("Open season report");
+    expect(overview).toContain("Find a tournament for the roster");
+    expect(overview).toContain("SEARCH_TOURNAMENTS_LABEL");
     expect(competitions).toContain("Club events");
     expect(competitions).toContain("Team events");
+    expect(competitions).toContain("Travel");
+    expect(competitions).toContain("Search tournaments");
   });
 
   it("shows a season trophy board on overview and does not call a mid-season club the first competition", () => {

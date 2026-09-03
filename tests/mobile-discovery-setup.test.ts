@@ -29,7 +29,9 @@ describe("mobile discovery and private district setup", () => {
     expect(districtPitch).toContain("bg-brand-blue-soft");
     expect(districtPitch).toContain("tabular-nums");
     expect(districtPitch).toContain("See the club workspace");
-    expect(districtPitch).toContain("Create a club account");
+    expect(districtPitch).toContain("START_CLUB_SIGNUP_HREF");
+    expect(districtPitch).toContain("START_A_CLUB_LABEL");
+    expect(districtPitch).not.toContain("Create a club account");
     expect(districtPitch).toContain("Review the district pilot");
     expect(districtPitch).toContain("District office");
     expect(districtPitch).toContain("School tournament");

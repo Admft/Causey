@@ -62,6 +62,8 @@ export function AuthNav() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasOrgStaffAccess, setHasOrgStaffAccess] = useState(false);
   const [hasDistrictAccess, setHasDistrictAccess] = useState(false);
+  const [hasSchoolAccess, setHasSchoolAccess] = useState(false);
+  const [hasClubAccess, setHasClubAccess] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
   const [shortcut, setShortcut] = useState<DiscoveryCategory | null>(null);
 
@@ -79,6 +81,8 @@ export function AuthNav() {
         setIsAdmin(false);
         setHasOrgStaffAccess(false);
         setHasDistrictAccess(false);
+        setHasSchoolAccess(false);
+        setHasClubAccess(false);
         setUnreadAlerts(0);
         setShortcut(null);
         return;
@@ -98,22 +102,13 @@ export function AuthNav() {
         supabase.rpc("is_platform_admin"),
         supabase
           .from("org_memberships")
-          .select("org_id, role")
+          .select("org_id, role, organizations(type)")
           .eq("profile_id", userId)
-          .eq("status", "active")
-          .in("role", [
-            "assistant_coach",
-            "coach",
-            "admin",
-            "school_admin",
-            "district_admin",
-          ])
-          .limit(1),
+          .eq("status", "active"),
         supabase
           .from("organizations")
           .select("id, type")
-          .eq("owner_profile_id", userId)
-          .limit(1),
+          .eq("owner_profile_id", userId),
         supabase
           .from("notifications")
           .select("id", { count: "exact", head: true })
@@ -134,15 +129,49 @@ export function AuthNav() {
       );
       setIsAdmin(adminResult.error ? false : adminResult.data === true);
       setHasOrgStaffAccess(
-        Boolean(membershipResult.data?.length || ownedOrgResult.data?.length)
-      );
-      setHasDistrictAccess(
         Boolean(
-          membershipResult.data?.some(
-            (membership) => membership.role === "district_admin"
-          ) ||
-            ownedOrgResult.data?.some((organization) => organization.type === "district")
+          (membershipResult.data ?? []).some((membership: { role?: string }) =>
+            [
+              "assistant_coach",
+              "coach",
+              "admin",
+              "school_admin",
+              "district_admin",
+            ].includes(membership.role ?? "")
+          ) || ownedOrgResult.data?.length
         )
+      );
+      const membershipTypes = (membershipResult.data ?? []).flatMap(
+        (membership: {
+          role?: string;
+          organizations?: { type?: string } | { type?: string }[] | null;
+        }) => {
+          const embedded = membership.organizations;
+          const type = Array.isArray(embedded)
+            ? embedded[0]?.type
+            : embedded?.type;
+          return type ? [type] : [];
+        }
+      );
+      const ownedTypes = (ownedOrgResult.data ?? []).map(
+        (organization: { type?: string }) => organization.type
+      );
+      const staffTypes = [...membershipTypes, ...ownedTypes];
+      const districtAccess = Boolean(
+        (membershipResult.data ?? []).some(
+          (membership: { role?: string }) =>
+            membership.role === "district_admin"
+        ) || staffTypes.includes("district")
+      );
+      const schoolAccess = staffTypes.includes("school");
+      const clubAccess = staffTypes.includes("club") || staffTypes.includes("team");
+      setHasDistrictAccess(districtAccess);
+      setHasSchoolAccess(schoolAccess);
+      setHasClubAccess(
+        clubAccess ||
+          ((profileResult.data?.role as AccountRole | undefined) === "coach" &&
+            !districtAccess &&
+            !schoolAccess)
       );
       setUnreadAlerts(unreadResult.error ? 0 : unreadResult.count ?? 0);
     }
@@ -197,7 +226,11 @@ export function AuthNav() {
 
   const organizationLink = {
     href: "/orgs",
-    ...organizationNavLabels({ hasDistrictAccess }),
+    ...organizationNavLabels({
+      hasDistrictAccess,
+      hasSchoolAccess,
+      hasClubAccess,
+    }),
   };
   const portalLinks =
     role === "parent"
@@ -214,9 +247,7 @@ export function AuthNav() {
                 label: "Plan",
                 shortLabel: "Plan",
               },
-              hasOrgStaffAccess
-                ? organizationLink
-                : { href: "/orgs", label: "My clubs", shortLabel: "Clubs" },
+              organizationLink,
             ]
           : hasOrgStaffAccess
             ? [organizationLink]

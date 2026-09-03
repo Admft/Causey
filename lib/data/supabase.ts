@@ -350,8 +350,7 @@ export class SupabaseDataSource implements DataSource {
     const needsJsWindow =
       hasSectionFilters(filters) ||
       Boolean(filters.featured) ||
-      Boolean(filters.club_going) ||
-      preferredOrgIds.size > 0;
+      Boolean(filters.club_going);
     const rpcLimit = needsJsWindow ? RADIUS_SCAN_CAP : Math.min(limit, RADIUS_SCAN_CAP);
     const rpcOffset = needsJsWindow ? 0 : offset;
 

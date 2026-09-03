@@ -1,12 +1,15 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { deliverPendingEmailOutbox } from "@/lib/email/delivery";
+import {
+  countReadyEmailOutbox,
+  deliverPendingEmailOutbox,
+} from "@/lib/email/delivery";
 import { enqueueProductEmails } from "@/lib/email/enqueue";
 import { hasProductEmailConfig } from "@/lib/email/config";
 import { reportError } from "@/lib/observability";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -34,7 +37,7 @@ export async function GET(request: Request) {
 
   try {
     const queued = await enqueueProductEmails();
-    const deadline = Date.now() + 50_000;
+    const deadline = Date.now() + 280_000;
     let claimed = 0;
     let sent = 0;
     let failed = 0;
@@ -47,10 +50,11 @@ export async function GET(request: Request) {
       failed += delivery.failed;
       if (delivery.skipped || delivery.claimed === 0) break;
     }
+    const remaining = skipped ? 0 : await countReadyEmailOutbox();
     return NextResponse.json({
       ok: true,
       queued,
-      delivery: { claimed, sent, failed, skipped },
+      delivery: { claimed, sent, failed, skipped, remaining },
     });
   } catch (error) {
     reportError(error, "GET /api/cron/product-email");

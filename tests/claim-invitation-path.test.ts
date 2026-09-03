@@ -42,6 +42,11 @@ describe("claim invitation path helpers", () => {
     expect(invitationRoleFitsOrganization("school", "district_admin")).toBe(
       false
     );
+    expect(invitationRoleFitsOrganization("club", "school_admin")).toBe(false);
+    expect(invitationRoleFitsOrganization("club", "coach")).toBe(true);
+    expect(invitationRoleFitsOrganization("team", "assistant_coach")).toBe(
+      true
+    );
   });
 
   it("wires reissue and bulk claim export for people provisioning", () => {

@@ -39,6 +39,8 @@ describe("competition comments", () => {
     expect(eventPage).toContain("CompetitionComments");
     expect(commentsUi).toContain("Do not post other students");
     expect(commentsUi).toContain("not a private message thread");
+    expect(commentsUi).toContain("Report");
+    expect(commentsUi).toContain("Comments are for ages 13 and up");
   });
 
   it("trims bodies and rejects empty or oversized comments", () => {

@@ -16,6 +16,9 @@ describe("platform admin ops stats", () => {
     expect(adminData).toContain(".limit(1000)");
     expect(adminData).toContain("formatIngestionLastRun");
     expect(adminData).toContain("countPlatformAdmins");
+    expect(adminData).toContain('rpc("count_platform_admins")');
+    expect(adminData).not.toContain('.from("platform_admins")');
+    expect(adminData).toContain("countPlatformAdminsFromDirectory");
     expect(adminData).toContain("runsUnavailable: true");
     expect(adminData).toContain(
       "runsUnavailable || !lastRun ? null : lastRun.rows_upserted"
@@ -105,6 +108,7 @@ describe("platform admin ops stats", () => {
     expect(users).not.toContain("getAdminOpsStats");
     expect(users).toContain("countPlatformAdmins");
     expect(users).toContain("error ? null : total");
+    expect(users).toContain("user.platform_admin");
     expect(users).toContain("Platform admins");
     expect(scrapers).not.toContain("getAdminOpsStats");
     expect(scrapers).toContain("getAdminIngestionSourceHealth");

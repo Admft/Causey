@@ -9,7 +9,7 @@
 **Date:** August 24, 2026  
 **Status:** Assisted chess pilot. Not a self-serve district product and not a finished procurement package. Club/team owners use a separate self-serve workspace (`docs/club-feature-overview.md`); this page is district + school only.
 
-Causey helps a district run scholastic competition programs without giving the central office a copy of every student’s browsing history. Families can search public chess tournaments for free. A district pilot adds the school-side work: getting the right people onto the right teams, telling families about events, recording who attended, and giving the district participation totals.
+Causey helps a district run scholastic competition programs without giving the central office a copy of every student’s browsing history. Families can search public chess tournaments for free. A district pilot uses the same organization workspace as schools — not a custom portal. Chess is the working surface; other types can be hosted. The pilot still adds the school-side work: getting the right people onto the right teams, telling families about events, recording who attended, and giving the district participation totals.
 
 Setup is hands-on. Causey creates the district record with you. Causey does not list a school, a coach, or a student on the public site before the district signs.
 
@@ -73,16 +73,16 @@ Chess is the working surface. Other competition types exist in the product but a
 | Qualification pathways | Chess pathway explorer for selected series | Illustrative scaffolding; confirm with the organizer |
 | District → school structure | One district over many schools | Yes, Causey-assisted |
 | Role-based access | District, school, coach, assistant, parent, student each see their own work | Yes |
-| Claim-link provisioning | Email or copyable invite; CSV import/export; reissue | Yes |
+| Claim-link provisioning | Email or copyable invite; CSV import/export via one set-based RPC; reissue | Yes |
 | Rosters and groups | School/club roster, groups for invites and attendance | Yes |
-| Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters and labels replies by school | Yes |
+| Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters, stamps school of origin, and labels replies by school | Yes |
 | Event audiences | Public, district-only, school-only, invite-only | Yes |
 | RSVP and attendance | Going / not going, attendance on the day, season view | Yes |
 | Organizer registration tracking | Families mark when they finished the external registration | Yes |
 | Family follow-through | Parent inbox of named child actions | Yes |
 | Announcements | Short notes from district or school staff; district overview can post once to every connected school | Yes |
 | Alerts | Invites, deadlines, 7-day and 1-day reminders, changes, cancel | In-app yes; email is configured but not yet proven at school volume |
-| Aggregate reports + CSV | School-level counts, not student browsing | Yes |
+| Aggregate reports + CSV | School-level counts, type filter, participating-school origin on district-hosted invites; not student browsing | Yes |
 | Privacy and terms pages | Public disclosures of what student data is stored | Published; legal review still required before a paid student rollout |
 
 ---

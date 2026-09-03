@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ageBandFromDateOfBirth,
   ageFromDateOfBirth,
+  canPostPublicComments,
   parseDateOnly,
 } from "@/lib/auth/age-band";
 
@@ -38,5 +39,33 @@ describe("ageBandFromDateOfBirth", () => {
   it("uses birthday boundary correctly", () => {
     expect(ageFromDateOfBirth("2016-07-29", asOf)).toBe(9);
     expect(ageBandFromDateOfBirth("2016-07-29", asOf)).toBe("u10");
+  });
+});
+
+describe("canPostPublicComments", () => {
+  it("blocks under-13 and students without a date of birth", () => {
+    const asOf = new Date();
+    const month = String(asOf.getMonth() + 1).padStart(2, "0");
+    const day = String(asOf.getDate()).padStart(2, "0");
+    const thirteen = `${asOf.getFullYear() - 13}-${month}-${day}`;
+    const twelve = `${asOf.getFullYear() - 12}-${month}-${day}`;
+    expect(
+      canPostPublicComments({
+        date_of_birth: twelve,
+        role: "student",
+      })
+    ).toBe(false);
+    expect(
+      canPostPublicComments({
+        date_of_birth: thirteen,
+        role: "student",
+      })
+    ).toBe(true);
+    expect(
+      canPostPublicComments({ date_of_birth: null, role: "student" })
+    ).toBe(false);
+    expect(
+      canPostPublicComments({ date_of_birth: null, role: "coach" })
+    ).toBe(true);
   });
 });

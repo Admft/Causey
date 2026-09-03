@@ -198,7 +198,9 @@ export default async function OrganizationPeoplePage({
             ? "District staffing"
             : view.org.type === "school"
               ? "School staffing"
-              : "People"}
+              : view.org.type === "team"
+                ? "Team staffing"
+                : "Club staffing"}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           Invites &amp; staff
@@ -233,7 +235,7 @@ export default async function OrganizationPeoplePage({
 
         {hasJoinCode ? (
           <p className="mt-6 text-sm text-muted">
-            Prefer the join link for whole classes?{" "}
+            Prefer the join link for the whole roster?{" "}
             <Link
               href={rosterHref}
               className="font-semibold text-brand-red hover:underline"

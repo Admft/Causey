@@ -66,6 +66,33 @@ describe("district data reads fail closed", () => {
         .mockResolvedValueOnce({
           data: null,
           error: { code: "XX000", message: "district-hosted read failed" },
+        })
+        .mockResolvedValueOnce({ data: [], error: null }),
+    });
+    const { getDistrictParticipationReport } = await import(
+      "@/lib/data/district"
+    );
+
+    await expect(
+      getDistrictParticipationReport("district-a")
+    ).resolves.toEqual({ ok: false });
+  });
+
+  it("fails a participation report when origin-school attribution fails", async () => {
+    const districtHosted = {
+      upcoming_tournaments: 2,
+      invitations_pending: 5,
+      going_count: 3,
+      attended_this_season: 6,
+    };
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      rpc: vi
+        .fn()
+        .mockResolvedValueOnce({ data: [], error: null })
+        .mockResolvedValueOnce({ data: [districtHosted], error: null })
+        .mockResolvedValueOnce({
+          data: null,
+          error: { code: "XX000", message: "origin read failed" },
         }),
     });
     const { getDistrictParticipationReport } = await import(
@@ -97,7 +124,8 @@ describe("district data reads fail closed", () => {
       rpc: vi
         .fn()
         .mockResolvedValueOnce({ data: [school], error: null })
-        .mockResolvedValueOnce({ data: [districtHosted], error: null }),
+        .mockResolvedValueOnce({ data: [districtHosted], error: null })
+        .mockResolvedValueOnce({ data: [], error: null }),
     });
     const { getDistrictParticipationReport } = await import(
       "@/lib/data/district"
@@ -107,7 +135,12 @@ describe("district data reads fail closed", () => {
       getDistrictParticipationReport("district-a")
     ).resolves.toEqual({
       ok: true,
-      data: { schools: [school], districtHosted },
+      data: {
+        schools: [school],
+        districtHosted,
+        hostedBySchool: [],
+        category: null,
+      },
     });
   });
 
@@ -175,6 +208,50 @@ describe("district data reads fail closed", () => {
         .mockReturnValueOnce(membershipFailure)
         .mockReturnValueOnce(successful([]))
         .mockReturnValueOnce(successful([])),
+      rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+    });
+    const { getDistrictPilotReadiness } = await import("@/lib/data/district");
+
+    await expect(getDistrictPilotReadiness("district-a")).resolves.toEqual({
+      ok: false,
+    });
+  });
+
+  it("fails the whole readiness read when the school rollup fails", async () => {
+    const successful = (data: unknown) =>
+      queryReturning({ data, error: null });
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      from: vi
+        .fn()
+        .mockReturnValueOnce(
+          successful({
+            id: "district-a",
+            name: "District A",
+            slug: "district-a",
+            parent_org_id: null,
+            owner_profile_id: "operator-a",
+            verification_status: "verified",
+          })
+        )
+        .mockReturnValueOnce(
+          successful([
+            {
+              id: "school-a",
+              name: "School A",
+              slug: "school-a",
+              parent_org_id: "district-a",
+              owner_profile_id: "operator-a",
+              verification_status: "verified",
+            },
+          ])
+        )
+        .mockReturnValueOnce(successful([]))
+        .mockReturnValueOnce(successful([]))
+        .mockReturnValueOnce(successful([])),
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: { code: "XX000", message: "rollup failed" },
+      }),
     });
     const { getDistrictPilotReadiness } = await import("@/lib/data/district");
 
@@ -228,9 +305,13 @@ describe("district read failure surfaces", () => {
     expect(reports).toContain("No totals or CSV were generated.");
     expect(reports).toContain("District-hosted competitions");
     expect(reports).toContain("They are not");
+    expect(reports).toContain("District-hosted by participating school");
+    expect(reports).toContain("Retry season attendance");
     expect(csv).toContain("status: 503");
     expect(csv).toContain('"Cache-Control": "private, no-store"');
     expect(csv).toContain('"District-hosted"');
     expect(csv).toContain('"School-hosted"');
+    expect(csv).toContain('"District-hosted by school"');
+    expect(csv).toContain("Season attendance is temporarily unavailable");
   });
 });

@@ -26,7 +26,8 @@ import {
 import { CompetitionComments } from "@/components/CompetitionComments";
 import { listCompetitionComments } from "@/lib/data/competition-comments";
 import { isCompetitionEnded } from "@/lib/competition-timing";
-import { getSessionUser } from "@/lib/auth/session";
+import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import { canPostPublicComments } from "@/lib/auth/age-band";
 import { isCurrentUserPlatformAdmin } from "@/lib/auth/platform-admin";
 import {
   discoveryCategory,
@@ -156,6 +157,8 @@ export default async function EventPage({ params }: Params) {
   const ended = isCompetitionEnded(competition);
 
   const user = await getSessionUser();
+  const profile = user ? await getCurrentProfile() : null;
+  const canComment = Boolean(profile && canPostPublicComments(profile));
   let initiallySaved = false;
   let initialScore: number | null = null;
   let canManage = false;
@@ -289,14 +292,16 @@ export default async function EventPage({ params }: Params) {
   // One primary job in the main column; everything else demotes to the aside.
   // Hosts see the same attendee view as everyone else — their tools live in
   // the host bar above, not in place of the attendee's next step.
-  const primaryAction: "ended" | "rsvp" | "register" | "invite_only" =
+  const primaryAction: "ended" | "rsvp" | "register" | "invite_only" | "no_reg_link" =
     ended
       ? "ended"
       : needsRsvp
         ? "rsvp"
         : competition.reg_url
           ? "register"
-          : "invite_only";
+          : competition.audience === "invite_only"
+            ? "invite_only"
+            : "no_reg_link";
   const showRsvpInAside =
     rsvpTargets.length > 0 && primaryAction !== "rsvp";
 
@@ -622,12 +627,35 @@ export default async function EventPage({ params }: Params) {
                   id="event-next-step"
                   className="font-display text-xl font-bold text-foreground"
                 >
-                  Entry is by club invitation
+                  Entry is by invitation
                 </h2>
                 <p className="mt-2 max-w-prose text-sm text-muted">
-                  This event is hosted on Causey — there is no open registration
-                  link. Ask your coach for an invite, or save it if you want to
-                  come back later.
+                  This listing is invite-only. Ask your school or club coach
+                  for an invite, or save it if you want to come back later.
+                </p>
+                {!user ? (
+                  <Link
+                    href={`/login?next=${encodeURIComponent(`/event/${competition.slug}`)}`}
+                    className="cta-enabled mt-5 inline-flex"
+                  >
+                    Sign in to save
+                  </Link>
+                ) : null}
+              </>
+            ) : null}
+
+            {primaryAction === "no_reg_link" ? (
+              <>
+                <h2
+                  id="event-next-step"
+                  className="font-display text-xl font-bold text-foreground"
+                >
+                  No registration link listed
+                </h2>
+                <p className="mt-2 max-w-prose text-sm text-muted">
+                  This listing does not include an organizer registration URL.
+                  Confirm entry on the organizer&rsquo;s site if you have it,
+                  or save the event.
                 </p>
                 {!user ? (
                   <Link
@@ -671,6 +699,7 @@ export default async function EventPage({ params }: Params) {
             competitionId={competition.id}
             eventSlug={competition.slug}
             signedIn={Boolean(user)}
+            canComment={canComment}
             viewerId={user?.id ?? null}
             comments={comments}
           />

@@ -14,6 +14,7 @@ import {
   renderProductEmail,
   type ProductEmailMessage,
 } from "@/lib/email/template";
+import { reportError } from "@/lib/observability";
 
 type EmailOutboxRow = {
   id: string;
@@ -148,8 +149,17 @@ async function updateClaimedOutboxRow(
   }
 }
 
+export async function countReadyEmailOutbox(): Promise<number> {
+  const service = getServiceRoleClient();
+  if (!service) return 0;
+  const { data, error } = await service.rpc("count_ready_email_outbox");
+  if (error) throw new Error(`Could not count email outbox: ${error.message}`);
+  return Number(data ?? 0);
+}
+
 export async function deliverPendingEmailOutbox(
-  limit = 25
+  limit = 25,
+  options?: { invitationsOnly?: boolean }
 ): Promise<{ claimed: number; sent: number; failed: number; skipped: boolean }> {
   if (!hasProductEmailConfig()) {
     return { claimed: 0, sent: 0, failed: 0, skipped: true };
@@ -157,9 +167,14 @@ export async function deliverPendingEmailOutbox(
 
   const service = getServiceRoleClient();
   if (!service) return { claimed: 0, sent: 0, failed: 0, skipped: true };
-  const { data, error } = await service.rpc("claim_email_outbox_batch", {
-    p_limit: Math.max(1, Math.min(limit, 100)),
-  });
+  const { data, error } = await service.rpc(
+    options?.invitationsOnly
+      ? "claim_email_outbox_invitations"
+      : "claim_email_outbox_batch",
+    {
+      p_limit: Math.max(1, Math.min(limit, 100)),
+    }
+  );
   if (error) throw new Error(`Could not claim email outbox: ${error.message}`);
 
   const rows = (data ?? []) as EmailOutboxRow[];
@@ -246,4 +261,20 @@ export async function deliverPendingEmailOutbox(
   }
 
   return { claimed: rows.length, sent, failed, skipped: false };
+}
+
+/** Send organization invitation mail now instead of waiting for the reminder cron. */
+export async function flushPendingInvitationEmails(): Promise<void> {
+  if (!hasProductEmailConfig()) return;
+  try {
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      const delivery = await deliverPendingEmailOutbox(25, {
+        invitationsOnly: true,
+      });
+      if (delivery.skipped || delivery.claimed === 0) break;
+    }
+  } catch (error) {
+    reportError(error, "flushPendingInvitationEmails");
+  }
 }
