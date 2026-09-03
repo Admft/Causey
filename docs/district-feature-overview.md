@@ -1,5 +1,9 @@
 # Causey for school districts
 
+**Shareable January 2027 pilot brief (district audience):** `docs/district-pilot-january.tex` (PDF: `docs/district-pilot-january.pdf`). That document is future tense: what the district will have by January, across every competition type.
+
+**This page** is the internal current-state catalog for agents. Do not send it to a district as if it were the January package.
+
 **Audience:** district administrators, school administrators, and program coordinators  
 **Product:** Causey (`https://app.causey.dev`)  
 **Date:** August 24, 2026  

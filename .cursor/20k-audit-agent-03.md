@@ -1,0 +1,68 @@
+# Agent 3 — Identity at 20k
+
+## Scope covered
+- `.cursor/20k-full-audit-roles.md`, `.cursor/skills/district-program-readiness/SKILL.md`
+- `lib/auth/{session,types,platform-admin,age-band,home-path,next-path,orgs}.ts`
+- `proxy.ts`, `lib/supabase/{middleware,server,browser,client}.ts`, `app/auth/callback/route.ts`
+- `app/{login,signup,forgot-password,reset-password,account}/page.tsx`, `app/claim/[token]/page.tsx`, `app/join/[code]/page.tsx`, `app/chess/page.tsx`, `app/admin/layout.tsx`
+- `components/{SignupForm,LoginForm,ForgotPasswordForm,ResetPasswordForm,ClaimInvitationButton,JoinByCodeButton,AccountSecurityForm,ProfileEditor,AuthNav,AlreadySignedInSignup,ParentStudentSignupGate}.tsx`
+- `lib/actions/{signup-guard,orgs,district,account-data}.ts`, `lib/rate-limit.ts`, `lib/invitations/claim-path.ts`, `lib/org-codes.ts`, `lib/org-permissions.ts`, `lib/portal-copy.ts`, `lib/data/portal.ts` (`getOrganizationInvitationPreview`)
+- Migrations: `0009` profiles/`handle_new_user`, `0011` join codes/`role_unlocked`, `0015`/`0058` platform admins, `0016` role freeze, `0018`/`0029`/`0030` invitations/claim, `0025`/`0040`/`0044` join preview + student rejoin, `0035` org-coach vs staff, `0056`/`0065` profile grants, `0062`/`0066` rate limits
+- Tests: `tests/public-path-hardening.test.ts`, `staff-invitation-onboarding.test.ts`, `parent-student-handoff.test.ts`, `escalation-lockdown.test.ts`, `district-lifecycle-guardrails.test.ts`, `claim-invitation-path.test.ts`, `admin-access.test.ts`
+- `supabase/config.toml` `[auth]` (local defaults only), `app/privacy/page.tsx`, `app/terms/page.tsx`
+
+## Verdict
+**Partial.** The identity *model* is real and should be kept: three locked account personas, org-scoped staff (`school_admin` / `district_admin`) that do not rewrite `profiles.role`, hashed 256-bit claim tokens, student-only join codes that exclude districts, and a separate platform-admin table. It is **not** ready for 20k concurrent sessions, a school-wifi signup day, or a district of 50 schools inviting at once. Session refresh still calls GoTrue `getUser` on almost every signed-in request with no per-request cache; app rate limits sit only in Next.js actions (bypassable with the public anon key / authenticated RPCs); login and password reset have no app buckets; under-13 is helper text, not a gate. Production Auth (email confirm, GoTrue limits, leaked-password protection, SSO) is **unknown / fail-closed**. Paid-club coach self-signup can work. Custom district portals have no tenant login or IdP.
+
+## Keep
+- Account role (`student` | `parent` | `coach`) vs org membership role (`school_admin`, `district_admin`, …) after `0030_scoped_staff_authority.sql`; do not collapse them.
+- Role freeze: `guard_profile_privileged_columns` (`0016`) + column grants that omit `role` / `role_unlocked` (`0015`, `0065`) + Account copy “account (locked)”.
+- Claim path: 32-byte hex token, SHA-256 at rest (`create_org_invitation` in `0018`), email must match JWT, `FOR UPDATE`, 7-day expiry, preview RPC returns `email_hint` not full email, `/claim` `robots: noindex` + `no-referrer` + `router.replace`.
+- Join codes: 8-char no-lookalike alphabet, districts excluded, removed members rejoin as `student` (`0044`), anonymous preview fail-closed before offering signup (`app/join/[code]/page.tsx`).
+- Parent/student same-browser gate (`ParentStudentSignupGate`); one session per browser (`AlreadySignedInSignup`).
+- Platform admin as `platform_admins` + `is_platform_admin()` that only answers `auth.uid()`; `/admin` is a separate shell.
+- `sanitizeNextPath` (no `//` or `\`); PKCE `exchangeCodeForSession` in `app/auth/callback/route.ts`.
+- Proxy skip of anonymous public GETs (`proxy.ts` `isAnonymousPublicGet`) — extend it, do not rip it out.
+- Signup form already calls `assertSignupAllowed` (`signup` 5/60s); join/claim/CSV actions already call `consumeRateLimit`.
+
+## Findings
+1. **Session refresh cost** · Every matched request with an auth cookie runs `updateSession` → `supabase.auth.getUser()` (`lib/supabase/middleware.ts`). `getSessionUser` / `getCurrentProfile` each call `getUser` again with a new client (`lib/auth/session.ts`); there is no `cache()`. Signed-in `/chess` is not skipped (`proxy.ts` requires no auth cookie) and the page calls `getSessionUser` anyway (`app/chess/page.tsx`). `/join`, `/claim`, `/login`, `/signup` are also outside `PUBLIC_GET_PREFIXES`, so anonymous claim/join still hits Auth. **At 20k concurrent sessions this is a GoTrue/Auth API stampede per navigation, not a Postgres problem.** · P0 · L
+
+2. **School-NAT / classroom signup and login collapse** · App signup cap is 5/minute **per hashed IP** (`lib/rate-limit.ts` `LIMITS.signup`, `hashedRequestActorKey` with no `userId`). Login and forgot-password have **no** `consumeRateLimit`. Local GoTrue (`supabase/config.toml`) is `sign_in_sign_ups = 30` / 5 min / IP and `token_refresh = 150` / 5 min / IP; hosted production values are **unknown**. A lab of 30+ students on one wifi, or 50 schools inviting the same morning, will 429 while the form still looks healthy. Tests only assert strings exist (`tests/public-path-hardening.test.ts`); they do not cover login/reset or NAT. · P0 · M
+
+3. **Rate limits are UI-adjacent, not enforcement** · `assertSignupAllowed` wraps the React form; the anon key is public, so `supabase.auth.signUp` / `signInWithPassword` / `resetPasswordForEmail` skip Causey buckets. `join_org_with_code` and `claim_org_invitation` are `GRANT`ed to `authenticated` with **no** limit inside the SQL (`0044`, `0030`); only the server actions call `consumeRateLimit`. GET `/join/[code]` and GET `/claim/[token]` are unlimited; join preview/`join_org_with_code` still `pg_sleep(0.15)` (`0040`, `0044`) which holds connections under scrape. `rate_limit_buckets` has **no cleanup**. `consume_rate_limit` is `SECURITY DEFINER` executable by `anon` with a caller-chosen `p_actor_key` (`0062`/`0066`). Mass join-link claims from 400 distinct students succeed (desired); one JWT looping the RPC is not capped. · P0 · M
+
+4. **Under-13 / DOB is advisory only** · Student signup requires a date and shows “A parent or guardian should help students under 13” (`SignupForm.tsx`); `age-band.ts` never branches on age 13. Parent/coach signup collects **no** DOB. `handle_new_user` (`0056`) trusts `raw_user_meta_data` role/DOB/`age_band` and sets `role_unlocked = true` for every persona. Privacy/terms tell districts Causey does **not** claim COPPA (`app/privacy/page.tsx`, `app/terms/page.tsx`). A district provisioning minors at 20k without verifiable consent is a legal/product fail-closed, not a missing checkbox. · P0 · M
+
+5. **Hosted Auth posture is unknown; local defaults fight the UI** · `config.toml`: `enable_confirmations = false`, `minimum_password_length = 6`, `password_requirements = ""`, `secure_password_change = false`, MFA TOTP off, captcha commented out, `email_sent = 2` / hour, session timebox commented out. The app requires 8-character passwords and has a confirm-email screen if GoTrue returns no session. **Production dashboard settings were not in repo — fail-closed, do not assume confirm-email is on.** No SSO/SAML/Clever/ClassLink for custom district portals. District staff and students share one global `auth.users` project. · P0 · L
+
+6. **50-school invite burst has no identity-plane budget** · `bulkInviteOrganizationMembers`: 500 rows/file, 3 CSV/min/user, 20 concurrent `create_org_invitation` RPCs (`lib/actions/district.ts`). Fifty school admins importing ~400 each ≈ 20k invitation rows + outbox inserts with no global/district cap. Tokens expire in 7 days; pending rows are not swept to `expired` (claim checks `expires_at`). Signup for those claims is still 5/min/IP. Claim itself is 10/min **per user** — fine for distinct students, useless as a district-wide brake. Join codes remain a shared classroom secret stored plaintext on `organizations.join_code`. · P1 · M
+
+7. **Staff landing ignores scoped org roles** · `homePathForRole` only switches on account persona (`/family`, `/orgs`, `/me`). A `district_admin` or `school_admin` who claimed onto an existing student/parent account (intentional after `0030`) still lands on Plan/Family. `workspaceOpenCta` ignores `hasDistrictAccess` unless `role === "coach"` (`lib/portal-copy.ts`). Custom district portals cannot hang off “who just signed in” without reading memberships. · P1 · S
+
+8. **Password reset is any authenticated session** · `ResetPasswordForm` only checks `getUser()` (`components/ResetPasswordForm.tsx`). Local `secure_password_change = false`. `/reset-password` therefore lets a normal logged-in session set a new password without the current one, bypassing `AccountSecurityForm`’s current-password check. Forgot-password and in-account reset both hit GoTrue directly (not the product outbox). · P1 · S
+
+9. **Header identity fan-out on every full load** · `AuthNav` `getUser` + five parallel queries (profile, `is_platform_admin`, staff memberships, owned orgs, unread notifications) (`components/AuthNav.tsx`). Soft navigations keep the client mounted; hard loads and token refresh re-run the fan-out for every one of 20k sessions. `getPlatformAdminUser` is also invoked in **both** `app/admin/layout.tsx` and each admin page. · P1 · S
+
+10. **Invitation email is not bound at signup** · Claim preview drives account type in the form, but `signUp` does not require the typed email to match the invitation; mismatch only fails later in `claim_org_invitation` (`0030` JWT email vs `org_invitations.email`). At classroom scale that is a support pile-up, not a security hole (token still email-locked). · P1 · S
+
+11. **Anon join/claim GETs still pay Auth + DB** · Preview RPCs are correctly fail-closed (`get_org_preview_by_code`, `get_org_invitation_preview`), but they are not in the anonymous skip list and are not rate-limited. Join’s 150ms sleep is an anti-enumeration hold that becomes a connection DoS if `/join/*` is scraped. Claim tokens are not enumerable (64 hex); join codes are unique but still a shared secret. · P1 · M
+
+12. **No district-scoped identity for custom portals** · One Causey login, one JWT, no tenant claim, no per-district branded `/login`, no IdP mapping. Isolation depends on RLS (Agent 4). Paying clubs can live with email/password; a 50-school district portal cannot treat “create a student password and confirm email” as the provisioning API. · P1 · L
+
+13. **Coach self-signup is fully unlocked** · `handle_new_user` inserts `role_unlocked = true` for every role (`0056`). `canCreateOrg` is `coach && role_unlocked` (`lib/org-permissions.ts`); district orgs stay platform-provisioned (`0025`). Fine for paid clubs; it also means any public visitor can mint a coach account and club/school without an invite. No signup CAPTCHA in app or local config. · P2 · S
+
+## Must-build before go-live
+1. **Request-scoped session:** wrap `getSessionUser` / `getCurrentProfile` / `getPlatformAdminUser` in React `cache()`; stop double `getUser` inside `getCurrentProfile`; extend `isAnonymousPublicGet` to `/join`, `/claim`, `/login`, `/signup`, `/forgot-password` when no auth cookie; stop calling `getUser` on public discovery pages unless a cookie exists.
+2. **Enforce limits in SQL and on Auth, not only actions:** add `login` / `password_reset` buckets; bind `join_org_with_code` and `claim_org_invitation` (and signup if you add a hook) to `consume_rate_limit` or equivalent; rate-limit GET previews; replace `pg_sleep` with a cheap fail; TTL/`DELETE` old `rate_limit_buckets`; stop taking caller-chosen actor keys from anon without deriving them server-side.
+3. **NAT-aware classroom provisioning:** per-email / per-org burst budgets so 400 students on one school IP can join; document and set hosted GoTrue `sign_in_sign_ups` / `token_refresh` / `email_sent` for that shape (local `config.toml` is not production).
+4. **Under-13 gate:** refuse student accounts under 13 without a completed parent-link (or district-as-agent agreement path). Do not collect DOB without that gate. Ignore client-supplied `age_band` when DOB is present.
+5. **Lock hosted Auth to the product:** confirm-email on, password min ≥ 8 + leaked-password protection, `secure_password_change`, recovery-session-only `/reset-password`, captcha on signup/login/reset. Treat current hosted values as unknown until read from the project.
+6. **Staff home from memberships:** after login/claim, if the user has `district_admin` / `school_admin` / coach membership, land on `/orgs` (or the custom portal), not `/me`, even when `profiles.role` is student/parent.
+7. **Bind invitation email at signup** (prefill + reject mismatch) and add a district-level invite budget (global concurrency / per-district cap) so 50 school CSVs cannot stampede `create_org_invitation`.
+8. **District identity for custom portals (this slice):** decide SSO (Google Workspace / OIDC) vs password accounts before promising a 50-school portal; if SSO slips, you still need a non-password classroom join that does not create 400 GoTrue users through one NAT in five minutes.
+
+## Open questions for the owner
+- What are the **hosted** Supabase Auth settings (confirm email, rate limits, leaked-password, SMTP) versus `supabase/config.toml`? Identity capacity is unknown until those are read.
+- Legal fork: COPPA parental consent vs “district is the school official / agent of the parent” in a signed DPA — the code cannot honestly support under-13 district accounts until this is chosen.
+- Custom-portal SLA: password+email for all 20k, or a district IdP (Google/OIDC/Clever)? That choice dominates signup, reset, and session design; the current app only implements the first.

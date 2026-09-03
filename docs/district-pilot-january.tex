@@ -1,0 +1,253 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue
+}
+
+\onehalfspacing
+\setlength{\parskip}{0.7em}
+\setlength{\parindent}{0pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\title{Causey for school districts\\[0.4em]
+\large January 2027 assisted pilot}
+\author{Causey}
+\date{August 27, 2026}
+
+\begin{document}
+\maketitle
+
+\noindent
+\textbf{Audience:} district administrators, school administrators, and program coordinators\\
+\textbf{Product:} Causey (\url{https://app.causey.dev})\\
+\textbf{Horizon:} what the district will use during the January 2027 assisted pilot\\
+\textbf{This is not} a snapshot of the live site today, a self-serve signup, or a finished procurement package.
+
+\vspace{0.4em}
+\hrule
+\vspace{1em}
+
+This document describes what Causey \emph{will} give a participating school district by January 2027. Features that are still being finished are written in future tense on purpose. Independent clubs and teams will keep a separate self-serve workspace; this brief is district and school only.
+
+\section*{One place for every competition}
+
+Causey will be the district's coordination layer for \textbf{every scholastic competition type} the schools run, not a chess-only tool with other types mentioned in passing.
+
+By the January pilot, a district will use the \emph{same} school and district workflow for:
+
+\begin{itemize}
+  \item Chess
+  \item Speech and debate
+  \item STEM (including mathematics and science-fair style events)
+  \item Arts (visual arts, music, and theatre)
+  \item Writing
+\end{itemize}
+
+Families will search every type from one zip search. Coaches will roster, invite, host or travel, take attendance, and record results on the same screens no matter which type the event is. The district office will read school-level totals across all of those types, not a separate chess report and a pile of spreadsheets for everything else.
+
+Public listing coverage will still be denser in some types than others. Chess will remain the broadest public index. Speech and debate, STEM, arts, and writing will have real official listings, and those indexes will still be incomplete. The district's own school and district-hosted events will sit next to those listings for every type. Families will still confirm fees, eligibility, and paid entry on the organizer's site when the event is not hosted on Causey.
+
+Causey will not give the central office a copy of any student's browsing. Reports will stay aggregate: how many students, how many events, who still needs an RSVP, who went, who showed up.
+
+\section*{How a district will start}
+
+Setup will stay hands-on. Causey will create the district record with the district, check that each participating school is real, and hand each school to the administrator the district names. There will be no instant district signup and no public school directory on Causey.
+
+\begin{enumerate}
+  \item Causey will provision the district after written approval.
+  \item Each school will be created, checked, and claimed by a named administrator. No shared passwords.
+  \item Staff will invite their own people with join links and claim links (including CSV for larger groups).
+  \item Coaches will run school events and district-wide events across every competition type above.
+  \item Families will RSVP and finish organizer registration where the event still uses an outside site.
+  \item The district office will read totals, a calendar of school and district events, and a scoped activity feed.
+\end{enumerate}
+
+Anyone will still be able to search public listings on Causey without an account. The district pilot is the school-side coordination on top of that search.
+
+To talk through a pilot: \url{https://app.causey.dev/districts}.
+
+\section*{What people in the district will be able to do}
+
+\subsection*{District office}
+The district will hold a district account that oversees connected schools, not a single club page pretending to be a district.
+
+\begin{itemize}
+  \item Add schools and see each school's setup status (administrator assigned, ownership handed off, roster started).
+  \item Follow one next action on the district overview instead of a dump of every setting.
+  \item Invite district staff without giving them student-by-student browsing access.
+  \item Open a calendar of upcoming \textbf{school-hosted and district-hosted} events, with the host named on each row, across every competition type.
+  \item Host a district-wide competition when the district is the real host, or leave hosting with a school.
+  \item On a district-hosted event, invite students from connected school rosters, or every connected school at once. Districts will not keep a student roster of their own.
+  \item Publish announcements that reach connected schools in one district-office action, or stay on district staff only.
+  \item Open Reports for school-level totals: students on roster, upcoming events, pending RSVPs, going, and attendance. District-hosted events will stay separate from school-hosted events so a district tournament is not counted as if every school ran it.
+  \item Export those totals as CSV.
+  \item Read a scoped Activity feed for school creates, staff invitations, verification and ownership changes, announcements, and competition status changes on that district only.
+\end{itemize}
+
+\subsection*{School administrators}
+\begin{itemize}
+  \item Receive a named invitation and claim a school account.
+  \item Take ownership of the school workspace after claim.
+  \item Invite coaches, assistants, students, and families.
+  \item Import staff or students from CSV, with a row-by-row error list when a file fails.
+  \item Manage school settings, verification, and the people list.
+  \item See school-hosted competitions and school reporting for every competition type the school runs.
+\end{itemize}
+
+\subsection*{Coaches}
+\begin{itemize}
+  \item Run a roster and groups (for invites and the day-of list).
+  \item Create competitions as drafts, preview them, then publish. Chess, speech and debate, STEM, arts, writing, or a custom type the school needs.
+  \item Choose who can see an event: public, district-only, school-only, or invite-only.
+  \item Invite students, collect RSVPs, and see who still needs to finish organizer registration on the tournament's own site.
+  \item Record attendance, then division, place, or award. Blanks will mean not recorded.
+  \item Post short announcements. Copy can be whatever the event needs (``Bring boards Saturday,'' ``Bring tubs,'' ``Bring posters'').
+  \item Edit or cancel a hosted event after it is published.
+\end{itemize}
+
+\subsection*{Parents}
+\begin{itemize}
+  \item Link to a child account and use a family desk: which child still needs an RSVP, or still needs to finish organizer registration, across every competition type.
+  \item Get alerts for invites, deadlines, schedule changes, cancellations, and recorded results. By January those alerts will also go out by email, not only in the app.
+\end{itemize}
+
+\subsection*{Students}
+\begin{itemize}
+  \item Search chess, speech and debate, STEM, arts, and writing events by zip and distance without creating an account.
+  \item Create an account to save events, RSVP, keep a plan, and join a school with a join link.
+\end{itemize}
+
+\subsection*{Causey staff (not the district)}
+\begin{itemize}
+  \item Create and verify the district.
+  \item Review public school-created events before they appear in the public directory.
+  \item Help with corrections when a school record needs more detail.
+\end{itemize}
+
+\section*{January pilot feature list}
+
+\begin{longtable}{@{}L{0.28\textwidth} L{0.44\textwidth} L{0.22\textwidth}@{}}
+  \toprule
+  \textbf{Feature} & \textbf{What the district will have} & \textbf{January pilot} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Feature} & \textbf{What the district will have} & \textbf{January pilot} \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+
+  Search for every type
+    & Zip and distance search across chess, speech and debate, STEM, arts, and writing. Fees, venues, and coverage will still vary by type; families will confirm with the organizer.
+    & Yes, coverage still incomplete \\
+  \addlinespace
+  Same workflow, every type
+    & Roster, invite, host or travel, RSVP, attendance, results, and district totals will work for every competition type above, not chess alone.
+    & Yes \\
+  \addlinespace
+  District $\to$ school structure
+    & One district over many schools. Causey-assisted setup.
+    & Yes \\
+  \addlinespace
+  Role-based access
+    & District, school, coach, assistant, parent, and student each see the work meant for them.
+    & Yes \\
+  \addlinespace
+  Claim-link provisioning
+    & Email or copyable invite; CSV import/export; reissue. No shared passwords.
+    & Yes \\
+  \addlinespace
+  Rosters and groups
+    & School roster and groups for invites and attendance.
+    & Yes \\
+  \addlinespace
+  School and district events
+    & Draft $\to$ preview $\to$ publish. Public events go through Causey review. District inventory includes child-school hosts. District-hosted manage invites connected-school rosters.
+    & Yes \\
+  \addlinespace
+  Event audiences
+    & Public, district-only, school-only, or invite-only.
+    & Yes \\
+  \addlinespace
+  RSVP and attendance
+    & Going / not going, attendance on the day, season view.
+    & Yes \\
+  \addlinespace
+  Organizer registration tracking
+    & Families mark when they finished the external registration. Causey will not replace that site.
+    & Yes \\
+  \addlinespace
+  Recorded results
+    & Place or award after attendance. Export when a board asks.
+    & Yes \\
+  \addlinespace
+  Family follow-through
+    & Parent inbox of named child actions across every type.
+    & Yes \\
+  \addlinespace
+  Announcements
+    & Short notes from district or school staff. District overview can post once to every connected school.
+    & Yes \\
+  \addlinespace
+  Alerts and email
+    & Invites, deadlines, 7-day and 1-day reminders, changes, cancel, recorded results. Email will run at school volume for the pilot cohort.
+    & Yes for the pilot cohort \\
+  \addlinespace
+  Aggregate reports + CSV
+    & School-level counts, not student browsing. School-hosted vs.\ district-hosted kept separate.
+    & Yes \\
+  \addlinespace
+  Activity
+    & District-scoped feed of setup and competition changes. Not a raw audit table.
+    & Yes \\
+  \addlinespace
+  Privacy and terms pages
+    & Public disclosures of what student data is stored. Formal certification is a separate legal track (see below).
+    & Published; legal review continues \\
+\end{longtable}
+
+\section*{What the January pilot will not include}
+
+These will stay out of the pilot on purpose. Do not read them as ``coming next week.''
+
+\begin{itemize}
+  \item Instant district signup, or a public directory of schools.
+  \item In-app entry fees, payments, or registration that replaces the organizer's site.
+  \item Coach--parent messaging threads.
+  \item Pairings, ballots, clocks, or dues.
+  \item A complete public index of every speech, debate, STEM, arts, or writing event in the country. The district will run every type; the public directories will still be incomplete.
+  \item Central-office access to what any student searched, saved, or browsed.
+  \item A finished price, contract, SLA, or FERPA / state-privacy \emph{certification}. Before a paid student rollout, Causey and the district will still settle price, support, privacy, how long data is kept, and security. The pilot will run under a written agreement and data terms; certification is not the same thing as those terms existing.
+\end{itemize}
+
+\section*{How a season will run}
+
+For a school or a coach, the season will be the same four jobs for every competition type:
+
+\begin{enumerate}
+  \item \textbf{Roster.} A join link or a CSV. Groups for invites and the day-of list.
+  \item \textbf{Travel or host.} Mark the school as going to a public event, or publish a school or district event here.
+  \item \textbf{Attendance.} Who showed up, including travel events the school attended.
+  \item \textbf{Results.} Place or award. Export when a board asks.
+\end{enumerate}
+
+For the district office, the same season will look like:
+
+\begin{enumerate}
+  \item \textbf{Provision.} The district and its schools are set up with Causey, one at a time.
+  \item \textbf{School tournaments.} Coaches run the roster and the day at each school, in every type the school offers.
+  \item \textbf{District-wide.} One event, every connected school, when that is the real host.
+  \item \textbf{District office.} School-level totals. Never a copy of any student's browsing.
+\end{enumerate}
+
+\end{document}
