@@ -60,6 +60,8 @@ describe("two-district tenant isolation", () => {
     expect(districtData).toContain(
       'rpc("get_district_admin_activity"'
     );
+    expect(districtData).toContain('.in("role", ["school_admin", "admin"])');
+    expect(districtData).toContain('rpc("get_district_school_rollup"');
     expect(rollupSql).toContain(
       "public.is_district_admin(p_district_id, auth.uid())"
     );
@@ -137,5 +139,19 @@ describe("atomic district school provisioning", () => {
     );
     expect(createAction).not.toContain('.from("organizations")');
     expect(createAction).not.toContain('.from("org_memberships")');
+  });
+});
+
+describe("unauthorized district hitchhike", () => {
+  it("rejects attaching a school to a district the writer does not administer", () => {
+    const hitchhike = source(
+      "supabase/migrations/0069_p1_isolation_email_comments.sql"
+    );
+    expect(hitchhike).toContain("school_parent_requires_district_admin");
+    expect(hitchhike).toContain("tg_op = 'INSERT'");
+    expect(hitchhike).toContain(
+      "public.is_district_admin(new.parent_org_id, auth.uid())"
+    );
+    expect(hitchhike).toContain("public.is_platform_admin()");
   });
 });

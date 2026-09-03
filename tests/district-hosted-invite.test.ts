@@ -19,6 +19,8 @@ describe("district-hosted multi-school invite", () => {
     expect(manage).toContain("isDistrictHost");
     expect(action).toContain("export async function inviteConnectedSchoolRosters");
     expect(action).toContain('host?.type !== "district"');
+    expect(action).toContain("list_connected_school_student_ids");
+    expect(action).not.toContain("getOrgRoster");
     expect(form).toContain("inviteConnectedSchoolRosters");
     expect(form).toContain("Invite every connected school");
   });

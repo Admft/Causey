@@ -175,6 +175,50 @@ describe("district data reads fail closed", () => {
         .mockReturnValueOnce(membershipFailure)
         .mockReturnValueOnce(successful([]))
         .mockReturnValueOnce(successful([])),
+      rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+    });
+    const { getDistrictPilotReadiness } = await import("@/lib/data/district");
+
+    await expect(getDistrictPilotReadiness("district-a")).resolves.toEqual({
+      ok: false,
+    });
+  });
+
+  it("fails the whole readiness read when the school rollup fails", async () => {
+    const successful = (data: unknown) =>
+      queryReturning({ data, error: null });
+    mocks.createServerSupabaseClient.mockResolvedValue({
+      from: vi
+        .fn()
+        .mockReturnValueOnce(
+          successful({
+            id: "district-a",
+            name: "District A",
+            slug: "district-a",
+            parent_org_id: null,
+            owner_profile_id: "operator-a",
+            verification_status: "verified",
+          })
+        )
+        .mockReturnValueOnce(
+          successful([
+            {
+              id: "school-a",
+              name: "School A",
+              slug: "school-a",
+              parent_org_id: "district-a",
+              owner_profile_id: "operator-a",
+              verification_status: "verified",
+            },
+          ])
+        )
+        .mockReturnValueOnce(successful([]))
+        .mockReturnValueOnce(successful([]))
+        .mockReturnValueOnce(successful([])),
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: { code: "XX000", message: "rollup failed" },
+      }),
     });
     const { getDistrictPilotReadiness } = await import("@/lib/data/district");
 

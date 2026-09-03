@@ -241,8 +241,12 @@ export async function getDistrictPilotReadiness(
   }
 
   const schoolIds = typedSchools.map((school) => school.id);
-  const [districtMembershipsResult, schoolMembershipsResult, invitationsResult] =
-    await Promise.all([
+  const [
+    districtMembershipsResult,
+    schoolMembershipsResult,
+    invitationsResult,
+    rollupResult,
+  ] = await Promise.all([
     supabase
       .from("org_memberships")
       .select("org_id, profile_id, role")
@@ -253,7 +257,8 @@ export async function getDistrictPilotReadiness(
       .from("org_memberships")
       .select("org_id, profile_id, role")
       .in("org_id", schoolIds)
-      .eq("status", "active"),
+      .eq("status", "active")
+      .in("role", ["school_admin", "admin"]),
     supabase
       .from("org_invitations")
       .select("org_id")
@@ -261,17 +266,27 @@ export async function getDistrictPilotReadiness(
       .eq("role", "school_admin")
       .eq("status", "pending")
       .gt("expires_at", new Date().toISOString()),
+    supabase.rpc("get_district_school_rollup", {
+      p_district_id: districtId,
+    }),
   ]);
   if (
     districtMembershipsResult.error ||
     schoolMembershipsResult.error ||
-    invitationsResult.error
+    invitationsResult.error ||
+    rollupResult.error
   ) {
     return { ok: false };
   }
   const districtMemberships = districtMembershipsResult.data;
   const schoolMemberships = schoolMembershipsResult.data;
   const pendingInvitations = invitationsResult.data;
+  const studentsBySchool = new Map(
+    ((rollupResult.data ?? []) as DistrictSchoolRollup[]).map((row) => [
+      row.school_id,
+      Number(row.active_students ?? 0),
+    ])
+  );
 
   const districtOperatorIds = new Set<string>();
   if (typedDistrict.owner_profile_id) {
@@ -311,8 +326,7 @@ export async function getDistrictPilotReadiness(
         name: school.name,
         slug: school.slug,
         verificationStatus: school.verification_status,
-        activeStudents: members.filter((member) => member.role === "student")
-          .length,
+        activeStudents: studentsBySchool.get(school.id) ?? 0,
         activeDelegatedAdmins: delegatedAdmins.length,
         pendingAdminInvites: pendingBySchool.get(school.id) ?? 0,
         ownershipTransferred: Boolean(

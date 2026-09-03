@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] P1 isolation/scale: unauthorized school→district hitchhike rejected; district rollup without cartesian join; invite-all uses one student-id RPC; invitation email flushes off the reminder sweep; comments report/hide + under-13; signed-in zip search keeps SQL `total_count` — 2026-09-02
 - [x] Family/school chrome honesty: Family, student Plan, student Orgs, and roster history use school/club/team nouns from membership types (`studentOrgChromeFromTypes`, `membershipHistoryEyebrow`); empty students stay school-or-club honest — 2026-09-01
 - [x] District Schools settings readiness: `#schools` uses the same pilot readiness model as the command center (invite admin / claim / ownership / provision / ready), with ready counts and fail-closed retry — not verification-only labels — 2026-08-31
 - [x] District-hosted manage replies by school: after multi-school invite, RSVP/attendance rows show the connected school, sort school-then-name, and name unfinished/complete organizer registration on going rows so district coordinators follow up without leaving manage — 2026-08-29

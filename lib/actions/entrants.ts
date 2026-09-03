@@ -4,10 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { actionErrorMessage } from "@/lib/actions/errors";
 import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/actions/in-app-notifications";
-import {
-  getChildSchoolsForDistrict,
-  getOrgRoster,
-} from "@/lib/data/portal";
+import { getChildSchoolsForDistrict } from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 
@@ -99,31 +96,36 @@ export async function inviteEntrants(
   if (!uniqueProfileIds.length) return { ok: true, invited: 0 };
 
   const supabase = await createServerSupabaseClient();
-
-  const { data, error } = await supabase
-    .from("competition_entrants")
-    .upsert(
-      uniqueProfileIds.map((profileId) => ({
-        competition_id: competitionId,
-        profile_id: profileId,
-        status: "invited",
-        invited_by: user.id,
-      })),
-      { onConflict: "competition_id,profile_id", ignoreDuplicates: true }
-    )
-    .select("profile_id");
-  if (error) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        error,
-        "Could not send the invitations. Check your connection and try again.",
-        "You don’t have permission to invite entrants to this competition."
-      ),
-    };
+  const invitedIds: string[] = [];
+  const INVITE_CHUNK = 200;
+  for (let start = 0; start < uniqueProfileIds.length; start += INVITE_CHUNK) {
+    const chunk = uniqueProfileIds.slice(start, start + INVITE_CHUNK);
+    const { data, error } = await supabase
+      .from("competition_entrants")
+      .upsert(
+        chunk.map((profileId) => ({
+          competition_id: competitionId,
+          profile_id: profileId,
+          status: "invited",
+          invited_by: user.id,
+        })),
+        { onConflict: "competition_id,profile_id", ignoreDuplicates: true }
+      )
+      .select("profile_id");
+    if (error) {
+      return {
+        ok: false,
+        error: actionErrorMessage(
+          error,
+          "Could not send the invitations. Check your connection and try again.",
+          "You don’t have permission to invite entrants to this competition."
+        ),
+      };
+    }
+    for (const row of data ?? []) {
+      invitedIds.push(row.profile_id as string);
+    }
   }
-
-  const invitedIds = (data ?? []).map((row) => row.profile_id as string);
   if (invitedIds.length) {
     const { data: competition } = await supabase
       .from("competitions")
@@ -280,18 +282,24 @@ export async function inviteConnectedSchoolRosters(
     };
   }
 
-  const rosters = await Promise.all(
-    schools.map((school) => getOrgRoster(school.id))
+  const { data: profileRows, error: rosterError } = await supabase.rpc(
+    "list_connected_school_student_ids",
+    { p_district_id: host.id }
   );
+  if (rosterError) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        rosterError,
+        "Could not load connected-school rosters. Reload and try again.",
+        "You don’t have permission to invite students to this competition."
+      ),
+    };
+  }
   const profileIds = [
     ...new Set(
-      rosters.flatMap((roster) =>
-        roster
-          .filter(
-            (row) =>
-              row.member_status === "active" && row.member_role === "student"
-          )
-          .map((row) => row.profile_id)
+      ((profileRows ?? []) as { profile_id: string }[]).map(
+        (row) => row.profile_id
       )
     ),
   ];

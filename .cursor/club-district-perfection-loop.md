@@ -30,11 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- _(none — ready for next tick)_
+- P1 isolation/scale (`0069` + app): hitchhike, email drain, session cache, zip totals, district load, rate-limit bind, comments/STEM/CTA honesty — 2026-09-02
 
 ## Last tick
 
-- 2026-09-01 — Family/school chrome honesty: `studentOrgChromeFromTypes` + `membershipHistoryEyebrow`; Family RSVP/membership copy, Plan/Orgs student chrome, and school history “School record” instead of hard-coded Club.
+- 2026-09-02 — P1 scale/isolation: district hitchhike rejected; bound email enqueue + invitation flush; session `cache()`; zip search SQL totals; district rollup/readiness/invite-all; rate-limit actor bind; comment report/hide + under-13; STEM/event CTA honesty.
 - 2026-08-31 — District Schools settings (`#schools`): same pilot readiness next actions as the command center (invite/handoff/provision), fail-closed retry — not verification-only labels.
 - 2026-08-29 — District-hosted manage replies: label each RSVP/attendance row with the connected school, sort by school, and surface organizer-registration follow-up on going rows.
 - 2026-08-27 — Home organizer switch: massive draggable window slider (red/blue halves, mirrored white labels, midpoint live-switch) with a district sheen prompt until first try; board copy/body slides in the thumb's travel direction.

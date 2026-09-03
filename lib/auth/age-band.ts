@@ -58,3 +58,18 @@ export function ageBandFromDateOfBirth(
 export function ageBandLabel(band: AgeBand): string {
   return AGE_BAND_OPTIONS.find((o) => o.value === band)?.label ?? band;
 }
+
+/** Public event comments are for 13+. Students without a stored DOB cannot post. */
+export function canPostPublicComments(profile: {
+  date_of_birth: string | null;
+  role: string;
+}): boolean {
+  if (profile.date_of_birth) {
+    try {
+      return ageFromDateOfBirth(profile.date_of_birth) >= 13;
+    } catch {
+      return false;
+    }
+  }
+  return profile.role !== "student";
+}

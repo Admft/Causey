@@ -21,6 +21,10 @@ const PUBLIC_GET_PREFIXES = [
   "/terms",
   "/districts",
   "/clubs",
+  "/login",
+  "/signup",
+  "/join",
+  "/claim",
 ];
 
 function isAnonymousPublicGet(request: NextRequest): boolean {

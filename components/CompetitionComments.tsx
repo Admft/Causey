@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   deleteCompetitionComment,
   postCompetitionComment,
+  reportCompetitionComment,
 } from "@/lib/actions/comments";
 import {
   COMPETITION_COMMENT_MAX_LENGTH,
@@ -28,12 +29,14 @@ export function CompetitionComments({
   competitionId,
   eventSlug,
   signedIn,
+  canComment,
   viewerId,
   comments,
 }: {
   competitionId: string;
   eventSlug: string;
   signedIn: boolean;
+  canComment: boolean;
   viewerId: string | null;
   comments: CompetitionCommentRow[];
 }) {
@@ -42,6 +45,7 @@ export function CompetitionComments({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [reportingId, setReportingId] = useState<string | null>(null);
   const returnPath = `/event/${eventSlug}`;
 
   async function onSubmit(event: FormEvent) {
@@ -85,6 +89,21 @@ export function CompetitionComments({
     }
   }
 
+  async function onReport(commentId: string) {
+    setError(null);
+    setReportingId(commentId);
+    try {
+      const result = await reportCompetitionComment({ commentId, eventSlug });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } finally {
+      setReportingId(null);
+    }
+  }
+
   return (
     <section className="mt-10" aria-labelledby="event-comments-heading">
       <h2
@@ -115,9 +134,15 @@ export function CompetitionComments({
                   {formatCommentTime(comment.createdAt)}
                 </p>
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
-                {comment.body}
-              </p>
+              {comment.hiddenAt ? (
+                <p className="mt-2 text-sm text-muted">
+                  Hidden after a report.
+                </p>
+              ) : (
+                <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
+                  {comment.body}
+                </p>
+              )}
               {viewerId && viewerId === comment.userId ? (
                 <button
                   type="button"
@@ -127,6 +152,15 @@ export function CompetitionComments({
                 >
                   {removingId === comment.id ? "Removing…" : "Remove"}
                 </button>
+              ) : viewerId && !comment.hiddenAt ? (
+                <button
+                  type="button"
+                  className="mt-2 text-xs font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
+                  disabled={reportingId === comment.id}
+                  onClick={() => onReport(comment.id)}
+                >
+                  {reportingId === comment.id ? "Reporting…" : "Report"}
+                </button>
               ) : null}
             </li>
           ))}
@@ -135,7 +169,13 @@ export function CompetitionComments({
         <p className="mt-4 text-sm text-muted">No comments yet.</p>
       )}
 
-      {signedIn ? (
+      {error ? (
+        <p className="mt-3 text-sm font-medium text-brand-red" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {signedIn && canComment ? (
         <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-2">
           <label htmlFor="event-comment" className="text-xs font-semibold text-muted-strong">
             Add a comment
@@ -151,11 +191,6 @@ export function CompetitionComments({
           <p className="text-2xs text-muted">
             {body.trim().length}/{COMPETITION_COMMENT_MAX_LENGTH}
           </p>
-          {error ? (
-            <p className="text-sm font-medium text-brand-red" role="alert">
-              {error}
-            </p>
-          ) : null}
           <button
             type="submit"
             disabled={pending || !parseCompetitionCommentBody(body)}
@@ -164,6 +199,10 @@ export function CompetitionComments({
             {pending ? "Posting…" : "Post comment"}
           </button>
         </form>
+      ) : signedIn ? (
+        <p className="mt-5 text-sm text-muted">
+          Comments are for ages 13 and up.
+        </p>
       ) : (
         <p className="mt-5 text-sm text-muted">
           <Link

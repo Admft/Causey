@@ -34,6 +34,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] District-hosted manage replies name each connected school (sorted by school) and surface unfinished organizer registration on going rows — 2026-08-29
 - [x] District Schools settings (`#schools`) shows readiness next actions (same model as overview), not verification-only labels — 2026-08-31
 - [x] Family/Plan/Orgs/school history use School nouns for school students (not club-first leftovers) — 2026-09-01
+- [x] Unauthorized school hitchhike blocked; district rollup and invite-all no longer cartesian; invitation mail flushes without waiting for the reminder sweep (`0069`) — 2026-09-02
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -96,7 +97,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
    Surface: Family mission/membership empty copy; Plan + student Orgs derive school/club/org chrome from memberships; roster history eyebrow uses `membershipHistoryEyebrow`.
 
 8. **Ops · Email volume + live dual-district smoke · —**  
-   Not product UI. Keep as Legal/Ops; do not invent compliance UI.
+   Drain and invitation flush shipped 2026-09-02 (`0069` + 5-minute cron). Still apply migrations and prove volume in the live env. Keep FERPA/price as Legal/Ops.
 
 9. **Legal · Price / FERPA / retention / public school directory · —**  
    Out of scope for build; refuse.

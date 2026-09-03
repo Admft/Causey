@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -7,7 +8,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
  * Platform administration is deliberately separate from profile and
  * organization roles. The database RPC only answers for auth.uid().
  */
-export async function getPlatformAdminUser() {
+export const getPlatformAdminUser = cache(async () => {
   const user = await getSessionUser();
   if (!user) return null;
 
@@ -16,7 +17,7 @@ export async function getPlatformAdminUser() {
   if (error || data !== true) return null;
 
   return user;
-}
+});
 
 export async function isCurrentUserPlatformAdmin(): Promise<boolean> {
   return Boolean(await getPlatformAdminUser());
@@ -26,7 +27,7 @@ export async function isCurrentUserPlatformAdmin(): Promise<boolean> {
  * Super-admin is a protected subset of platform admins. The RPC only
  * answers for auth.uid().
  */
-export async function getSuperAdminUser() {
+export const getSuperAdminUser = cache(async () => {
   const user = await getPlatformAdminUser();
   if (!user) return null;
 
@@ -35,7 +36,7 @@ export async function getSuperAdminUser() {
   if (error || data !== true) return null;
 
   return user;
-}
+});
 
 export async function isCurrentUserSuperAdmin(): Promise<boolean> {
   return Boolean(await getSuperAdminUser());

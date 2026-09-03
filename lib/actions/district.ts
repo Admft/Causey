@@ -18,6 +18,7 @@ import {
   consumeRateLimit,
   hashedRequestActorKey,
 } from "@/lib/rate-limit";
+import { flushPendingInvitationEmails } from "@/lib/email/delivery";
 
 const InvitationRoleSchema = z.enum([
   "student",
@@ -378,6 +379,7 @@ export async function inviteOrganizationMember(input: {
   const result = await createInvitationRecord(parsed.data);
   if (result.ok) {
     revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
+    await flushPendingInvitationEmails();
   }
   return result;
 }
@@ -581,6 +583,9 @@ export async function bulkInviteOrganizationMembers(input: {
     };
   }
   revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
+  if (invited > 0) {
+    await flushPendingInvitationEmails();
+  }
   return { ok: true, invited, failed, claims };
 }
 
@@ -656,6 +661,7 @@ export async function reissueOrganizationInvitation(input: {
   });
   if (!result.ok) return result;
   revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
+  await flushPendingInvitationEmails();
   return { ...result, email: invitation.email };
 }
 
