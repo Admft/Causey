@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light only">
+    <title>Reset your password</title>
+  </head>
+  <body style="margin:0;background:#f5f9fc;color:#14181c;font-family:Arial,sans-serif">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0">Reset your Causey password.</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f9fc">
+      <tr>
+        <td align="center" style="padding:32px 16px">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid rgba(20,24,28,.1);border-radius:12px">
+            <tr>
+              <td style="padding:28px">
+                <p style="margin:0 0 20px;color:#c23b32;font-family:Georgia,serif;font-size:24px;font-weight:700">Causey</p>
+                <h1 style="margin:0;color:#14181c;font-family:Georgia,serif;font-size:28px;line-height:1.2">Reset your password</h1>
+                <p style="margin:18px 0 0;color:#3a4450;font-size:16px;line-height:1.6">Use this link to choose a new password for your Causey account. It expires after an hour.</p>
+                <p style="margin:24px 0">
+                  <a href="{{ .ConfirmationURL }}" style="display:inline-block;border-radius:8px;background:#c23b32;color:#ffffff;font-size:15px;font-weight:700;line-height:1;padding:13px 18px;text-decoration:none">Reset password</a>
+                </p>
+                <p style="margin:0;color:#5a6570;font-size:13px;line-height:1.5">If the button does not work, copy this link into your browser:</p>
+                <p style="margin:8px 0 0;color:#5a6570;font-size:13px;line-height:1.5;word-break:break-all">{{ .ConfirmationURL }}</p>
+                <p style="margin:18px 0 0;color:#5a6570;font-size:13px;line-height:1.5">If you did not ask to reset your password, you can ignore this email. Your password stays the same.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
