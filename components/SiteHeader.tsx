@@ -7,7 +7,13 @@ import { AuthNav } from "@/components/AuthNav";
 import { CauseyLogo } from "@/components/CauseyLogo";
 
 /** Pages whose hero already shows the Causey lockup — header brand waits. */
-const HERO_BRAND_PATHS = new Set(["/", "/districts", "/clubs"]);
+const HERO_BRAND_PATHS = new Set([
+  "/",
+  "/districts",
+  "/clubs",
+  "/billing",
+  "/portals",
+]);
 
 export function SiteHeader() {
   const pathname = usePathname();

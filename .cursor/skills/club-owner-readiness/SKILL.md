@@ -33,7 +33,7 @@ Coordination + discovery: roster, invites, RSVP, attendance, recorded results, f
 
 ## What Causey is not (do not build)
 
-Pairings, ballots, live standings, dues/Stripe, coach–parent DMs, public student profiles, LMS/practice homework, Lichess/Tabroom OAuth, public club directory until owner/legal says so.
+Pairings, ballots, live standings, student dues, coach–parent DMs, public student profiles, LMS/practice homework, Lichess/Tabroom OAuth, public club directory until owner/legal says so. Club SaaS checkout is a local `/billing` layout only until a processor is connected.
 
 ## Ship rule
 

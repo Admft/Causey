@@ -50,11 +50,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
       <body className="flex min-h-screen flex-col overflow-x-clip font-medium">
+        <a href="#main" className="skip-to-content">
+          Skip to content
+        </a>
         <div className="sticky top-0 z-50" data-site-chrome>
           <SiteHeader />
         </div>
 
-        <main className="flex-1">{children}</main>
+        <main id="main" className="flex-1">
+          {children}
+        </main>
 
         <footer className="band-join band-join--surface bg-surface py-10">
           <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 sm:flex-row sm:items-start sm:justify-between sm:px-8">
@@ -95,18 +100,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 Schools and districts
               </Link>
-              <Link
-                href="/privacy"
-                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+              <nav
+                aria-label="Legal"
+                className="flex flex-col gap-2"
               >
-                Privacy and student data
-              </Link>
-              <Link
-                href="/terms"
-                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
-              >
-                Terms of use
-              </Link>
+                <Link
+                  href="/privacy"
+                  className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+                >
+                  Privacy and student data
+                </Link>
+                <Link
+                  href="/terms"
+                  className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+                >
+                  Terms of use
+                </Link>
+              </nav>
               <a
                 href="https://causey.dev"
                 target="_blank"

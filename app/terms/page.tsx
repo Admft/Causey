@@ -49,7 +49,10 @@ export default function TermsPage() {
           <p className="mt-4 text-base text-muted">
             Provide accurate information, protect sign-in credentials, and use
             only the access assigned to you. Students under 13 should create and
-            use an account with a parent or guardian&rsquo;s help. Staff may add
+            use an account with a parent or guardian&rsquo;s help. Whether
+            under-13 accounts use parental consent, a school-official
+            instruction in a signed district agreement, or a block is not
+            decided. Causey does not sell an under-13 paid cohort. Staff may add
             students or act for an organization only when the school, district,
             club, student, or family has authorized them to do so.
           </p>
@@ -77,6 +80,24 @@ export default function TermsPage() {
               information they publish.
             </li>
           </ul>
+        </section>
+
+        <section aria-labelledby="subscription">
+          <h2
+            id="subscription"
+            className="font-display text-display-sm font-bold tracking-tight text-foreground"
+          >
+            Club and team subscriptions
+          </h2>
+          <p className="mt-4 text-base text-muted">
+            A future monthly Causey fee for a club or team workspace is not in force.
+            Checkout is not connected, and these terms do not charge a
+            club. When checkout is connected, the owner would pay through Stripe
+            Checkout and cancel through Stripe&rsquo;s customer portal. That fee
+            is not student dues and is not tournament entry. School and district
+            pilots stay a separate written agreement; public pages do not create
+            that contract.
+          </p>
         </section>
 
         <section aria-labelledby="district">

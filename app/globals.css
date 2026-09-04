@@ -290,6 +290,28 @@ textarea.field {
   flex-shrink: 0;
 }
 
+.skip-to-content {
+  position: absolute;
+  left: 1.25rem;
+  top: 1.25rem;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  height: 3rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-xl);
+  background: var(--brand-red);
+  color: #ffffff;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  transform: translateY(-8rem);
+}
+.skip-to-content:focus {
+  transform: translateY(0);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
 .cta-disabled {
   display: inline-flex;
   align-items: center;
@@ -755,6 +777,7 @@ textarea.field {
   .cta-enabled,
   .cta-outline,
   .page-back,
+  .skip-to-content,
   .card-lift,
   .nudge-x,
   .field,

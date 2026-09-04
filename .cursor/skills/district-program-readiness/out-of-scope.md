@@ -11,5 +11,6 @@ Do not start these unless the user explicitly asks in this chat.
 | Complete speech/STEM/arts/writing indexes as the district pitch | Chess is the working surface. Hosting other types is allowed; discovery is incomplete. |
 | Cross-district student transfer or shared rosters | Isolation is a hard gate. |
 | Messaging threads, payments, pairing engines | Same as club out-of-scope; worse at district scale. |
+| Live custom portal / vanity DNS | January is the shared `/orgs` shell. Local `/portals` is layout only. |
 
 Log procurement leftovers (export/delete proof, email volume, retention) in `.cursor/district-readiness.md` as **Legal** / **Ops**, not as fake UI.

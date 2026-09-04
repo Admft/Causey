@@ -21,6 +21,8 @@ const PUBLIC_GET_PREFIXES = [
   "/terms",
   "/districts",
   "/clubs",
+  "/billing",
+  "/portals",
   "/login",
   "/signup",
   "/join",

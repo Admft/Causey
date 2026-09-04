@@ -30,11 +30,14 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- School-student chrome on Account profile, homepage My tournaments, search org-going filter, and event teammate heading — 2026-09-03
+- P3 remaining: local `/billing` (invoices, dunning, entitlements) + `/portals` custom-host preview; both 404 on Vercel — 2026-09-03
 
 ## Last tick
 
+- 2026-09-03 — P3 remaining: `/billing` shows entitlements, unpublished invoices, and dunning; `/portals` is a local custom-host preview (UUID bind, fail-closed unknown host). Privacy/Terms name Vercel, Supabase, Resend, Sentry, OpenAI, and GitHub Actions; club subscription is not in force. Skip-to-content; nested `<main>` removed; footer legal nav. Still no Stripe SDK, no pairings/dues/DMs, no DPA or VPAT.
+- 2026-09-03 — P3: `/billing` Stripe Checkout panel matches the page’s hero card and fact rows (same shell as the left column). Still not connected.
 - 2026-09-03 — District school-student chrome: grade help on Account, My tournaments empty copy, search “My school is going,” event “Going from your school” derive nouns from org memberships.
+- 2026-09-02 — P3: `/billing` is a local-only Stripe Checkout + billing desk for club/team SaaS. Production/preview 404. `/clubs` no longer says “No billing or Stripe.” Student dues and tournament entry stay off the SKU.
 - 2026-09-02 — P2: Competitions lists past travel; attendance opens on start date; district Reports filter by type and show participating-school origin; CSV invites are one RPC; `/districts` names the shared org workspace (chess working surface, other types hostable). Apply `0070` on hosted Supabase.
 - 2026-09-02 — Club owner · first session: Start a club (not a fourth account type) → coach signup copy → `/orgs/new` club/team only; empty `/orgs` and nav say clubs; People hides School administrator on club/team.
 - 2026-08-31 — District Schools settings (`#schools`): same pilot readiness next actions as the command center (invite/handoff/provision), fail-closed retry — not verification-only labels.

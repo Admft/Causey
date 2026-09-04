@@ -35,7 +35,7 @@ export default async function ClaimInvitationPage({
 
   if (!invitation) {
     return (
-      <main className="mx-auto max-w-xl px-5 py-12 sm:px-8">
+      <div className="mx-auto max-w-xl px-5 py-12 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">
           Organization invitation
         </p>
@@ -52,12 +52,12 @@ export default async function ClaimInvitationPage({
         >
           Search tournaments
         </Link>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto max-w-xl px-5 py-12 sm:px-8">
+    <div className="mx-auto max-w-xl px-5 py-12 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Organization invitation</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Join {invitation.org_name}
@@ -112,6 +112,6 @@ export default async function ClaimInvitationPage({
           </>
         )}
       </section>
-    </main>
+    </div>
   );
 }

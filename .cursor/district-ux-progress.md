@@ -17,6 +17,9 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] P3 remaining (layout + honesty): `/billing` adds entitlements, invoices, and dunning; `/portals` is a Vercel-404 custom-host preview; Privacy/Terms name processors and keep subscription not in force; skip-to-content + single `main` + footer legal nav — 2026-09-03
+- [x] P3 `/billing` Stripe Checkout panel uses the same hero card and fact-row recipe as the rest of the page (no Checkout clone widget) — 2026-09-03
+- [x] P3 club SaaS layout preview: `/billing` shows Stripe Checkout and a billing desk (active / past due / canceled) with unpublished amounts; Vercel always 404s; no payment SDK — 2026-09-02
 - [x] DOE National Science Bowl re-enabled after ordinary public Key Dates/About HTML returned HTTP 200 and the retained parser produced four national dates; VEX stays blocked on Cloudflare 403 with no bypass — 2026-09-02
 - [x] P2 club/district hardening: Competitions travel list; day-of attendance; type-sliced district Reports/CSV + origin school (`0070`); set-based CSV invites; January shared-`/orgs` copy; fail-closed school attendance export — 2026-09-02
 - [x] Platform-admin account count uses the directory RPC (and `0071` when applied) instead of a revoked `platform_admins` table read, so `/admin` and `/admin/users` stop showing Unavailable for a non-zero admin set — 2026-09-02

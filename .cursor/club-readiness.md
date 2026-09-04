@@ -43,11 +43,12 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Competitions tab lists travel events the club marked as attending — 2026-09-02
 - [x] Club/team People does not offer School administrator — 2026-09-02
 - [x] Host publish CTA says Club/Team, not school — 2026-09-02
-- [ ] Owner/legal: public club directory, dues, messaging — see skill `out-of-scope.md`
+- [x] Club SaaS billing layout (Stripe Checkout, invoices, dunning, entitlements) at local `/billing` — 2026-09-03; checkout not connected, not on Vercel
+- [ ] Owner/legal: public club directory, student dues, messaging — see skill `out-of-scope.md`
 
 ## Out (do not build unless asked)
 
-Needs for a professional club (not building unless you ask): recurring practice nights, a public club directory, live USCF/NSDA lookup, pairings/ballots, dues, coach–parent DMs.
+Needs for a professional club (not building unless you ask): recurring practice nights, a public club directory, live USCF/NSDA lookup, pairings/ballots, student dues, coach–parent DMs. Club SaaS checkout is a local layout only (`/billing`).
 
 ## Findings — 2026-08-26 club-owner source walk
 

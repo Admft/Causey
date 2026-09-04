@@ -6,6 +6,11 @@ import { OrganizationSettingsForm } from "@/components/OrganizationSettingsForm"
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PortalErrorState } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
+import {
+  BILLING_PREVIEW_PATH,
+  PORTAL_PREVIEW_PATH,
+  isLocalPreviewEnabled,
+} from "@/lib/local-preview";
 import { getDistrictPilotReadiness } from "@/lib/data/district";
 import {
   getOrganizationVerificationReview,
@@ -166,6 +171,47 @@ export default async function OrganizationSettingsPage({
             </p>
           ) : null}
         </section>
+        {isLocalPreviewEnabled() &&
+        (view.org.type === "club" || view.org.type === "team") ? (
+          <section className="mt-8 rounded-xl border border-line bg-surface p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+              Local preview
+            </p>
+            <h2 className="mt-2 text-base font-semibold text-foreground">
+              Club subscription
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted">
+              Checkout is not connected. This block is hidden on Vercel so a
+              deploy cannot start charging clubs.
+            </p>
+            <Link
+              href={BILLING_PREVIEW_PATH}
+              className="mt-4 inline-flex cta-outline"
+            >
+              Open billing layout
+            </Link>
+          </section>
+        ) : null}
+        {isLocalPreviewEnabled() && view.org.type === "district" ? (
+          <section className="mt-8 rounded-xl border border-line bg-surface p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+              Local preview
+            </p>
+            <h2 className="mt-2 text-base font-semibold text-foreground">
+              Custom district portal
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted">
+              January pilots stay on the shared Causey workspace. This block
+              is hidden on Vercel so a deploy cannot start a vanity host.
+            </p>
+            <Link
+              href={PORTAL_PREVIEW_PATH}
+              className="mt-4 inline-flex cta-outline"
+            >
+              Open portal layout
+            </Link>
+          </section>
+        ) : null}
         <section className="section-rule mt-8 pt-8">
           <OrganizationSettingsForm
             org={view.org}

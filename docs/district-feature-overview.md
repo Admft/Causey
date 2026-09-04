@@ -9,7 +9,7 @@
 **Date:** August 24, 2026  
 **Status:** Assisted chess pilot. Not a self-serve district product and not a finished procurement package. Club/team owners use a separate self-serve workspace (`docs/club-feature-overview.md`); this page is district + school only.
 
-Causey helps a district run scholastic competition programs without giving the central office a copy of every student’s browsing history. Families can search public chess tournaments for free. A district pilot uses the same organization workspace as schools — not a custom portal. Chess is the working surface; other types can be hosted. The pilot still adds the school-side work: getting the right people onto the right teams, telling families about events, recording who attended, and giving the district participation totals.
+Causey helps a district run scholastic competition programs without giving the central office a copy of every student’s browsing history. Families can search public chess tournaments for free. A district pilot uses the same organization workspace as schools — not a custom portal. A vanity host is a later unsold SKU (local `/portals` layout only). Chess is the working surface; other types can be hosted. The pilot still adds the school-side work: getting the right people onto the right teams, telling families about events, recording who attended, and giving the district participation totals.
 
 Setup is hands-on. Causey creates the district record with you. Causey does not list a school, a coach, or a student on the public site before the district signs.
 
@@ -83,7 +83,8 @@ Chess is the working surface. Other competition types exist in the product but a
 | Announcements | Short notes from district or school staff; district overview can post once to every connected school | Yes |
 | Alerts | Invites, deadlines, 7-day and 1-day reminders, changes, cancel | In-app yes; email is configured but not yet proven at school volume |
 | Aggregate reports + CSV | School-level counts, type filter, participating-school origin on district-hosted invites; not student browsing | Yes |
-| Privacy and terms pages | Public disclosures of what student data is stored | Published; legal review still required before a paid student rollout |
+| Privacy and terms pages | Public disclosures of what student data is stored; processors named | Published; legal review still required before a paid student rollout |
+| Custom district portal | Vanity host, UUID allowlist, host-only cookie | Layout only (`/portals`); January stays shared `/orgs` |
 
 ---
 
@@ -96,6 +97,7 @@ Do not promise these in a district conversation:
 - Coach–parent messaging threads
 - A complete index of speech, debate, STEM, arts, or writing events
 - A finished price, contract, SLA, or FERPA/state-privacy certification
+- A live custom portal, vanity domain, or per-district feature pack (local `/portals` layout only)
 - Automated proof that every student-data request (export, delete, retention) is complete for procurement
 
 Before a paid student rollout, Causey and the district still have to settle price, support, privacy, how long data is kept, and security, and Causey has to prove email delivery at school volume.

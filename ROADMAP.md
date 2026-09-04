@@ -61,7 +61,8 @@ tournaments, RSVP, household links, org attendance on public events) shipped
 
 - [x] **Moderation queue** — coach-created *public* events go through review
   before listing (status `pending_review`); private events stay instant.
-- [ ] **In-app registration & payments** for org events (fees, Stripe).
+- [ ] **Club/team monthly SaaS** — Stripe Checkout, invoices, dunning, and entitlements (local layout at `/billing`; not connected). Student dues and in-app tournament fees stay out.
+- [ ] **Custom district portals** — vanity host and UUID feature allowlist (local layout at `/portals`; not connected). January pilots stay on the shared `/orgs` workspace.
 - [x] **Attendance history / season view** for coaches (who came to what).
 - [ ] **Achievements** — badges for first tournament, 5 RSVPs, etc.
 - [ ] **Messaging** — real coach ↔ parent threads (big safety surface; needs

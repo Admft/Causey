@@ -57,7 +57,7 @@ export default async function NotificationsPage() {
   const hasAnything = attention.length > 0 || notifications.length > 0;
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
       <PageBackLink href={workspace.href}>{workspace.label}</PageBackLink>
       <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-brand-red">
         Alerts
@@ -226,6 +226,6 @@ export default async function NotificationsPage() {
           </ul>
         )}
       </section>
-    </main>
+    </div>
   );
 }

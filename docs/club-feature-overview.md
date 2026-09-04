@@ -3,7 +3,7 @@
 **Audience:** club owners, team coaches, and volunteer organizers (any competition type Causey lists)  
 **Product:** Causey (`https://app.causey.dev`)  
 **Date:** August 24, 2026  
-**Status:** A coach can run a real season of coordination. Chess search is the densest public index. Causey is not tournament-floor software and not a billing product.
+**Status:** A coach can run a real season of coordination. Chess search is the densest public index. Causey is not tournament-floor software. Club SaaS checkout is a local layout only; it does not collect student dues or organizer entry.
 
 Causey helps a club find events, get students and families to the right ones, record who went and how they finished, and keep a season file. Families still finish paid entry on the organizer’s site. Chess clubs get the most listings; a debate, STEM, arts, or writing club can use the same roster and hosting tools with fewer public events in the directory.
 
@@ -56,7 +56,8 @@ A club is not a school and not a district. Coaches create club or team workspace
 | Grade + credential IDs | Typed USCF / NSDA / other | IDs only; no live lookups |
 | Website + meeting note | Members only | Yes |
 | Public club homepage / directory | Find a club by city | No |
-| Pairings, ballots, dues | Floor TD / tab / billing | No — use those products |
+| Pairings, ballots, student dues | Floor TD / tab / family billing | No — use those products |
+| Club/team SaaS checkout | Monthly Causey subscription for the workspace | Layout only (`/billing`); invoices, dunning, and entitlements shown; not live |
 
 ---
 
@@ -69,6 +70,8 @@ A club is not a school and not a district. Coaches create club or team workspace
 - Dues
 - Coach–parent DMs
 
+Club SaaS checkout exists only as a local layout (`/billing`). It is not live and does not collect student dues.
+
 ## What Causey does not do yet
 
 Do not promise these in a club-owner conversation. Same list as above, with the usual extra detail:
@@ -78,7 +81,7 @@ Do not promise these in a club-owner conversation. Same list as above, with the 
 - Live rating or NSDA-point lookup from typed IDs
 - Swiss pairings, boards, clocks, or submitting a US Chess rating report
 - Tabroom/SpeechWire ballots or imported break lists
-- Membership dues, Stripe, or fundraising
+- Membership dues collected from families, or live Stripe checkout
 - Coach–parent message threads
 
 ---

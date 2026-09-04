@@ -452,7 +452,7 @@ export default async function AccountPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageBackLink href={workspace.href}>{workspace.label}</PageBackLink>
         <Link
@@ -493,6 +493,6 @@ export default async function AccountPage() {
       ) : null}
 
       <AccountSettingsShell panels={panels} />
-    </main>
+    </div>
   );
 }

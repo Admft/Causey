@@ -39,6 +39,8 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Type-sliced district Reports/CSV plus participating-school origin on district-hosted invites (`0070`) — 2026-09-02
 - [x] CSV staff invites use one set-based RPC; restore-drill runbook names Pro backups, PITR-off, and verify steps without claiming a logged drill — 2026-09-02
 - [x] January story copy: shared `/orgs` workspace, chess working surface, other types hostable, not custom portals — 2026-09-02
+- [x] Club SaaS billing is a local layout only (`/billing`); districts stay meeting-booked — 2026-09-02
+- [x] Custom district portal is a local layout only (`/portals`); January stays the shared `/orgs` workspace — 2026-09-03
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
