@@ -160,7 +160,10 @@ export default async function AccountPage() {
         .
       </p>
       <div className="mt-6">
-        <ProfileEditor profile={profile} />
+        <ProfileEditor
+          profile={profile}
+          orgTypes={myOrgs.map((row) => row.org.type)}
+        />
       </div>
       <p className="mt-4">
         <Link
@@ -449,7 +452,7 @@ export default async function AccountPage() {
   ];
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageBackLink href={workspace.href}>{workspace.label}</PageBackLink>
         <Link
@@ -490,6 +493,6 @@ export default async function AccountPage() {
       ) : null}
 
       <AccountSettingsShell panels={panels} />
-    </main>
+    </div>
   );
 }

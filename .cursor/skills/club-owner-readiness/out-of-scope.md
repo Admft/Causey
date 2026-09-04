@@ -8,7 +8,7 @@ Do not start these unless the user explicitly asks in this chat.
 | --- | --- |
 | Pairings, boards, clocks, US Chess rating report | Floor TD tools. Causey coordinates; SwissSys/WinTD run the room. |
 | Tabroom/SpeechWire ballots, speaker points | NSDA terms block Tabroom automation; Causey is not a tab system. |
-| Dues, Stripe, merch, fundraising | No billing product. |
+| Student dues, merch, fundraising | Do not collect family money. Club SaaS is a local `/billing` layout only — no live processor. |
 | Coach ↔ parent message threads | Minor-safety / moderation surface. Announcements stay the substitute. |
 | Public `/u/` player pages or public club directory | Privacy + “no public school/club names until paperwork” constraint. |
 | Practice-night LMS, puzzles, Lichess sync | Not a classroom or online-play product. |

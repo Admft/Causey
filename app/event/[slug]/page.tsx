@@ -46,6 +46,7 @@ import {
   getCoachOrgsWithAttendance,
   getCompetitionBySlugAuthed,
   getEntrantsForCompetition,
+  getMyOrgs,
   getOrganizationSlugById,
   getRatingSummary,
   getRecommendTargets,
@@ -55,6 +56,10 @@ import {
   type RecommendTarget,
 } from "@/lib/data/portal";
 import type { EntrantStatus } from "@/lib/auth/orgs";
+import {
+  goingFromOrgHeading,
+  orgMembershipKindsFromTypes,
+} from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -177,6 +182,7 @@ export default async function EventPage({ params }: Params) {
   let coachOrgs: CoachOrgAttendance[] = [];
   let recommendTargets: RecommendTarget[] = [];
   let clubGoing: ClubGoingGroup[] = [];
+  let goingFromOrgLabel = "Going from your club";
   const [ratingSummary, hostOrgSlug, comments] = await Promise.all([
     getRatingSummary(competition.id),
     competition.org_id
@@ -207,6 +213,10 @@ export default async function EventPage({ params }: Params) {
       getRecommendTargets(user.id),
       getClubGoing(competition.id),
     ]);
+    const viewerOrgs = await getMyOrgs(user.id);
+    goingFromOrgLabel = goingFromOrgHeading(
+      orgMembershipKindsFromTypes(viewerOrgs.map((row) => row.org.type))
+    );
     const children = await getActiveChildren(user.id);
     const childIds = children.map((c) => c.profile_id);
     const entrants = await getEntrantsForCompetition(competition.id, [
@@ -738,7 +748,7 @@ export default async function EventPage({ params }: Params) {
           {clubGoing.length ? (
             <div className="border-b border-line pb-5">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-                Going from your club
+                {goingFromOrgLabel}
               </h2>
               <div className="mt-2 flex flex-col gap-2">
                 {clubGoing.map((group) => (

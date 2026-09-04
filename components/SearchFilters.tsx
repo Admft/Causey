@@ -97,12 +97,14 @@ export function SearchFilters({
   category = "chess",
   idPrefix = "filter",
   clubGoingAvailable = false,
+  clubGoingLabel = "My club is going",
 }: {
   filters: FilterState;
   onChange: (next: FilterState) => void;
   category?: CompetitionCategory;
   idPrefix?: string;
   clubGoingAvailable?: boolean;
+  clubGoingLabel?: string;
 }) {
   const set = (key: keyof FilterState) => (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) =>
     onChange({ ...filters, [key]: e.target.value });
@@ -242,7 +244,7 @@ export function SearchFilters({
               : "border-line bg-white text-muted-strong hover:border-brand-red/40 hover:text-brand-red"
           }`}
         >
-          My club is going
+          {clubGoingLabel}
         </button>
       ) : null}
 
@@ -358,7 +360,8 @@ type Chip = { key: keyof FilterState; label: string; value: string };
 
 function activeChips(
   filters: FilterState,
-  category: CompetitionCategory
+  category: CompetitionCategory,
+  clubGoingLabel: string
 ): Chip[] {
   const chips: Chip[] = [];
   if (filters.timing === "ended") {
@@ -370,7 +373,7 @@ function activeChips(
     chips.push({ key: "featured", label: "Featured only", value: "" });
   }
   if (filters.club_going) {
-    chips.push({ key: "club_going", label: "My club is going", value: "" });
+    chips.push({ key: "club_going", label: clubGoingLabel, value: "" });
   }
   const source = competitionSourceOptionsForCategory(category).find(
     (s) => s.value === filters.source
@@ -420,12 +423,14 @@ export function ActiveFilterChips({
   filters,
   onChange,
   category = "chess",
+  clubGoingLabel = "My club is going",
 }: {
   filters: FilterState;
   onChange: (next: FilterState) => void;
   category?: CompetitionCategory;
+  clubGoingLabel?: string;
 }) {
-  const chips = activeChips(filters, category);
+  const chips = activeChips(filters, category, clubGoingLabel);
   if (chips.length === 0) return null;
 
   const remove = (chip: Chip) =>

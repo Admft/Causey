@@ -25,14 +25,38 @@ import {
 import { workspaceOpenCta } from "@/lib/portal-copy";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+function orgNavAccessFromMemberships(
+  orgs: {
+    org: { type: OrganizationType };
+    isCoach: boolean;
+    memberRole: string | null;
+  }[]
+): {
+  hasDistrictAccess: boolean;
+  hasSchoolAccess: boolean;
+  hasClubAccess: boolean;
+} {
+  const staffOrgs = orgs.filter((row) => row.isCoach);
+  return {
+    hasDistrictAccess: staffOrgs.some(
+      (row) =>
+        row.org.type === "district" || row.memberRole === "district_admin"
+    ),
+    hasSchoolAccess: orgs.some((row) => row.org.type === "school"),
+    hasClubAccess: orgs.some(
+      (row) => row.org.type === "club" || row.org.type === "team"
+    ),
+  };
+}
+
 function emptySummary(
   role: AccountRole,
-  hasDistrictAccess: boolean
+  access: ReturnType<typeof orgNavAccessFromMemberships>
 ): HomeMyTournamentsSummary {
-  const empty = homeMyTournamentsEmptyCopy(role, hasDistrictAccess);
+  const empty = homeMyTournamentsEmptyCopy(role, access);
   return {
     items: [],
-    seeAll: workspaceOpenCta(role, { hasDistrictAccess }),
+    seeAll: workspaceOpenCta(role, access),
     emptyTitle: empty.title,
     emptyDescription: empty.description,
   };
@@ -47,7 +71,11 @@ export async function getHomeMyTournaments(
   profile: Profile
 ): Promise<HomeMyTournamentsSummary> {
   if (!isSupabaseConfigured()) {
-    return emptySummary(profile.role, false);
+    return emptySummary(profile.role, {
+      hasDistrictAccess: false,
+      hasSchoolAccess: false,
+      hasClubAccess: false,
+    });
   }
 
   try {
@@ -60,11 +88,8 @@ export async function getHomeMyTournaments(
         : Promise.resolve([]),
     ]);
 
+    const orgAccess = orgNavAccessFromMemberships(orgs);
     const staffOrgs = orgs.filter((row) => row.isCoach);
-    const hasDistrictAccess = staffOrgs.some(
-      (row) =>
-        row.org.type === "district" || row.memberRole === "district_admin"
-    );
 
     const collected: HomeMyTournamentRow[] = [];
 
@@ -189,15 +214,19 @@ export async function getHomeMyTournaments(
       }
     }
 
-    const empty = homeMyTournamentsEmptyCopy(profile.role, hasDistrictAccess);
+    const empty = homeMyTournamentsEmptyCopy(profile.role, orgAccess);
     return {
       items: mergeHomeMyTournamentRows(collected),
-      seeAll: workspaceOpenCta(profile.role, { hasDistrictAccess }),
+      seeAll: workspaceOpenCta(profile.role, orgAccess),
       emptyTitle: empty.title,
       emptyDescription: empty.description,
     };
   } catch (error) {
     console.error("Homepage my-tournaments preview failed:", error);
-    return emptySummary(profile.role, false);
+    return emptySummary(profile.role, {
+      hasDistrictAccess: false,
+      hasSchoolAccess: false,
+      hasClubAccess: false,
+    });
   }
 }

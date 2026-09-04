@@ -4,8 +4,11 @@ import { describe, expect, it } from "vitest";
 import {
   OPEN_MY_CLUBS_LABEL,
   OPEN_MY_ORGANIZATIONS_LABEL,
+  goingFromOrgHeading,
   membershipHistoryEyebrow,
+  orgGoingFilterLabel,
   organizationKindTitle,
+  profileGradeHelpText,
   studentOrgChromeFromTypes,
 } from "@/lib/portal-copy";
 
@@ -74,5 +77,28 @@ describe("school and family chrome honesty", () => {
     expect(orgs).toContain("staffOrgListChromeFromTypes");
     expect(orgs).not.toContain("You left that club.");
     expect(orgs).toContain("studentChrome.heading");
+  });
+
+  it("labels profile, search, and event surfaces from membership types", () => {
+    expect(profileGradeHelpText({ hasSchool: true, hasClubOrTeam: false })).toMatch(
+      /school/
+    );
+    expect(profileGradeHelpText({ hasSchool: true, hasClubOrTeam: false })).not.toMatch(
+      /clubs/i
+    );
+    expect(profileGradeHelpText({ hasSchool: false, hasClubOrTeam: true })).toMatch(
+      /clubs/i
+    );
+    expect(goingFromOrgHeading({ hasSchool: true, hasClubOrTeam: false })).toBe(
+      "Going from your school"
+    );
+    expect(orgGoingFilterLabel({ hasSchool: true, hasClubOrTeam: false })).toBe(
+      "My school is going"
+    );
+
+    expect(source("components/ProfileEditor.tsx")).toContain("profileGradeHelpText");
+    expect(source("app/event/[slug]/page.tsx")).toContain("goingFromOrgHeading");
+    expect(source("components/SearchFilters.tsx")).toContain("clubGoingLabel");
+    expect(source("app/chess/page.tsx")).toContain("searchOrgGoingFilterLabel");
   });
 });

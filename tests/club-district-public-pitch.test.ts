@@ -35,6 +35,8 @@ describe("club and district public pitches", () => {
     expect(clubsPage).toContain("Live USCF/NSDA lookup");
     expect(clubsPage).toContain("Pairings/ballots");
     expect(clubsPage).toContain("Dues");
+    expect(clubsPage).toContain("does not collect student dues or tournament entry");
+    expect(clubsPage).not.toContain("No billing or Stripe");
     expect(clubsPage).toContain("Coach–parent DMs");
   });
 

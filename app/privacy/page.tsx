@@ -98,11 +98,14 @@ export default function PrivacyPage() {
             Service providers and event organizers
           </h2>
           <p className="mt-4 text-base text-muted">
-            Causey uses service providers for hosting, authentication, database
-            storage, and email delivery. They process data only to provide those
-            services. Tournament registration happens on an organizer&rsquo;s
-            website; information submitted there is governed by that
-            organizer&rsquo;s privacy practices, not this notice.
+            Causey uses Vercel for hosting, Supabase for authentication and
+            database storage, Resend for email delivery, Sentry for error
+            reporting when it is configured, OpenAI for optional pathway
+            enrichment, and GitHub Actions for build and ingest jobs. They
+            process data only to provide those services. Tournament registration
+            happens on an organizer&rsquo;s website; information submitted there
+            is governed by that organizer&rsquo;s privacy practices, not this
+            notice.
           </p>
         </section>
 
@@ -148,7 +151,10 @@ export default function PrivacyPage() {
             permitted uses, retention expectations, and deletion process in an
             agreement approved by the district. Causey does not claim FERPA,
             COPPA, or state student-privacy compliance merely because this page
-            exists.
+            exists. Whether under-13 students use parental consent, a
+            school-official instruction in that agreement, or a block is not
+            decided. Causey does not sell an under-13 paid cohort. Public event
+            comments already block under-13 posters.
           </p>
         </section>
 

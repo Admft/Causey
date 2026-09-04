@@ -131,9 +131,11 @@ function parseTiming(raw: string | null): FilterState["timing"] {
 export function SearchClient({
   category,
   clubGoingAvailable = false,
+  clubGoingLabel = "My club is going",
 }: {
   category: DiscoveryCategory;
   clubGoingAvailable?: boolean;
+  clubGoingLabel?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -429,6 +431,7 @@ export function SearchClient({
                 category={category}
                 idPrefix="desktop-filter"
                 clubGoingAvailable={clubGoingAvailable}
+                clubGoingLabel={clubGoingLabel}
               />
             </div>
           </aside>
@@ -441,6 +444,7 @@ export function SearchClient({
                 category={category}
                 idPrefix="mobile-filter"
                 clubGoingAvailable={clubGoingAvailable}
+                clubGoingLabel={clubGoingLabel}
               />
             </div>
             <DisciplineFacetSwitch
@@ -452,6 +456,7 @@ export function SearchClient({
               filters={filters}
               onChange={setFilters}
               category={category}
+              clubGoingLabel={clubGoingLabel}
             />
 
             {status.kind === "loading" && (

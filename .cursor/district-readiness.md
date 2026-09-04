@@ -34,10 +34,13 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] District-hosted manage replies name each connected school (sorted by school) and surface unfinished organizer registration on going rows — 2026-08-29
 - [x] District Schools settings (`#schools`) shows readiness next actions (same model as overview), not verification-only labels — 2026-08-31
 - [x] Family/Plan/Orgs/school history use School nouns for school students (not club-first leftovers) — 2026-09-01
+- [x] Account grade help, homepage My tournaments empty states, search org-going chip, and event teammate heading use school/club nouns from memberships — 2026-09-03
 - [x] Unauthorized school hitchhike blocked; district rollup and invite-all no longer cartesian; invitation mail flushes without waiting for the reminder sweep (`0069`) — 2026-09-02
 - [x] Type-sliced district Reports/CSV plus participating-school origin on district-hosted invites (`0070`) — 2026-09-02
 - [x] CSV staff invites use one set-based RPC; restore-drill runbook names Pro backups, PITR-off, and verify steps without claiming a logged drill — 2026-09-02
 - [x] January story copy: shared `/orgs` workspace, chess working surface, other types hostable, not custom portals — 2026-09-02
+- [x] Club SaaS billing is a local layout only (`/billing`); districts stay meeting-booked — 2026-09-02
+- [x] Custom district portal is a local layout only (`/portals`); January stays the shared `/orgs` workspace — 2026-09-03
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 

@@ -42,6 +42,59 @@ export function membershipHistoryEyebrow(type: string): string {
   return `${organizationKindTitle(type)} record`;
 }
 
+/** School vs club/team membership from organization types. */
+export type OrgMembershipKinds = {
+  hasSchool: boolean;
+  hasClubOrTeam: boolean;
+};
+
+export function orgMembershipKindsFromTypes(
+  types: Iterable<string>
+): OrgMembershipKinds {
+  const kinds = new Set(
+    [...types]
+      .map((t) => organizationKindLabel(t))
+      .filter((k) => k === "school" || k === "club" || k === "team")
+  );
+  return {
+    hasSchool: kinds.has("school"),
+    hasClubOrTeam: kinds.has("club") || kinds.has("team"),
+  };
+}
+
+/** Account profile grade field helper under the grade select. */
+export function profileGradeHelpText(kinds: OrgMembershipKinds): string {
+  if (kinds.hasSchool && !kinds.hasClubOrTeam) {
+    return "Optional. Coaches at your school can see this on the roster. It is not a live eligibility lookup.";
+  }
+  if (!kinds.hasSchool && kinds.hasClubOrTeam) {
+    return "Optional. Coaches in your clubs can see this on the roster. It is not a live eligibility lookup.";
+  }
+  return "Optional. Coaches in your schools and clubs can see this on the roster. It is not a live eligibility lookup.";
+}
+
+/** Event page aside: teammates who RSVP'd going. */
+export function goingFromOrgHeading(kinds: OrgMembershipKinds): string {
+  if (kinds.hasSchool && !kinds.hasClubOrTeam) {
+    return "Going from your school";
+  }
+  if (!kinds.hasSchool && kinds.hasClubOrTeam) {
+    return "Going from your club";
+  }
+  return "Going from your organization";
+}
+
+/** Signed-in search filter chip for org-attended events. */
+export function orgGoingFilterLabel(kinds: OrgMembershipKinds): string {
+  if (kinds.hasSchool && !kinds.hasClubOrTeam) {
+    return "My school is going";
+  }
+  if (!kinds.hasSchool && kinds.hasClubOrTeam) {
+    return "My club is going";
+  }
+  return "My organization is going";
+}
+
 export type StudentOrgChrome = {
   heading: string;
   openLabel: string;

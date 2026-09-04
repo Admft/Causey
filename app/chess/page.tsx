@@ -5,6 +5,7 @@ import { SearchClient } from "@/components/SearchClient";
 import { TournamentSources } from "@/components/TournamentSources";
 import { getSessionUser } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/data/portal";
+import { searchOrgGoingFilterLabel } from "@/lib/search-org-going-label";
 
 export const metadata: Metadata = {
   title: "Scholastic chess competitions",
@@ -15,6 +16,9 @@ export const metadata: Metadata = {
 export default async function ChessSearchPage() {
   const clubGoingAvailable =
     isSupabaseConfigured() && Boolean(await getSessionUser());
+  const clubGoingLabel = clubGoingAvailable
+    ? await searchOrgGoingFilterLabel()
+    : "My club is going";
   return (
     <>
       <ChessSubnavBar tool="tournaments" />
@@ -22,6 +26,7 @@ export default async function ChessSearchPage() {
         <SearchClient
           category="chess"
           clubGoingAvailable={clubGoingAvailable}
+          clubGoingLabel={clubGoingLabel}
         />
       </Suspense>
       <TournamentSources />

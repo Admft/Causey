@@ -19,6 +19,10 @@ import {
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
 import { ZipCaptureField } from "@/components/ZipCaptureField";
+import {
+  orgMembershipKindsFromTypes,
+  profileGradeHelpText,
+} from "@/lib/portal-copy";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -38,7 +42,13 @@ function isShortcutSchemaGap(error: unknown): boolean {
   return message.includes("preferred_competition_category");
 }
 
-export function ProfileEditor({ profile }: { profile: Profile }) {
+export function ProfileEditor({
+  profile,
+  orgTypes = [],
+}: {
+  profile: Profile;
+  orgTypes?: string[];
+}) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [dateOfBirth, setDateOfBirth] = useState(profile.date_of_birth ?? "");
@@ -74,6 +84,11 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       return null;
     }
   }, [dateOfBirth]);
+
+  const gradeHelpText = useMemo(
+    () => profileGradeHelpText(orgMembershipKindsFromTypes(orgTypes)),
+    [orgTypes]
+  );
 
   function toggleInterest(category: DiscoveryCategory, checked: boolean) {
     setInterests((current) => {
@@ -196,10 +211,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             </option>
           ))}
         </select>
-        <span className="text-2xs text-muted">
-          Optional. Coaches in your clubs can see this on the roster. It is
-          not a live eligibility lookup.
-        </span>
+        <span className="text-2xs text-muted">{gradeHelpText}</span>
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1">

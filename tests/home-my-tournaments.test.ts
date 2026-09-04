@@ -57,14 +57,34 @@ describe("home my-tournaments preview", () => {
     expect(travelingReason("school")).toBe("Your school is traveling");
     expect(travelingReason("district")).toBe("Your district is traveling");
     expect(hostedReason("North Chess Club")).toBe("Hosted by North Chess Club");
-    expect(homeMyTournamentsEmptyCopy("coach", true).title).toContain(
-      "school or district"
-    );
-    expect(homeMyTournamentsEmptyCopy("coach", true).title).not.toContain(
-      "club"
-    );
-    expect(homeMyTournamentsEmptyCopy("coach", false).title).toContain("club");
-    expect(homeMyTournamentsEmptyCopy("parent", false).title).toContain(
+    expect(
+      homeMyTournamentsEmptyCopy("coach", { hasDistrictAccess: true }).title
+    ).toContain("school or district");
+    expect(
+      homeMyTournamentsEmptyCopy("coach", { hasDistrictAccess: true }).title
+    ).not.toContain("club");
+    expect(
+      homeMyTournamentsEmptyCopy("coach", { hasDistrictAccess: false }).title
+    ).toContain("club");
+    expect(
+      homeMyTournamentsEmptyCopy("student", {
+        hasSchoolAccess: true,
+        hasClubAccess: false,
+      }).title
+    ).toContain("school");
+    expect(
+      homeMyTournamentsEmptyCopy("student", {
+        hasSchoolAccess: true,
+        hasClubAccess: false,
+      }).title
+    ).not.toContain("club");
+    expect(
+      homeMyTournamentsEmptyCopy("student", {
+        hasSchoolAccess: false,
+        hasClubAccess: true,
+      }).title
+    ).toContain("club");
+    expect(homeMyTournamentsEmptyCopy("parent", {}).title).toContain(
       "students"
     );
   });

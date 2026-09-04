@@ -80,7 +80,8 @@ const notIncluded = [
   },
   {
     title: "Dues",
-    description: "No billing or Stripe. Fees stay on the organizer’s site.",
+    description:
+      "Causey does not collect student dues or tournament entry. Families still pay the organizer.",
   },
   {
     title: "Coach–parent DMs",
