@@ -290,24 +290,37 @@ textarea.field {
   flex-shrink: 0;
 }
 
-.skip-to-content {
+/* Keyboard-only skip link. Clip, don't translate: production CSS dropped
+ * `.skip-to-content`, and body overflow-x-clip can keep a transformed chip
+ * in the document. Visible only on Tab. */
+.skip-link {
   position: absolute;
   left: 1.25rem;
   top: 1.25rem;
   z-index: 100;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link:focus {
   display: inline-flex;
   align-items: center;
+  width: auto;
   height: 3rem;
   padding-inline: 1.25rem;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
   border-radius: var(--radius-xl);
   background: var(--brand-red);
   color: #ffffff;
   font-size: var(--text-sm);
   font-weight: 700;
-  transform: translateY(-8rem);
-}
-.skip-to-content:focus {
-  transform: translateY(0);
   outline: none;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
@@ -777,7 +790,7 @@ textarea.field {
   .cta-enabled,
   .cta-outline,
   .page-back,
-  .skip-to-content,
+  .skip-link,
   .card-lift,
   .nudge-x,
   .field,

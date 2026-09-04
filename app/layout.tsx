@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
       <body className="flex min-h-screen flex-col overflow-x-clip font-medium">
-        <a href="#main" className="skip-to-content">
+        <a href="#main" className="skip-link sr-only focus:not-sr-only">
           Skip to content
         </a>
         <div className="sticky top-0 z-50" data-site-chrome>

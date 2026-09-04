@@ -119,7 +119,9 @@ describe("P3 local previews and honesty", () => {
   it("ships a skip link, one main landmark, and a legal footer nav", () => {
     const layout = read("app/layout.tsx");
     expect(layout).toContain('href="#main"');
-    expect(layout).toContain("skip-to-content");
+    expect(layout).toContain("skip-link");
+    expect(layout).toContain("sr-only");
+    expect(read("app/globals.css")).toContain(".skip-link");
     expect(layout).toContain('id="main"');
     expect(layout).toContain('aria-label="Legal"');
 

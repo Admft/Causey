@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Skip link no longer sits in the header as plain text: production CSS had dropped `.skip-to-content`, so the clip/`sr-only` `.skip-link` only appears on Tab — 2026-09-04
 - [x] P3 remaining (layout + honesty): `/billing` adds entitlements, invoices, and dunning; `/portals` is a Vercel-404 custom-host preview; Privacy/Terms name processors and keep subscription not in force; skip-to-content + single `main` + footer legal nav — 2026-09-03
 - [x] P3 `/billing` Stripe Checkout panel uses the same hero card and fact-row recipe as the rest of the page (no Checkout clone widget) — 2026-09-03
 - [x] P3 club SaaS layout preview: `/billing` shows Stripe Checkout and a billing desk (active / past due / canceled) with unpublished amounts; Vercel always 404s; no payment SDK — 2026-09-02
