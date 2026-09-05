@@ -32,7 +32,8 @@ describe("abuse controls and public-path cost", () => {
       'process.env.NODE_ENV !== "production"'
     );
     expect(read("lib/actions/signup-guard.ts")).toContain('"signup"');
-    expect(read("lib/actions/orgs.ts")).toContain('"join_code"');
+    expect(read("lib/join-write.ts")).toContain('"join_code"');
+    expect(read("lib/actions/orgs.ts")).toContain("performJoinOrgWithCode");
     expect(read("lib/actions/district.ts")).toContain('"claim"');
     expect(read("lib/actions/district.ts")).toContain('"csv_import"');
     expect(read("lib/actions/comments.ts")).toContain('"comment"');

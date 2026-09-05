@@ -311,8 +311,8 @@ textarea.field {
   outline: 2px solid var(--foreground);
   outline-offset: 3px;
 }
-/* Face gloss + corner spotlight behind the step art. Alpha stays ≤0.14 over
- * the right edge and ≤0.08 across the top so white copy keeps ≥4.5:1 on red. */
+/* Face gloss. Alpha stays ≤0.14 over the right edge and ≤0.08 across the
+ * top so white copy keeps ≥4.5:1 on red. */
 .partner-promo::after {
   content: "";
   position: absolute;
@@ -369,84 +369,12 @@ textarea.field {
     transform: translateX(280%);
   }
 }
-/* The climb, labeled: local → state → national invitationals. A filled rail,
- * not decoration — mobile stacks it under the CTA behind a hairline, sm+ pins
- * it as a ruled side rail so the panel has no air. */
-.partner-promo-ladder {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin: 1.25rem 0 0;
-  padding: 1rem 0 0;
-  list-style: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
-}
-@media (min-width: 40rem) {
-  .partner-promo-ladder {
-    margin: 0;
-    padding: 0 0 0 1.5rem;
-    border-top: 0;
-    border-left: 1px solid rgba(255, 255, 255, 0.22);
-    align-self: center;
-  }
-}
-.partner-promo-ladder li {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-}
-/* Connector from this node's bottom edge to the next row's center; the next
- * dot paints over the overshoot. */
-.partner-promo-ladder li:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  left: 0.25rem;
-  top: calc(50% + 0.3125rem);
-  height: calc(50% + 0.75rem);
-  width: 2px;
-  background: rgba(255, 255, 255, 0.28);
-}
-.partner-promo-ladder-dot {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
-  width: 0.625rem;
-  height: 0.625rem;
-  border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.55);
-  background: transparent;
-}
-.partner-promo-ladder-dot-goal {
-  border-color: #ffffff;
-  background: #ffffff;
-}
-/* Opacity-only pulse (no transform) so every engine paints the breathing halo. */
-.partner-promo-ladder-dot-goal::before {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: 999px;
-  background: #ffffff;
-  opacity: 0.14;
-  animation: partner-promo-goal-pulse 2.6s var(--ease-structured) infinite;
-}
-@keyframes partner-promo-goal-pulse {
-  0%,
-  100% {
-    opacity: 0.14;
-  }
-  50% {
-    opacity: 0.32;
-  }
-}
 .partner-promo-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  width: 100%;
+  width: auto;
   height: 3rem;
   padding-inline: 1.25rem;
   border-radius: var(--radius-xl);
@@ -457,11 +385,6 @@ textarea.field {
   box-shadow: 0 2px 10px rgba(20, 24, 28, 0.2);
   transition: background-color 200ms var(--ease-brand), color 200ms var(--ease-brand),
     box-shadow 200ms var(--ease-brand);
-}
-@media (min-width: 40rem) {
-  .partner-promo-cta {
-    width: auto;
-  }
 }
 .partner-promo:hover .partner-promo-cta,
 .partner-promo:focus-visible .partner-promo-cta {
@@ -1052,8 +975,7 @@ textarea.field {
   .home-hero-search.is-search-attention::before,
   .home-hero-cue,
   .cta-sheen.is-cta-attention::before,
-  .partner-promo::before,
-  .partner-promo-ladder-dot-goal::before {
+  .partner-promo::before {
     animation: none;
   }
   .home-featured-rail[data-hint] > ul {

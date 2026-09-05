@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { causeyFetch, formatDateRange } from "../../src/api";
@@ -10,6 +10,7 @@ import {
   ErrorText,
   Kicker,
   Lede,
+  LinkButton,
   Meta,
   PrimaryButton,
   Screen,
@@ -41,6 +42,7 @@ type AttendancePayload = {
 export default function AttendanceScreen() {
   const { competitionId } = useLocalSearchParams<{ competitionId: string }>();
   const { session } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<AttendancePayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyProfile, setBusyProfile] = useState<string | null>(null);
@@ -201,9 +203,10 @@ export default function AttendanceScreen() {
               </View>
             ))}
           </Card>
-          <Meta>
-            Places and awards are recorded on the website after the event.
-          </Meta>
+          <LinkButton
+            label="Record results"
+            onPress={() => router.push(`/results/${competitionId}`)}
+          />
         </>
       )}
     </Screen>

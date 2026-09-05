@@ -182,7 +182,7 @@ function FamilyDesk() {
         <Lede>
           {isParent
             ? "Link a student on the Causey website, then their invitations and registrations show up here."
-            : "Family actions are for parent accounts. Use the Search tab to find chess tournaments."}
+            : "Family actions are for parent accounts. Use the Search tab to find tournaments."}
         </Lede>
       ) : null}
 

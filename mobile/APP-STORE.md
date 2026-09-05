@@ -55,14 +55,18 @@ The account must have, in production:
 
 **Notes for the reviewer** (paste into App Store Connect):
 
-> Causey helps parents, coaches, and students keep track of student chess
+> Causey helps parents, coaches, and students keep track of student
 > tournaments. Sign in with the demo account. The first tab depends on the
 > account type: a parent gets Family (each student and the RSVPs waiting on
 > you), a student gets My tournaments (their own invitations), and a coach gets
 > My team (the organizations they staff, day-of attendance for upcoming events,
-> and rosters). The Search tab loads upcoming chess tournaments and opens a
-> detail screen where you can add the tournament to your calendar or share it.
-> Registration for most tournaments is run by the organizer on their own
+> and rosters). The Search tab opens on Chess with the same type images as the
+> website (Chess, Debate, STEM, Arts, Writing). Chess has a Tournaments /
+> Pathways switch: Pathways walks the same illustrative qualification lookup as
+> the website (not an official US Chess ruling). Sort is Soonest or Popular.
+> You can also search by name or zip. Chess is the densest index; other
+> types can be empty, which is honest, not broken. Open a listing to add it to
+> the calendar or share it. Registration for most tournaments is run by the organizer on their own
 > website, so those listings link out; Causey then tracks that the registration
 > is done. Invitations, CSV imports, organization settings, and season reports
 > are website tasks and are not in the app. Account deletion is in the Me tab
@@ -84,8 +88,9 @@ Add this line **only if** email confirmation is still enabled in Supabase:
 
 Account creation happens entirely in the app for parents and coaches: Me →
 Create a parent or coach account, or the link on the sign-in screen. Students
-are not offered on the phone, because the app never asks for a birth date; a
-parent or coach creates a student account on the website.
+13 or older create a student account on the website (`/signup?role=student`),
+which collects date of birth; the phone never asks for it. After that they
+sign in on the app. Students under 13 stay on a parent account.
 
 - **No third-party or social login.** Causey uses first-party email and
   password through Supabase, so Guideline 4.8 does not apply and Sign in with
@@ -97,12 +102,13 @@ parent or coach creates a student account on the website.
   the Me tab.
 - **Deletion matches creation** (Guideline 5.1.1(v)) — see below.
 
-**Browsing without an account (Guideline 5.1.1(i)).** Chess search and the
+**Browsing without an account (Guideline 5.1.1(i)).** Search and the
 tournament detail screen work signed out, exactly as they do on the website; the
-app opens on Search for a visitor. Sign-in is required only for account work:
-Family RSVPs, a student's own tournaments, rosters, and attendance. A reviewer
-can therefore see real content before creating anything. The signed-out Me tab
-is where sign-in and sign-up live.
+app opens on Search for a visitor. Search covers Chess, Speech & Debate, STEM,
+Arts, and Writing. Sign-in is required only for account work: Family RSVPs, a
+student's own tournaments, rosters, and attendance. A reviewer can therefore see
+real content before creating anything. The signed-out Me tab is where sign-in
+and sign-up live.
 
 ## Age rating
 
@@ -172,9 +178,10 @@ website so both surfaces say the same thing.
 > Causey helps parents and coaches keep student chess tournaments straight.
 >
 > See which student still owes an RSVP, answer it in a tap, and keep track of
-> the registrations you finish on an organizer's site. Search upcoming chess
-> tournaments by zip, add one to your calendar, and share it with the rest of
-> the team.
+> the registrations you finish on an organizer's site. Search Chess, Speech &
+> Debate, STEM, Arts, and Writing by zip, add a listing to your calendar, and
+> share it with the rest of the team. Chess has the most listings; other types
+> are thinner and can be empty.
 >
 > Causey is an early build. Tournament coverage is incomplete, so confirm dates
 > and fees with the organizer before you travel.
@@ -204,7 +211,7 @@ Check after `eas build` runs prebuild:
 
 Deferred on purpose for 1.0: push notifications, Sign in with Apple (not
 required — Causey offers no third-party social login), in-app purchases,
-student self-signup on mobile, saved events, the notifications inbox, event
+in-app student signup (13+ students use the website form, then sign in), event
 comments and ratings, and the district office.
 
 Comments and ratings are deliberately absent. Shipping user-generated content

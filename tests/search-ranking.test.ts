@@ -13,6 +13,9 @@ function result(
     start_date: "2026-09-01",
     distance_miles: null,
     interest_count: 0,
+    source: "tla_scrape",
+    series: null,
+    details: null,
     ...overrides,
   } as CompetitionResult;
 }

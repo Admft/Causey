@@ -15,7 +15,8 @@ export const dynamic = "force-dynamic";
  * GET /api/competitions — search published competitions.
  * Query params mirror SearchFiltersSchema (category, q, zip, radius_miles, state,
  * source, grade_band, rating_band, max_fee_cents, date_from, date_to,
- * timing, sort, limit, offset). timing defaults to upcoming (hides ended);
+ * timing, sort, limit, offset). Omit category to search every public directory
+ * (chess, debate, STEM, arts, writing). timing defaults to upcoming (hides ended);
  * sort defaults to popular, with soonest available as an explicit option.
  * Returns { results, total, limit, offset, count } — tiles page in chunks
  * (default limit 20) so the first load stays fast.
@@ -35,13 +36,7 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
-  if (!parsed.data.category) {
-    return NextResponse.json(
-      { error: "Choose a competition type before searching." },
-      { status: 400 }
-    );
-  }
-  if (!isDiscoveryCategory(parsed.data.category)) {
+  if (parsed.data.category && !isDiscoveryCategory(parsed.data.category)) {
     return NextResponse.json(
       { error: "That competition type does not have a public directory." },
       { status: 400 }

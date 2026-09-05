@@ -44,6 +44,9 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Host a competition preview shows the real search card and event-page start (not a fact dump) — 2026-09-04
 - [x] Host a competition requires type plus a visible discipline chip (same catalog as search); no silent chess default — 2026-09-04
 - [x] Staff team-entry: coaches and school admins mark a student going / not going on Manage event (`0076`); audited `response_source = staff`; student + linked parents notified; Family labels staff entry; owner-run backfill drops the authenticated update guard before data repair and recreates it afterward — 2026-09-05
+- [x] Phone event shows who from the school (or club) marked going, using the same `get_club_going` groups as the website — 2026-09-05
+- [x] Phone Alerts inbox lists the same invitation/result/account rows as website `/me/notifications`; public event hrefs open in-app, Family/orgs/account stay on the website — 2026-09-05
+- [x] Phone lists school and district memberships (with Club/Team kept distinct) via `GET /api/mobile/orgs`; district offices have no roster to open — 2026-09-05
 - [x] Family can mark a linked student Going on a public listing without a school/club invite (`0080`); organizer-site entry is still Mark complete, not an import — 2026-09-05
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory

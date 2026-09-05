@@ -52,11 +52,12 @@ describe("district tournament expansion foundation", () => {
     expect(sql).not.toContain("else array['chess']");
   });
 
-  it("requires API callers to choose a public category", () => {
+  it("lets callers omit category to search every public directory", () => {
     const route = repositoryFile("app/api/competitions/route.ts");
     expect(route).not.toContain('raw.category ??= "chess"');
-    expect(route).toContain("Choose a competition type before searching.");
+    expect(route).not.toContain("Choose a competition type before searching.");
     expect(route).toContain("isDiscoveryCategory(parsed.data.category)");
+    expect(route).toContain("Omit category to search every public directory");
   });
 
   it("versions category details and rejects cross-category pathways", () => {

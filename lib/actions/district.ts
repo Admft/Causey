@@ -16,6 +16,7 @@ import {
   invitationRoleFitsOrganization,
 } from "@/lib/invitations/claim-path";
 import { performMarkAttendance } from "@/lib/attendance-write";
+import { performRecordResult } from "@/lib/results-write";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
@@ -1085,140 +1086,23 @@ export async function recordEntrantResult(input: {
   const user = await currentUserOrError();
   if (!user.ok) return user;
   const supabase = await createServerSupabaseClient();
-  const [managementCheck, entrantCheck] = await Promise.all([
-    supabase.rpc("can_manage_competition", {
-      p_competition_id: parsed.data.competitionId,
-      p_profile_id: user.id,
-    }),
-    supabase.rpc("can_invite_to_competition", {
-      p_competition_id: parsed.data.competitionId,
-      p_entrant_id: parsed.data.profileId,
-      p_inviter_id: user.id,
-    }),
-  ]);
-  const canManage = managementCheck.data === true || entrantCheck.data === true;
-  if (!canManage && managementCheck.error && entrantCheck.error) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        managementCheck.error,
-        "Could not verify result recording access."
-      ),
-    };
+  const result = await performRecordResult({
+    supabase,
+    userId: user.id,
+    competitionId: parsed.data.competitionId,
+    profileId: parsed.data.profileId,
+    eventSlug: parsed.data.eventSlug,
+    sectionId: parsed.data.sectionId,
+    placement: parsed.data.placement,
+    awardLabel: parsed.data.awardLabel,
+  });
+  if (
+    result.ok ||
+    result.error.startsWith("The result was saved")
+  ) {
+    revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
+    revalidatePath("/me");
+    revalidatePath("/family");
   }
-  if (!canManage) {
-    return {
-      ok: false,
-      error: "Only competition staff can record a result.",
-    };
-  }
-
-  const award =
-    parsed.data.awardLabel && parsed.data.awardLabel.length
-      ? parsed.data.awardLabel
-      : null;
-  const hasPayload =
-    parsed.data.sectionId !== null ||
-    parsed.data.placement !== null ||
-    award !== null;
-  const { count, error } = await supabase
-    .from("competition_entrants")
-    .update(
-      {
-        section_id: parsed.data.sectionId,
-        placement: parsed.data.placement,
-        award_label: award,
-        result_marked_by: hasPayload ? user.id : null,
-        result_marked_at: hasPayload ? new Date().toISOString() : null,
-      },
-      { count: "exact" }
-    )
-    .eq("competition_id", parsed.data.competitionId)
-    .eq("profile_id", parsed.data.profileId);
-  if (error || count !== 1) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        error,
-        "That result could not be saved.",
-        "You don’t have permission to record a result for this student."
-      ),
-    };
-  }
-
-  if (hasPayload) {
-    const { data: competition } = await supabase
-      .from("competitions")
-      .select("name")
-      .eq("id", parsed.data.competitionId)
-      .maybeSingle();
-    const eventName = competition?.name ?? "a tournament";
-    const resultBits = [
-      parsed.data.placement != null ? `Place ${parsed.data.placement}` : null,
-      award,
-    ].filter(Boolean);
-    const resultBody = resultBits.length
-      ? `${resultBits.join(" · ")} is now on Causey.`
-      : "A division was recorded on Causey.";
-    const studentNote =
-      parsed.data.profileId === user.id
-        ? []
-        : [
-            {
-              recipientId: parsed.data.profileId,
-              kind: "result" as const,
-              title: `Result recorded: ${eventName}`,
-              body: resultBody,
-              href: `/event/${parsed.data.eventSlug}`,
-              entityType: "competition",
-              entityId: parsed.data.competitionId,
-              dedupeKey: `result:${parsed.data.competitionId}:${parsed.data.profileId}`,
-            },
-          ];
-    const guardians = await getActiveGuardiansForProfiles([
-      parsed.data.profileId,
-    ]);
-    if (guardians.error) {
-      revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
-      revalidatePath("/me");
-      revalidatePath("/family");
-      return {
-        ok: false,
-        error:
-          "The result was saved, but linked parents could not be notified.",
-      };
-    }
-    const parentNotes = guardians.guardians
-      .filter((guardian) => guardian.parentId !== user.id)
-      .map((guardian) => ({
-        recipientId: guardian.parentId,
-        kind: "result" as const,
-        title: `${guardian.childDisplayName} · Result recorded: ${eventName}`,
-        body: resultBody,
-        href: "/family",
-        entityType: "competition",
-        entityId: parsed.data.competitionId,
-        dedupeKey: `result:${parsed.data.competitionId}:${parsed.data.profileId}:parent:${guardian.parentId}`,
-      }));
-    const notifications = await createInAppNotifications([
-      ...studentNote,
-      ...parentNotes,
-    ]);
-    if (notifications.failures.length) {
-      revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
-      revalidatePath("/me");
-      revalidatePath("/family");
-      return {
-        ok: false,
-        error: `The result was saved, but ${notifications.failures.length} in-app ${
-          notifications.failures.length === 1 ? "update" : "updates"
-        } could not be created.`,
-      };
-    }
-  }
-
-  revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
-  revalidatePath("/me");
-  revalidatePath("/family");
-  return { ok: true };
+  return result;
 }

@@ -1,7 +1,9 @@
+import * as Linking from "expo-linking";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useAuth } from "../src/auth";
+import { siteUrl } from "../src/theme";
 import {
   ErrorText,
   Field,
@@ -49,8 +51,8 @@ export default function LoginScreen() {
         />
         <Title>Causey</Title>
         <Lede>
-          See which student needs an RSVP, search chess tournaments, and keep
-          track of registrations you finish on an organizer&apos;s site.
+          See which student needs an RSVP, search tournaments, and keep track of
+          registrations you finish on an organizer&apos;s site.
         </Lede>
         <Field
           label="Email"
@@ -86,6 +88,10 @@ export default function LoginScreen() {
         <LinkButton
           label="Create a parent or coach account"
           onPress={() => router.push("/signup")}
+        />
+        <LinkButton
+          label="Create a student account (13+) on the website"
+          onPress={() => Linking.openURL(`${siteUrl}/signup?role=student`)}
         />
         <LinkButton
           label="Forgot password?"

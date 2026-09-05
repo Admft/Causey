@@ -41,7 +41,11 @@ type TeamEvent = {
   org_name: string;
 };
 
-type TeamPayload = { orgs: TeamOrg[]; events: TeamEvent[] };
+type TeamPayload = {
+  orgs: TeamOrg[];
+  events: TeamEvent[];
+  past_events?: TeamEvent[];
+};
 
 export default function TeamScreen() {
   return (
@@ -108,6 +112,7 @@ function TeamDesk() {
 
   const orgs = data?.orgs ?? [];
   const events = data?.events ?? [];
+  const pastEvents = data?.past_events ?? [];
   const rosterOrgs = orgs.filter((org) => org.has_roster);
 
   return (
@@ -137,37 +142,39 @@ function TeamDesk() {
       {events.length ? (
         <Card>
           {events.map((event) => (
-            <Pressable
+            <TeamEventRow
               key={event.competition_id}
-              onPress={() =>
+              event={event}
+              onAttendance={() =>
                 router.push(`/attendance/${event.competition_id}`)
               }
-              accessibilityRole="button"
-              accessibilityLabel={`Take attendance for ${event.name}`}
-              style={({ pressed }) => [
-                styles.eventRow,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.eventName}>{event.name}</Text>
-              <Meta>
-                {formatDateRange(event.start_date, event.end_date)}
-                {event.city
-                  ? ` · ${event.city}, ${event.state ?? ""}`.trimEnd()
-                  : ""}
-              </Meta>
-              <Meta>
-                {event.relation === "hosted"
-                  ? `Hosted by ${event.org_name}`
-                  : `${event.org_name} is going`}
-              </Meta>
-              <Text style={styles.eventCta}>Take attendance</Text>
-            </Pressable>
+              onResults={() =>
+                router.push(`/results/${event.competition_id}`)
+              }
+            />
           ))}
         </Card>
       ) : null}
 
-      {data && orgs.length && !events.length ? (
+      {pastEvents.length ? (
+        <Card>
+          <Text style={styles.sectionHeading}>Recent events</Text>
+          {pastEvents.map((event) => (
+            <TeamEventRow
+              key={event.competition_id}
+              event={event}
+              onAttendance={() =>
+                router.push(`/attendance/${event.competition_id}`)
+              }
+              onResults={() =>
+                router.push(`/results/${event.competition_id}`)
+              }
+            />
+          ))}
+        </Card>
+      ) : null}
+
+      {data && orgs.length && !events.length && !pastEvents.length ? (
         <Lede>
           No upcoming tournaments for your organizations. Publish one or mark a
           public tournament as going on the website, then attendance shows up
@@ -209,8 +216,7 @@ function TeamDesk() {
       {orgs.length ? (
         <View style={styles.deskWork}>
           <Meta>
-            Invitations, groups, CSV imports, settings, and season reports are
-            on the website.
+            Desk work (CSV, settings, reports) stays on the website.
           </Meta>
           <LinkButton
             label="Open my organizations on the web"
@@ -222,6 +228,49 @@ function TeamDesk() {
   );
 }
 
+function TeamEventRow({
+  event,
+  onAttendance,
+  onResults,
+}: {
+  event: TeamEvent;
+  onAttendance: () => void;
+  onResults: () => void;
+}) {
+  return (
+    <View style={styles.eventRow}>
+      <Text style={styles.eventName}>{event.name}</Text>
+      <Meta>
+        {formatDateRange(event.start_date, event.end_date)}
+        {event.city
+          ? ` · ${event.city}, ${event.state ?? ""}`.trimEnd()
+          : ""}
+      </Meta>
+      <Meta>
+        {event.relation === "hosted"
+          ? `Hosted by ${event.org_name}`
+          : `${event.org_name} is going`}
+      </Meta>
+      <Pressable
+        onPress={onAttendance}
+        accessibilityRole="button"
+        accessibilityLabel={`Take attendance for ${event.name}`}
+        style={({ pressed }) => [styles.eventCtaHit, pressed && styles.pressed]}
+      >
+        <Text style={styles.eventCta}>Take attendance</Text>
+      </Pressable>
+      <Pressable
+        onPress={onResults}
+        accessibilityRole="button"
+        accessibilityLabel={`Record results for ${event.name}`}
+        style={({ pressed }) => [styles.eventCtaHit, pressed && styles.pressed]}
+      >
+        <Text style={styles.eventCta}>Record results</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   eventRow: {
     paddingVertical: 14,
@@ -230,10 +279,14 @@ const styles = StyleSheet.create({
   },
   eventName: { fontSize: 16, fontWeight: "700", color: colors.foreground },
   eventCta: {
-    marginTop: 8,
     color: colors.brandRed,
     fontWeight: "700",
     fontSize: 15,
+  },
+  eventCtaHit: {
+    marginTop: 8,
+    minHeight: 44,
+    justifyContent: "center",
   },
   sectionHeading: {
     fontSize: 15,

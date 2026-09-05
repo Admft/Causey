@@ -14,7 +14,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 - Create club/team; join link; CSV/email staff+student invites; assistants
 - Groups, announcements, member-only website + meeting note, leave club
-- Public search + “My club is going”; mark club attending; teammate going list
+- Public search + “My club is going”; mark club attending; teammate going list (website event page + phone `ClubGoingCard`); phone Chess Pathways tool + nationals pin
 - Host any listed type (draft → review → publish); club/team-only audience (not “school only”)
 - RSVP, organizer-registration checkbox, attendance on hosted **and** travel events
 - Hosted/travel manage shows an event pulse (invited / RSVP / unfinished registration / blank results) and People vs Listing
@@ -23,6 +23,9 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 ## Need for a professional club (priority)
 
+- [x] Phone lists clubs/teams (and any school/district memberships) the signed-in account belongs to (`GET /api/mobile/orgs`); coaches open roster; no create/settings/CSV — 2026-09-05
+- [x] Phone Alerts inbox shows the same invitation/RSVP/result rows as website `/me/notifications`; event pages open in-app, manage/orgs/account stay on the website — 2026-09-05
+- [x] Phone event shows teammates who marked going (`/api/mobile/club-going` + `ClubGoingCard`), same groups as website `getClubGoing` — 2026-09-05
 - [x] Tournament roster invite confirms saved invited rows (not the empty upsert body) so students and linked parents get Alerts — 2026-09-05
 - [x] Overview tells the owner to **record results** after attendance (not only invite/create) — 2026-08-24
 - [x] Homepage Find card has a My tournaments tab: sign-in returns here; signed-in preview of Going / traveling / hosted — 2026-08-26
