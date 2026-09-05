@@ -15,13 +15,17 @@ const NoteSchema = z
 /**
  * Send an event to connected accounts (linked children, org-mates). RLS
  * verifies each connection; already-sent pairs are skipped, not overwritten.
+ *
+ * Do not count rows from the upsert body: `ignoreDuplicates` often returns an
+ * empty representation even when the insert succeeded, which showed “Sent to
+ * 0 people” after a real send.
  */
 export async function sendRecommendation(input: {
   competitionId: string;
   eventSlug: string;
   toProfileIds: string[];
   note: string;
-}): Promise<ActionResult<{ sent: number }>> {
+}): Promise<ActionResult<{ sent: number; toProfileIds: string[] }>> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: "Sign in to continue." };
   const toProfileIds = [...new Set(input.toProfileIds)];
@@ -34,21 +38,18 @@ export async function sendRecommendation(input: {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("event_recommendations")
-    .upsert(
-      toProfileIds.map((toProfileId) => ({
-        competition_id: input.competitionId,
-        from_profile_id: user.id,
-        to_profile_id: toProfileId,
-        note: note.data || null,
-      })),
-      {
-        onConflict: "competition_id,from_profile_id,to_profile_id",
-        ignoreDuplicates: true,
-      }
-    )
-    .select("id");
+  const { error } = await supabase.from("event_recommendations").upsert(
+    toProfileIds.map((toProfileId) => ({
+      competition_id: input.competitionId,
+      from_profile_id: user.id,
+      to_profile_id: toProfileId,
+      note: note.data || null,
+    })),
+    {
+      onConflict: "competition_id,from_profile_id,to_profile_id",
+      ignoreDuplicates: true,
+    }
+  );
   if (error) {
     return {
       ok: false,
@@ -60,10 +61,57 @@ export async function sendRecommendation(input: {
     };
   }
 
+  const { data: saved, error: readError } = await supabase
+    .from("event_recommendations")
+    .select("to_profile_id")
+    .eq("competition_id", input.competitionId)
+    .eq("from_profile_id", user.id)
+    .in("to_profile_id", toProfileIds);
+  if (readError) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        readError,
+        "Could not confirm the recommendation.",
+        "You can only recommend competitions to connected accounts."
+      ),
+    };
+  }
+  const savedIds = [
+    ...new Set((saved ?? []).map((row) => row.to_profile_id as string)),
+  ];
+  if (!savedIds.length) {
+    return {
+      ok: false,
+      error: "Could not send the recommendation. You can only recommend competitions to connected accounts.",
+    };
+  }
+
+  const alertOutcomes = await Promise.all(
+    savedIds.map((toProfileId) =>
+      supabase.rpc("notify_event_recommendation", {
+        p_competition_id: input.competitionId,
+        p_recipient_id: toProfileId,
+      })
+    )
+  );
+  if (alertOutcomes.some((outcome) => outcome.error)) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        alertOutcomes.find((outcome) => outcome.error)?.error,
+        "The recommendation was saved, but the alert could not be created.",
+        "The recommendation was saved, but the alert could not be created."
+      ),
+    };
+  }
+
+  revalidatePath("/me");
+  revalidatePath("/me/notifications");
   revalidatePath("/orgs");
   revalidatePath("/family");
   revalidatePath(`/event/${input.eventSlug}`);
-  return { ok: true, sent: data?.length ?? 0 };
+  return { ok: true, sent: savedIds.length, toProfileIds: savedIds };
 }
 
 export async function dismissRecommendation(id: string): Promise<ActionResult> {
@@ -81,6 +129,8 @@ export async function dismissRecommendation(id: string): Promise<ActionResult> {
     return { ok: false, error: "Could not dismiss this." };
   }
 
+  revalidatePath("/me");
+  revalidatePath("/me/notifications");
   revalidatePath("/orgs");
   revalidatePath("/family");
   return { ok: true };

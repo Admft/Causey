@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DismissRecommendationButton } from "@/components/DismissRecommendationButton";
 import { GuardianLinkRequestForm } from "@/components/GuardianLinkRequestForm";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { MissingZipCard } from "@/components/MissingZipCard";
@@ -12,6 +13,7 @@ import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import {
   getMyEntrantRows,
   getMyOrgs,
+  getMyRecommendations,
   getParentLinks,
   isUpcomingEvent,
 } from "@/lib/data/portal";
@@ -135,6 +137,7 @@ export default async function MePage() {
     parentLinks,
     entrantRows,
     myOrgs,
+    recommendations,
   ] = await Promise.all([
     supabase
       .from("saved_competitions")
@@ -160,6 +163,7 @@ export default async function MePage() {
       : Promise.resolve([]),
     getMyEntrantRows(profile.id),
     profile.role === "student" ? getMyOrgs(profile.id) : Promise.resolve([]),
+    getMyRecommendations(profile.id),
   ]);
   // Only a request the student still has to answer is a task. A request the
   // student sent is waiting on the parent, so it must not drive the mission.
@@ -319,6 +323,16 @@ export default async function MePage() {
               ? { href: "/orgs", label: "Join a school or club" }
               : searchAction,
         }
+      : recommendations.length > 0
+        ? {
+            title:
+              recommendations.length === 1
+                ? `${recommendations[0]!.from_name} recommended an event`
+                : `${recommendations.length} recommended events`,
+            description: "Open the event to save it or say going.",
+            action: { href: "#recommended", label: "See recommended events" },
+            secondary: searchAction,
+          }
       : actionCount > 0
         ? {
             title:
@@ -413,6 +427,30 @@ export default async function MePage() {
           <div className="mt-4">
             <GuardianLinkRequestForm />
           </div>
+        </section>
+      ) : null}
+
+      {recommendations.length ? (
+        <section id="recommended" className="mt-10 scroll-mt-24">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+            Recommended to you
+          </h2>
+          <ul className="mt-3">
+            {recommendations.map((rec) => (
+              <PortalListRow
+                key={rec.id}
+                href={`/event/${rec.competition!.slug}`}
+                title={rec.competition!.name}
+                meta={`${formatDateRange(
+                  rec.competition!.start_date,
+                  rec.competition!.end_date
+                )} · from ${rec.from_name}${
+                  rec.note ? ` — “${rec.note}”` : ""
+                }`}
+                trailing={<DismissRecommendationButton id={rec.id} />}
+              />
+            ))}
+          </ul>
         </section>
       ) : null}
 

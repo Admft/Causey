@@ -230,19 +230,16 @@ export async function inviteEntrants(
   const INVITE_CHUNK = 200;
   for (let start = 0; start < uniqueProfileIds.length; start += INVITE_CHUNK) {
     const chunk = uniqueProfileIds.slice(start, start + INVITE_CHUNK);
-    const { data, error } = await supabase
-      .from("competition_entrants")
-      .upsert(
-        chunk.map((profileId) => ({
-          competition_id: competitionId,
-          profile_id: profileId,
-          status: "invited",
-          invited_by: user.id,
-          origin_org_id: originByProfile?.[profileId] ?? defaultOrigin,
-        })),
-        { onConflict: "competition_id,profile_id", ignoreDuplicates: true }
-      )
-      .select("profile_id");
+    const { error } = await supabase.from("competition_entrants").upsert(
+      chunk.map((profileId) => ({
+        competition_id: competitionId,
+        profile_id: profileId,
+        status: "invited",
+        invited_by: user.id,
+        origin_org_id: originByProfile?.[profileId] ?? defaultOrigin,
+      })),
+      { onConflict: "competition_id,profile_id", ignoreDuplicates: true }
+    );
     if (error) {
       return {
         ok: false,
@@ -253,11 +250,32 @@ export async function inviteEntrants(
         ),
       };
     }
-    for (const row of data ?? []) {
+
+    // ignoreDuplicates often returns an empty body even after a real insert.
+    // Count and alert from the saved invited rows, not the upsert representation.
+    const { data: saved, error: readError } = await supabase
+      .from("competition_entrants")
+      .select("profile_id")
+      .eq("competition_id", competitionId)
+      .eq("status", "invited")
+      .eq("invited_by", user.id)
+      .in("profile_id", chunk);
+    if (readError) {
+      return {
+        ok: false,
+        error: actionErrorMessage(
+          readError,
+          "Could not confirm the invitations. Check your connection and try again.",
+          "You don’t have permission to invite entrants to this competition."
+        ),
+      };
+    }
+    for (const row of saved ?? []) {
       invitedIds.push(row.profile_id as string);
     }
   }
-  if (invitedIds.length) {
+  const uniqueInvitedIds = [...new Set(invitedIds)];
+  if (uniqueInvitedIds.length) {
     const { data: competition } = await supabase
       .from("competitions")
       .select("name")
@@ -265,7 +283,7 @@ export async function inviteEntrants(
       .maybeSingle();
     const eventName = competition?.name ?? "a tournament";
     const notifications = await createInAppNotifications(
-      invitedIds
+      uniqueInvitedIds
         .filter((profileId) => profileId !== user.id)
         .map((profileId) => ({
           recipientId: profileId,
@@ -282,21 +300,21 @@ export async function inviteEntrants(
       revalidateEventSurfaces(eventSlug);
       return {
         ok: false,
-        error: `${invitedIds.length} ${
-          invitedIds.length === 1 ? "invitation was" : "invitations were"
+        error: `${uniqueInvitedIds.length} ${
+          uniqueInvitedIds.length === 1 ? "invitation was" : "invitations were"
         } saved, but ${notifications.failures.length} in-app ${
           notifications.failures.length === 1 ? "update" : "updates"
         } could not be created.`,
       };
     }
 
-    const guardians = await getActiveGuardiansForProfiles(invitedIds);
+    const guardians = await getActiveGuardiansForProfiles(uniqueInvitedIds);
     if (guardians.error) {
       revalidateEventSurfaces(eventSlug);
       return {
         ok: false,
-        error: `${invitedIds.length} ${
-          invitedIds.length === 1 ? "invitation was" : "invitations were"
+        error: `${uniqueInvitedIds.length} ${
+          uniqueInvitedIds.length === 1 ? "invitation was" : "invitations were"
         } saved, but linked parents could not be notified.`,
       };
     }
@@ -318,8 +336,8 @@ export async function inviteEntrants(
         revalidateEventSurfaces(eventSlug);
         return {
           ok: false,
-          error: `${invitedIds.length} ${
-            invitedIds.length === 1 ? "invitation was" : "invitations were"
+          error: `${uniqueInvitedIds.length} ${
+            uniqueInvitedIds.length === 1 ? "invitation was" : "invitations were"
           } saved, but ${parentNotifications.failures.length} parent ${
             parentNotifications.failures.length === 1 ? "update" : "updates"
           } could not be created.`,
@@ -329,7 +347,7 @@ export async function inviteEntrants(
   }
 
   revalidateEventSurfaces(eventSlug);
-  return { ok: true, invited: invitedIds.length };
+  return { ok: true, invited: uniqueInvitedIds.length };
 }
 
 export async function inviteGroup(

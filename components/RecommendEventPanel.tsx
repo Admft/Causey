@@ -1,26 +1,55 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { sendRecommendation } from "@/lib/actions/recommendations";
 import type { RecommendTarget } from "@/lib/data/portal";
+
+function formatNameList(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+}
 
 /** Event-page aside: send this event to linked children / club-mates. */
 export function RecommendEventPanel({
   competitionId,
   eventSlug,
   targets,
+  alreadySentIds = [],
 }: {
   competitionId: string;
   eventSlug: string;
   targets: RecommendTarget[];
+  alreadySentIds?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [note, setNote] = useState("");
-  const [sent, setSent] = useState<number | null>(null);
+  const [localSentIds, setLocalSentIds] = useState<string[]>([]);
+  const [lastSentIds, setLastSentIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const firstTargetRef = useRef<HTMLInputElement>(null);
+
+  const sentIds = useMemo(() => {
+    const next = new Set(alreadySentIds);
+    for (const id of localSentIds) next.add(id);
+    return next;
+  }, [alreadySentIds, localSentIds]);
+
+  const remaining = useMemo(
+    () => targets.filter((target) => !sentIds.has(target.profile_id)),
+    [targets, sentIds]
+  );
+  const sentTargets = useMemo(
+    () => targets.filter((target) => sentIds.has(target.profile_id)),
+    [targets, sentIds]
+  );
+  const lastSentNames = lastSentIds
+    .map(
+      (id) => targets.find((target) => target.profile_id === id)?.display_name
+    )
+    .filter((name): name is string => Boolean(name));
 
   useEffect(() => {
     if (open) firstTargetRef.current?.focus();
@@ -49,7 +78,8 @@ export function RecommendEventPanel({
         setError(result.error);
         return;
       }
-      setSent(result.sent);
+      setLastSentIds(result.toProfileIds);
+      setLocalSentIds((prev) => [...new Set([...prev, ...result.toProfileIds])]);
       setSelected(new Set());
       setNote("");
       setOpen(false);
@@ -58,32 +88,45 @@ export function RecommendEventPanel({
     }
   }
 
+  const statusText = lastSentNames.length
+    ? `Sent to ${formatNameList(lastSentNames)}.`
+    : sentTargets.length
+      ? `Already sent to ${formatNameList(
+          sentTargets.map((target) => target.display_name)
+        )}.`
+      : null;
+
   return (
     <div className="rounded-2xl border border-line bg-surface p-4 shadow-[var(--shadow-card)]">
       <h2 className="text-sm font-semibold text-foreground">Recommend this event</h2>
-      {sent !== null && !open ? (
-        <p className="mt-2 text-sm text-muted-strong" role="status">
-          Sent to {sent} {sent === 1 ? "person" : "people"}.
-        </p>
+      {statusText && !open ? (
+        <div className="mt-2" role="status">
+          <p className="text-sm text-muted-strong">{statusText}</p>
+          <p className="mt-1 text-xs text-muted">
+            They’ll get an Alerts update and see it on Plan.
+          </p>
+        </div>
       ) : null}
       {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="mt-2 rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand-red/30"
-        >
-          {sent !== null ? "Recommend to more people" : "Pick who to send it to"}
-        </button>
+        remaining.length ? (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="mt-2 rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand-red/30"
+          >
+            {sentIds.size ? "Recommend to more people" : "Pick who to send it to"}
+          </button>
+        ) : null
       ) : (
         <div className="mt-3 flex flex-col gap-3">
           <div className="flex max-h-48 flex-col gap-1.5 overflow-y-auto">
-            {targets.map((target) => (
+            {remaining.map((target, index) => (
               <label
                 key={target.profile_id}
                 className="flex items-center gap-2 text-sm text-foreground"
               >
                 <input
-                  ref={target.profile_id === targets[0]?.profile_id ? firstTargetRef : undefined}
+                  ref={index === 0 ? firstTargetRef : undefined}
                   type="checkbox"
                   disabled={pending}
                   checked={selected.has(target.profile_id)}
@@ -92,6 +135,18 @@ export function RecommendEventPanel({
                 {target.display_name}
                 <span className="text-2xs text-muted">{target.context}</span>
               </label>
+            ))}
+            {sentTargets.map((target) => (
+              <p
+                key={target.profile_id}
+                className="flex items-center gap-2 text-sm text-muted"
+              >
+                <span className="font-medium text-foreground">
+                  {target.display_name}
+                </span>
+                <span className="text-2xs">Sent</span>
+                <span className="text-2xs">{target.context}</span>
+              </p>
             ))}
           </div>
           <label className="flex flex-col gap-1">

@@ -23,6 +23,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 ## Need for a professional club (priority)
 
+- [x] Tournament roster invite confirms saved invited rows (not the empty upsert body) so students and linked parents get Alerts — 2026-09-05
 - [x] Overview tells the owner to **record results** after attendance (not only invite/create) — 2026-08-24
 - [x] Homepage Find card has a My tournaments tab: sign-in returns here; signed-in preview of Going / traveling / hosted — 2026-08-26
 - [x] Desktop home samples real nearby/photo listings; event pages take comments; zip/location capture on signup and landings — 2026-08-26

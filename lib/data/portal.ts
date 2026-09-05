@@ -769,6 +769,21 @@ export type RecommendationRow = {
   > | null;
 };
 
+/** Recipients this viewer has already recommended this event to. */
+export async function getSentRecommendationRecipientIds(
+  competitionId: string,
+  fromProfileId: string
+): Promise<string[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("event_recommendations")
+    .select("to_profile_id")
+    .eq("competition_id", competitionId)
+    .eq("from_profile_id", fromProfileId);
+  if (error || !data?.length) return [];
+  return data.map((row) => row.to_profile_id as string);
+}
+
 /** Recommendations sent to the viewer, sender names resolved via RPC. */
 export async function getMyRecommendations(
   userId: string

@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Super-admin provision school under a district + district tree on `/admin/organizations` (`0078`) — 2026-09-05
+- Parent recommend + coach tournament invite: confirm saved rows after ignoreDuplicates upsert, write Alerts, show recs on student Plan (`0079`) — 2026-09-05
 
 ## Last tick
 
+- 2026-09-05 — Parent recommend and coach roster invite no longer trust an empty upsert body. Recommendations write Alerts + show on Plan (`0079` backfill). Invites re-read invited rows, then fan out student and parent Alerts.
 - 2026-09-05 — Super admin can provision a child school under an existing district and invite its named administrator (claim link + code). `/admin/organizations` nests School account rows; orphan-school create is removed; People shows the activation code. Migration `0078`.
 - 2026-09-05 — Staff team-entry: coaches and school admins can mark an invited student going / not going on Manage event; audited as `response_source = staff`; student + linked parents get in-app alerts; Family and reply meta label staff entry. `0076` now removes the authenticated entrant guard before its owner-run backfill and recreates the updated guard afterward.
 - 2026-09-05 — Chess search and the homepage chess rail pin a labeled “Get your kid to chess nationals” placement above the list; click opens `/pathways` on the current seeded chains (not an official US Chess ruling).
