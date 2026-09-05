@@ -28,7 +28,7 @@ A club is not a school and not a district. Coaches create club or team workspace
 - Record **attendance**, then **division / place / award**. Open a student from the roster for club-scoped history. The club overview shows a **This season** list of recorded places.
 
 ### Parents
-- Link a child and use the **family desk** for RSVP and unfinished organizer registration.
+- Link a child and use the **family desk** for RSVP and unfinished organizer registration, including public listings with no club invite.
 - See recorded results when a coach entered them (blank means not recorded).
 
 ### Students

@@ -21,8 +21,9 @@ function revalidateEventSurfaces(eventSlug?: string) {
 }
 
 /**
- * RSVP for yourself or (as a linked parent) for your child — RLS decides
- * which rows the update may touch, and responded_by must be the caller.
+ * RSVP for yourself or (as a linked parent) for your child. Updates an
+ * existing invite row, or inserts going/not_going on a published public
+ * listing when none exists. responded_by must be the caller.
  */
 export async function setRsvp(input: {
   competitionId: string;

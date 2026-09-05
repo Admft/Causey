@@ -61,7 +61,7 @@ describe("school and family chrome honesty", () => {
     expect(empty.heading).toBe("Your organizations");
     expect(empty.openLabel).toBe(OPEN_MY_ORGANIZATIONS_LABEL);
     expect(empty.notYetMembership).toBe("Not in a school or club yet.");
-    expect(empty.familyRsvpMission).toMatch(/school or club/);
+    expect(empty.familyRsvpMission).toMatch(/Mark Going/);
 
     const mixed = studentOrgChromeFromTypes(["school", "team"]);
     expect(mixed.heading).toBe("Your organizations");

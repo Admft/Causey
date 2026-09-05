@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { setRsvp } from "@/lib/actions/entrants";
-import type { EntrantStatus } from "@/lib/auth/orgs";
+import type { RsvpUiStatus } from "@/lib/event-rsvp-targets";
 
 /**
  * Two-button RSVP. Works for yourself and — when profileId is a linked
@@ -12,8 +12,12 @@ import type { EntrantStatus } from "@/lib/auth/orgs";
 type RsvpButtonsProps = {
   competitionId: string;
   profileId: string;
-  status: EntrantStatus;
+  status: RsvpUiStatus;
   eventSlug?: string;
+  /** Child display name when answering for someone else. */
+  forLabel?: string;
+  /** Invite = club/school roster row; family = public listing without a coach invite. */
+  tone?: "invite" | "family";
 };
 
 export function RsvpButtons(props: RsvpButtonsProps) {
@@ -25,17 +29,41 @@ export function RsvpButtons(props: RsvpButtonsProps) {
   );
 }
 
+function confirmationMessage(
+  next: "going" | "not_going",
+  tone: "invite" | "family",
+  forLabel?: string
+) {
+  if (tone === "family") {
+    return next === "going"
+      ? `Causey RSVP saved${forLabel ? ` for ${forLabel}` : ""}. This is not entry on the organizer’s site.`
+      : `Causey RSVP saved${forLabel ? ` for ${forLabel}` : ""}. Family can see they are not going.`;
+  }
+  if (forLabel) {
+    return next === "going"
+      ? `RSVP saved for ${forLabel}. Your organization can see that they’re going.`
+      : `RSVP saved for ${forLabel}. Your organization can see that they can’t attend.`;
+  }
+  return next === "going"
+    ? "RSVP saved. Your organization can see that you’re going."
+    : "RSVP saved. Your organization can see that you can’t attend.";
+}
+
 function RsvpButtonState({
   competitionId,
   profileId,
   status,
   eventSlug,
+  forLabel,
+  tone,
 }: RsvpButtonsProps) {
   const router = useRouter();
-  const [current, setCurrent] = useState<EntrantStatus>(status);
+  const [current, setCurrent] = useState<RsvpUiStatus>(status);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
+  const resolvedTone =
+    tone ?? (status === "unanswered" ? "family" : "invite");
 
   async function respond(next: "going" | "not_going") {
     if (pending || current === next) return;
@@ -56,11 +84,7 @@ function RsvpButtonState({
         setError(result.error);
         return;
       }
-      setConfirmation(
-        next === "going"
-          ? "RSVP saved. Your organization can see that you’re going."
-          : "RSVP saved. Your organization can see that you can’t attend."
-      );
+      setConfirmation(confirmationMessage(next, resolvedTone, forLabel));
       router.refresh();
     } catch {
       setCurrent(previous);

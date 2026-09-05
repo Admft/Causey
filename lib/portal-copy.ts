@@ -235,7 +235,7 @@ export function studentOrgChromeFromTypes(
     openRosterDescription:
       "Open a school or club to see teammates and public org pages. Use a join code to add another.",
     familyRsvpMission:
-      "RSVPs tell the school or club who’s coming; organizer registration finishes entry on the tournament site.",
+      "Mark Going on a listing so Family can track it; organizer registration finishes entry on the tournament site.",
   };
 }
 

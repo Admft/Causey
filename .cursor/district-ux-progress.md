@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Parent Family desk could not show a student going unless a club/school had already invited them: event pages now offer Going/Can't go for linked children on public listings (`0080` insert), Family lists that Going status, Save is labeled a bookmark, and organizer-site RSVPs still require Mark complete — 2026-09-05
 - [x] Tournament invite used the same empty upsert body as recommend: Manage said “already invited” and skipped Alerts; invite now re-reads invited rows for the coach, then fans out student + parent alerts — 2026-09-05
 - [x] Parent recommend-event now writes an Alerts row for the student (`0079` notify_event_recommendation + backfill) and lists the rec on Plan, not only a buried Orgs section — 2026-09-05
 - [x] Parent recommend-event count was lying: upsert `ignoreDuplicates` returns an empty body even after a real send, so the event page said “Sent to 0 people”; send now re-reads saved recipient ids, names who got it, and marks already-sent people — 2026-09-05

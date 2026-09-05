@@ -79,7 +79,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Event audiences | Public, district-only, school-only, invite-only | Yes |
 | RSVP and attendance | Going / not going (student, parent, or staff team-entry), attendance on the day, season view | Yes |
 | Organizer registration tracking | Families mark when they finished the external registration | Yes |
-| Family follow-through | Parent inbox of named child actions | Yes |
+| Family follow-through | Parent inbox of named child actions, including Going on public listings without a school roster invite | Yes |
 | Announcements | Short notes from district or school staff; district overview can post once to every connected school | Yes |
 | Alerts | Invites, deadlines, 7-day and 1-day reminders, changes, cancel | In-app yes; email is configured but not yet proven at school volume |
 | Aggregate reports + CSV | School-level counts, type filter, participating-school origin on district-hosted invites; not student browsing | Yes |

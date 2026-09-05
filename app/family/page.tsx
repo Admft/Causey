@@ -188,7 +188,7 @@ export default async function FamilyPage() {
   } else {
     missionTitle = "Your family is caught up";
     missionDescription =
-      "No invitations or unfinished organizer registrations need you right now.";
+      "No invitations or unfinished organizer registrations need you right now. Search a public listing and mark Going for a student to track them here — they do not need to be in a club first. Causey does not see organizer-site RSVPs until you mark registration complete.";
     missionAction = {
       href: profile?.preferred_competition_category
         ? preferredDiscoveryHref(profile.preferred_competition_category)
@@ -379,6 +379,8 @@ export default async function FamilyPage() {
                           profileId={child.profile_id}
                           status={row.status}
                           eventSlug={row.competition!.slug}
+                          forLabel={child.display_name}
+                          tone={row.status === "invited" ? "invite" : "family"}
                         />
                       </li>
                     ))}
@@ -482,7 +484,23 @@ export default async function FamilyPage() {
 
                 {!child.upcoming.length && !past.length ? (
                   <p className="mt-4 text-sm text-muted">
-                    No upcoming tournament invites.
+                    No tournaments yet.{" "}
+                    <Link
+                      href={
+                        profile?.preferred_competition_category
+                          ? preferredDiscoveryHref(
+                              profile.preferred_competition_category
+                            )
+                          : "/#search"
+                      }
+                      className="font-semibold text-brand-red hover:underline"
+                    >
+                      Search listings
+                    </Link>{" "}
+                    and mark Going for {child.display_name} on the event page.
+                    They do not need to be in a club first. Save is a bookmark
+                    for your account; Causey does not import RSVPs from the
+                    organizer&rsquo;s site.
                   </p>
                 ) : !child.upcoming.length ? null : answered.length ? (
                   <div className="mt-4">
@@ -499,6 +517,12 @@ export default async function FamilyPage() {
                             row.competition!.start_date,
                             row.competition!.end_date
                           )                          }${
+                            row.status === "going"
+                              ? " · Going"
+                              : row.status === "not_going"
+                                ? " · Can’t go"
+                                : ""
+                          }${
                             row.responded_by === user.id
                               ? " · RSVP’d by you"
                               : row.responded_by === child.profile_id
@@ -517,6 +541,8 @@ export default async function FamilyPage() {
                               profileId={child.profile_id}
                               status={row.status}
                               eventSlug={row.competition!.slug}
+                              forLabel={child.display_name}
+                              tone="family"
                             />
                           }
                         />
