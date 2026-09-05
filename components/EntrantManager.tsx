@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { inviteConnectedSchoolRosters, inviteEntrants, inviteGroup, removeEntrant } from "@/lib/actions/entrants";
+import {
+  inviteConnectedSchoolRosters,
+  inviteEntrants,
+  inviteGroup,
+  markEntrantStaffRsvp,
+  removeEntrant,
+} from "@/lib/actions/entrants";
 import {
   markEntrantAttendance,
   recordEntrantResult,
@@ -428,6 +434,73 @@ export function RemoveEntrantButton({
     >
       Remove
     </button>
+  );
+}
+
+/** Coach/admin team entry before day-of attendance opens. */
+export function StaffRsvpButtons({
+  competitionId,
+  eventSlug,
+  profileId,
+  status,
+}: {
+  competitionId: string;
+  eventSlug: string;
+  profileId: string;
+  status: string;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function mark(nextStatus: "going" | "not_going") {
+    setError(null);
+    startTransition(async () => {
+      const result = await markEntrantStaffRsvp({
+        competitionId,
+        eventSlug,
+        profileId,
+        status: nextStatus,
+      });
+      if (!result.ok) setError(result.error);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-1 sm:items-end">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => mark("going")}
+          disabled={isPending}
+          className={
+            status === "going"
+              ? "min-h-10 rounded-md border border-brand-red/25 bg-accent-soft px-3 py-1.5 text-sm font-semibold text-brand-red"
+              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
+          }
+        >
+          {isPending && status !== "going" ? "Saving…" : "Mark going"}
+        </button>
+        <button
+          type="button"
+          onClick={() => mark("not_going")}
+          disabled={isPending}
+          className={
+            status === "not_going"
+              ? "min-h-10 rounded-md border border-line bg-surface-soft px-3 py-1.5 text-sm font-semibold text-foreground"
+              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
+          }
+        >
+          {isPending && status !== "not_going" ? "Saving…" : "Can’t go"}
+        </button>
+      </div>
+      {error ? (
+        <span className="text-xs font-medium text-brand-red" role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

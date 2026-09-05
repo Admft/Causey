@@ -247,11 +247,11 @@ otp_expiry = 3600
 # `supabase start` and are the source to copy into Authentication → Email Templates.
 [auth.email.template.confirmation]
 subject = "Confirm your email for Causey"
-content_path = "./templates/confirmation.html"
+content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
 subject = "Reset your Causey password"
-content_path = "./templates/recovery.html"
+content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

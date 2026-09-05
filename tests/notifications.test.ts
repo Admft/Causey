@@ -152,6 +152,7 @@ function childSummary(
         profile_id: profileId,
         status: options?.status ?? "invited",
         responded_by: null,
+        response_source: null,
         placement: null,
         award_label: null,
         section_name: null,

@@ -50,6 +50,7 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 _(none — ready for next audit tick)_
 
 ## Last tick
+- 2026-09-05 — **Chess nationals pin glow + density (user-directed, outside audit cadence)**: `.partner-promo` rebuilt cross-browser (no color-mix/range-media in critical paint) with gradient face, ambient aura, looping sheen, and a labeled pathway ladder rail filling the panel on `/` featured and `/chess` results.
 - 2026-09-01 — **Family/school chrome honesty**: `studentOrgChromeFromTypes` + `membershipHistoryEyebrow`; Family drops “tell the club” / “Not in any club yet”; Plan/Orgs derive school vs club chrome from memberships; school history eyebrow is “School record”.
 - 2026-08-31 — **District Schools settings readiness**: `#schools` uses the same pilot readiness model as the command center (invite/claim/ownership/provision/ready + fail-closed retry), not verification-only labels.
 - 2026-08-27 — **School-safe roster/manage composition**: roster invite → group → competitions with progressive GroupManager; manage replies by awaiting/going/can’t-go; individual invite picks demoted when groups exist; Family metadata drops club RSVP wording.

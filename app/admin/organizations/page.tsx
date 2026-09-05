@@ -71,9 +71,10 @@ export default async function AdminOrganizationsPage({
         Organizations
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        Review new organizations, verify the ones you trust, and open any
-        workspace. District admins connect their own schools after their
-        district is verified.
+        Review new organizations and verify the ones you trust. Founder super
+        admins provision a district, then add each school under it. Students
+        join a school account, never the district office. Clubs and teams are
+        started by their coaches.
       </p>
 
       <div className="mt-8">

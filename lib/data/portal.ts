@@ -217,6 +217,7 @@ export type EntrantWithEvent = {
   profile_id: string;
   status: EntrantStatus;
   responded_by: string | null;
+  response_source: "self" | "parent" | "staff" | null;
   placement: number | null;
   award_label: string | null;
   section_name: string | null;
@@ -543,7 +544,7 @@ export async function getMyEntrantRows(
   const { data } = await supabase
     .from("competition_entrants")
     .select(
-      "competition_id, profile_id, status, responded_by, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date)"
+      "competition_id, profile_id, status, responded_by, response_source, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date)"
     )
     .eq("profile_id", userId);
 
@@ -552,6 +553,7 @@ export async function getMyEntrantRows(
     profile_id: row.profile_id as string,
     status: row.status as EntrantStatus,
     responded_by: row.responded_by as string | null,
+    response_source: (row.response_source as EntrantWithEvent["response_source"]) ?? null,
     placement: (row.placement as number | null) ?? null,
     award_label: (row.award_label as string | null) ?? null,
     section_name:
@@ -630,6 +632,7 @@ export async function getEventAttendance(
     award_label: row.award_label ?? null,
     origin_org_id: row.origin_org_id ?? null,
     origin_org_name: row.origin_org_name ?? null,
+    response_source: row.response_source ?? null,
   }));
 }
 
@@ -957,7 +960,7 @@ export async function getChildrenWithEvents(
     supabase
       .from("competition_entrants")
       .select(
-        "competition_id, profile_id, status, responded_by, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date, reg_url)"
+        "competition_id, profile_id, status, responded_by, response_source, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date, reg_url)"
       )
       .in("profile_id", childIds),
     supabase
@@ -998,6 +1001,8 @@ export async function getChildrenWithEvents(
           profile_id: row.profile_id as string,
           status: row.status as EntrantStatus,
           responded_by: row.responded_by as string | null,
+          response_source:
+            (row.response_source as EntrantWithEvent["response_source"]) ?? null,
           placement: (row.placement as number | null) ?? null,
           award_label: (row.award_label as string | null) ?? null,
           section_name:

@@ -88,6 +88,8 @@ describe("claim invitation path helpers", () => {
     expect(peopleManager).toContain("Reissue & copy link");
     expect(peopleManager).toContain("Download CSV");
     expect(peopleManager).toContain("Copy all claim links");
+    expect(peopleManager).toContain("Copy code");
+    expect(peopleManager).toContain("type the code at /claim");
     expect(loginPage).toContain("getInvitationPreviewForClaimPath");
     expect(loginPage).toContain("Create staff account");
   });

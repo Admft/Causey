@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  adminProvisionDistrict,
-  type DistrictProvisionPack,
+  adminProvisionDistrictSchool,
+  type SchoolProvisionPack,
 } from "@/lib/actions/admin";
 import {
   AdminInvitationCopyRow,
@@ -20,15 +20,37 @@ const STATES = [
   "VA","WA","WV","WI","WY","DC",
 ];
 
-export function AdminDistrictProvisionForm() {
+export type SchoolProvisionDistrictOption = {
+  id: string;
+  name: string;
+  state: string | null;
+};
+
+export function AdminSchoolProvisionForm({
+  districts,
+}: {
+  districts: SchoolProvisionDistrictOption[];
+}) {
   const router = useRouter();
+  const [districtId, setDistrictId] = useState(districts[0]?.id ?? "");
   const [name, setName] = useState("");
-  const [state, setState] = useState("");
+  const [state, setState] = useState(districts[0]?.state ?? "");
   const [contactEmail, setContactEmail] = useState("");
   const [contactName, setContactName] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pack, setPack] = useState<DistrictProvisionPack | null>(null);
+  const [pack, setPack] = useState<SchoolProvisionPack | null>(null);
   const [pending, setPending] = useState(false);
+
+  const selectedDistrict = useMemo(
+    () => districts.find((district) => district.id === districtId) ?? null,
+    [districts, districtId]
+  );
+
+  function onDistrictChange(nextId: string) {
+    setDistrictId(nextId);
+    const next = districts.find((district) => district.id === nextId);
+    if (next?.state) setState(next.state);
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -36,7 +58,8 @@ export function AdminDistrictProvisionForm() {
     setPack(null);
     setPending(true);
     try {
-      const result = await adminProvisionDistrict({
+      const result = await adminProvisionDistrictSchool({
+        districtId,
         name,
         state,
         contactEmail,
@@ -56,6 +79,15 @@ export function AdminDistrictProvisionForm() {
     }
   }
 
+  if (!districts.length) {
+    return (
+      <p className="text-sm text-muted">
+        Provision a district first. Schools are children of a district office,
+        not standalone accounts.
+      </p>
+    );
+  }
+
   if (pack) {
     const claimUrl = pack.invitation
       ? new URL(pack.invitation.claimPath, window.location.origin).toString()
@@ -65,11 +97,11 @@ export function AdminDistrictProvisionForm() {
       <div className="flex flex-col gap-5">
         <div>
           <p className="text-sm font-semibold text-foreground">
-            {pack.name} is provisioned
+            {pack.name} is a school account
           </p>
           <p className="mt-1 text-sm text-muted">
-            Send the district administrator either the link or the code. Both
-            open the same invitation, and both require them to sign in with{" "}
+            It sits under {pack.districtName}. Send the school administrator
+            either the link or the code. Both require them to sign in with{" "}
             {pack.invitation?.email ?? "their invited email"} — a forwarded copy
             will not let anyone else in.
           </p>
@@ -84,7 +116,7 @@ export function AdminDistrictProvisionForm() {
               <p className="mt-1 text-sm text-muted-strong">
                 Causey stores only hashes of these, so they cannot be shown
                 again. If you lose them, reissue the invitation from the
-                district&rsquo;s People page. Expires{" "}
+                school&rsquo;s People page. Expires{" "}
                 {formatInvitationExpiry(pack.invitation.expiresAt)}.
               </p>
             </div>
@@ -104,12 +136,12 @@ export function AdminDistrictProvisionForm() {
         ) : (
           <div className="rounded-xl border border-brand-red/30 bg-white p-4">
             <p className="text-sm font-semibold text-foreground">
-              District created, but the invitation did not send
+              School created, but the invitation did not send
             </p>
             <p className="mt-1 text-sm text-muted-strong">
               {pack.invitationError ??
-                "Could not create the district administrator invitation."}{" "}
-              Invite the district administrator from the district&rsquo;s People
+                "Could not create the school administrator invitation."}{" "}
+              Invite the school administrator from the school&rsquo;s People
               page.
             </p>
           </div>
@@ -124,7 +156,7 @@ export function AdminDistrictProvisionForm() {
             onClick={() => setPack(null)}
             className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red"
           >
-            Provision another district
+            Provision another school
           </button>
         </div>
       </div>
@@ -135,14 +167,32 @@ export function AdminDistrictProvisionForm() {
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1">
         <span className="text-xs font-semibold text-muted-strong">
-          District name
+          District
+        </span>
+        <select
+          className="field"
+          required
+          value={districtId}
+          onChange={(event) => onDistrictChange(event.target.value)}
+        >
+          {districts.map((district) => (
+            <option key={district.id} value={district.id}>
+              {district.name}
+              {district.state ? ` · ${district.state}` : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs font-semibold text-muted-strong">
+          School name
         </span>
         <input
           className="field"
           required
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Moffat County School District"
+          placeholder="Lincoln Middle School"
         />
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -164,19 +214,19 @@ export function AdminDistrictProvisionForm() {
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs font-semibold text-muted-strong">
-            Contact name (optional)
+            Administrator name (optional)
           </span>
           <input
             className="field"
             value={contactName}
             onChange={(event) => setContactName(event.target.value)}
-            placeholder="Dana Reyes"
+            placeholder={selectedDistrict ? "Campus administrator" : ""}
           />
         </label>
       </div>
       <label className="flex flex-col gap-1">
         <span className="text-xs font-semibold text-muted-strong">
-          District administrator email
+          School administrator email
         </span>
         <input
           className="field"
@@ -184,11 +234,11 @@ export function AdminDistrictProvisionForm() {
           required
           value={contactEmail}
           onChange={(event) => setContactEmail(event.target.value)}
-          placeholder="dana.reyes@moffat.k12.co.us"
+          placeholder="principal@school.edu"
         />
         <span className="text-xs text-muted">
-          The invitation is bound to this address. Use the person who will run
-          the program, not a shared inbox.
+          The invitation is bound to this address. They create a staff account
+          with their own password, then accept at /claim.
         </span>
       </label>
 
@@ -203,7 +253,7 @@ export function AdminDistrictProvisionForm() {
         disabled={pending}
         className="cta-enabled w-fit disabled:opacity-60"
       >
-        {pending ? "Provisioning…" : "Provision district"}
+        {pending ? "Provisioning…" : "Provision school"}
       </button>
     </form>
   );

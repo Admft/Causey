@@ -70,6 +70,7 @@ export type CompetitionEntrant = {
   invited_by: string | null;
   responded_by: string | null;
   responded_at: string | null;
+  response_source: "self" | "parent" | "staff" | null;
   attendance_marked_by: string | null;
   attendance_marked_at: string | null;
   section_id: string | null;
@@ -120,6 +121,7 @@ export type AttendanceRow = {
   award_label: string | null;
   origin_org_id: string | null;
   origin_org_name: string | null;
+  response_source: "self" | "parent" | "staff" | null;
 };
 
 /** Return shape of get_org_member_competition_history. */

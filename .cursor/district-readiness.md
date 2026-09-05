@@ -43,6 +43,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Finding tournaments no longer shows “too often” when the limiter RPC errors or a signed-in search sent a `user:` key `0069` rejects — 2026-09-04
 - [x] Host a competition preview shows the real search card and event-page start (not a fact dump) — 2026-09-04
 - [x] Host a competition requires type plus a visible discipline chip (same catalog as search); no silent chess default — 2026-09-04
+- [x] Staff team-entry: coaches and school admins mark a student going / not going on Manage event (`0076`); audited `response_source = staff`; student + linked parents notified; Family labels staff entry; owner-run backfill drops the authenticated update guard before data repair and recreates it afterward — 2026-09-05
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -66,7 +67,8 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Area | Status | Evidence |
 | --- | --- | --- |
 | Platform provisions district; coach cannot self-serve | **works** | `0025` + `/admin/organizations`; `tests/district-lifecycle-guardrails.test.ts` |
-| Add school → invite named admin → claim → ownership; district retains authority | **works** | `createDistrictSchool` / `0045`; `/orgs/[slug]/settings#schools` readiness actions; `/people`; ownership settings; effective-org authority tests |
+| Add school → invite named admin → claim → ownership; district retains authority | **works** | `createDistrictSchool` / `0045`; super-admin `admin_provision_district_school` / `0078`; `/orgs/[slug]/settings#schools`; `/people`; ownership settings |
+| Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school |
 | Command center: one next action + per-school readiness | **works** | `lib/district-readiness.ts` → `run_competitions`; `/orgs/[slug]` school list |
 | N=2 isolation (readiness/reports/CSV/activity) | **works** in repo; live env still ops-gated | `tests/multi-district-isolation.test.ts`; runbook §7 |
 | School chrome says School account | **works** | `components/OrgSubnav.tsx`; Family/Plan/Orgs/`membershipHistoryEyebrow` type-aware nouns |
@@ -77,7 +79,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Overview calendar of school + district events | **works** | `/orgs/[slug]` “Upcoming across the district” (prior tick) |
 | Reports + CSV school- vs district-hosted; fail closed | **works** | `/orgs/[slug]/reports` + `export/route.ts`; `0046`; type filter + origin-school table (`0070`); school attendance fails closed |
 | District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters`; `origin_org_id` stamped (`0070`) |
-| Claim-link provisioning | **works** | Email or copyable invite; CSV import via `create_org_invitations`; reissue |
+| Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school |
 | Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
 | Family RSVP + organizer registration | **works** | `/family` (org-agnostic RSVP copy) |
 | School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
@@ -123,9 +125,15 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 13. **P4 · Chess federation pin was missing · M · shipped 2026-09-05**  
    Surface: `/chess` results and the homepage chess rail now have a labeled “Get your kid to chess nationals” placement into `/pathways`. Uses seeded Denker/Barber/Rockefeller/Haring chains. Not an official US Chess ruling; swap copy when they send written pathway info.
 
+14. **P5 · Staff could not mark a student going · M · shipped 2026-09-05**  
+   Surface: `/event/[slug]/manage` replies now offer Mark going / Can’t go for coaches and school admins. Migration `0076` audits `response_source = staff` + `responded_by`, notifies the student and linked parents, and keeps assistants read-only. Family desk labels “Marked by staff.” Students and parents can still change the answer.
+
+15. **P1 · Super admin could not provision a school under a district · M · shipped 2026-09-05**  
+   Surface: `/admin/organizations` → Provision school. One super-admin action creates a child school and invites its named administrator (`0078`). Directory is a district tree with School account rows and invited/waiting/claimed status. Orphan-school create is gone. People shows the activation code, not only the claim link.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0075` in each environment (`0074` and `0075` are both hard gates — see the runbook). Then the P5 staff team-entry path: coaches and school admins marking a student as going, audited as staff-entered, with the student and linked parents notified. Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
+Ops proof of email at school volume, and apply migrations through `0078` in each environment (`0074`–`0078` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
 
 ### Out-of-scope refusals this pass
 

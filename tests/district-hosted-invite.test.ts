@@ -39,7 +39,10 @@ describe("district-hosted multi-school invite", () => {
       "Each reply names the connected school so multi-school follow-up stays"
     );
     expect(manage).toContain(
-      "Replies name each school so you can follow up without leaving this page."
+      "Mark going for a student when the family has not answered"
+    );
+    expect(manage).toContain(
+      "Replies name each school"
     );
     expect(rsvp).toContain("export function sortAttendanceBySchool");
     expect(rsvp).toContain("export function formatManageReplyMeta");

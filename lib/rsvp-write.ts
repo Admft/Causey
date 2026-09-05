@@ -14,12 +14,15 @@ export async function performSetRsvp(input: {
     return { ok: false, error: "Pick going or not going." };
   }
 
+  const responseSource =
+    input.profileId === input.userId ? "self" : "parent";
   const { data, error } = await input.supabase
     .from("competition_entrants")
     .update({
       status: input.status,
       responded_by: input.userId,
       responded_at: new Date().toISOString(),
+      response_source: responseSource,
     })
     .eq("competition_id", input.competitionId)
     .eq("profile_id", input.profileId)
