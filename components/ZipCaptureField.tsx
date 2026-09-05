@@ -67,7 +67,7 @@ export function ZipCaptureField({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <button
           type="button"
-          className="text-xs font-semibold text-brand-red hover:underline disabled:opacity-60"
+          className="text-xs font-semibold text-brand-blue hover:text-brand-blue-strong hover:underline disabled:opacity-60"
           onClick={useLocation}
           disabled={disabled || locating}
         >
