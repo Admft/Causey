@@ -257,34 +257,74 @@ textarea.field {
   color: var(--brand-red);
 }
 
-/* Chess (and later partner) pin above results — labeled placement, not ranking. */
+/* Chess (and later partner) pin above results — labeled placement, not ranking.
+ * Deep-red gradient face with a resting red aura (user-requested glow; this
+ * extends the sanctioned --shadow-cta language, overriding the default "no
+ * colored shadows" rule for this one placement). All critical paint is plain
+ * hex/rgba — no color-mix, masks, range media queries, or backdrop-filter in
+ * the render path, so older WebKit/Gecko still get the full look. */
 .partner-promo {
   position: relative;
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--radius-2xl);
   background: var(--brand-red);
+  background: linear-gradient(152deg, #c8402f 0%, var(--brand-red) 44%, #a32e25 100%);
   color: #ffffff;
-  box-shadow: var(--shadow-cta);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
+    0 6px 20px rgba(194, 59, 50, 0.28),
+    0 20px 48px rgba(194, 59, 50, 0.24);
   text-decoration: none;
-  transition: background-color 200ms var(--ease-brand);
+  transition: transform 220ms var(--ease-brand), box-shadow 220ms var(--ease-brand);
 }
 .partner-promo:hover {
-  background: var(--brand-red-hover);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
+    0 8px 24px rgba(168, 50, 42, 0.34),
+    0 26px 60px rgba(194, 59, 50, 0.3);
+}
+.partner-promo:active {
+  transform: translateY(0);
 }
 .partner-promo:focus-visible {
   outline: 2px solid var(--foreground);
   outline-offset: 3px;
 }
+/* Face gloss + corner spotlight behind the step art. Alpha stays ≤0.14 over
+ * the right edge and ≤0.08 across the top so white copy keeps ≥4.5:1 on red. */
+.partner-promo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(52% 78% at 92% 6%, rgba(255, 255, 255, 0.14), transparent 72%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08), transparent 34%);
+}
+/* Slow sheen loop (sweep, then a long rest) so the pin still reads alive when
+ * the visitor scrolls to it — the old one-shot fired before first scroll.
+ * rgba() gradient first; the color-mix restatement only wins where supported. */
 .partner-promo::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
   left: -45%;
-  z-index: 0;
+  z-index: 2;
   width: 40%;
   pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.75) 42%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 100%
+  );
   background: linear-gradient(
     105deg,
     transparent 0%,
@@ -292,7 +332,97 @@ textarea.field {
     color-mix(in srgb, #ffffff 55%, transparent) 50%,
     transparent 100%
   );
-  animation: search-shine 1100ms var(--ease-brand) 180ms both;
+  opacity: 0;
+  animation: partner-promo-sheen 6.5s var(--ease-brand) 900ms infinite;
+}
+@keyframes partner-promo-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  6% {
+    opacity: 0.9;
+  }
+  26% {
+    opacity: 0;
+    transform: translateX(280%);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(280%);
+  }
+}
+/* The climb, labeled: local → state → national invitationals. A filled rail,
+ * not decoration — mobile stacks it under the CTA behind a hairline, sm+ pins
+ * it as a ruled side rail so the panel has no air. */
+.partner-promo-ladder {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+  padding: 1rem 0 0;
+  list-style: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+}
+@media (min-width: 40rem) {
+  .partner-promo-ladder {
+    margin: 0;
+    padding: 0 0 0 1.5rem;
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.22);
+    align-self: center;
+  }
+}
+.partner-promo-ladder li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+/* Connector from this node's bottom edge to the next row's center; the next
+ * dot paints over the overshoot. */
+.partner-promo-ladder li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 0.25rem;
+  top: calc(50% + 0.3125rem);
+  height: calc(50% + 0.75rem);
+  width: 2px;
+  background: rgba(255, 255, 255, 0.28);
+}
+.partner-promo-ladder-dot {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: transparent;
+}
+.partner-promo-ladder-dot-goal {
+  border-color: #ffffff;
+  background: #ffffff;
+}
+/* Opacity-only pulse (no transform) so every engine paints the breathing halo. */
+.partner-promo-ladder-dot-goal::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  background: #ffffff;
+  opacity: 0.14;
+  animation: partner-promo-goal-pulse 2.6s var(--ease-structured) infinite;
+}
+@keyframes partner-promo-goal-pulse {
+  0%,
+  100% {
+    opacity: 0.14;
+  }
+  50% {
+    opacity: 0.32;
+  }
 }
 .partner-promo-cta {
   display: inline-flex;
@@ -307,8 +437,11 @@ textarea.field {
   color: var(--brand-red);
   font-weight: 700;
   font-size: var(--text-base);
+  box-shadow: 0 2px 10px rgba(20, 24, 28, 0.2);
+  transition: background-color 200ms var(--ease-brand), color 200ms var(--ease-brand),
+    box-shadow 200ms var(--ease-brand);
 }
-@media (width >= 40rem) {
+@media (min-width: 40rem) {
   .partner-promo-cta {
     width: auto;
   }
@@ -317,6 +450,7 @@ textarea.field {
 .partner-promo:focus-visible .partner-promo-cta {
   background: var(--accent-soft);
   color: var(--brand-red-hover);
+  box-shadow: 0 4px 14px rgba(20, 24, 28, 0.24);
 }
 
 /* Compact page-back control — design system §8.4 (nav outline). Shorter than
@@ -869,6 +1003,7 @@ textarea.field {
   .cta-enabled,
   .cta-outline,
   .partner-promo,
+  .partner-promo-cta,
   .page-back,
   .skip-link,
   .card-lift,
@@ -883,6 +1018,8 @@ textarea.field {
   .cta-enabled:active,
   .card-lift:hover,
   .card-lift:focus-visible,
+  .partner-promo:hover,
+  .partner-promo:active,
   .group:hover .nudge-x,
   .group:focus-visible .nudge-x {
     transform: none;
@@ -897,7 +1034,8 @@ textarea.field {
   .home-hero-search.is-search-attention::before,
   .home-hero-cue,
   .cta-sheen.is-cta-attention::before,
-  .partner-promo::before {
+  .partner-promo::before,
+  .partner-promo-ladder-dot-goal::before {
     animation: none;
   }
   .home-featured-rail[data-hint] > ul {
