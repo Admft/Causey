@@ -3,6 +3,7 @@ import { Redirect, Tabs } from "expo-router";
 import type { ComponentProps } from "react";
 import type { ColorValue } from "react-native";
 import { useAuth } from "../../src/auth";
+import { homeRouteForRole } from "../../src/roles";
 import { colors } from "../../src/theme";
 import { Spinner } from "../../src/ui";
 
@@ -27,11 +28,18 @@ function tabIcon(active: IconName, inactive: IconName) {
 }
 
 export default function TabsLayout() {
-  const { ready, session, access } = useAuth();
+  const { ready, session, access, profile } = useAuth();
 
   if (!ready) return <Spinner />;
-  if (!session) return <Redirect href="/login" />;
-  if (access && access.allowed === false) return <Redirect href="/blocked" />;
+  if (session && access && access.allowed === false) {
+    return <Redirect href="/blocked" />;
+  }
+
+  // Tournament search is public on the website, so it is public here too: a
+  // visitor can browse without an account and sign in from the Me tab.
+  // One home per role, and none of them for a visitor.
+  const signedIn = Boolean(session);
+  const home = signedIn ? homeRouteForRole(profile?.role) : null;
 
   return (
     <Tabs
@@ -50,7 +58,24 @@ export default function TabsLayout() {
         name="family"
         options={{
           title: "Family",
+          href: home === "/family" ? undefined : null,
           tabBarIcon: tabIcon("people", "people-outline"),
+        }}
+      />
+      <Tabs.Screen
+        name="plan"
+        options={{
+          title: "My tournaments",
+          href: home === "/plan" ? undefined : null,
+          tabBarIcon: tabIcon("calendar", "calendar-outline"),
+        }}
+      />
+      <Tabs.Screen
+        name="team"
+        options={{
+          title: "My team",
+          href: home === "/team" ? undefined : null,
+          tabBarIcon: tabIcon("clipboard", "clipboard-outline"),
         }}
       />
       <Tabs.Screen

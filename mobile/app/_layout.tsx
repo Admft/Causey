@@ -20,6 +20,11 @@ export default function RootLayout() {
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="event/[slug]" options={{ title: "Tournament" }} />
+          <Stack.Screen
+            name="attendance/[competitionId]"
+            options={{ title: "Attendance" }}
+          />
+          <Stack.Screen name="roster/[orgId]" options={{ title: "Roster" }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="signup" options={{ title: "Create account" }} />
           <Stack.Screen

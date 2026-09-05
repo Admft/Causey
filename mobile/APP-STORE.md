@@ -10,9 +10,10 @@ sees a broken app and rejects under Guideline 2.1.
 
 1. **`/api/mobile/*` is live on `https://causey.dev`** with
    `DATA_SOURCE=supabase`. Every screen in the app calls these routes:
-   `/api/mobile/me`, `/api/mobile/family`, `/api/mobile/rsvp`,
-   `/api/mobile/registration`, `/api/mobile/account`, and `/api/competitions`.
-   On mock data the reviewer's account resolves to nothing.
+   `/api/mobile/me`, `/api/mobile/family`, `/api/mobile/plan`,
+   `/api/mobile/team`, `/api/mobile/roster`, `/api/mobile/attendance`,
+   `/api/mobile/rsvp`, `/api/mobile/registration`, `/api/mobile/account`, and
+   `/api/competitions`. On mock data the reviewer's account resolves to nothing.
 2. **Supabase keys are set on the EAS build profile.** `eas.json` pins
    `EXPO_PUBLIC_CAUSEY_API_URL`, but the two Supabase values are not committed:
 
@@ -26,6 +27,13 @@ sees a broken app and rejects under Guideline 2.1.
 3. **The demo account below exists in production** with real linked students.
 4. **Icons are current.** Run `npm run icons:mobile` from the repo root after
    any change to `lib/og/causey-app-icon.tsx`.
+5. **You know whether Supabase requires email confirmation in production.**
+   Check Authentication → Sign In / Providers → Confirm email. Reviewers test
+   sign-up even when you hand them a demo account, and they use throwaway
+   addresses they cannot read. If confirmation is **on**, the reviewer hits the
+   "Confirm your email" screen and cannot continue — that reads as broken under
+   Guideline 2.1. Either turn it off for launch or keep the sentence about it in
+   the review notes below. Do not leave this unanswered.
 
 ## Demo account (App Review Information)
 
@@ -47,15 +55,54 @@ The account must have, in production:
 
 **Notes for the reviewer** (paste into App Store Connect):
 
-> Causey helps parents and coaches keep track of student chess tournaments.
-> Sign in with the demo account. The Family tab lists each student and the
-> RSVPs waiting on you. The Search tab loads upcoming chess tournaments and
-> opens a detail screen where you can add the tournament to your calendar or
-> share it. Registration for most tournaments is run by the organizer on their
-> own website, so those listings link out; Causey then tracks that the
-> registration is done. Account deletion is in the Me tab under "Delete
-> account". The app is for ages 13 and up; student accounts under 13 are
-> blocked at sign-in and shown a screen explaining why.
+> Causey helps parents, coaches, and students keep track of student chess
+> tournaments. Sign in with the demo account. The first tab depends on the
+> account type: a parent gets Family (each student and the RSVPs waiting on
+> you), a student gets My tournaments (their own invitations), and a coach gets
+> My team (the organizations they staff, day-of attendance for upcoming events,
+> and rosters). The Search tab loads upcoming chess tournaments and opens a
+> detail screen where you can add the tournament to your calendar or share it.
+> Registration for most tournaments is run by the organizer on their own
+> website, so those listings link out; Causey then tracks that the registration
+> is done. Invitations, CSV imports, organization settings, and season reports
+> are website tasks and are not in the app. Account deletion is in the Me tab
+> under "Delete account". The app is for ages 13 and up; student accounts under
+> 13 are blocked at sign-in and shown a screen explaining why.
+
+To exercise all three homes, the reviewer can use the demo parent plus the two
+demo student accounts below. A coach demo account is optional; if you include
+one, it needs at least one upcoming hosted or travel event so the attendance
+screen is not empty.
+
+Add this line **only if** email confirmation is still enabled in Supabase:
+
+> Creating a brand-new account sends a confirmation email before first sign-in.
+> Please use the demo account above rather than signing up, or tell us and we
+> will provide a pre-confirmed address.
+
+## Accounts and sign-in
+
+Account creation happens entirely in the app for parents and coaches: Me →
+Create a parent or coach account, or the link on the sign-in screen. Students
+are not offered on the phone, because the app never asks for a birth date; a
+parent or coach creates a student account on the website.
+
+- **No third-party or social login.** Causey uses first-party email and
+  password through Supabase, so Guideline 4.8 does not apply and Sign in with
+  Apple is not required. Do not add it to "look compliant."
+- **Sign-up collects** name, email, password, and an optional 5-digit zip. That
+  is exactly what the App Privacy table above declares. Zip is optional and
+  there is no date of birth.
+- **Terms and privacy are linked on the sign-up screen itself**, not only in
+  the Me tab.
+- **Deletion matches creation** (Guideline 5.1.1(v)) — see below.
+
+**Browsing without an account (Guideline 5.1.1(i)).** Chess search and the
+tournament detail screen work signed out, exactly as they do on the website; the
+app opens on Search for a visitor. Sign-in is required only for account work:
+Family RSVPs, a student's own tournaments, rosters, and attendance. A reviewer
+can therefore see real content before creating anything. The signed-out Me tab
+is where sign-in and sign-up live.
 
 ## Age rating
 
@@ -157,4 +204,16 @@ Check after `eas build` runs prebuild:
 
 Deferred on purpose for 1.0: push notifications, Sign in with Apple (not
 required — Causey offers no third-party social login), in-app purchases,
-student self-signup on mobile, and the district office.
+student self-signup on mobile, saved events, the notifications inbox, event
+comments and ratings, and the district office.
+
+Comments and ratings are deliberately absent. Shipping user-generated content
+would make the "User-generated content: No" answer above false and would add
+Guideline 1.2 moderation obligations (in-app report and block). Keep them on the
+website until that is built.
+
+Desk work stays on the website on purpose: invitations and claim links, CSV
+roster import and export, organization settings and ownership transfer, season
+and aggregate reports, district provisioning, and platform admin. The app covers
+what someone does standing up: answer an RSVP, find a tournament, take
+attendance.

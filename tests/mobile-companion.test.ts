@@ -166,9 +166,20 @@ describe("App Store readiness", () => {
 
   it("keeps sign-in, sign-up, and password reset inside the app", () => {
     // Guideline 4: sending a reviewer to Safari to create an account is the
-    // single most common rejection for a companion app.
+    // single most common rejection for a companion app. Trust documents are
+    // allowed to open in a browser; account actions are not.
+    const WEB_ACCOUNT_PATHS = [
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+      "/account",
+    ];
     for (const screen of AUTH_SCREENS) {
-      expect(read(screen)).not.toContain("Linking.openURL");
+      const source = read(screen);
+      for (const path of WEB_ACCOUNT_PATHS) {
+        expect(source).not.toContain(`siteUrl}${path}`);
+      }
     }
     expect(read("mobile/app/login.tsx")).toContain('router.push("/signup")');
     expect(read("mobile/app/login.tsx")).toContain(
@@ -275,5 +286,136 @@ describe("App Store readiness", () => {
     expect(kit).toContain("/support");
     expect(kit).toContain("/privacy");
     expect(kit).toContain("/terms");
+  });
+});
+
+describe("every signed-in role has a home", () => {
+  it("gives parents, students, and coaches their own first tab", () => {
+    const roles = read("mobile/src/roles.ts");
+    expect(roles).toContain('if (role === "coach") return "/team"');
+    expect(roles).toContain('if (role === "student") return "/plan"');
+    expect(roles).toContain('return "/family"');
+
+    const layout = read("mobile/app/(tabs)/_layout.tsx");
+    expect(layout).toContain("homeRouteForRole");
+    for (const tab of ["family", "plan", "team"]) {
+      expect(layout).toContain(`name="${tab}"`);
+    }
+  });
+
+  it("never redirects a signed-in account onto a hidden tab", () => {
+    // A student or coach sent to /family would land on a tab with no button.
+    for (const screen of [
+      "mobile/app/index.tsx",
+      "mobile/app/login.tsx",
+      "mobile/app/signup.tsx",
+      "mobile/app/blocked.tsx",
+    ]) {
+      expect(read(screen)).not.toContain('"/family"');
+    }
+    expect(read("mobile/app/index.tsx")).toContain("AccountHomeRedirect");
+  });
+
+  it("waits for the profile instead of guessing the parent home", () => {
+    // The session lands before the profile on a fresh sign-in; reading role
+    // too early sent students and coaches to Family.
+    const guard = read("mobile/src/RoleHomeGuard.tsx");
+    expect(guard).toContain('if (!profile)');
+    expect(guard).toContain('{ kind: "wait" }');
+    expect(guard).toContain("homeRouteForRole");
+    // A profile that never loads must not spin forever.
+    expect(guard).toContain("Try again");
+    expect(guard).toContain("refreshMe");
+  });
+
+  it("lets a visitor browse tournaments without an account", () => {
+    // Guideline 5.1.1(i): chess search is public on the website, so a reviewer
+    // should not need to create an account to see a single tournament.
+    const layout = read("mobile/app/(tabs)/_layout.tsx");
+    expect(layout).not.toContain('if (!session) return <Redirect href="/login" />');
+    expect(layout).toContain("const signedIn = Boolean(session)");
+
+    const guard = read("mobile/src/RoleHomeGuard.tsx");
+    expect(guard).toContain('kind: "anonymous"');
+    expect(guard).toContain('<Redirect href="/search" />');
+
+    // The signed-out Me tab is how a visitor reaches sign-in, and it must not
+    // offer account deletion for an account that does not exist.
+    const me = read("mobile/app/(tabs)/me.tsx");
+    expect(me).toContain("browsing as a guest");
+    expect(me).toContain('router.push("/login")');
+    expect(me).toContain('router.push("/signup")');
+    expect(me).toContain("ready && !session");
+
+    // Login is no longer the forced entry point, so it needs a way back out.
+    expect(read("mobile/app/login.tsx")).toContain(
+      "Browse tournaments without an account"
+    );
+  });
+
+  it("shows the terms and privacy notice where the account is created", () => {
+    const signup = read("mobile/app/signup.tsx");
+    expect(signup).toContain("siteUrl}/privacy");
+    expect(signup).toContain("siteUrl}/terms");
+    expect(signup).toContain("terms of use");
+  });
+
+  it("stops a hidden tab from rendering for the wrong role", () => {
+    const homes: [string, string][] = [
+      ["mobile/app/(tabs)/family.tsx", '"/family"'],
+      ["mobile/app/(tabs)/plan.tsx", '"/plan"'],
+      ["mobile/app/(tabs)/team.tsx", '"/team"'],
+    ];
+    for (const [screen, home] of homes) {
+      const source = read(screen);
+      expect(source).toContain("RoleHomeGuard");
+      expect(source).toContain(`home=${home}`);
+    }
+  });
+
+  it("backs the coach signup option with real coach work", () => {
+    // Signup offers Coach, so the app owes a coach something to do.
+    expect(read("mobile/app/signup.tsx")).toContain('value: "coach"');
+    const team = read("mobile/app/(tabs)/team.tsx");
+    expect(team).toContain("/api/mobile/team");
+    expect(team).toContain("Take attendance");
+    expect(team).toContain("/roster/");
+
+    const attendance = read("mobile/app/attendance/[competitionId].tsx");
+    expect(attendance).toContain("/api/mobile/attendance");
+    expect(attendance).toContain("did_not_attend");
+  });
+
+  it("lets a student answer their own invitations", () => {
+    const plan = read("mobile/app/(tabs)/plan.tsx");
+    expect(plan).toContain("/api/mobile/plan");
+    expect(plan).toContain("/api/mobile/rsvp");
+    expect(plan).toContain("EntrantRow");
+    expect(read("app/api/mobile/plan/route.ts")).toContain("getMobilePlan");
+  });
+
+  it("shares one attendance permission path with the website", () => {
+    const shared = read("lib/attendance-write.ts");
+    expect(shared).toContain("can_manage_competition");
+    expect(shared).toContain("can_invite_to_competition");
+    expect(shared).toContain("Only competition staff can record attendance.");
+    for (const caller of [
+      "lib/actions/district.ts",
+      "app/api/mobile/attendance/route.ts",
+    ]) {
+      expect(read(caller)).toContain("performMarkAttendance");
+    }
+  });
+
+  it("keeps desk work off the phone", () => {
+    // Invites, CSV, settings, and reports stay on the website by design.
+    const team = read("mobile/app/(tabs)/team.tsx");
+    for (const deskWord of ["CSV", "settings", "reports"]) {
+      expect(team).toContain(deskWord);
+    }
+    // A district office has no roster to open.
+    expect(read("app/api/mobile/roster/route.ts")).toContain(
+      "canMarkOrganizationAttending"
+    );
   });
 });

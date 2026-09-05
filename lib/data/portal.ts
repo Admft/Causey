@@ -241,8 +241,11 @@ export function isUpcomingEvent(
   return (row.end_date ?? row.start_date) >= todayIso;
 }
 
-export async function getMyOrgs(userId: string): Promise<MyOrgRow[]> {
-  const supabase = await createServerSupabaseClient();
+export async function getMyOrgs(
+  userId: string,
+  client?: PortalSupabase
+): Promise<MyOrgRow[]> {
+  const supabase = await portalClient(client);
   const [membershipRes, ownedRes] = await Promise.all([
     supabase
       .from("org_memberships")
@@ -538,13 +541,14 @@ export async function getTournamentDraftForViewer(
 }
 
 export async function getMyEntrantRows(
-  userId: string
+  userId: string,
+  client?: PortalSupabase
 ): Promise<EntrantWithEvent[]> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const { data } = await supabase
     .from("competition_entrants")
     .select(
-      "competition_id, profile_id, status, responded_by, response_source, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date)"
+      "competition_id, profile_id, status, responded_by, response_source, placement, award_label, sections(name), competitions(slug, name, city, state, start_date, end_date, reg_url)"
     )
     .eq("profile_id", userId);
 
@@ -617,9 +621,10 @@ export async function canManageCompetitionAsViewer(
 }
 
 export async function getEventAttendance(
-  competitionId: string
+  competitionId: string,
+  client?: PortalSupabase
 ): Promise<AttendanceRow[]> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const { data, error } = await supabase.rpc("get_event_attendance", {
     p_competition_id: competitionId,
   });
@@ -674,8 +679,11 @@ export async function getEntrantsForCompetition(
  * Roster via the get_org_roster RPC — display_name, age band, grade, and
  * typed credential IDs only (no DOB/zip/email).
  */
-export async function getOrgRoster(orgId: string): Promise<RosterRow[]> {
-  const supabase = await createServerSupabaseClient();
+export async function getOrgRoster(
+  orgId: string,
+  client?: PortalSupabase
+): Promise<RosterRow[]> {
+  const supabase = await portalClient(client);
   const { data, error } = await supabase.rpc("get_org_roster", {
     p_org_id: orgId,
   });

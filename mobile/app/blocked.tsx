@@ -15,7 +15,7 @@ import {
 export default function BlockedScreen() {
   const { access, session, signOut } = useAuth();
   if (!session) return <Redirect href="/login" />;
-  if (!access || access.allowed) return <Redirect href="/family" />;
+  if (!access || access.allowed) return <Redirect href="/" />;
 
   return (
     <Screen header>

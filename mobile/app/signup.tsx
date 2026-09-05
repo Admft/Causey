@@ -1,7 +1,9 @@
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useAuth, type MobileSignupRole } from "../src/auth";
+import { siteUrl } from "../src/theme";
 import {
   Card,
   ChoiceRow,
@@ -59,7 +61,7 @@ export default function SignupScreen() {
       setConfirmSent(true);
       return;
     }
-    router.replace("/family");
+    router.replace("/");
   }
 
   if (confirmSent) {
@@ -148,6 +150,18 @@ export default function SignupScreen() {
             email, account type, and zip so we can show the right students and
             tournaments. You can delete the account from the Me tab at any time.
           </Meta>
+          <Meta>
+            Creating an account means you accept the terms of use and the
+            privacy notice.
+          </Meta>
+          <LinkButton
+            label="Read the privacy notice"
+            onPress={() => Linking.openURL(`${siteUrl}/privacy`)}
+          />
+          <LinkButton
+            label="Read the terms of use"
+            onPress={() => Linking.openURL(`${siteUrl}/terms`)}
+          />
         </Card>
         <LinkButton
           label="Already have an account? Sign in"
