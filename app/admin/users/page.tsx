@@ -8,25 +8,45 @@ import {
   getPlatformAdminUser,
   isCurrentUserSuperAdmin,
 } from "@/lib/auth/platform-admin";
-import { countPlatformAdmins, getAdminUsers } from "@/lib/data/admin";
+import {
+  adminUsersHref,
+  countPlatformAdmins,
+  getAdminUsers,
+  parseAdminUserAccess,
+} from "@/lib/data/admin";
 
 export const metadata: Metadata = {
   title: "Admin users",
   description: "Search Causey accounts and manage platform access.",
 };
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ access?: string }>;
+}) {
   const admin = await getPlatformAdminUser();
   if (!admin) return null;
   const isSuperAdmin = await isCurrentUserSuperAdmin();
-  const { users, total, error } = await getAdminUsers({
-    limit: 50,
-  });
-  const platformAdmins = error
-    ? null
-    : users.length === total
-      ? users.filter((user) => user.platform_admin).length
-      : await countPlatformAdmins();
+  const { access: rawAccess } = await searchParams;
+  const access = parseAdminUserAccess(rawAccess);
+  const [directory, platformAdmins, allAccounts] = await Promise.all([
+    getAdminUsers({
+      limit: 50,
+      access,
+    }),
+    countPlatformAdmins(),
+    access === "admins" ? getAdminUsers({ limit: 1 }) : Promise.resolve(null),
+  ]);
+  const { users, total, error } = directory;
+  const totalAccounts =
+    access === "admins"
+      ? allAccounts && !allAccounts.error
+        ? allAccounts.total
+        : null
+      : error
+        ? null
+        : total;
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
@@ -48,13 +68,15 @@ export default async function AdminUsersPage() {
           items={[
             {
               label: "Total accounts",
-              value: error ? null : total,
-              href: "/admin/users",
+              value: totalAccounts,
+              href: adminUsersHref("all"),
+              current: access === "all",
             },
             {
               label: "Platform admins",
               value: platformAdmins,
-              href: "/admin/users",
+              href: adminUsersHref("admins"),
+              current: access === "admins",
             },
           ]}
           chart={
@@ -68,7 +90,7 @@ export default async function AdminUsersPage() {
                 },
                 {
                   label: "Everyone else",
-                  value: remainderCount(error ? null : total, platformAdmins),
+                  value: remainderCount(totalAccounts, platformAdmins),
                   tone: "quiet",
                 },
               ]}
@@ -79,6 +101,8 @@ export default async function AdminUsersPage() {
 
       <div className="mt-8">
         <AdminUserDirectory
+          key={access}
+          access={access}
           initialUsers={users}
           initialTotal={total}
           initialError={error}

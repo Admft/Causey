@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { CompetitionCoverImage } from "@/components/CompetitionCoverImage";
+import { CategoryGraphic } from "@/components/CategoryGraphic";
+import { CompetitionHostPreview } from "@/components/CompetitionHostPreview";
 import { PageBackButton } from "@/components/PageBackLink";
 import {
   adminUpdateTournament,
@@ -25,7 +27,12 @@ import {
   organizerMathTypeFacet,
   organizerPrimaryFacet,
   primaryFacetsForCategory,
+  requiredOrganizerFacetMessage,
 } from "@/lib/category-discovery";
+import {
+  buildHostListingPreview,
+  hostListingSearchNote,
+} from "@/lib/host-listing-preview";
 import {
   CREATABLE_COMPETITION_TYPES,
   competitionTypeLabel,
@@ -58,13 +65,10 @@ function feeToCents(raw: string): { cents: number | null } | { error: string } {
   return { cents: Math.round(dollars * 100) };
 }
 
-function formatDate(value: string): string {
-  if (!value) return "Not set";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(`${value}T12:00:00`));
+function facetChipClass(active: boolean) {
+  return active
+    ? "inline-flex shrink-0 items-center rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-foreground shadow-sm"
+    : "inline-flex shrink-0 items-center rounded-md px-2.5 py-1.5 text-xs font-semibold text-muted-strong transition-colors hover:text-foreground";
 }
 
 /** Prefill values when editing an existing tournament. */
@@ -103,6 +107,7 @@ const OPEN_SECTION: TournamentSectionDraft = {
 export function TournamentCreateForm({
   orgId,
   orgSlug,
+  orgName = "",
   orgState,
   orgType,
   parentOrgId = null,
@@ -116,6 +121,7 @@ export function TournamentCreateForm({
 }: {
   orgId: string;
   orgSlug: string;
+  orgName?: string;
   orgState: string | null;
   /** Host org type — used to decide whether District-only audience is real. */
   orgType?: "school" | "club" | "team" | "district";
@@ -139,8 +145,9 @@ export function TournamentCreateForm({
       ? { type: orgType, parent_org_id: parentOrgId ?? null }
       : null
   );
+  const initialCategory = savedDraft?.category || initial?.category || "";
   const [category, setCategory] = useState<CompetitionCategory | "">(
-    savedDraft?.category ?? initial?.category ?? ""
+    initialCategory
   );
   const [customCategoryName, setCustomCategoryName] = useState(
     savedDraft?.customCategoryName ?? initial?.custom_category_name ?? ""
@@ -208,14 +215,14 @@ export function TournamentCreateForm({
   const [primaryFacet, setPrimaryFacet] = useState(
     savedDraft?.primaryFacet ??
       organizerPrimaryFacet(
-        savedDraft?.category ?? initial?.category ?? "chess",
+        initialCategory || "chess",
         initial?.facets
       )
   );
   const [mathTypeFacet, setMathTypeFacet] = useState(
     savedDraft?.mathTypeFacet ??
       organizerMathTypeFacet(
-        savedDraft?.category ?? initial?.category ?? "chess",
+        initialCategory || "chess",
         initial?.facets
       )
   );
@@ -243,7 +250,7 @@ export function TournamentCreateForm({
 
   function currentDraftData(): TournamentDraftData {
     return {
-      category: category || "chess",
+      category,
       customCategoryName,
       participationMode,
       name,
@@ -513,6 +520,11 @@ export function TournamentCreateForm({
       setError("Choose a competition type.");
       return;
     }
+    const requiredFacet = requiredOrganizerFacetMessage(category);
+    if (requiredFacet && !primaryFacet) {
+      setError(requiredFacet);
+      return;
+    }
 
     const fee = feeToCents(entryFee);
     if ("error" in fee) {
@@ -647,24 +659,34 @@ export function TournamentCreateForm({
           : "Publish invite-only competition";
   const publishingLabel = publicReview ? "Submitting…" : "Publishing…";
   const fee = feeToCents(entryFee);
-  const feeSummary =
-    "error" in fee
-      ? "Check the entry fee"
-      : fee.cents === null
-        ? "Not listed"
-        : fee.cents === 0
-          ? "Free"
-          : `$${(fee.cents / 100).toFixed(2)}`;
-  const locationSummary =
-    participationMode === "online"
-      ? "Online"
-      : [
-          venueName.trim(),
-          address.trim(),
-          [city.trim(), state, zip.trim()].filter(Boolean).join(" "),
-        ]
-          .filter(Boolean)
-          .join(", ");
+  const listingPreview =
+    reviewing &&
+    category &&
+    !("error" in fee)
+      ? buildHostListingPreview({
+          orgId,
+          orgName,
+          category,
+          customCategoryName,
+          participationMode,
+          name,
+          startDate,
+          endDate,
+          regDeadline,
+          venueName,
+          address,
+          city,
+          state,
+          zip,
+          entryFeeCents: fee.cents,
+          rated,
+          imageUrl: coverImageUrl,
+          primaryFacet,
+          mathTypeFacet,
+          sections,
+          audience,
+        })
+      : null;
   function updateSection(
     index: number,
     patch: Partial<TournamentSectionDraft>
@@ -761,14 +783,14 @@ export function TournamentCreateForm({
             Step {reviewing ? "2" : "1"} of 2
           </p>
           <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">
-            {reviewing ? "Preview and choose the audience" : "Add competition details"}
+            {reviewing ? "Preview how it looks" : "Add competition details"}
           </h2>
           <p className="mt-2 max-w-prose text-sm text-muted">
             {reviewing
               ? publicReview
-                ? "Check the preview and audience, then submit the public listing for platform review."
-                : "Check the event page preview, decide who can find it, then publish."
-              : "Add the cover, schedule, location, and registration information."}
+                ? "Check the search card and event page, then choose the audience and submit for platform review."
+                : "Check how the listing and event page look, decide who can find it, then publish."
+              : "Pick the type and discipline, then add the cover, schedule, and location."}
           </p>
         </div>
       ) : null}
@@ -814,8 +836,181 @@ export function TournamentCreateForm({
 
       {!reviewing ? (
         <>
+          <fieldset>
+            <legend className="text-sm font-semibold text-foreground">
+              What it is
+            </legend>
+            <p className="mt-1 text-xs text-muted">
+              Pick the type, then the discipline families use to filter. Chess
+              has no discipline tag. Other is a scheduled competition that is not
+              listed.
+            </p>
+            <div
+              role="radiogroup"
+              aria-labelledby="host-category-label"
+              className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6"
+            >
+              <span id="host-category-label" className="sr-only">
+                Competition type
+              </span>
+              {CREATABLE_COMPETITION_TYPES.map((type) => {
+                const selected = category === type.id;
+                return (
+                  <button
+                    key={type.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    aria-label={type.label}
+                    onClick={() => {
+                      setCategory(type.id);
+                      if (type.id !== "other") setCustomCategoryName("");
+                      if (type.id !== "chess") setRated(false);
+                      setPrimaryFacet("");
+                      setMathTypeFacet("");
+                    }}
+                    className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 text-center transition-colors ${
+                      selected
+                        ? "border-brand-red/45 bg-accent-soft text-brand-red"
+                        : "border-line bg-white text-foreground hover:border-brand-red/35 hover:text-brand-red"
+                    }`}
+                  >
+                    {isDiscoveryCategory(type.id) ? (
+                      <CategoryGraphic
+                        category={type.id}
+                        className="h-10 w-10"
+                        sizes="40px"
+                      />
+                    ) : null}
+                    <span className="max-w-full text-2xs font-bold leading-tight">
+                      {discoveryCategory(type.id)?.shortLabel ?? type.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {isDiscoveryCategory(category) && category !== "chess" ? (
+              <p className="mt-3 border-l-2 border-brand-blue pl-3 text-xs text-muted-strong">
+                Approved public listings join the{" "}
+                {competitionTypeLabel({ category, customCategoryName: null })}{" "}
+                directory.
+              </p>
+            ) : category === "other" ? (
+              <p className="mt-3 border-l-2 border-brand-blue pl-3 text-xs text-muted-strong">
+                Custom types stay off the public directories. Approved public
+                listings are shared by direct link.
+              </p>
+            ) : !category ? (
+              <p className="mt-3 text-xs text-muted">
+                Pick a type. Chess is the densest public index; other types can
+                still be hosted.
+              </p>
+            ) : null}
+            {category && primaryFacetsForCategory(category).length > 0 ? (
+              <div className="mt-4 flex flex-col gap-3">
+                <div>
+                  <p
+                    className="text-xs font-semibold text-muted-strong"
+                    id="host-discipline-label"
+                  >
+                    {discoveryCategory(category)?.facetLabel ?? "Discipline"}{" "}
+                    <span className="text-brand-red">Required</span>
+                  </p>
+                  <div
+                    role="group"
+                    aria-labelledby="host-discipline-label"
+                    className="mt-1.5 flex flex-wrap gap-1 rounded-lg border border-line bg-surface-soft p-1"
+                  >
+                    {primaryFacetsForCategory(category).map((facet) => {
+                      const active = primaryFacet === facet.value;
+                      return (
+                        <button
+                          key={facet.value}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => {
+                            setPrimaryFacet(facet.value);
+                            setMathTypeFacet("");
+                          }}
+                          className={facetChipClass(active)}
+                        >
+                          {facet.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {childFacetsFor(category, primaryFacet).length > 0 ? (
+                  <div>
+                    <p
+                      className="text-xs font-semibold text-muted-strong"
+                      id="host-math-type-label"
+                    >
+                      Type of math (optional)
+                    </p>
+                    <div
+                      role="group"
+                      aria-labelledby="host-math-type-label"
+                      className="mt-1.5 flex flex-wrap gap-1 rounded-lg border border-line bg-white p-1"
+                    >
+                      <button
+                        type="button"
+                        aria-pressed={!mathTypeFacet}
+                        onClick={() => setMathTypeFacet("")}
+                        className={facetChipClass(!mathTypeFacet)}
+                      >
+                        All math types
+                      </button>
+                      {childFacetsFor(category, primaryFacet).map((facet) => {
+                        const active = mathTypeFacet === facet.value;
+                        return (
+                          <button
+                            key={facet.value}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => setMathTypeFacet(facet.value)}
+                            className={facetChipClass(active)}
+                          >
+                            {facet.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            {category === "other" ? (
+              <label className="mt-4 block max-w-lg">
+                <span className="text-xs font-semibold text-muted-strong">
+                  Name this competition type
+                </span>
+                <input
+                  className="field mt-1"
+                  required
+                  maxLength={80}
+                  value={customCategoryName}
+                  onChange={(event) =>
+                    setCustomCategoryName(event.target.value)
+                  }
+                  placeholder="Spelling bee, Model UN, academic decathlon…"
+                />
+              </label>
+            ) : null}
+            {category === "chess" ? (
+              <label className="mt-4 flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={rated}
+                  onChange={(e) => setRated(e.target.checked)}
+                />
+                US Chess rated
+              </label>
+            ) : null}
+          </fieldset>
+
           {resolvedDraftId ? (
-            <fieldset className="flex flex-col gap-3">
+            <fieldset className="section-rule flex flex-col gap-3 pt-5">
               <legend className="text-xs font-semibold text-muted-strong">
                 Cover image{" "}
                 {edit ? null : (
@@ -858,129 +1053,10 @@ export function TournamentCreateForm({
             </fieldset>
           ) : null}
 
-          <fieldset className="section-rule pt-5">
+          <fieldset className="section-rule flex flex-col gap-5 pt-5">
             <legend className="text-sm font-semibold text-foreground">
-              Competition type
+              Schedule and place
             </legend>
-            <p className="mt-1 text-xs text-muted">
-              Choose the closest type. Use Other for a scheduled competition
-              that is not listed.
-            </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {CREATABLE_COMPETITION_TYPES.map((type) => {
-                const selected = category === type.id;
-                return (
-                  <button
-                    key={type.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => {
-                      setCategory(type.id);
-                      if (type.id !== "other") setCustomCategoryName("");
-                      if (type.id !== "chess") setRated(false);
-                      setPrimaryFacet("");
-                      setMathTypeFacet("");
-                    }}
-                    className={`rounded-xl border px-3 py-3 text-left transition-colors ${
-                      selected
-                        ? "border-brand-red/40 bg-accent-soft"
-                        : "border-line bg-white hover:border-brand-red/30"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold text-foreground">
-                      {type.label}
-                    </span>
-                    <span className="mt-1 block text-2xs text-muted">
-                      {type.description}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {isDiscoveryCategory(category) && category !== "chess" ? (
-              <p className="mt-3 border-l-2 border-brand-blue pl-3 text-xs text-muted-strong">
-                Approved public listings join the{" "}
-                {competitionTypeLabel({ category, customCategoryName: null })}{" "}
-                directory. Tag the discipline so families can filter — for
-                arts, that keeps music and theatre from sharing one unfiltered
-                list.
-              </p>
-            ) : category === "other" ? (
-              <p className="mt-3 border-l-2 border-brand-blue pl-3 text-xs text-muted-strong">
-                Custom types stay off the public directories. Approved public
-                listings are shared by direct link.
-              </p>
-            ) : !category ? (
-              <p className="mt-3 text-xs text-muted">
-                Pick a type. Chess is the densest public index; other types can
-                still be hosted.
-              </p>
-            ) : null}
-            {category && primaryFacetsForCategory(category).length > 0 ? (
-              <div className="mt-4 grid max-w-lg gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="text-xs font-semibold text-muted-strong">
-                    {discoveryCategory(category)?.facetLabel ?? "Discipline"}{" "}
-                    (optional)
-                  </span>
-                  <select
-                    className="field mt-1"
-                    value={primaryFacet}
-                    onChange={(event) => {
-                      setPrimaryFacet(event.target.value);
-                      setMathTypeFacet("");
-                    }}
-                  >
-                    <option value="">Not tagged yet</option>
-                    {primaryFacetsForCategory(category).map((facet) => (
-                      <option key={facet.value} value={facet.value}>
-                        {facet.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {childFacetsFor(category, primaryFacet).length > 0 ? (
-                  <label className="block">
-                    <span className="text-xs font-semibold text-muted-strong">
-                      Type of math (optional)
-                    </span>
-                    <select
-                      className="field mt-1"
-                      value={mathTypeFacet}
-                      onChange={(event) =>
-                        setMathTypeFacet(event.target.value)
-                      }
-                    >
-                      <option value="">All math types</option>
-                      {childFacetsFor(category, primaryFacet).map((facet) => (
-                        <option key={facet.value} value={facet.value}>
-                          {facet.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : null}
-              </div>
-            ) : null}
-            {category === "other" ? (
-              <label className="mt-4 block max-w-lg">
-                <span className="text-xs font-semibold text-muted-strong">
-                  Name this competition type
-                </span>
-                <input
-                  className="field mt-1"
-                  required
-                  maxLength={80}
-                  value={customCategoryName}
-                  onChange={(event) =>
-                    setCustomCategoryName(event.target.value)
-                  }
-                  placeholder="Spelling bee, Model UN, academic decathlon…"
-                />
-              </label>
-            ) : null}
-          </fieldset>
-
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold text-muted-strong">
               Competition name
@@ -1150,6 +1226,7 @@ export function TournamentCreateForm({
               />
             </label>
           </div>
+          </fieldset>
 
           <fieldset className="section-rule pt-5">
               <legend className="text-sm font-semibold text-foreground">
@@ -1302,127 +1379,20 @@ export function TournamentCreateForm({
           </fieldset>
 
           {edit ? audienceChooser : null}
-
-          {category === "chess" ? (
-          <label className="flex items-center gap-2 text-sm text-foreground">
-            <input
-              type="checkbox"
-              checked={rated}
-              onChange={(e) => setRated(e.target.checked)}
-            />
-            US Chess rated
-          </label>
-          ) : null}
         </>
       ) : (
         <>
-          <section aria-labelledby="tournament-review-heading">
-            <CompetitionCoverImage
-              src={coverImageUrl}
-              source="organizer"
-              alt={`Cover for ${name}`}
-              aspectClass="aspect-[2/1]"
-              className="mb-5 max-w-2xl rounded-2xl"
+          {listingPreview ? (
+            <CompetitionHostPreview
+              result={listingPreview}
+              searchNote={hostListingSearchNote({
+                audience,
+                category: listingPreview.category,
+                orgType,
+                admin,
+              })}
             />
-            <h3
-              id="tournament-review-heading"
-              className="font-display text-xl font-bold tracking-tight text-foreground"
-            >
-              {name}
-            </h3>
-            <dl className="mt-4 grid gap-x-6 gap-y-4 border-y border-line py-5 sm:grid-cols-2">
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">Type</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {category
-                    ? competitionTypeLabel({
-                        category,
-                        customCategoryName,
-                      })
-                    : "Choose a type"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">
-                  Participation
-                </dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {participationMode === "in_person"
-                    ? "In person"
-                    : participationMode === "online"
-                      ? "Online"
-                      : "Hybrid"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">When</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {formatDate(startDate)}
-                  {endDate && endDate !== startDate ? ` to ${formatDate(endDate)}` : ""}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">Register by</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {regDeadline ? formatDate(regDeadline) : "No deadline listed"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">Where</dt>
-                <dd className="mt-1 text-sm text-foreground">{locationSummary}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">Entry fee</dt>
-                <dd className="mt-1 text-sm text-foreground">{feeSummary}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">Registration</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {regUrl.trim() ? "External registration link" : "RSVP on Causey"}
-                </dd>
-              </div>
-              {category === "chess" ? (
-              <div>
-                <dt className="text-xs font-semibold text-muted-strong">Rating</dt>
-                <dd className="mt-1 text-sm text-foreground">
-                  {rated ? "US Chess rated" : "Not listed as rated"}
-                </dd>
-              </div>
-              ) : null}
-            </dl>
-          </section>
-
-          <section>
-            <h3 className="text-xs font-semibold text-muted-strong">
-              {category === "chess"
-                ? "Sections families will see"
-                : "Divisions families will see"}
-            </h3>
-            <ul className="mt-2 divide-y divide-line border-y border-line">
-              {sections.map((section, index) => (
-                <li key={index} className="py-2.5 text-sm text-foreground">
-                  <span className="font-semibold">{section.name}</span>
-                  <span className="ml-2 text-xs text-muted">
-                    {[
-                      category === "chess" &&
-                      (section.minRating !== null || section.maxRating !== null)
-                        ? `rating ${section.minRating ?? "any"}–${
-                            section.maxRating ?? "open"
-                          }`
-                        : null,
-                      section.minGrade !== null || section.maxGrade !== null
-                        ? `grades ${section.minGrade ?? "K"}–${
-                            section.maxGrade ?? 12
-                          }`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "Open eligibility"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          ) : null}
 
           {audienceChooser}
 

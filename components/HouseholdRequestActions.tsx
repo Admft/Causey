@@ -4,13 +4,22 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { respondToLink } from "@/lib/actions/household";
 
-/** Student-side accept/decline for a parent link request (on /me). */
+export type HouseholdLinkState = "awaiting_me" | "awaiting_them" | "linked";
+
+/**
+ * Accept, decline, cancel, or unlink a family link. Whoever opened the request
+ * cannot accept it, so an outgoing request only offers to cancel.
+ */
 export function HouseholdRequestActions({
-  parentProfileId,
-  linked,
+  counterpartyProfileId,
+  state,
+  unlinkLabel = "Unlink",
+  confirmUnlinkLabel = "Yes, unlink",
 }: {
-  parentProfileId: string;
-  linked: boolean;
+  counterpartyProfileId: string;
+  state: HouseholdLinkState;
+  unlinkLabel?: string;
+  confirmUnlinkLabel?: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -21,7 +30,7 @@ export function HouseholdRequestActions({
     setError(null);
     setPending(true);
     try {
-      const result = await respondToLink(parentProfileId, accept);
+      const result = await respondToLink(counterpartyProfileId, accept);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -37,7 +46,7 @@ export function HouseholdRequestActions({
 
   return (
     <div className="flex flex-col items-end gap-1">
-      {linked ? (
+      {state === "linked" ? (
         confirmingUnlink ? (
           <div className="flex flex-wrap justify-end gap-2">
             <button
@@ -46,7 +55,7 @@ export function HouseholdRequestActions({
               onClick={() => respond(false)}
               className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
             >
-              {pending ? "Unlinking…" : "Yes, unlink parent"}
+              {pending ? "Unlinking…" : confirmUnlinkLabel}
             </button>
             <button
               type="button"
@@ -67,9 +76,23 @@ export function HouseholdRequestActions({
             }}
             className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
           >
-            Unlink
+            {unlinkLabel}
           </button>
         )
+      ) : state === "awaiting_them" ? (
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium text-muted">
+            Waiting for them
+          </span>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => respond(false)}
+            className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+          >
+            {pending ? "Canceling…" : "Cancel request"}
+          </button>
+        </div>
       ) : (
         <div className="flex items-center gap-2">
           <button

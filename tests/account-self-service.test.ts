@@ -11,8 +11,11 @@ describe("account export and self-service delete", () => {
       "causey-account-export.json"
     );
     expect(read("app/api/account/export/route.ts")).toContain("linked_students");
-    expect(read("lib/actions/account-data.ts")).toContain("delete_own_account");
-    expect(read("lib/actions/account-data.ts")).toContain("owns_organization");
+    expect(read("lib/account-delete.ts")).toContain("delete_own_account");
+    expect(read("lib/account-delete.ts")).toContain("owns_organization");
+    expect(read("lib/actions/account-data.ts")).toContain(
+      "performDeleteOwnAccount"
+    );
     expect(read("components/AccountDataControls.tsx")).toContain(
       "Type"
     );

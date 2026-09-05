@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
+import { performSetExternalRegistration } from "@/lib/external-registration-write";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 
@@ -27,62 +28,18 @@ export async function setExternalRegistrationStatus(input: {
 
   const targetProfileId = input.profileId ?? user.id;
   const supabase = await createServerSupabaseClient();
-
-  if (targetProfileId !== user.id) {
-    const { data: link } = await supabase
-      .from("household_links")
-      .select("child_profile_id")
-      .eq("parent_profile_id", user.id)
-      .eq("child_profile_id", targetProfileId)
-      .eq("status", "active")
-      .maybeSingle();
-    if (!link) {
-      return {
-        ok: false,
-        error: "You can only update registration for a linked student.",
-      };
-    }
+  const result = await performSetExternalRegistration({
+    supabase,
+    userId: user.id,
+    competitionId: input.competitionId,
+    profileId: targetProfileId,
+    status: input.status,
+  });
+  if (result.ok) {
+    revalidatePath(`/event/${input.eventSlug}`);
+    revalidatePath("/me");
+    revalidatePath("/family");
+    revalidatePath("/me/notifications");
   }
-
-  const statusUpdatedAt = new Date().toISOString();
-  const { data: updated, error: updateError } = await supabase
-    .from("external_registrations")
-    .update({
-      status: input.status,
-      status_updated_at: statusUpdatedAt,
-    })
-    .eq("user_id", targetProfileId)
-    .eq("competition_id", input.competitionId)
-    .select("competition_id");
-
-  if (updateError) {
-    return {
-      ok: false,
-      error: "Could not save the registration status. Try again.",
-    };
-  }
-
-  if (!updated?.length) {
-    const { error: insertError } = await supabase
-      .from("external_registrations")
-      .insert({
-        user_id: targetProfileId,
-        competition_id: input.competitionId,
-        status: input.status,
-        opened_at: statusUpdatedAt,
-        status_updated_at: statusUpdatedAt,
-      });
-    if (insertError) {
-      return {
-        ok: false,
-        error: "Could not save the registration status. Try again.",
-      };
-    }
-  }
-
-  revalidatePath(`/event/${input.eventSlug}`);
-  revalidatePath("/me");
-  revalidatePath("/family");
-  revalidatePath("/me/notifications");
-  return { ok: true };
+  return result;
 }

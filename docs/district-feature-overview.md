@@ -70,7 +70,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Feature | What it does | Ready for a chess pilot? |
 | --- | --- | --- |
 | Public chess search | Indexed US chess listings by zip, radius, date, grade, rating, fee, and source | Yes, with incomplete coverage |
-| Qualification pathways | Chess pathway explorer for selected series | Illustrative scaffolding; confirm with the organizer |
+| Qualification pathways | Chess pathway explorer for selected series; “Get your kid to chess nationals” pin above chess search | Illustrative scaffolding; swap in verified US Chess rules when they arrive; confirm with the organizer |
 | District → school structure | One district over many schools | Yes, Causey-assisted |
 | Role-based access | District, school, coach, assistant, parent, student each see their own work | Yes |
 | Claim-link provisioning | Email or copyable invite; CSV import/export via one set-based RPC; reissue | Yes |

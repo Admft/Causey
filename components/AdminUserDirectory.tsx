@@ -6,6 +6,7 @@ import { AdminOrgMembershipForm } from "@/components/AdminOrgMembershipForm";
 import { AdminUserAccessForm } from "@/components/AdminUserAccessForm";
 import { AdminUserDeleteForm } from "@/components/AdminUserDeleteForm";
 import { PageBackButton, PageNextButton } from "@/components/PageBackLink";
+import type { AdminUserAccessFilter } from "@/lib/data/admin";
 
 type AdminUserRow = {
   profile_id: string;
@@ -41,12 +42,14 @@ export function AdminUserDirectory({
   initialError,
   currentAdminId,
   isSuperAdmin,
+  access = "all",
 }: {
   initialUsers: AdminUserRow[];
   initialTotal: number;
   initialError: string | null;
   currentAdminId: string;
   isSuperAdmin: boolean;
+  access?: AdminUserAccessFilter;
 }) {
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -67,6 +70,7 @@ export function AdminUserDirectory({
       const result = await adminSearchUsers({
         query: nextQuery,
         page: nextPage,
+        access,
       });
       if (!result.ok) {
         setUsers([]);
@@ -91,6 +95,10 @@ export function AdminUserDirectory({
     accountRole: AdminUserRow["account_role"],
     platformAdmin: boolean
   ) {
+    if (access === "admins" && !platformAdmin) {
+      removeVisibleUser(profileId);
+      return;
+    }
     setUsers((current) =>
       current.map((user) =>
         user.profile_id === profileId
@@ -142,12 +150,18 @@ export function AdminUserDirectory({
       <div className="section-rule mt-8 pt-8" aria-busy={isPending}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-sm font-semibold text-foreground">
-            {appliedQuery ? `Results for “${appliedQuery}”` : "All accounts"}
+            {appliedQuery
+              ? `Results for “${appliedQuery}”`
+              : access === "admins"
+                ? "Platform admins"
+                : "All accounts"}
           </h2>
           <span className="text-xs text-muted" aria-live="polite">
             {total
               ? `${firstResult}–${lastResult} of ${total}`
-              : "0 accounts"}
+              : access === "admins"
+                ? "0 platform admins"
+                : "0 accounts"}
           </span>
         </div>
 
@@ -162,8 +176,12 @@ export function AdminUserDirectory({
         ) : !users.length ? (
           <p className="mt-4 text-sm text-muted">
             {appliedQuery
-              ? "No account matched that name or email. Check the spelling or search a shorter part."
-              : "No Causey accounts are available."}
+              ? access === "admins"
+                ? "No platform admin matched that name or email. Check the spelling or search a shorter part."
+                : "No account matched that name or email. Check the spelling or search a shorter part."
+              : access === "admins"
+                ? "No platform admin accounts are listed."
+                : "No Causey accounts are available."}
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">

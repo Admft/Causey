@@ -52,6 +52,7 @@ export default async function AdminEditTournamentPage({
             tournament.org_id ?? "00000000-0000-0000-0000-000000000000"
           }
           orgSlug={tournament.organizations?.slug ?? "platform-admin"}
+          orgName={tournament.organizations?.name ?? ""}
           orgState={tournament.organizations?.state ?? tournament.state}
           orgType={tournament.organizations?.type}
           parentOrgId={tournament.organizations?.parent_org_id ?? null}

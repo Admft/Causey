@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   AttendanceRow,
   CompetitionAudience,
@@ -12,6 +13,14 @@ import type {
   RosterRow,
 } from "@/lib/auth/orgs";
 import type { CompetitionDetail } from "@/lib/data/types";
+import {
+  isValidActivationCode,
+  normalizeActivationCode,
+} from "@/lib/invitations/activation-code";
+import {
+  extractClaimCode,
+  extractClaimToken,
+} from "@/lib/invitations/claim-path";
 import {
   CompetitionSchema,
   SectionSchema,
@@ -34,6 +43,12 @@ export function isSupabaseConfigured(): boolean {
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
+}
+
+type PortalSupabase = SupabaseClient;
+
+async function portalClient(client?: PortalSupabase) {
+  return client ?? (await createServerSupabaseClient());
 }
 
 export async function getOrganizationSlugById(
@@ -167,6 +182,34 @@ export async function getOrganizationInvitationPreview(
   });
   if (error) return null;
   return (data?.[0] as OrganizationInvitationPreview | undefined) ?? null;
+}
+
+export async function getOrganizationInvitationPreviewByCode(
+  code: string
+): Promise<OrganizationInvitationPreview | null> {
+  if (!isValidActivationCode(code)) return null;
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc(
+    "get_org_invitation_preview_by_code",
+    { p_code: normalizeActivationCode(code) }
+  );
+  if (error) return null;
+  return (data?.[0] as OrganizationInvitationPreview | undefined) ?? null;
+}
+
+/**
+ * Login and signup both need the invitation behind a post-auth /claim path so
+ * the account they create matches the invited role, whether the person arrived
+ * with a link or a typed code.
+ */
+export async function getInvitationPreviewForClaimPath(
+  next: string | null | undefined
+): Promise<OrganizationInvitationPreview | null> {
+  const token = extractClaimToken(next);
+  if (token) return getOrganizationInvitationPreview(token);
+  const code = extractClaimCode(next);
+  if (code) return getOrganizationInvitationPreviewByCode(code);
+  return null;
 }
 
 export type EntrantWithEvent = {
@@ -592,9 +635,10 @@ export async function getEventAttendance(
 
 /** Actively linked children with their display names (parent viewers). */
 export async function getActiveChildren(
-  userId: string
+  userId: string,
+  client?: PortalSupabase
 ): Promise<{ profile_id: string; display_name: string }[]> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const { data } = await supabase
     .from("household_links")
     .select("child_profile_id, profiles!household_links_child_profile_id_fkey(display_name)")
@@ -896,13 +940,14 @@ export type ChildSummary = {
 
 /** Family dashboard: each active child with their orgs and entrant rows. */
 export async function getChildrenWithEvents(
-  userId: string
+  userId: string,
+  client?: PortalSupabase
 ): Promise<ChildSummary[]> {
-  const children = await getActiveChildren(userId);
+  const children = await getActiveChildren(userId, client);
   if (!children.length) return [];
   const childIds = children.map((c) => c.profile_id);
 
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const [membershipsRes, entrantsRes, registrationsRes] = await Promise.all([
     supabase
       .from("org_memberships")
@@ -978,6 +1023,8 @@ export type ParentRequest = {
   parent_name: string;
   status: "pending" | "active";
   created_at: string;
+  /** True when the student opened the request, so the parent still has to accept. */
+  awaiting_parent: boolean;
 };
 
 /** For a student's /me page: who has asked to link (or is linked) as parent. */
@@ -986,7 +1033,7 @@ export async function getParentLinks(userId: string): Promise<ParentRequest[]> {
   const { data } = await supabase
     .from("household_links")
     .select(
-      "parent_profile_id, status, created_at, profiles!household_links_parent_profile_id_fkey(display_name)"
+      "parent_profile_id, status, created_at, requested_by, profiles!household_links_parent_profile_id_fkey(display_name)"
     )
     .eq("child_profile_id", userId)
     .in("status", ["pending", "active"]);
@@ -997,14 +1044,51 @@ export async function getParentLinks(userId: string): Promise<ParentRequest[]> {
         ?.display_name ?? "") || "A parent",
     status: row.status as "pending" | "active",
     created_at: row.created_at as string,
+    awaiting_parent:
+      row.status === "pending" && (row.requested_by as string | null) === userId,
   }));
+}
+
+export type ChildLinkRequest = {
+  child_profile_id: string;
+  child_name: string;
+  created_at: string;
+};
+
+/**
+ * For a parent's /family page: students who asked this parent to link. Only
+ * student-initiated requests appear, so a parent's own outgoing request never
+ * confirms whether the address matched an account.
+ */
+export async function getIncomingChildLinkRequests(
+  userId: string,
+  client?: PortalSupabase
+): Promise<ChildLinkRequest[]> {
+  const supabase = await portalClient(client);
+  const { data } = await supabase
+    .from("household_links")
+    .select(
+      "child_profile_id, created_at, requested_by, profiles!household_links_child_profile_id_fkey(display_name)"
+    )
+    .eq("parent_profile_id", userId)
+    .eq("status", "pending");
+  return (data ?? [])
+    .filter((row) => (row.requested_by as string | null) === row.child_profile_id)
+    .map((row) => ({
+      child_profile_id: row.child_profile_id as string,
+      child_name:
+        ((row.profiles as unknown as { display_name: string } | null)
+          ?.display_name ?? "") || "A student",
+      created_at: row.created_at as string,
+    }));
 }
 
 /** Parent's outgoing pending requests (no child names before acceptance). */
 export async function getPendingChildRequestCount(
-  userId: string
+  userId: string,
+  client?: PortalSupabase
 ): Promise<number> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const { count } = await supabase
     .from("household_links")
     .select("*", { count: "exact", head: true })

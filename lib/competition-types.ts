@@ -76,9 +76,10 @@ export function competitionType(
 }
 
 export function competitionTypeLabel(input: {
-  category: CompetitionCategory;
+  category: CompetitionCategory | "";
   customCategoryName?: string | null;
 }): string {
+  if (!input.category) return "Type not chosen";
   if (input.category === "other" && input.customCategoryName?.trim()) {
     return input.customCategoryName.trim();
   }

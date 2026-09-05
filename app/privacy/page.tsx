@@ -53,6 +53,12 @@ export default function PrivacyPage() {
               Basic technical records needed to secure, operate, and
               troubleshoot the service.
             </li>
+            <li>
+              On the iOS and Android apps, the same account data as the
+              website, plus a sign-in session on the device. The phone app does
+              not currently collect push tokens, advertising IDs, or precise
+              GPS. Zip search uses the zip you type or save on your profile.
+            </li>
           </ul>
         </section>
 
@@ -155,6 +161,31 @@ export default function PrivacyPage() {
             school-official instruction in that agreement, or a block is not
             decided. Causey does not sell an under-13 paid cohort. Public event
             comments already block under-13 posters.
+          </p>
+        </section>
+
+        <section aria-labelledby="mobile">
+          <h2
+            id="mobile"
+            className="font-display text-display-sm font-bold tracking-tight text-foreground"
+          >
+            iOS and Android apps
+          </h2>
+          <p className="mt-4 text-base text-muted">
+            The phone apps use the same accounts and privacy rules as the
+            website. They are for ages 13 and up. Students under 13 cannot
+            sign in on a phone. Account export and deletion stay on{" "}
+            <Link
+              href="/account#data"
+              className="font-semibold text-brand-red hover:underline"
+            >
+              Account
+            </Link>
+            . Support is at{" "}
+            <Link href="/support" className="font-semibold text-brand-red hover:underline">
+              Support
+            </Link>
+            .
           </p>
         </section>
 

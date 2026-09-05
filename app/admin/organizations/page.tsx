@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { AdminBarChart, AdminMixChart } from "@/components/AdminCharts";
 import { AdminOrganizationsExplorer } from "@/components/AdminOrganizationsExplorer";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
-import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
+import {
+  getPlatformAdminUser,
+  isCurrentUserSuperAdmin,
+} from "@/lib/auth/platform-admin";
 import { getAdminOpsStats, getAdminOrganizations } from "@/lib/data/admin";
 import { getDistrictPilotReadiness } from "@/lib/data/district";
 
@@ -29,9 +32,10 @@ export default async function AdminOrganizationsPage({
     ? (rawStatus as (typeof ORG_STATUSES)[number])
     : "all";
 
-  const [organizations, stats] = await Promise.all([
+  const [organizations, stats, canProvisionDistrict] = await Promise.all([
     getAdminOrganizations(),
     getAdminOpsStats(["organizations"]),
+    isCurrentUserSuperAdmin(),
   ]);
   const districtReadinessById = Object.fromEntries(
     await Promise.all(
@@ -160,6 +164,7 @@ export default async function AdminOrganizationsPage({
           organizations={organizations}
           districtReadinessById={districtReadinessById}
           initialStatus={initialStatus}
+          canProvisionDistrict={canProvisionDistrict}
         />
       </div>
     </div>

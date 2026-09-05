@@ -19,6 +19,9 @@ describe("platform admin ops stats", () => {
     expect(adminData).toContain('rpc("count_platform_admins")');
     expect(adminData).not.toContain('.from("platform_admins")');
     expect(adminData).toContain("countPlatformAdminsFromDirectory");
+    expect(adminData).toContain("collectAdminUsersFromUnfilteredDirectory");
+    expect(adminData).toContain('args.p_access = "admins"');
+    expect(adminData).toContain("parseAdminUserAccess");
     expect(adminData).toContain("runsUnavailable: true");
     expect(adminData).toContain(
       "runsUnavailable || !lastRun ? null : lastRun.rows_upserted"
@@ -43,6 +46,7 @@ describe("platform admin ops stats", () => {
     expect(overview).toContain("Next in queue");
     expect(overview).toContain("Archived");
     expect(overview).toContain("Total accounts");
+    expect(overview).toContain("/admin/users?access=admins");
     expect(overview).toContain("PortalMission");
     expect(overview).toContain("Moderation first");
     expect(overview).toMatch(/label:\s*"Published"/);
@@ -91,6 +95,7 @@ describe("platform admin ops stats", () => {
     const orgs = read("app/admin/organizations/page.tsx");
     const users = read("app/admin/users/page.tsx");
     const scrapers = read("app/admin/scrapers/page.tsx");
+    const overview = read("app/admin/page.tsx");
 
     expect(moderation).toContain('getAdminOpsStats(["listings"])');
     expect(moderation).toContain("Published organizer listings");
@@ -107,9 +112,11 @@ describe("platform admin ops stats", () => {
     expect(orgs).toContain("/admin/organizations?status=pending");
     expect(users).not.toContain("getAdminOpsStats");
     expect(users).toContain("countPlatformAdmins");
-    expect(users).toContain("error ? null : total");
-    expect(users).toContain("user.platform_admin");
+    expect(users).toContain("parseAdminUserAccess");
+    expect(users).toContain("adminUsersHref");
+    expect(users).toContain('adminUsersHref("admins")');
     expect(users).toContain("Platform admins");
+    expect(overview).toContain("/admin/users?access=admins");
     expect(scrapers).not.toContain("getAdminOpsStats");
     expect(scrapers).toContain("getAdminIngestionSourceHealth");
     expect(scrapers).toContain("runResult");

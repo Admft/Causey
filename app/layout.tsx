@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
+import { AddToHomeScreen } from "@/components/AddToHomeScreen";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { SiteHeader } from "@/components/SiteHeader";
 import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
@@ -20,6 +21,12 @@ const sourceSerif = Source_Serif_4({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.causey.dev"),
+  applicationName: "Causey",
+  appleWebApp: {
+    capable: true,
+    title: "Causey",
+    statusBarStyle: "default",
+  },
   title: {
     default: "Causey — Find student competitions",
     template: "%s · Causey",
@@ -34,9 +41,17 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  other: {
+    // Safari still keys standalone Home Screen on the Apple meta; Next emits
+    // the standard mobile-web-app-capable name for Chromium.
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
-export const viewport: Viewport = { viewportFit: "cover" };
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: "#f5f9fc",
+};
 
 function ExternalMark() {
   return (
@@ -53,7 +68,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="skip-link sr-only focus:not-sr-only">
           Skip to content
         </a>
-        <div className="sticky top-0 z-50" data-site-chrome>
+        <div
+          className="sticky top-0 z-50 pt-[env(safe-area-inset-top)]"
+          data-site-chrome
+        >
           <SiteHeader />
         </div>
 
@@ -61,8 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
 
-        <footer className="band-join band-join--surface bg-surface py-10">
-          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 sm:flex-row sm:items-start sm:justify-between sm:px-8">
+        <footer className="band-join band-join--surface bg-surface pt-0 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+          <AddToHomeScreen />
+          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 pt-10 sm:flex-row sm:items-start sm:justify-between sm:px-8">
             <div className="flex flex-col gap-2">
               <CauseyLogo size="sm" />
               <p className="max-w-sm text-xs text-muted">
@@ -104,6 +123,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 aria-label="Legal"
                 className="flex flex-col gap-2"
               >
+                <Link
+                  href="/support"
+                  className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+                >
+                  Support
+                </Link>
                 <Link
                   href="/privacy"
                   className="font-medium text-muted-strong transition-colors hover:text-brand-red"

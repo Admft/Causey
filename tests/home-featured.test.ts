@@ -33,6 +33,8 @@ describe("homepage featured listings", () => {
     expect(featuredSection).toContain('layout="grid2"');
     expect(featuredSection).not.toContain("sourceFallback={false}");
     expect(featuredSection).toContain("HomeFeaturedSeeMore");
+    expect(featuredSection).toContain("PartnerPromoSlot");
+    expect(featuredSection).toContain('partnerPromoForCategory("chess")');
     expect(
       readFileSync(
         resolve(process.cwd(), "components/HomeFeaturedRail.tsx"),

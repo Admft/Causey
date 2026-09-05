@@ -96,6 +96,7 @@ export default async function EditEventPage({
           <TournamentCreateForm
             orgId={org.id}
             orgSlug={org.slug}
+            orgName={org.name}
             orgState={org.state}
             orgType={org.type}
             parentOrgId={org.parent_org_id}

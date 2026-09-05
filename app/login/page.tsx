@@ -7,11 +7,10 @@ import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { sanitizeNextPath } from "@/lib/auth/next-path";
 import {
   accountRoleForOrgInvitationRole,
-  extractClaimToken,
   isClaimNextPath,
   isJoinCodeNextPath,
 } from "@/lib/invitations/claim-path";
-import { getOrganizationInvitationPreview } from "@/lib/data/portal";
+import { getInvitationPreviewForClaimPath } from "@/lib/data/portal";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -33,10 +32,7 @@ export default async function LoginPage({
     }
   }
   const isJoiningOrganization = isJoinCodeNextPath(next);
-  const claimToken = extractClaimToken(next);
-  const invitation = claimToken
-    ? await getOrganizationInvitationPreview(claimToken)
-    : null;
+  const invitation = await getInvitationPreviewForClaimPath(next);
   const isClaimingInvitation = Boolean(invitation);
   const claimAccountRole = invitation
     ? accountRoleForOrgInvitationRole(invitation.member_role)

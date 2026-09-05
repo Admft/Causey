@@ -80,7 +80,7 @@ describe("staff invitation onboarding", () => {
 
   it("locks invitation signup to the correct account persona", () => {
     expect(signupPage).toContain("invitationAccountRole");
-    expect(signupPage).toContain("getOrganizationInvitationPreview");
+    expect(signupPage).toContain("getInvitationPreviewForClaimPath");
     expect(signupForm).toContain("invitation?.accountRole ?? initialRole");
     expect(signupForm).toContain('"Create staff account"');
   });

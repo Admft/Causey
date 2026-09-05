@@ -40,7 +40,9 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] CSV staff invites use one set-based RPC; restore-drill runbook names Pro backups, PITR-off, and verify steps without claiming a logged drill — 2026-09-02
 - [x] January story copy: shared `/orgs` workspace, chess working surface, other types hostable, not custom portals — 2026-09-02
 - [x] Club SaaS billing is a local layout only (`/billing`); districts stay meeting-booked — 2026-09-02
-- [x] Custom district portal is a local layout only (`/portals`); January stays the shared `/orgs` workspace — 2026-09-03
+- [x] Finding tournaments no longer shows “too often” when the limiter RPC errors or a signed-in search sent a `user:` key `0069` rejects — 2026-09-04
+- [x] Host a competition preview shows the real search card and event-page start (not a fact dump) — 2026-09-04
+- [x] Host a competition requires type plus a visible discipline chip (same catalog as search); no silent chess default — 2026-09-04
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -109,9 +111,21 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 9. **Legal · Price / FERPA / retention / public school directory · —**  
    Out of scope for build; refuse.
 
+10. **P0 · Staff invitations were broken on any project that applied `0070` · S · shipped 2026-09-04**  
+   `0070` recreated `create_org_invitation` with `search_path = public`, reverting the extension path `0030` set, so `gen_random_bytes` failed and no district or school administrator could be invited. Migration `0074` restores it. Apply `0074` before onboarding anyone.
+
+11. **P1 · Contract-to-access handoff was a multi-step ops task · M · shipped 2026-09-04**  
+   Surface: `/admin/organizations` → Provision district. One super-admin action creates the district, invites its first administrator, and returns a claim link plus a typable activation code (`0074`). `/claim` accepts the code; login/signup keep the staff persona for code claims.
+
+12. **P1 · Guardian linking was silent and one-way · M · shipped 2026-09-04**  
+   Surface: student Plan/Account family rows are direction-aware and carry an "Ask a parent to link" form with a copyable parent-signup handoff; `/family#requests` gives the parent an inbox for student-opened requests. `0075` adds `household_links.requested_by`, so the participant who opened a request can never accept it — enforced in both the update policy and the new `respond_to_household_link` RPC. Both directions notify the other side, and acceptance notifies whoever asked. A parent still cannot confirm a student exists by guessing an email; a student-opened request is the only case where a pending counterpart becomes visible, because the student is disclosing their own name. `0075` also allowlists the `comment` and `geo` rate-limit buckets `0062` omitted.
+
+13. **P4 · Chess federation pin was missing · M · shipped 2026-09-05**  
+   Surface: `/chess` results and the homepage chess rail now have a labeled “Get your kid to chess nationals” placement into `/pathways`. Uses seeded Denker/Barber/Rockefeller/Haring chains. Not an official US Chess ruling; swap copy when they send written pathway info.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume (and apply migrations through latest in each environment). Otherwise defer to owner/legal gates — do not invent FERPA/price UI.
+Ops proof of email at school volume, and apply migrations through `0075` in each environment (`0074` and `0075` are both hard gates — see the runbook). Then the P5 staff team-entry path: coaches and school admins marking a student as going, audited as staff-entered, with the student and linked parents notified. Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
 
 ### Out-of-scope refusals this pass
 

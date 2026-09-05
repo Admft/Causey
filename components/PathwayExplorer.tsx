@@ -5,6 +5,7 @@ import type { PathwayNode } from "@/lib/qualification";
 import type { CompetitionRef } from "@/lib/data/types";
 import type { Series } from "@/lib/schemas";
 import { PathwayList } from "@/components/PathwayList";
+import { defaultPathwaySource } from "@/lib/partner-promos";
 
 /**
  * The differentiator demo: pick an event (or a recurring series), pick a
@@ -35,7 +36,13 @@ export function PathwayExplorer() {
       .then(async (res) => {
         if (!res.ok) throw new Error();
         const body = await res.json();
-        if (!cancelled) setOptions(body);
+        if (cancelled) return;
+        setOptions(body);
+        const next = defaultPathwaySource(body);
+        if (next) {
+          setSource(next);
+          setWalkState("loading");
+        }
       })
       .catch(() => {
         if (!cancelled)

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import zipsJson from "@/data/zips.sample.json";
-import { getSessionUser } from "@/lib/auth/session";
 import {
   RATE_LIMIT_MESSAGE,
   consumeRateLimit,
@@ -26,10 +25,10 @@ const BodySchema = {
 };
 
 export async function POST(request: NextRequest) {
-  const user = await getSessionUser();
   const allowed = await consumeRateLimit(
     "geo",
-    await hashedRequestActorKey(user?.id)
+    await hashedRequestActorKey(null, request.headers),
+    request.headers
   );
   if (!allowed) {
     return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });

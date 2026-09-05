@@ -53,6 +53,19 @@ export type AdminUserDirectoryRow = {
   total_count: number;
 };
 
+export const ADMIN_USER_ACCESS_FILTERS = ["all", "admins"] as const;
+export type AdminUserAccessFilter = (typeof ADMIN_USER_ACCESS_FILTERS)[number];
+
+export function parseAdminUserAccess(
+  raw?: string | null
+): AdminUserAccessFilter {
+  return raw === "admins" ? "admins" : "all";
+}
+
+export function adminUsersHref(access: AdminUserAccessFilter = "all"): string {
+  return access === "admins" ? "/admin/users?access=admins" : "/admin/users";
+}
+
 export type AdminTournamentRow = {
   id: string;
   slug: string;
@@ -569,51 +582,153 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
   })) as unknown as AdminOrganizationRow[];
 }
 
-export async function getAdminUsers({
-  query = "",
-  limit = 50,
-  offset = 0,
+function mapAdminDirectoryUsers(
+  data: AdminUserDirectoryRow[] | null
+): AdminUserDirectoryRow[] {
+  return ((data ?? []) as AdminUserDirectoryRow[]).map((user) => ({
+    ...user,
+    super_admin: Boolean(user.super_admin),
+    platform_admin: Boolean(user.platform_admin),
+  }));
+}
+
+function platformUserSearchError(error: {
+  code?: string;
+  message?: string;
+}): string {
+  if (isMissingAdminRpc(error, "search_platform_users") || error.code === "42804") {
+    return "User search is unavailable on this deployment.";
+  }
+  return "User search could not be loaded. Check the connection and try again.";
+}
+
+async function searchPlatformUsersRpc({
+  query,
+  limit,
+  offset,
+  access = "all",
 }: {
-  query?: string;
-  limit?: number;
-  offset?: number;
+  query: string;
+  limit: number;
+  offset: number;
+  access?: AdminUserAccessFilter;
 }): Promise<{
   users: AdminUserDirectoryRow[];
   total: number;
   error: string | null;
+  missingFunction: boolean;
 }> {
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.rpc("search_platform_users", {
+  const args: {
+    p_query: string;
+    p_limit: number;
+    p_offset: number;
+    p_access?: string;
+  } = {
     p_query: query,
     p_limit: limit,
     p_offset: offset,
-  });
+  };
+  if (access === "admins") {
+    args.p_access = "admins";
+  }
+  const { data, error } = await supabase.rpc("search_platform_users", args);
   if (error) {
     console.error("Platform user search failed:", {
       code: error.code,
       message: error.message,
     });
-    const missingMigration = isMissingAdminRpc(error, "search_platform_users");
     return {
       users: [],
       total: 0,
-      error: missingMigration
-        ? "User search is unavailable on this deployment."
-        : error.code === "42804"
-          ? "User search is unavailable on this deployment."
-        : "User search could not be loaded. Check the connection and try again.",
+      error: platformUserSearchError(error),
+      missingFunction: isMissingAdminRpc(error, "search_platform_users"),
     };
   }
-  const users = ((data ?? []) as AdminUserDirectoryRow[]).map((user) => ({
-    ...user,
-    super_admin: Boolean(user.super_admin),
-    platform_admin: Boolean(user.platform_admin),
-  }));
+  const users = mapAdminDirectoryUsers(data as AdminUserDirectoryRow[] | null);
   return {
     users,
     total: Number(users[0]?.total_count ?? 0),
     error: null,
+    missingFunction: false,
   };
+}
+
+async function collectAdminUsersFromUnfilteredDirectory({
+  query,
+  limit,
+  offset,
+}: {
+  query: string;
+  limit: number;
+  offset: number;
+}): Promise<{
+  users: AdminUserDirectoryRow[];
+  total: number;
+  error: string | null;
+}> {
+  const pageSize = 100;
+  const maxPages = 20;
+  const matched: AdminUserDirectoryRow[] = [];
+  let scanned = 0;
+  let directoryTotal = 0;
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const result = await searchPlatformUsersRpc({
+      query,
+      limit: pageSize,
+      offset: scanned,
+    });
+    if (result.error) {
+      return { users: [], total: 0, error: result.error };
+    }
+    directoryTotal = result.total;
+    matched.push(...result.users.filter((user) => user.platform_admin));
+    scanned += pageSize;
+    if (result.users.length === 0 || scanned >= directoryTotal) {
+      break;
+    }
+  }
+
+  const page = matched.slice(offset, offset + limit).map((user) => ({
+    ...user,
+    total_count: matched.length,
+  }));
+  return { users: page, total: matched.length, error: null };
+}
+
+export async function getAdminUsers({
+  query = "",
+  limit = 50,
+  offset = 0,
+  access = "all",
+}: {
+  query?: string;
+  limit?: number;
+  offset?: number;
+  access?: AdminUserAccessFilter;
+}): Promise<{
+  users: AdminUserDirectoryRow[];
+  total: number;
+  error: string | null;
+}> {
+  const result = await searchPlatformUsersRpc({
+    query,
+    limit,
+    offset,
+    access,
+  });
+  if (!result.error) {
+    return { users: result.users, total: result.total, error: null };
+  }
+  if (access === "admins" && result.missingFunction) {
+    return collectAdminUsersFromUnfilteredDirectory({
+      query,
+      limit,
+      offset,
+    });
+  }
+  return { users: [], total: 0, error: result.error };
 }
 
 export async function getAdminTournaments(

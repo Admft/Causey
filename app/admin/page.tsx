@@ -279,7 +279,7 @@ export default async function AdminOverviewPage() {
                   {
                     label: "Platform admins",
                     value: stats.accounts.platformAdmins,
-                    href: "/admin/users",
+                    href: "/admin/users?access=admins",
                   },
                 ],
                 chart: (

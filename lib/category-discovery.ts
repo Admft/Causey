@@ -385,6 +385,15 @@ export function primaryFacetsForCategory(
   );
 }
 
+/** Null when the type has no organizer discipline, format, or genre chips. */
+export function requiredOrganizerFacetMessage(
+  category: CompetitionCategory
+): string | null {
+  if (primaryFacetsForCategory(category).length === 0) return null;
+  const label = discoveryCategory(category)?.facetLabel ?? "Discipline";
+  return `${label} is required.`;
+}
+
 export function childFacetsFor(
   category: CompetitionCategory,
   parentValue: string

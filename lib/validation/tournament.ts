@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { storedFacetsForOrganizer } from "@/lib/category-discovery";
+import {
+  requiredOrganizerFacetMessage,
+  storedFacetsForOrganizer,
+} from "@/lib/category-discovery";
 import {
   CompetitionCategorySchema,
   CompetitionFacetSchema,
@@ -31,9 +34,14 @@ const SectionInputSchema = z
     { message: "Section minimum grade can’t exceed its maximum.", path: ["maxGrade"] }
   );
 
+const RequiredCompetitionCategory = z.enum(
+  CompetitionCategorySchema.options,
+  { errorMap: () => ({ message: "Choose a competition type." }) }
+);
+
 const TournamentFieldsSchema = z
   .object({
-    category: CompetitionCategorySchema.default("chess"),
+    category: RequiredCompetitionCategory,
     customCategoryName: z
       .string()
       .trim()
@@ -109,6 +117,14 @@ const TournamentFieldsSchema = z
     path: ["regDeadline"],
   })
   .superRefine((value, context) => {
+    const requiredFacet = requiredOrganizerFacetMessage(value.category);
+    if (requiredFacet && !value.primaryFacet) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["primaryFacet"],
+        message: requiredFacet,
+      });
+    }
     const facets = storedFacetsForOrganizer(
       value.category,
       value.primaryFacet,

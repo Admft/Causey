@@ -14,14 +14,26 @@ the verified `mail.causey.dev` Resend integration.
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0071_count_platform_admins.sql` (including
+   `0075_guardian_link_consent.sql` (including
    `0045_atomic_district_school_creation.sql`,
    `0046_district_hosted_reporting.sql`,
    `0060_district_admin_activity.sql`,
    `0061_search_competitions_radius.sql`,
    `0062_rate_limits.sql`,
    `0069_p1_isolation_email_comments.sql`, and
-   `0070_p2_origin_reports_invites.sql`). A clean filename check alone
+   `0070_p2_origin_reports_invites.sql`).
+   **`0074` is a hard gate, not an optional newer file.** `0070` recreated
+   `create_org_invitation` with `search_path = public`, which reverted the
+   extension search path `0030` had set. On any project that applied `0070`,
+   every staff invitation fails inside pgcrypto (`gen_random_bytes`), so no
+   district administrator or school administrator can be invited at all.
+   `0074` restores the search path and adds the typable activation code. If a
+   claim link or invitation has ever failed on the target project, this is why.
+   `0075` is a second hard gate for the same reason: `consume_rate_limit`
+   shipped in `0062` with an allowlist that never included the `comment` or
+   `geo` buckets the app already sends, so event comments fail closed on any
+   project running `0062` without `0075`.
+   A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch
    file.
@@ -65,15 +77,33 @@ the verified `mail.causey.dev` Resend integration.
 
 ## 2. Provision and verify the district
 
-1. Sign in as a platform administrator.
-2. Open `/admin/organizations`.
-3. Create the district record with its official name and state.
-4. Verify the district only after checking its identity with the pilot owner.
-5. Open the district workspace and confirm the next action says to add its
+1. Sign in as a **super administrator**. Creating a district is reserved for
+   the protected founder tier (`is_super_admin()`), enforced in the insert
+   policy, the governance trigger, and both admin actions. A platform admin
+   without super-admin can still create schools, verify records, and moderate.
+2. Open `/admin/organizations` and choose **Provision district**.
+3. Enter the district's official name, state, and the email address of the
+   person who will run the program. Use a named person, not a shared inbox:
+   the invitation is bound to that address and cannot be claimed from another.
+4. Causey creates the district, invites its first district administrator, and
+   shows two forms of the same invitation:
+   - a **claim link** for email, and
+   - an eight-character **activation code** for a phone call.
+   Both are shown once. Causey stores only their hashes. If you lose them,
+   reissue from the district's People page.
+5. Send whichever the district prefers. The administrator opens the link, or
+   enters the code at `/claim`. Either way they must sign in with the invited
+   email address before the membership is created.
+6. Verify the district only after checking its identity with the pilot owner.
+7. Open the district workspace and confirm the next action says to add its
    first school.
 
 Districts are platform-created. Do not create a district as a generic coach
 organization or attach students directly to the district.
+
+An activation code is not access on its own. It expires in 7 days, is rate
+limited, and still requires control of the invited mailbox. Do not treat it as
+a password, and do not post it in a shared channel.
 
 For two concurrent pilots, complete these steps for District A and then
 District B as separate records. Do not reuse a district record, school

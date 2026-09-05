@@ -5,6 +5,7 @@ export type AdminStatItem = {
   label: string;
   value: number | string | null;
   href?: string;
+  current?: boolean;
 };
 
 export function formatAdminCount(value: number | string | null): string {
@@ -17,7 +18,13 @@ function StatRow({ item }: { item: AdminStatItem }) {
   const unavailable = item.value === null;
   const body = (
     <>
-      <dt className="text-sm text-muted-strong">{item.label}</dt>
+      <dt
+        className={`text-sm ${
+          item.current ? "font-semibold text-foreground" : "text-muted-strong"
+        }`}
+      >
+        {item.label}
+      </dt>
       <dd
         className={`font-display text-lg font-bold tabular-nums ${
           unavailable ? "text-muted" : "text-foreground"
@@ -39,7 +46,10 @@ function StatRow({ item }: { item: AdminStatItem }) {
   return (
     <Link
       href={item.href}
-      className="flex items-baseline justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-surface-soft"
+      aria-current={item.current ? "page" : undefined}
+      className={`flex items-baseline justify-between gap-4 px-4 py-2.5 transition-colors ${
+        item.current ? "bg-surface-soft" : "hover:bg-surface-soft"
+      }`}
     >
       {body}
     </Link>
@@ -69,6 +79,7 @@ function StatCell({ item }: { item: AdminStatItem }) {
   return (
     <Link
       href={item.href}
+      aria-current={item.current ? "page" : undefined}
       className="border-l-2 border-brand-red pl-3 transition-colors hover:border-brand-red-hover"
     >
       {body}

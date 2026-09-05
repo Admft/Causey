@@ -297,7 +297,7 @@ export default async function AccountPage() {
           {!parentLinks.length ? (
             <PortalEmptyState
               title="No parent links yet"
-              description="A parent starts the link from Family. When their request arrives, accept it here or on Plan."
+              description="A parent can start the link from Family, or you can ask one from Plan. When a request arrives, accept it here or on Plan."
               action={workspaceOpenCta("student")}
             />
           ) : (
@@ -312,14 +312,23 @@ export default async function AccountPage() {
                       {link.parent_name}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted">
-                      {link.status === "pending"
-                        ? "wants to link as your parent"
-                        : "linked as your parent"}
+                      {link.status === "active"
+                        ? "linked as your parent"
+                        : link.awaiting_parent
+                          ? "you asked them to link — waiting for them to accept"
+                          : "wants to link as your parent"}
                     </span>
                   </div>
                   <HouseholdRequestActions
-                    parentProfileId={link.parent_profile_id}
-                    linked={link.status === "active"}
+                    counterpartyProfileId={link.parent_profile_id}
+                    state={
+                      link.status === "active"
+                        ? "linked"
+                        : link.awaiting_parent
+                          ? "awaiting_them"
+                          : "awaiting_me"
+                    }
+                    confirmUnlinkLabel="Yes, unlink parent"
                   />
                 </li>
               ))}

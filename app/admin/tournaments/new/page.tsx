@@ -84,7 +84,10 @@ export default async function AdminNewTournamentPage({
           <TournamentCreateForm
             orgId={selected.id}
             orgSlug={selected.slug}
+            orgName={selected.name}
             orgState={selected.state}
+            orgType={selected.type}
+            parentOrgId={selected.parent_org_id}
             draftId={draftId}
             admin
             returnTo="/admin/tournaments?status=published"
