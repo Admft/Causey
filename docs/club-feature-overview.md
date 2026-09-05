@@ -1,13 +1,13 @@
 # Causey for clubs and teams
 
 **Audience:** club owners, team coaches, and volunteer organizers (any competition type Causey lists)  
-**Product:** Causey (`https://app.causey.dev`)  
+**Product:** Causey (`https://causey.dev`)  
 **Date:** August 24, 2026  
 **Status:** A coach can run a real season of coordination. Chess search is the densest public index. Causey is not tournament-floor software. Club SaaS checkout is a local layout only; it does not collect student dues or organizer entry.
 
 Causey helps a club find events, get students and families to the right ones, record who went and how they finished, and keep a season file. Families still finish paid entry on the organizer’s site. Chess clubs get the most listings; a debate, STEM, arts, or writing club can use the same roster and hosting tools with fewer public events in the directory.
 
-A club is not a school and not a district. Coaches create club or team workspaces themselves. Districts are provisioned separately by Causey. Public pitch: [app.causey.dev/clubs](https://app.causey.dev/clubs).
+A club is not a school and not a district. Coaches create club or team workspaces themselves. Districts are provisioned separately by Causey. Public pitch: [causey.dev/clubs](https://causey.dev/clubs).
 
 ---
 
@@ -94,4 +94,4 @@ Do not promise these in a club-owner conversation. Same list as above, with the 
 4. **Mark attendance and record results** so families and the season file stay complete.
 5. **Export the season CSV** when a board or parent asks who went and who placed.
 
-To talk through a school-district program instead, use [app.causey.dev/districts](https://app.causey.dev/districts).
+To talk through a school-district program instead, use [causey.dev/districts](https://causey.dev/districts).

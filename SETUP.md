@@ -308,14 +308,13 @@ What exists already:
 What still needs to happen:
 
 - Deploy the app to the chosen host.
-- Point `app.causey.dev` to the deployment.
-- Wire the main marketing site CTA on `causey.dev` to the app.
-- Verify nav and footer links between marketing and product surfaces.
+- Point `causey.dev` to the deployment. Keep `app.causey.dev` as an alias.
+- Verify nav and footer links on the public site.
 
 Why this matters:
 
-- The product app and the marketing site are still separate surfaces that need
-  to be connected cleanly.
+- The public product hostname is `causey.dev`. `app.causey.dev` stays attached
+  so old links still work.
 
 ## 8. Decide how operations will work day to day
 
@@ -376,5 +375,5 @@ If someone is taking this from MVP to launch, do the work in this order:
 5. Follow `docs/district-pilot-runbook.md` for one assisted district
 6. Verify scraper and ingestion workflow
 7. Replace seeded qualification rules with verified ones
-8. Deploy and connect `app.causey.dev`
+8. Deploy and connect `causey.dev`
 9. Complete legal, observability, email, and operational rollout gates

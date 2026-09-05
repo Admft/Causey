@@ -8,19 +8,19 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_CAUSEY_API_URL": "https://app.causey.dev"
+        "EXPO_PUBLIC_CAUSEY_API_URL": "https://causey.dev"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_CAUSEY_API_URL": "https://app.causey.dev"
+        "EXPO_PUBLIC_CAUSEY_API_URL": "https://causey.dev"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_CAUSEY_API_URL": "https://app.causey.dev"
+        "EXPO_PUBLIC_CAUSEY_API_URL": "https://causey.dev"
       }
     }
   },

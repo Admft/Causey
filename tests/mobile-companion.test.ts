@@ -13,19 +13,19 @@ describe("Bearer access tokens", () => {
   it("reads a Bearer header and ignores other schemes", () => {
     expect(
       accessTokenFromRequest(
-        new Request("https://app.causey.dev/api/mobile/me", {
+        new Request("https://causey.dev/api/mobile/me", {
           headers: { authorization: "Bearer tok_123" },
         })
       )
     ).toBe("tok_123");
     expect(
       accessTokenFromRequest(
-        new Request("https://app.causey.dev/api/mobile/me")
+        new Request("https://causey.dev/api/mobile/me")
       )
     ).toBeNull();
     expect(
       accessTokenFromRequest(
-        new Request("https://app.causey.dev/api/mobile/me", {
+        new Request("https://causey.dev/api/mobile/me", {
           headers: { authorization: "Basic abc" },
         })
       )
@@ -225,7 +225,7 @@ describe("App Store readiness", () => {
     expect(profiles).toContain("production");
     for (const profile of profiles) {
       expect(eas.build[profile]?.env?.EXPO_PUBLIC_CAUSEY_API_URL).toBe(
-        "https://app.causey.dev"
+        "https://causey.dev"
       );
     }
   });

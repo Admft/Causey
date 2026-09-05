@@ -266,7 +266,8 @@ Before a paid student cohort:
 
 ## 10. Production hostname and observability
 
-- Use one public hostname: `https://app.causey.dev`. Do not advertise
+- Use one public hostname: `https://causey.dev`. Keep `app.causey.dev` attached
+  as an alias so old email and phone-app links still resolve. Do not advertise
   `app.causey.com` unless that domain is attached to the Vercel project.
 - Production must be a green deploy. A failed `main` promotion is not a
   launch. Preview SSO can stay on for `*.vercel.app` URLs.

@@ -20,7 +20,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://app.causey.dev"),
+  metadataBase: new URL("https://causey.dev"),
   applicationName: "Causey",
   appleWebApp: {
     capable: true,
