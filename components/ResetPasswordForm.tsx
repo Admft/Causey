@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { PasswordField } from "@/components/PasswordField";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import {
+  WEAK_PASSWORD_MESSAGE,
+  isPasswordAcceptable,
+} from "@/lib/password-strength";
 
 /** Reached from the email link (session already established by the callback). */
 export function ResetPasswordForm() {
@@ -15,8 +20,8 @@ export function ResetPasswordForm() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (!isPasswordAcceptable(password)) {
+      setError(WEAK_PASSWORD_MESSAGE);
       return;
     }
     if (password !== confirm) {
@@ -46,32 +51,23 @@ export function ResetPasswordForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-muted-strong">New password</span>
-        <input
-          className="field"
-          type="password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="new-password"
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-muted-strong">
-          Confirm new password
-        </span>
-        <input
-          className="field"
-          type="password"
-          required
-          minLength={8}
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          autoComplete="new-password"
-        />
-      </label>
+      <PasswordField
+        label="New password"
+        required
+        minLength={8}
+        value={password}
+        onChange={setPassword}
+        autoComplete="new-password"
+        showStrength
+      />
+      <PasswordField
+        label="Confirm new password"
+        required
+        minLength={8}
+        value={confirm}
+        onChange={setConfirm}
+        autoComplete="new-password"
+      />
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">
           {error}

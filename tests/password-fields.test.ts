@@ -29,5 +29,15 @@ describe("password confirmation and visibility", () => {
     expect(passwordField).toContain("aria-pressed={visible}");
     expect(passwordField).toContain('type={visible ? "text" : "password"}');
     expect(passwordField).toContain('type="button"');
+    expect(signupForm).toContain("showStrength");
+    expect(signupForm).toContain("isPasswordAcceptable");
+    expect(signupForm).toContain("WEAK_PASSWORD_MESSAGE");
+    expect(passwordField).toContain("password-strength-track");
+    expect(passwordField).toContain('role="meter"');
+    expect(loginForm).not.toContain("showStrength");
+    expect(read("components/ResetPasswordForm.tsx")).toContain("showStrength");
+    expect(read("components/AccountSecurityForm.tsx")).toContain(
+      "isPasswordAcceptable"
+    );
   });
 });

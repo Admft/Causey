@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Family discovery RSVP: parent Going/Can't go for linked students on public listings without a club invite; organizer registration stays mark-complete (`0080`) — 2026-09-05
+- Signup password strength meter; reject weak new passwords — 2026-09-05
 
 ## Last tick
 
+- 2026-09-05 — New passwords on signup, reset, and account change show a strength bar and reject weak strings (8+ mixed case and a number, or a long passphrase). Login is unchanged.
 - 2026-09-05 — Parents can mark a linked student Going on a public event without a club/school invite. Family shows that status. Save is a bookmark. Organizer-site RSVPs are still Mark complete (`0080`).
 - 2026-09-05 — Parent recommend and coach roster invite no longer trust an empty upsert body. Recommendations write Alerts + show on Plan (`0079` backfill). Invites re-read invited rows, then fan out student and parent Alerts.
 - 2026-09-05 — Super admin can provision a child school under an existing district and invite its named administrator (claim link + code). `/admin/organizations` nests School account rows; orphan-school create is removed; People shows the activation code. Migration `0078`.

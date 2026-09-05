@@ -19,6 +19,10 @@ import {
 import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { PasswordField } from "@/components/PasswordField";
 import { ZipCaptureField } from "@/components/ZipCaptureField";
+import {
+  WEAK_PASSWORD_MESSAGE,
+  isPasswordAcceptable,
+} from "@/lib/password-strength";
 
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -53,6 +57,7 @@ const ROLE_SIGNUP_COPY: Record<
 const SAFE_SIGNUP_ERRORS = new Set([
   "Account creation is unavailable in this build.",
   "Password must be at least 8 characters.",
+  WEAK_PASSWORD_MESSAGE,
   "Passwords don’t match.",
   "Enter your date of birth.",
   "Enter a valid date of birth.",
@@ -121,8 +126,8 @@ export function SignupForm({
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
         throw new Error("Account creation is unavailable in this build.");
       }
-      if (password.length < 8) {
-        throw new Error("Password must be at least 8 characters.");
+      if (!isPasswordAcceptable(password)) {
+        throw new Error(WEAK_PASSWORD_MESSAGE);
       }
       if (password !== confirmPassword) {
         throw new Error("Passwords don’t match.");
@@ -336,6 +341,7 @@ export function SignupForm({
             value={password}
             onChange={setPassword}
             autoComplete="new-password"
+            showStrength
           />
         </div>
         <div className="sm:col-span-2">

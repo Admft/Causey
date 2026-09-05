@@ -26,6 +26,7 @@
   --accent: #c23b32;
   --accent-hover: #a8322a;
   --accent-soft: #f8e8e6;
+  --ok: #2d6a4f;
   --field: #ffffff;
   --field-border: rgba(20, 24, 28, 0.14);
   --radius-xl: 0.75rem;
@@ -60,6 +61,7 @@
   --color-accent: #c23b32;
   --color-accent-hover: #a8322a;
   --color-accent-soft: #f8e8e6;
+  --color-ok: #2d6a4f;
   --color-field: #ffffff;
   --color-field-border: rgba(20, 24, 28, 0.14);
   --color-white: #ffffff;
@@ -175,6 +177,21 @@ textarea.field {
 }
 .field.field-password {
   padding-right: 2.75rem;
+}
+
+.password-strength-track {
+  height: 0.25rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.password-strength-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 200ms var(--ease-structured, ease),
+    background-color 200ms var(--ease-structured, ease);
 }
 
 /* Primary CTA — §8.2. */
@@ -1009,6 +1026,7 @@ textarea.field {
   .card-lift,
   .nudge-x,
   .field,
+  .password-strength-fill,
   .site-header-inner,
   .site-header-brand,
   .site-header-nav {
