@@ -39,7 +39,7 @@ const STAY_ON_CAUSEY = [
   {
     title: "Public chess search",
     description:
-      "The public index stays on app.causey.dev. A custom host does not become a second chess directory.",
+      "The public index stays on causey.dev. A custom host does not become a second chess directory.",
   },
   {
     title: "January shared workspace",
@@ -244,7 +244,7 @@ export function PortalPreview({ path }: { path: string }) {
                 {host === "shared" ? (
                   <div className="mt-5 border-l-2 border-line pl-4">
                     <p className="text-sm font-bold text-foreground">
-                      app.causey.dev
+                      causey.dev
                     </p>
                     <p className="mt-1 text-sm text-muted">
                       Staff who also coach a club would switch districts
@@ -280,7 +280,7 @@ export function PortalPreview({ path }: { path: string }) {
                     rows={
                       host === "shared"
                         ? [
-                            { label: "Host", value: "app.causey.dev" },
+                            { label: "Host", value: "causey.dev" },
                             { label: "Tenant", value: "Chosen in the workspace" },
                             { label: "Cookie", value: "Causey session" },
                             {

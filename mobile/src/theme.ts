@@ -12,9 +12,9 @@ export const colors = {
 } as const;
 
 export const apiUrl = (
-  process.env.EXPO_PUBLIC_CAUSEY_API_URL ?? "https://app.causey.dev"
+  process.env.EXPO_PUBLIC_CAUSEY_API_URL ?? "https://causey.dev"
 ).replace(/\/$/, "");
 
 export const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
 export const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
-export const siteUrl = "https://app.causey.dev";
+export const siteUrl = "https://causey.dev";

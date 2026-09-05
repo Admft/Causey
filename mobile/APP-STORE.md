@@ -8,7 +8,7 @@ Causey is an early build; keep these answers specific and true.
 Do not open a review until all four are done. A reviewer who hits any of these
 sees a broken app and rejects under Guideline 2.1.
 
-1. **`/api/mobile/*` is live on `https://app.causey.dev`** with
+1. **`/api/mobile/*` is live on `https://causey.dev`** with
    `DATA_SOURCE=supabase`. Every screen in the app calls these routes:
    `/api/mobile/me`, `/api/mobile/family`, `/api/mobile/rsvp`,
    `/api/mobile/registration`, `/api/mobile/account`, and `/api/competitions`.
@@ -98,10 +98,10 @@ space (`E174.1`) — the set pulled in by AsyncStorage and the Expo runtime.
 
 ## Required URLs
 
-- Support URL: `https://app.causey.dev/support`
-- Privacy policy URL: `https://app.causey.dev/privacy`
-- Terms of use: `https://app.causey.dev/terms`
-- Account deletion (also in-app on the Me tab): `https://app.causey.dev/account#data`
+- Support URL: `https://causey.dev/support`
+- Privacy policy URL: `https://causey.dev/privacy`
+- Terms of use: `https://causey.dev/terms`
+- Account deletion (also in-app on the Me tab): `https://causey.dev/account#data`
 
 ## Account deletion (Guideline 5.1.1(v))
 

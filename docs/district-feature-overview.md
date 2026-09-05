@@ -5,7 +5,7 @@
 **This page** is the internal current-state catalog for agents. Do not send it to a district as if it were the January package.
 
 **Audience:** district administrators, school administrators, and program coordinators  
-**Product:** Causey (`https://app.causey.dev`)  
+**Product:** Causey (`https://causey.dev`)  
 **Date:** August 24, 2026  
 **Status:** Assisted chess pilot. Not a self-serve district product and not a finished procurement package. Club/team owners use a separate self-serve workspace (`docs/club-feature-overview.md`); this page is district + school only.
 
@@ -114,4 +114,4 @@ Before a paid student rollout, Causey and the district still have to settle pric
 
 Anyone can search tournaments on Causey for free. A district pilot is the coordination layer on top of that search.
 
-To talk through a pilot: use the booking link on [app.causey.dev/districts](https://app.causey.dev/districts).
+To talk through a pilot: use the booking link on [causey.dev/districts](https://causey.dev/districts).

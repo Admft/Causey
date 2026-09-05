@@ -63,12 +63,12 @@ From the repo root, `npm run test` covers the store-readiness invariants in
 
 Read [APP-STORE.md](APP-STORE.md) first — it lists the demo account, privacy
 answers, age rating, and the blocking prerequisites (live `/api/mobile/*` on
-`app.causey.dev`, and Supabase keys set as EAS environment variables).
+`causey.dev`, and Supabase keys set as EAS environment variables).
 
 ## Store listing URLs
 
-- Support: `https://app.causey.dev/support`
-- Privacy: `https://app.causey.dev/privacy`
-- Terms: `https://app.causey.dev/terms`
+- Support: `https://causey.dev/support`
+- Privacy: `https://causey.dev/privacy`
+- Terms: `https://causey.dev/terms`
 
 Age: 13+. Not Kids Category. No in-app purchases.

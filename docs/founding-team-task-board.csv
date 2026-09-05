@@ -1,6 +1,6 @@
 Status,Owner,Workstream,Task,Audience,Next action,Due,Notes
 Not started,Myshay,Audience,Club waitlist form (name, org, city, contact, chess program size),Clubs,Create a Google Form; do not list clubs on the public site until paperwork exists,,No public partner names or logos
-Not started,Myshay,Audience,Talk track for clubs: chess search is usable; fees/venues can be missing; confirm on organizer site,Clubs,One paragraph + link to https://app.causey.dev/chess,,Early-build honesty
+Not started,Myshay,Audience,Talk track for clubs: chess search is usable; fees/venues can be missing; confirm on organizer site,Clubs,One paragraph + link to https://causey.dev/chess,,Early-build honesty
 Not started,Adam,Audience,Club onboarding path: create club org, join link, first tournament,Clubs,Write 5-step internal checklist,,Clubs are orgs/teams, not districts
 Not started,Myshay,Audience,District conversation packet (this feature overview + /districts + privacy),Districts,PDF or print docs/district-feature-overview.md,,No pricing in the packet
 Not started,Both,Legal,Written approval before any named school or district appears in the product,Districts,Keep zero public partner names,,Existing product rule

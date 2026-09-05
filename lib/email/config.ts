@@ -1,6 +1,6 @@
 import "server-only";
 
-const DEFAULT_PUBLIC_URL = "https://app.causey.dev";
+const DEFAULT_PUBLIC_URL = "https://causey.dev";
 
 export function hasProductEmailConfig(): boolean {
   return Boolean(
