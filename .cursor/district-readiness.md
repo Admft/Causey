@@ -40,6 +40,8 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] CSV staff invites use one set-based RPC; restore-drill runbook names Pro backups, PITR-off, and verify steps without claiming a logged drill — 2026-09-02
 - [x] January story copy: shared `/orgs` workspace, chess working surface, other types hostable, not custom portals — 2026-09-02
 - [x] Club SaaS billing is a local layout only (`/billing`); districts stay meeting-booked — 2026-09-02
+- [x] Finding tournaments no longer shows “too often” when the limiter RPC errors or a signed-in search sent a `user:` key `0069` rejects — 2026-09-04
+- [x] Host a competition preview shows the real search card and event-page start (not a fact dump) — 2026-09-04
 - [x] Host a competition requires type plus a visible discipline chip (same catalog as search); no silent chess default — 2026-09-04
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
@@ -109,9 +111,15 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 9. **Legal · Price / FERPA / retention / public school directory · —**  
    Out of scope for build; refuse.
 
+10. **P0 · Staff invitations were broken on any project that applied `0070` · S · shipped 2026-09-04**  
+   `0070` recreated `create_org_invitation` with `search_path = public`, reverting the extension path `0030` set, so `gen_random_bytes` failed and no district or school administrator could be invited. Migration `0074` restores it. Apply `0074` before onboarding anyone.
+
+11. **P1 · Contract-to-access handoff was a multi-step ops task · M · shipped 2026-09-04**  
+   Surface: `/admin/organizations` → Provision district. One super-admin action creates the district, invites its first administrator, and returns a claim link plus a typable activation code (`0074`). `/claim` accepts the code; login/signup keep the staff persona for code claims.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume (and apply migrations through latest in each environment). Otherwise defer to owner/legal gates — do not invent FERPA/price UI.
+Guardian linking is still silent: `request_child_link` notifies neither side, and a student cannot start the request. Fix the silence without breaking student consent. After that, ops proof of email at school volume (and apply migrations through `0074` in each environment). Defer to owner/legal gates — do not invent FERPA/price UI.
 
 ### Out-of-scope refusals this pass
 

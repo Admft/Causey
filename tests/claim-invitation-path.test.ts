@@ -3,7 +3,9 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   accountRoleForOrgInvitationRole,
+  buildClaimCodePath,
   buildClaimPath,
+  extractClaimCode,
   extractClaimToken,
   invitationRoleFitsOrganization,
   isClaimNextPath,
@@ -30,6 +32,23 @@ describe("claim invitation path helpers", () => {
     expect(extractClaimToken("/join/CODE")).toBeUndefined();
     expect(isClaimNextPath(`/claim/${token}`)).toBe(true);
     expect(isJoinCodeNextPath("/join/CODE")).toBe(true);
+  });
+
+  it("treats a typed activation code as a claim path too", () => {
+    expect(buildClaimCodePath("bcdf-ghjk")).toBe("/claim?code=BCDFGHJK");
+    expect(extractClaimCode("/claim?code=BCDFGHJK")).toBe("BCDFGHJK");
+    expect(extractClaimCode("/claim?code=bcdf-ghjk")).toBe("BCDFGHJK");
+    expect(isClaimNextPath("/claim?code=BCDFGHJK")).toBe(true);
+    expect(accountRoleForOrgInvitationRole("district_admin")).toBe("coach");
+  });
+
+  it("rejects codes with the wrong shape or lookalike characters", () => {
+    expect(extractClaimCode("/claim?code=BCDF")).toBeUndefined();
+    expect(extractClaimCode("/claim?code=BCDFGHJKM")).toBeUndefined();
+    expect(extractClaimCode("/claim?code=BCDFGHI0")).toBeUndefined();
+    expect(extractClaimCode("/claim")).toBeUndefined();
+    expect(extractClaimCode(`/claim/${"a".repeat(64)}`)).toBeUndefined();
+    expect(isClaimNextPath("/claim?code=nope")).toBe(false);
   });
 
   it("keeps district and school invitation roles scoped", () => {
@@ -69,7 +88,7 @@ describe("claim invitation path helpers", () => {
     expect(peopleManager).toContain("Reissue & copy link");
     expect(peopleManager).toContain("Download CSV");
     expect(peopleManager).toContain("Copy all claim links");
-    expect(loginPage).toContain("getOrganizationInvitationPreview");
+    expect(loginPage).toContain("getInvitationPreviewForClaimPath");
     expect(loginPage).toContain("Create staff account");
   });
 });

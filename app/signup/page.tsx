@@ -10,10 +10,10 @@ import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { AccountRoleSchema } from "@/lib/auth/types";
 import {
   accountRoleForOrgInvitationRole,
-  extractClaimToken,
+  isClaimNextPath,
   isJoinCodeNextPath,
 } from "@/lib/invitations/claim-path";
-import { getOrganizationInvitationPreview } from "@/lib/data/portal";
+import { getInvitationPreviewForClaimPath } from "@/lib/data/portal";
 
 export const metadata: Metadata = {
   title: "Sign up",
@@ -37,11 +37,9 @@ export default async function SignupPage({
   const { role, next: requestedNext } = await searchParams;
   const parsedRole = AccountRoleSchema.safeParse(role);
   const requestedPath = sanitizeNextPath(requestedNext);
-  const claimToken = extractClaimToken(requestedPath);
-  const invitation = claimToken
-    ? await getOrganizationInvitationPreview(claimToken)
-    : null;
-  const next = claimToken && !invitation ? undefined : requestedPath;
+  const isClaimPath = isClaimNextPath(requestedPath);
+  const invitation = await getInvitationPreviewForClaimPath(requestedPath);
+  const next = isClaimPath && !invitation ? undefined : requestedPath;
   const isJoiningOrganization = isJoinCodeNextPath(next);
   const invitationAccountRole = invitation
     ? accountRoleForOrgInvitationRole(invitation.member_role)
@@ -55,8 +53,8 @@ export default async function SignupPage({
   const user = await getSessionUser();
   if (user) {
     // Claim acceptance belongs on /claim with the matching signed-in email.
-    if (claimToken && invitation) {
-      redirect(`/claim/${claimToken}`);
+    if (isClaimPath && invitation && requestedPath) {
+      redirect(requestedPath);
     }
 
     const profile = await getCurrentProfile();

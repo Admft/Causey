@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { AdminDistrictProvisionForm } from "@/components/AdminDistrictProvisionForm";
 import { AdminDistrictSchoolBulkVerify } from "@/components/AdminDistrictSchoolBulkVerify";
 import { AdminOrganizationForm } from "@/components/AdminOrganizationForm";
 import { AdminOrganizationReviewActions } from "@/components/AdminOrganizationReviewActions";
@@ -255,10 +256,13 @@ export function AdminOrganizationsExplorer({
   organizations,
   districtReadinessById,
   initialStatus = "all",
+  canProvisionDistrict = false,
 }: {
   organizations: AdminOrganizationRow[];
   districtReadinessById: DistrictReadinessById;
   initialStatus?: StatusFilter;
+  /** District creation is reserved for founder super admins. */
+  canProvisionDistrict?: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -266,6 +270,7 @@ export function AdminOrganizationsExplorer({
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [provisionOpen, setProvisionOpen] = useState(false);
 
   const schoolsByDistrict = useMemo(() => {
     const map = new Map<string, AdminOrganizationRow[]>();
@@ -327,15 +332,54 @@ export function AdminOrganizationsExplorer({
             <option value="team">Teams</option>
           </select>
         </label>
+        {canProvisionDistrict ? (
+          <button
+            type="button"
+            onClick={() => {
+              setProvisionOpen((open) => !open);
+              setCreateOpen(false);
+            }}
+            aria-expanded={provisionOpen}
+            className="cta-enabled"
+          >
+            {provisionOpen ? "Close form" : "Provision district"}
+          </button>
+        ) : null}
         <button
           type="button"
-          onClick={() => setCreateOpen((open) => !open)}
+          onClick={() => {
+            setCreateOpen((open) => !open);
+            setProvisionOpen(false);
+          }}
           aria-expanded={createOpen}
-          className="cta-enabled"
+          className={
+            canProvisionDistrict
+              ? "rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red"
+              : "cta-enabled"
+          }
         >
           {createOpen ? "Close form" : "Add organization"}
         </button>
       </div>
+
+      {provisionOpen && canProvisionDistrict ? (
+        <section
+          aria-label="Provision a district"
+          className="rounded-xl border border-line bg-surface p-5"
+        >
+          <h2 className="text-sm font-semibold text-foreground">
+            Provision a district after the contract lands
+          </h2>
+          <p className="mt-1 text-xs text-muted">
+            Creates the district, invites its first administrator, and gives you
+            a claim link and a code to read over the phone. The district then
+            connects its own schools.
+          </p>
+          <div className="mt-4">
+            <AdminDistrictProvisionForm />
+          </div>
+        </section>
+      ) : null}
 
       {createOpen ? (
         <section
@@ -348,7 +392,10 @@ export function AdminOrganizationsExplorer({
           <p className="mt-1 text-xs text-muted">
             New records start as pending — verify them after checking their
             identity. Clubs and teams are started by their own coaches, not
-            here.
+            here.{" "}
+            {canProvisionDistrict
+              ? "Use “Provision district” instead when a district is starting fresh — it also creates the administrator invitation."
+              : "Creating a district is reserved for founder super admins."}
           </p>
           <div className="mt-4">
             <AdminOrganizationForm />

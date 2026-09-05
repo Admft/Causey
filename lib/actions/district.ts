@@ -8,6 +8,10 @@ import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/a
 import type { OrgMemberRole } from "@/lib/auth/orgs";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
+  isValidActivationCode,
+  normalizeActivationCode,
+} from "@/lib/invitations/activation-code";
+import {
   buildClaimPath,
   invitationRoleFitsOrganization,
 } from "@/lib/invitations/claim-path";
@@ -299,6 +303,8 @@ type InvitationResult = {
   invitationId: string;
   claimPath: string;
   expiresAt: string;
+  /** Shown once. Null when the database predates migration 0074. */
+  activationCode: string | null;
 };
 
 async function createInvitationRecord(input: {
@@ -321,6 +327,7 @@ async function createInvitationRecord(input: {
         invitation_id: string;
         claim_token: string;
         expires_at: string;
+        activation_code?: string | null;
       }
     | undefined;
   if (error || !row) {
@@ -331,6 +338,7 @@ async function createInvitationRecord(input: {
     invitationId: row.invitation_id,
     claimPath: buildClaimPath(row.claim_token),
     expiresAt: row.expires_at,
+    activationCode: row.activation_code ?? null,
   };
 }
 
@@ -704,6 +712,41 @@ export async function claimOrganizationInvitation(
     | undefined;
   if (error || !row) {
     return { ok: false, error: "This invitation is invalid, expired, or belongs to another email." };
+  }
+  revalidatePath("/orgs");
+  return { ok: true, slug: row.org_slug, name: row.org_name };
+}
+
+/**
+ * Same claim as the emailed link, for staff who were read a code instead.
+ * The code alone is not access: the database still requires the signed-in
+ * email to match the invited address.
+ */
+export async function claimOrganizationInvitationByCode(
+  code: string
+): Promise<ActionResult<{ slug: string; name: string }>> {
+  if (!isValidActivationCode(code)) {
+    return { ok: false, error: "Check the activation code and try again." };
+  }
+  const user = await currentUserOrError();
+  if (!user.ok) return user;
+  const allowed = await consumeRateLimit(
+    "claim",
+    await hashedRequestActorKey(user.id)
+  );
+  if (!allowed) return { ok: false, error: RATE_LIMIT_MESSAGE };
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("claim_org_invitation_by_code", {
+    p_code: normalizeActivationCode(code),
+  });
+  const row = data?.[0] as { org_slug: string; org_name: string } | undefined;
+  if (error || !row) {
+    return {
+      ok: false,
+      error:
+        "This code is invalid, expired, or belongs to another email address.",
+    };
   }
   revalidatePath("/orgs");
   return { ok: true, slug: row.org_slug, name: row.org_name };

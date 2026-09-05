@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
+import { inviteOrganizationMember } from "@/lib/actions/district";
 import {
   getPlatformAdminUser,
   getSuperAdminUser,
@@ -31,6 +32,9 @@ import {
   type TournamentUpdateInput,
 } from "@/lib/validation/tournament";
 
+const SUPER_ADMIN_DISTRICT_MESSAGE =
+  "Creating a district is limited to founder super admins.";
+
 function revalidatePublicDiscovery() {
   for (const category of DISCOVERY_CATEGORIES) {
     revalidatePath(category.href);
@@ -47,6 +51,21 @@ const AdminOrgCreateSchema = z.object({
     .regex(/^[A-Z]{2}$/)
     .nullable()
     .or(z.literal("").transform(() => null)),
+});
+
+const AdminDistrictProvisionSchema = z.object({
+  name: z.string().trim().min(2, "Name the district.").max(80),
+  state: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{2}$/, "Pick the district's state."),
+  contactEmail: z
+    .string()
+    .trim()
+    .email("Enter the district contact's email address.")
+    .max(320),
+  contactName: z.string().trim().max(100).optional(),
 });
 
 const AdminStatusSchema = z.object({
@@ -561,6 +580,10 @@ export async function adminCreateOrganization(input: {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the form." };
   }
 
+  if (parsed.data.type === "district" && !(await getSuperAdminUser())) {
+    return { ok: false, error: SUPER_ADMIN_DISTRICT_MESSAGE };
+  }
+
   const base = slugifyName(parsed.data.name);
   if (!base) return { ok: false, error: "Name the organization." };
 
@@ -591,6 +614,108 @@ export async function adminCreateOrganization(input: {
   }
 
   return { ok: false, error: "That name is already in use." };
+}
+
+export type DistrictProvisionPack = {
+  id: string;
+  slug: string;
+  name: string;
+  invitation:
+    | {
+        email: string;
+        claimPath: string;
+        activationCode: string | null;
+        expiresAt: string;
+      }
+    | null;
+  /** Set when the district exists but its first invitation did not send. */
+  invitationError?: string;
+};
+
+/**
+ * One action for the whole handoff: create the district, invite its first
+ * district administrator, and return the claim link and typable code together
+ * so a signed contract can be turned into working access in a single step.
+ */
+export async function adminProvisionDistrict(input: {
+  name: string;
+  state: string;
+  contactEmail: string;
+  contactName?: string;
+}): Promise<ActionResult<DistrictProvisionPack>> {
+  const admin = await getSuperAdminUser();
+  if (!admin) return { ok: false, error: SUPER_ADMIN_DISTRICT_MESSAGE };
+
+  const parsed = AdminDistrictProvisionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the district details.",
+    };
+  }
+
+  const base = slugifyName(parsed.data.name);
+  if (!base) return { ok: false, error: "Name the district." };
+
+  const supabase = await createServerSupabaseClient();
+  let district: { id: string; slug: string } | null = null;
+  for (let attempt = 1; attempt <= 5 && !district; attempt += 1) {
+    const slug = attempt === 1 ? base : withSlugSuffix(base, attempt);
+    const { data, error } = await supabase
+      .from("organizations")
+      .insert({
+        name: parsed.data.name,
+        slug,
+        type: "district",
+        state: parsed.data.state,
+        created_by: admin.id,
+        owner_profile_id: admin.id,
+      })
+      .select("id, slug")
+      .single();
+
+    if (error) {
+      if (error.code === "23505") continue;
+      return { ok: false, error: "Could not create the district." };
+    }
+    district = data;
+  }
+  if (!district) return { ok: false, error: "That district name is already in use." };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/organizations");
+
+  const invitation = await inviteOrganizationMember({
+    orgId: district.id,
+    orgSlug: district.slug,
+    email: parsed.data.contactEmail,
+    displayName: parsed.data.contactName,
+    role: "district_admin",
+  });
+
+  if (!invitation.ok) {
+    return {
+      ok: true,
+      id: district.id,
+      slug: district.slug,
+      name: parsed.data.name,
+      invitation: null,
+      invitationError: invitation.error,
+    };
+  }
+
+  return {
+    ok: true,
+    id: district.id,
+    slug: district.slug,
+    name: parsed.data.name,
+    invitation: {
+      email: parsed.data.contactEmail,
+      claimPath: invitation.claimPath,
+      activationCode: invitation.activationCode,
+      expiresAt: invitation.expiresAt,
+    },
+  };
 }
 
 export async function adminCreateTournament(

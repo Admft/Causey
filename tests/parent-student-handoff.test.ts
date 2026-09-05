@@ -42,7 +42,8 @@ describe("parent → student separate-device handoff", () => {
   });
 
   it("keeps claim acceptance on the claim route for signed-in users", () => {
-    expect(signupPage).toContain("redirect(`/claim/${claimToken}`)");
+    expect(signupPage).toContain("isClaimPath && invitation && requestedPath");
+    expect(signupPage).toContain("redirect(requestedPath)");
   });
 
   it("tells already-signed-in visitors not to replace their session", () => {
