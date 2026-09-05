@@ -437,7 +437,7 @@ export const SearchFiltersSchema = z.object({
     .union([z.literal("1"), z.literal("true"), z.boolean()])
     .optional()
     .transform((v) => v === true || v === "1" || v === "true"),
-  /** Popular defaults to real saved/registration interest; soonest is explicit. */
+  /** Popular = save/registration interest; soonest = start date. */
   sort: SearchSortSchema.optional().default("popular"),
   /** Page size for tile loading. Defaults to 20; max 100. */
   limit: z.coerce.number().int().positive().max(100).optional(),

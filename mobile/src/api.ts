@@ -56,10 +56,13 @@ export async function causeyFetch(
     [key: string]: unknown;
   };
   if (!res.ok) {
-    throw new CauseyApiError(
-      json.error || "Something went wrong. Try again.",
-      res.status
-    );
+    const message =
+      typeof json.error === "string" && json.error
+        ? json.error
+        : res.status === 404
+          ? "This screen is not on the server this app is talking to."
+          : "Something went wrong. Try again.";
+    throw new CauseyApiError(message, res.status);
   }
   return json;
 }
@@ -84,4 +87,13 @@ export function formatDateRange(start: string, end: string | null): string {
   };
   if (!end || end === start) return fmt(start);
   return `${fmt(start)} – ${fmt(end)}`;
+}
+
+/** Month + day pair for the search-card date chip. */
+export function dateChipParts(start: string): { month: string; day: string } {
+  const [y, m, d] = start.split("-").map(Number);
+  const month = new Date(Date.UTC(y, m - 1, d))
+    .toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
+    .toUpperCase();
+  return { month, day: String(d) };
 }

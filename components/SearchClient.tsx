@@ -74,7 +74,7 @@ function readParams(params: URLSearchParams): SearchInputState {
     keyword: params.get("q") ?? "",
     zip: params.get("zip") ?? "",
     radius: params.get("radius") ?? "50",
-    sort: params.get("sort") === "soonest" ? "soonest" : "popular",
+    sort: parseSort(params.get("sort")),
     filters: {
       state: params.get("state") ?? "",
       source: params.get("source") ?? "",
@@ -128,6 +128,11 @@ function queryFromState(
 function parseTiming(raw: string | null): FilterState["timing"] {
   if (raw === "ended" || raw === "all" || raw === "upcoming") return raw;
   return "upcoming";
+}
+
+function parseSort(raw: string | null): SearchSort {
+  if (raw === "soonest") return raw;
+  return "popular";
 }
 
 export function SearchClient({

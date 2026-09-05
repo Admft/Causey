@@ -3,17 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
-import { isValidJoinCode } from "@/lib/org-codes";
+import { performJoinOrgWithCode } from "@/lib/join-write";
 import { canCreateOrg } from "@/lib/org-permissions";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 import { actionErrorMessage } from "@/lib/actions/errors";
-import {
-  RATE_LIMIT_MESSAGE,
-  consumeRateLimit,
-  hashedRequestActorKey,
-} from "@/lib/rate-limit";
 
 const OrgCreateSchema = z.object({
   name: z.string().trim().min(2, "Name your club or team.").max(80),
@@ -97,26 +92,11 @@ export async function joinOrgWithCode(
 ): Promise<ActionResult<{ slug: string; name: string }>> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: "Sign in to join an organization." };
-  if (!isValidJoinCode(code)) {
-    return { ok: false, error: "That code didn’t match an organization." };
-  }
-
-  const allowed = await consumeRateLimit(
-    "join_code",
-    await hashedRequestActorKey(user.id)
-  );
-  if (!allowed) return { ok: false, error: RATE_LIMIT_MESSAGE };
 
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.rpc("join_org_with_code", {
-    p_code: code,
-  });
-  if (error || !data?.length) {
-    return { ok: false, error: "That code didn’t match an organization." };
-  }
-
-  revalidatePath("/orgs");
-  return { ok: true, slug: data[0].org_slug, name: data[0].org_name };
+  const result = await performJoinOrgWithCode({ supabase, code });
+  if (result.ok) revalidatePath("/orgs");
+  return result;
 }
 
 export async function rotateJoinCode(

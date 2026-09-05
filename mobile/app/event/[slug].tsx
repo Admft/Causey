@@ -4,7 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, Share, StyleSheet, Text, View } from "react-native";
 import { causeyFetch, formatDateRange, formatFeeCents } from "../../src/api";
 import { addTournamentToCalendar } from "../../src/calendar";
+import { categoryLabel } from "../../src/categories";
+import { ClubGoingCard } from "../../src/ClubGoingCard";
+import { EventPathways } from "../../src/EventPathways";
 import { feedback } from "../../src/haptics";
+import { SaveEventButton } from "../../src/SaveEventButton";
 import { siteUrl } from "../../src/theme";
 import {
   Card,
@@ -19,8 +23,10 @@ import {
 } from "../../src/ui";
 
 type Competition = {
+  id: string;
   slug: string;
   name: string;
+  category: string;
   organizer_name: string | null;
   venue_name: string | null;
   address: string | null;
@@ -32,6 +38,8 @@ type Competition = {
   reg_url: string | null;
   entry_fee_cents: number | null;
   rated: boolean;
+  pathway_status?: string | null;
+  pathway_summary?: string | null;
 };
 
 function placeLine(event: Competition): string {
@@ -51,6 +59,7 @@ function calendarLocation(event: Competition): string | null {
 export default function EventScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [event, setEvent] = useState<Competition | null>(null);
+  const [unlocks, setUnlocks] = useState<unknown[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [addingToCalendar, setAddingToCalendar] = useState(false);
 
@@ -60,8 +69,10 @@ export default function EventScreen() {
     try {
       const data = (await causeyFetch(`/api/competitions/${slug}`)) as {
         competition: Competition;
+        unlocks?: unknown[];
       };
       setEvent(data.competition);
+      setUnlocks(Array.isArray(data.unlocks) ? data.unlocks : []);
     } catch (err) {
       setError(
         err instanceof Error
@@ -124,7 +135,7 @@ export default function EventScreen() {
 
   return (
     <Screen header>
-      <Kicker>Chess</Kicker>
+      <Kicker>{categoryLabel(event.category)}</Kicker>
       <Title>{event.name}</Title>
       <Meta>{formatDateRange(event.start_date, event.end_date)}</Meta>
       {place ? <Meta>{place}</Meta> : null}
@@ -137,7 +148,9 @@ export default function EventScreen() {
           Registration closes {formatDateRange(event.reg_deadline, null)}
         </Meta>
       ) : null}
-      {event.rated ? <Meta>US Chess rated</Meta> : null}
+      {event.rated && event.category === "chess" ? (
+        <Meta>US Chess rated</Meta>
+      ) : null}
 
       <PrimaryButton
         label="Add to calendar"
@@ -145,6 +158,7 @@ export default function EventScreen() {
         busy={addingToCalendar}
       />
       <SecondaryButton label="Share tournament" onPress={onShare} />
+      <SaveEventButton competitionId={event.id} initiallySaved={false} />
       {event.reg_url ? (
         <SecondaryButton
           label="Open organizer registration"
@@ -152,12 +166,20 @@ export default function EventScreen() {
         />
       ) : null}
 
+      <ClubGoingCard competitionId={event.id} />
+      <EventPathways
+        unlocks={unlocks}
+        pathwayStatus={event.pathway_status}
+        pathwaySummary={event.pathway_summary}
+      />
+
       <Card>
         <View>
           <Text style={styles.noteHeading}>Before you travel</Text>
           <Meta>
-            Causey&apos;s chess coverage is incomplete and listings can change.
-            Confirm dates, sections, and fees with the organizer.
+            Causey&apos;s {categoryLabel(event.category)} coverage is incomplete
+            and listings can change. Confirm dates, sections, and fees with the
+            organizer.
             {event.reg_url
               ? " Registration is completed on the organizer's site, not in Causey."
               : ""}

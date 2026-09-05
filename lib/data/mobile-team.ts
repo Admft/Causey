@@ -27,6 +27,7 @@ export type MobileTeamEvent = {
 export type MobileTeam = {
   orgs: MobileTeamOrg[];
   events: MobileTeamEvent[];
+  past_events: MobileTeamEvent[];
 };
 
 type CompetitionRow = {
@@ -44,10 +45,42 @@ type CompetitionRow = {
 /** Statuses a coach can still work on the day of; archived and rejected cannot. */
 const WORKABLE = new Set(["draft", "pending_review", "published"]);
 
+const PAST_WINDOW_DAYS = 90;
+const PAST_LIMIT = 20;
+
+const EMPTY_TEAM: MobileTeam = { orgs: [], events: [], past_events: [] };
+
+function isoDaysBefore(todayIso: string, days: number): string {
+  const [year, month, day] = todayIso.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+function toTeamEvent(
+  row: CompetitionRow,
+  relation: "hosted" | "travel",
+  orgId: string | null,
+  orgNameById: Map<string, string>
+): MobileTeamEvent {
+  return {
+    competition_id: row.id,
+    slug: row.slug,
+    name: row.name,
+    city: row.city,
+    state: row.state,
+    start_date: row.start_date,
+    end_date: row.end_date,
+    relation,
+    org_name: orgNameById.get(orgId ?? "") ?? "Your organization",
+  };
+}
+
 /**
- * Coach home on the phone: the organizations this account actually staffs and
- * the upcoming events those organizations host or travel to. Everything a coach
- * does at a desk — invites, CSV, settings, reports — stays on the website.
+ * Coach home on the phone: the organizations this account actually staffs,
+ * upcoming hosted/travel events, and recent past events so attendance and
+ * results can still be recorded. Desk work — invites, CSV, settings, reports
+ * — stays on the website.
  */
 export async function getMobileTeam(
   userId: string,
@@ -56,7 +89,7 @@ export async function getMobileTeam(
 ): Promise<MobileTeam> {
   const memberships = await getMyOrgs(userId, supabase);
   const staffed = memberships.filter((row) => row.isCoach);
-  if (!staffed.length) return { orgs: [], events: [] };
+  if (!staffed.length) return EMPTY_TEAM;
 
   const orgs: MobileTeamOrg[] = staffed.map((row) => ({
     id: row.org.id,
@@ -67,6 +100,7 @@ export async function getMobileTeam(
   }));
   const orgNameById = new Map(orgs.map((org) => [org.id, org.name]));
   const orgIds = orgs.map((org) => org.id);
+  const pastCutoff = isoDaysBefore(todayIso, PAST_WINDOW_DAYS);
 
   const [hostedRes, travelRes] = await Promise.all([
     supabase
@@ -84,40 +118,35 @@ export async function getMobileTeam(
   ]);
 
   const events = new Map<string, MobileTeamEvent>();
+  const pastEvents = new Map<string, MobileTeamEvent>();
+
+  const consider = (
+    row: CompetitionRow,
+    relation: "hosted" | "travel",
+    orgId: string | null
+  ) => {
+    if (!WORKABLE.has(row.status)) return;
+    if (relation === "travel" && (events.has(row.id) || pastEvents.has(row.id))) {
+      return;
+    }
+    const item = toTeamEvent(row, relation, orgId, orgNameById);
+    if (isUpcomingEvent(row, todayIso)) {
+      events.set(row.id, item);
+      return;
+    }
+    const lastDay = row.end_date ?? row.start_date;
+    if (lastDay < pastCutoff) return;
+    pastEvents.set(row.id, item);
+  };
 
   for (const row of (hostedRes.data ?? []) as CompetitionRow[]) {
-    if (!WORKABLE.has(row.status)) continue;
-    if (!isUpcomingEvent(row, todayIso)) continue;
-    events.set(row.id, {
-      competition_id: row.id,
-      slug: row.slug,
-      name: row.name,
-      city: row.city,
-      state: row.state,
-      start_date: row.start_date,
-      end_date: row.end_date,
-      relation: "hosted",
-      org_name: orgNameById.get(row.org_id ?? "") ?? "Your organization",
-    });
+    consider(row, "hosted", row.org_id);
   }
 
   for (const row of travelRes.data ?? []) {
     const competition = row.competitions as unknown as CompetitionRow | null;
-    if (!competition || !WORKABLE.has(competition.status)) continue;
-    if (!isUpcomingEvent(competition, todayIso)) continue;
-    // A hosted row already carries the stronger relation; don't downgrade it.
-    if (events.has(competition.id)) continue;
-    events.set(competition.id, {
-      competition_id: competition.id,
-      slug: competition.slug,
-      name: competition.name,
-      city: competition.city,
-      state: competition.state,
-      start_date: competition.start_date,
-      end_date: competition.end_date,
-      relation: "travel",
-      org_name: orgNameById.get(row.org_id as string) ?? "Your organization",
-    });
+    if (!competition) continue;
+    consider(competition, "travel", row.org_id as string);
   }
 
   return {
@@ -125,5 +154,8 @@ export async function getMobileTeam(
     events: [...events.values()].sort((a, b) =>
       a.start_date.localeCompare(b.start_date)
     ),
+    past_events: [...pastEvents.values()]
+      .sort((a, b) => b.start_date.localeCompare(a.start_date))
+      .slice(0, PAST_LIMIT),
   };
 }

@@ -18,6 +18,10 @@ import {
   parseCompetitionRow,
   sortCompetitionResults,
 } from "@/lib/data/search";
+import {
+  isDiscoveryCategory,
+  PUBLIC_DISCOVERY_CATEGORY_IDS,
+} from "@/lib/category-discovery";
 import { competitionIsFeatured } from "@/lib/event-standing";
 import { todayIsoDate } from "@/lib/competition-timing";
 import type {
@@ -184,6 +188,7 @@ export class SupabaseDataSource implements DataSource {
       .eq("status", "published");
 
     if (filters.category) query = query.eq("category", filters.category);
+    else query = query.in("category", [...PUBLIC_DISCOVERY_CATEGORY_IDS]);
     if (filters.q) {
       query = query.ilike("name", `%${escapePostgrestLikePattern(filters.q)}%`);
     }
@@ -227,6 +232,10 @@ export class SupabaseDataSource implements DataSource {
       : null;
     if (preferredQuery && filters.category) {
       preferredQuery = preferredQuery.eq("category", filters.category);
+    } else if (preferredQuery) {
+      preferredQuery = preferredQuery.in("category", [
+        ...PUBLIC_DISCOVERY_CATEGORY_IDS,
+      ]);
     }
     if (preferredQuery && filters.state) {
       preferredQuery = preferredQuery.eq("state", filters.state);
@@ -406,6 +415,9 @@ export class SupabaseDataSource implements DataSource {
       if (!row) continue;
       const parsed = parseCompetitionRow(row);
       if (!parsed) continue;
+      if (!filters.category && !isDiscoveryCategory(parsed.competition.category)) {
+        continue;
+      }
 
       if (clubGoingIds && !clubGoingIds.has(parsed.competition.id)) {
         continue;

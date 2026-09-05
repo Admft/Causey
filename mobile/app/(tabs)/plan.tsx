@@ -166,8 +166,8 @@ function PlanDesk() {
 
       {data && !upcoming.length ? (
         <Lede>
-          Nothing on your calendar yet. Use the Search tab to find a chess
-          tournament, or wait for a coach invitation.
+          Nothing on your calendar yet. Use the Search tab to find a tournament,
+          or wait for a coach invitation.
         </Lede>
       ) : null}
 

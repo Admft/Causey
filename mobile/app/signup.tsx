@@ -90,8 +90,9 @@ export default function SignupScreen() {
         <Kicker>Create account</Kicker>
         <Title>Join Causey</Title>
         <Lede>
-          The app is for parents, guardians, and coaches, ages 13 and up.
-          Students join through a coach or parent on the website.
+          Parents and coaches create an account here. Students 13 or older
+          create a student account on the website — that form asks for a date of
+          birth, which this app never collects. Under 13, a parent uses this app.
         </Lede>
         <ChoiceRow
           label="I am a"
@@ -143,6 +144,10 @@ export default function SignupScreen() {
           onPress={onSubmit}
           busy={busy}
           disabled={!canSubmit}
+        />
+        <LinkButton
+          label="Create a student account (13+) on the website"
+          onPress={() => Linking.openURL(`${siteUrl}/signup?role=student`)}
         />
         <Card>
           <Meta>

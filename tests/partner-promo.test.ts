@@ -48,6 +48,17 @@ describe("chess nationals placement", () => {
     expect(slot).not.toContain("isFeaturedStanding");
     expect(slot).not.toContain("Official US Chess");
     expect(slot).not.toContain("endorsed");
+    expect(slot).not.toContain("Local and weekend");
+    expect(slot).not.toContain("partner-promo-ladder");
+  });
+
+  it("ships the same pin on the phone chess search", () => {
+    const search = read("mobile/app/(tabs)/search.tsx");
+    const copy = read("mobile/src/chess-nationals.ts");
+    expect(search).toContain("ChessNationalsPin");
+    expect(copy).toContain("Get your kid to chess nationals");
+    expect(copy).toContain("See the pathways");
+    expect(copy).toMatch(/not an official US Chess ruling/i);
   });
 
   it("opens pathways on the same nationals promise with illustrative rules", () => {

@@ -165,12 +165,12 @@ describe("App Store readiness", () => {
   ];
 
   it("keeps sign-in, sign-up, and password reset inside the app", () => {
-    // Guideline 4: sending a reviewer to Safari to create an account is the
-    // single most common rejection for a companion app. Trust documents are
-    // allowed to open in a browser; account actions are not.
+    // Guideline 4: sending a reviewer to Safari to create a parent or coach
+    // account is a common rejection. Trust documents may open in a browser.
+    // 13+ student signup is the exception: it needs a date of birth, which
+    // the phone never collects, so that form stays on the website.
     const WEB_ACCOUNT_PATHS = [
       "/login",
-      "/signup",
       "/forgot-password",
       "/reset-password",
       "/account",
@@ -180,6 +180,8 @@ describe("App Store readiness", () => {
       for (const path of WEB_ACCOUNT_PATHS) {
         expect(source).not.toContain(`siteUrl}${path}`);
       }
+      expect(source).not.toContain("siteUrl}/signup`");
+      expect(source).not.toContain('siteUrl}/signup"');
     }
     expect(read("mobile/app/login.tsx")).toContain('router.push("/signup")');
     expect(read("mobile/app/login.tsx")).toContain(
@@ -189,9 +191,14 @@ describe("App Store readiness", () => {
     expect(read("mobile/src/auth.tsx")).toContain("resetPasswordForEmail");
   });
 
-  it("never asks for a birth date on a phone and only signs up adults", () => {
-    expect(read("mobile/app/signup.tsx")).not.toContain("date_of_birth");
-    expect(read("mobile/app/signup.tsx")).not.toContain('"student"');
+  it("never asks for a birth date on a phone and only signs up adults in-app", () => {
+    const signup = read("mobile/app/signup.tsx");
+    expect(signup).not.toContain("date_of_birth");
+    expect(signup).not.toContain('value: "student"');
+    expect(signup).toContain("/signup?role=student");
+    expect(signup).toContain("Create a student account (13+) on the website");
+    expect(read("mobile/app/login.tsx")).toContain("/signup?role=student");
+    expect(read("mobile/app/(tabs)/me.tsx")).toContain("/signup?role=student");
     expect(read("mobile/src/auth.tsx")).toContain("date_of_birth: null");
     expect(read("mobile/src/auth.tsx")).toContain("age_band: null");
     expect(read("mobile/src/auth.tsx")).toContain(
@@ -271,9 +278,11 @@ describe("App Store readiness", () => {
     const api = read("mobile/src/api.ts");
     expect(api).toContain("AbortController");
     expect(api).toContain("TIMEOUT_MS");
+    expect(api).toContain("res.status === 404");
+    expect(api).toContain("This screen is not on the server this app is talking to.");
     // The Search tab must show results on open, not an empty form.
     expect(read("mobile/app/(tabs)/search.tsx")).toContain("useEffect");
-    expect(read("mobile/app/(tabs)/search.tsx")).toContain("No upcoming chess");
+    expect(read("mobile/src/categories.ts")).toContain("No upcoming chess");
     expect(read("mobile/src/ui.tsx")).toContain("SafeAreaView");
     expect(read("mobile/app/login.tsx")).not.toContain("paddingTop: 80");
   });
@@ -350,6 +359,37 @@ describe("every signed-in role has a home", () => {
     // Login is no longer the forced entry point, so it needs a way back out.
     expect(read("mobile/app/login.tsx")).toContain(
       "Browse tournaments without an account"
+    );
+  });
+
+  it("searches each public directory with Soonest and Popular sorts", () => {
+    const search = read("mobile/app/(tabs)/search.tsx");
+    expect(search).toContain("CategoryTileGrid");
+    expect(search).toContain("CATEGORY_MARKS");
+    expect(search).toContain('useState<DiscoveryCategoryId>("chess")');
+    expect(search).toContain('useState<Sort>("soonest")');
+    expect(search).toContain('label: "Soonest"');
+    expect(search).toContain('label: "Popular"');
+    expect(search).not.toContain("Official first");
+    expect(search).not.toContain('"official"');
+    expect(search).toContain("sort: nextSort");
+    expect(search).toContain("category: nextCategory");
+    expect(search).toContain('params.set("q", name)');
+    expect(search).toContain('label: "Pathways"');
+    expect(search).toContain("ChessNationalsPin");
+    expect(search).toContain("PathwayExplorer");
+    expect(search).toContain("styles.grid");
+    expect(search).not.toContain("All types");
+    expect(search).not.toContain('value: "all", label: "All types"');
+    const categories = read("mobile/src/categories.ts");
+    for (const id of ["chess", "debate", "stem", "arts", "writing"]) {
+      expect(categories).toContain(`id: "${id}"`);
+    }
+    expect(categories).toContain("emptyUpcoming");
+    expect(categories).not.toContain("ALL_TYPES");
+    expect(read("mobile/app/event/[slug].tsx")).toContain("categoryLabel");
+    expect(read("mobile/app/event/[slug].tsx")).not.toContain(
+      "<Kicker>Chess</Kicker>"
     );
   });
 

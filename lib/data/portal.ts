@@ -847,6 +847,23 @@ export async function getRatingSummary(
 }
 
 export type ClubGoingGroup = { org_name: string; names: string[] };
+export type ClubGoingRow = { org_name: string; display_name: string };
+
+/** Fold `get_club_going` rows into org groups with sorted display names. */
+export function groupClubGoingRows(
+  data: ClubGoingRow[] | null | undefined
+): ClubGoingGroup[] {
+  const groups = new Map<string, string[]>();
+  for (const row of data ?? []) {
+    const list = groups.get(row.org_name) ?? [];
+    list.push(row.display_name || "Unnamed student");
+    groups.set(row.org_name, list);
+  }
+  return [...groups.entries()].map(([org_name, names]) => ({
+    org_name,
+    names: names.sort(),
+  }));
+}
 
 /** Teammates from the viewer's orgs who RSVP'd going, grouped by org. */
 export async function getClubGoing(
@@ -857,16 +874,7 @@ export async function getClubGoing(
     p_competition_id: competitionId,
   });
   if (error) return [];
-  const groups = new Map<string, string[]>();
-  for (const row of (data ?? []) as { org_name: string; display_name: string }[]) {
-    const list = groups.get(row.org_name) ?? [];
-    list.push(row.display_name || "Unnamed student");
-    groups.set(row.org_name, list);
-  }
-  return [...groups.entries()].map(([org_name, names]) => ({
-    org_name,
-    names: names.sort(),
-  }));
+  return groupClubGoingRows(data as ClubGoingRow[] | null);
 }
 
 export type CoachOrgAttendance = {

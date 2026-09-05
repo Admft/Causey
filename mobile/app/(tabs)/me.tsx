@@ -50,8 +50,9 @@ export default function MeScreen() {
         <Kicker>Account</Kicker>
         <Title>You&apos;re browsing as a guest</Title>
         <Lede>
-          Tournament search works without an account. Sign in to answer RSVPs
-          for your students, open a roster, or take attendance.
+          Tournament search works without an account. Sign in to answer RSVPs,
+          open My tournaments, or take attendance. Students 13 or older create
+          their account on the website, then sign in here.
         </Lede>
         <PrimaryButton
           label="Sign in"
@@ -60,6 +61,10 @@ export default function MeScreen() {
         <SecondaryButton
           label="Create a parent or coach account"
           onPress={() => router.push("/signup")}
+        />
+        <LinkButton
+          label="Create a student account (13+) on the website"
+          onPress={() => Linking.openURL(`${siteUrl}/signup?role=student`)}
         />
         <TrustLinks />
       </Screen>
@@ -72,6 +77,23 @@ export default function MeScreen() {
       <Title>{profile?.display_name ?? "Signed in"}</Title>
       {profile?.email ? <Meta>{profile.email}</Meta> : null}
       <Meta>{ROLE_LABEL[profile?.role ?? ""] ?? "Signed in"}</Meta>
+
+      <LinkButton
+        label="Alerts"
+        onPress={() => router.push("/alerts")}
+      />
+      <LinkButton
+        label="Your organizations"
+        onPress={() => router.push("/orgs")}
+      />
+      <LinkButton
+        label="Enter a join code"
+        onPress={() => router.push("/join")}
+      />
+      <LinkButton
+        label="Saved listings"
+        onPress={() => router.push("/saved")}
+      />
 
       <TrustLinks />
       <LinkButton

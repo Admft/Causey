@@ -4,9 +4,11 @@ export const colors = {
   muted: "#5a6570",
   mutedStrong: "#3a4450",
   surface: "#ffffff",
+  surfaceSoft: "#eef3f7",
   line: "rgba(20, 24, 28, 0.1)",
   brandRed: "#c23b32",
   brandRedHover: "#a8322a",
+  accentSoft: "#f8e8e6",
   fieldBorder: "rgba(20, 24, 28, 0.14)",
   error: "#dc2626",
 } as const;

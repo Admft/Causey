@@ -4,6 +4,7 @@ import seriesJson from "@/data/seed/series.json";
 import rulesJson from "@/data/seed/qualification_rules.json";
 import zipsJson from "@/data/zips.sample.json";
 
+import { isDiscoveryCategory } from "@/lib/category-discovery";
 import {
   CompetitionSchema,
   QualificationRuleSchema,
@@ -62,6 +63,7 @@ export class MockDataSource implements DataSource {
     for (const c of competitions) {
       if (c.status !== "published") continue;
       if (filters.category && c.category !== filters.category) continue;
+      if (!filters.category && !isDiscoveryCategory(c.category)) continue;
       if (filters.q && !c.name.toLowerCase().includes(filters.q.trim().toLowerCase())) continue;
       if (filters.state && c.state !== filters.state) continue;
       if (filters.source && c.source !== filters.source) continue;

@@ -24,7 +24,15 @@ export default function RootLayout() {
             name="attendance/[competitionId]"
             options={{ title: "Attendance" }}
           />
+          <Stack.Screen
+            name="results/[competitionId]"
+            options={{ title: "Results" }}
+          />
           <Stack.Screen name="roster/[orgId]" options={{ title: "Roster" }} />
+          <Stack.Screen name="saved" options={{ title: "Saved listings" }} />
+          <Stack.Screen name="orgs" options={{ title: "Organizations" }} />
+          <Stack.Screen name="join" options={{ title: "Join" }} />
+          <Stack.Screen name="alerts" options={{ title: "Alerts" }} />
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="signup" options={{ title: "Create account" }} />
           <Stack.Screen

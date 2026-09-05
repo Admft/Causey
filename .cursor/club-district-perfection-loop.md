@@ -30,10 +30,14 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Signup password strength meter; reject weak new passwords — 2026-09-05
+- Phone Search: chess nationals pin + Pathways tool, category-mark grid, two-column results — 2026-09-05
 
 ## Last tick
 
+- 2026-09-05 — Phone Search matches website discovery: category-mark 3+2 tiles, two-column results, chess nationals pin, Chess Pathways tool on `GET /api/pathways`.
+- 2026-09-05 — Phone `/orgs` lists the signed-in account’s clubs, teams, schools, and districts (`GET /api/mobile/orgs`, same `getMyOrgs` as the website). Coaches with a roster open `/roster/[orgId]`. No create, settings, CSV, or public directory. District offices have `has_roster: false`.
+- 2026-09-05 — Phone event screen can show the same “going from your club or school” groups as the website (`get_club_going` via `/api/mobile/club-going` + `ClubGoingCard`). Unsigned stays quiet; empty groups are not an error.
+- 2026-09-05 — Phone Search covers all five public directories (not chess-only), with Upcoming/All and honest empty copy per type.
 - 2026-09-05 — New passwords on signup, reset, and account change show a strength bar and reject weak strings (8+ mixed case and a number, or a long passphrase). Login is unchanged.
 - 2026-09-05 — Parents can mark a linked student Going on a public event without a club/school invite. Family shows that status. Save is a bookmark. Organizer-site RSVPs are still Mark complete (`0080`).
 - 2026-09-05 — Parent recommend and coach roster invite no longer trust an empty upsert body. Recommendations write Alerts + show on Plan (`0079` backfill). Invites re-read invited rows, then fan out student and parent Alerts.

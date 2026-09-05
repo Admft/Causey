@@ -196,6 +196,48 @@ export function LinkButton({
   );
 }
 
+export function ChipRow<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (next: T) => void;
+}) {
+  return (
+    <View style={styles.fieldGroup} accessibilityRole="radiogroup">
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.chipRow}>
+        {options.map((option) => {
+          const selected = option.value === value;
+          return (
+            <Pressable
+              key={option.value}
+              onPress={() => onChange(option.value)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
+              accessibilityLabel={option.label}
+              style={[styles.chip, selected && styles.choiceSelected]}
+            >
+              <Text
+                style={[
+                  styles.chipLabel,
+                  selected && styles.choiceLabelSelected,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 export function ChoiceRow<T extends string>({
   label,
   options,
@@ -348,6 +390,23 @@ const styles = StyleSheet.create({
   },
   linkCenter: { alignItems: "center" },
   link: { color: colors.brandRed, fontWeight: "700", fontSize: 15 },
+  chipRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    minHeight: TAP_TARGET,
+    borderWidth: 1,
+    borderColor: colors.fieldBorder,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: "center",
+  },
+  chipLabel: { fontSize: 14, fontWeight: "700", color: colors.foreground },
   choiceRow: { marginTop: 8, gap: 10 },
   choice: {
     borderWidth: 1,
@@ -358,7 +417,7 @@ const styles = StyleSheet.create({
   },
   choiceSelected: {
     borderColor: colors.brandRed,
-    backgroundColor: "#f8e8e6",
+    backgroundColor: colors.accentSoft,
   },
   choiceLabel: { fontSize: 15, fontWeight: "700", color: colors.foreground },
   choiceLabelSelected: { color: colors.brandRed },
