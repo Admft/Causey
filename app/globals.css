@@ -257,6 +257,68 @@ textarea.field {
   color: var(--brand-red);
 }
 
+/* Chess (and later partner) pin above results — labeled placement, not ranking. */
+.partner-promo {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-2xl);
+  background: var(--brand-red);
+  color: #ffffff;
+  box-shadow: var(--shadow-cta);
+  text-decoration: none;
+  transition: background-color 200ms var(--ease-brand);
+}
+.partner-promo:hover {
+  background: var(--brand-red-hover);
+}
+.partner-promo:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+}
+.partner-promo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  z-index: 0;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    color-mix(in srgb, #ffffff 80%, transparent) 42%,
+    color-mix(in srgb, #ffffff 55%, transparent) 50%,
+    transparent 100%
+  );
+  animation: search-shine 1100ms var(--ease-brand) 180ms both;
+}
+.partner-promo-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-xl);
+  background: #ffffff;
+  color: var(--brand-red);
+  font-weight: 700;
+  font-size: var(--text-base);
+}
+@media (width >= 40rem) {
+  .partner-promo-cta {
+    width: auto;
+  }
+}
+.partner-promo:hover .partner-promo-cta,
+.partner-promo:focus-visible .partner-promo-cta {
+  background: var(--accent-soft);
+  color: var(--brand-red-hover);
+}
+
 /* Compact page-back control — design system §8.4 (nav outline). Shorter than
    .cta-outline so it does not compete with the page’s primary action. */
 .page-back {
@@ -806,6 +868,7 @@ textarea.field {
 @media (prefers-reduced-motion: reduce) {
   .cta-enabled,
   .cta-outline,
+  .partner-promo,
   .page-back,
   .skip-link,
   .card-lift,
@@ -833,7 +896,8 @@ textarea.field {
   .home-hero-search.is-search-attention,
   .home-hero-search.is-search-attention::before,
   .home-hero-cue,
-  .cta-sheen.is-cta-attention::before {
+  .cta-sheen.is-cta-attention::before,
+  .partner-promo::before {
     animation: none;
   }
   .home-featured-rail[data-hint] > ul {

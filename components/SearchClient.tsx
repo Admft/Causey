@@ -22,11 +22,13 @@ import {
   type ResultsLayout,
 } from "@/components/ResultsLayoutToggle";
 import { SearchHeroGraphic } from "@/components/ChessHeroGraphic";
+import { PartnerPromoSlot } from "@/components/PartnerPromoSlot";
 import {
   discoveryCategory,
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
+import { partnerPromoForCategory } from "@/lib/partner-promos";
 
 /**
  * The whole search experience: zip + radius up top, filter rail, results.
@@ -155,6 +157,7 @@ export function SearchClient({
   const [pageSize, setPageSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const [layout, setLayout] = useState<ResultsLayout>("grid2");
 
   const applyZip = useCallback(() => {
@@ -287,7 +290,7 @@ export function SearchClient({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [buildApiParams, pageSize]);
+  }, [buildApiParams, pageSize, retryNonce]);
 
   const loadMore = useCallback(async () => {
     if (status.kind !== "ready" || loadingMore) return;
@@ -325,6 +328,7 @@ export function SearchClient({
   const shown = status.kind === "ready" ? status.results.length : 0;
   const total = status.kind === "ready" ? status.total : 0;
   const hasMore = status.kind === "ready" && shown < total;
+  const partnerPromo = partnerPromoForCategory(category);
 
   return (
     <>
@@ -459,6 +463,8 @@ export function SearchClient({
               clubGoingLabel={clubGoingLabel}
             />
 
+            {partnerPromo ? <PartnerPromoSlot promo={partnerPromo} /> : null}
+
             {status.kind === "loading" && (
               <div className={resultsGridClass(layout)} aria-label="Loading results">
                 {Array.from({ length: layout === "grid3" ? 9 : layout === "list" ? 5 : 6 }, (_, i) => (
@@ -480,6 +486,13 @@ export function SearchClient({
                 <p role="alert" className="mt-1 max-w-prose text-sm text-error">
                   {status.message}
                 </p>
+                <button
+                  type="button"
+                  className="cta-enabled mt-3"
+                  onClick={() => setRetryNonce((n) => n + 1)}
+                >
+                  Try search again
+                </button>
               </div>
             )}
 

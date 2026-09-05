@@ -42,6 +42,8 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Create-club chrome: Club/Team copy, no School type, no “organization” H1 after `/clubs` — 2026-09-02
 - [x] Competitions tab lists travel events the club marked as attending — 2026-09-02
 - [x] Club/team People does not offer School administrator — 2026-09-02
+- [x] Finding tournaments no longer shows “too often” when the limiter RPC errors or a signed-in search sent a `user:` key `0069` rejects — 2026-09-04
+- [x] Host a competition preview shows the real search card and event-page start (not a fact dump) — 2026-09-04
 - [x] Host a competition requires type plus a visible discipline chip (same catalog as search); no silent chess default — 2026-09-04
 - [x] Club SaaS billing layout (Stripe Checkout, invoices, dunning, entitlements) at local `/billing` — 2026-09-03; checkout not connected, not on Vercel
 - [ ] Owner/legal: public club directory, student dues, messaging — see skill `out-of-scope.md`

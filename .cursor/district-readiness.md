@@ -120,9 +120,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 12. **P1 · Guardian linking was silent and one-way · M · shipped 2026-09-04**  
    Surface: student Plan/Account family rows are direction-aware and carry an "Ask a parent to link" form with a copyable parent-signup handoff; `/family#requests` gives the parent an inbox for student-opened requests. `0075` adds `household_links.requested_by`, so the participant who opened a request can never accept it — enforced in both the update policy and the new `respond_to_household_link` RPC. Both directions notify the other side, and acceptance notifies whoever asked. A parent still cannot confirm a student exists by guessing an email; a student-opened request is the only case where a pending counterpart becomes visible, because the student is disclosing their own name. `0075` also allowlists the `comment` and `geo` rate-limit buckets `0062` omitted.
 
+13. **P4 · Chess federation pin was missing · M · shipped 2026-09-05**  
+   Surface: `/chess` results and the homepage chess rail now have a labeled “Get your kid to chess nationals” placement into `/pathways`. Uses seeded Denker/Barber/Rockefeller/Haring chains. Not an official US Chess ruling; swap copy when they send written pathway info.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0075` in each environment (`0074` and `0075` are both hard gates — see the runbook). Then the P5 staff team-entry path: coaches and school admins marking a student as going, audited as staff-entered, with the student and linked parents notified. Defer to owner/legal gates — do not invent FERPA/price UI.
+Ops proof of email at school volume, and apply migrations through `0075` in each environment (`0074` and `0075` are both hard gates — see the runbook). Then the P5 staff team-entry path: coaches and school admins marking a student as going, audited as staff-entered, with the student and linked parents notified. Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
 
 ### Out-of-scope refusals this pass
 

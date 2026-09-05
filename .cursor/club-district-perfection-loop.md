@@ -30,10 +30,13 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Host competition: required type + discipline chips (search catalog); create/preview layout lead with what it is — 2026-09-04
+- P4: chess nationals pin above chess search → `/pathways` — 2026-09-05
 
 ## Last tick
 
+- 2026-09-05 — Chess search and the homepage chess rail pin a labeled “Get your kid to chess nationals” placement above the list; click opens `/pathways` on the current seeded chains (not an official US Chess ruling).
+- 2026-09-04 — Tournament search: limiter RPC errors no longer 429 as “too often”; search/geo fail open; actor key is always hashed IP plus cookie JWT.
+- 2026-09-04 — Host create preview: search card and event-page start (same CompetitionCard / event hero), not a fact dump.
 - 2026-09-04 — Host a competition: type tiles with category marks, required discipline/format/genre chips, no silent chess default on draft or publish.
 - 2026-09-04 — Platform admin account stats filter the directory: Total accounts → every account, Platform admins → `/admin/users?access=admins` (`0073`).
 - 2026-09-03 — P3 remaining: `/billing` shows entitlements, unpublished invoices, and dunning; `/portals` is a local custom-host preview (UUID bind, fail-closed unknown host). Privacy/Terms name Vercel, Supabase, Resend, Sentry, OpenAI, and GitHub Actions; club subscription is not in force. Skip-to-content; nested `<main>` removed; footer legal nav. Still no Stripe SDK, no pairings/dues/DMs, no DPA or VPAT.

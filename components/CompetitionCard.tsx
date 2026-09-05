@@ -67,14 +67,42 @@ function DateChip({ start, small }: { start: string; small?: boolean }) {
   );
 }
 
+function CardFrame({
+  preview,
+  slug,
+  className,
+  children,
+}: {
+  preview: boolean;
+  slug: string;
+  className: string;
+  children: ReactNode;
+}) {
+  if (preview) {
+    return (
+      <article aria-label="Search listing preview" className={className}>
+        {children}
+      </article>
+    );
+  }
+  return (
+    <Link href={`/event/${slug}`} className={className}>
+      {children}
+    </Link>
+  );
+}
+
 export function CompetitionCard({
   result,
   layout = "grid2",
   sourceFallback = true,
+  preview = false,
 }: {
   result: CompetitionResult;
   layout?: ResultsLayout;
   sourceFallback?: boolean;
+  /** Render as a non-link sample of the search card (host create/preview). */
+  preview?: boolean;
 }) {
   const anyFilterActive = result.matching_section_ids.length !== result.sections.length;
   const compact = layout === "grid3";
@@ -134,8 +162,9 @@ export function CompetitionCard({
 
   if (list) {
     return (
-      <Link
-        href={`/event/${result.slug}`}
+      <CardFrame
+        preview={preview}
+        slug={result.slug}
         className={`card-lift relative flex flex-col gap-3 rounded-xl border bg-surface p-3 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:gap-4 ${
           organizationLabel ? "border-org-gold" : "border-line"
         }`}
@@ -185,7 +214,7 @@ export function CompetitionCard({
             </div>
           </div>
         </div>
-      </Link>
+      </CardFrame>
     );
   }
 
@@ -204,8 +233,9 @@ export function CompetitionCard({
   }
 
   return (
-    <Link
-      href={`/event/${result.slug}`}
+    <CardFrame
+      preview={preview}
+      slug={result.slug}
       className={`card-lift relative flex h-full flex-col overflow-hidden rounded-2xl border bg-surface shadow-[var(--shadow-card)] ${
         organizationLabel ? "border-org-gold" : "border-line"
       }`}
@@ -278,6 +308,6 @@ export function CompetitionCard({
           </div>
         </div>
       </div>
-    </Link>
+    </CardFrame>
   );
 }

@@ -1,7 +1,9 @@
 import { CompetitionCard } from "@/components/CompetitionCard";
 import { HomeFeaturedRail } from "@/components/HomeFeaturedRail";
 import { HomeFeaturedSeeMore } from "@/components/HomeFeaturedSeeMore";
+import { PartnerPromoSlot } from "@/components/PartnerPromoSlot";
 import type { HomeFeaturedResult } from "@/lib/data/home-featured";
+import { partnerPromoForCategory } from "@/lib/partner-promos";
 
 export function HomeFeaturedSection({
   featured,
@@ -16,6 +18,7 @@ export function HomeFeaturedSection({
     featured.nearbyEmpty && zip
       ? `No upcoming chess listings within range of ${zip} yet. Showing a wider preview instead.`
       : featured.copy.blurb;
+  const partnerPromo = partnerPromoForCategory("chess");
 
   return (
     <section
@@ -24,6 +27,7 @@ export function HomeFeaturedSection({
       aria-labelledby="featured-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        {partnerPromo ? <PartnerPromoSlot promo={partnerPromo} /> : null}
         <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
             <div className="min-w-0 max-w-xl">

@@ -25,7 +25,7 @@ describe("abuse controls and public-path cost", () => {
     expect(read("lib/rate-limit.ts")).toContain('"geo"');
     expect(read("app/api/competitions/route.ts")).toContain('consumeRateLimit(\n    "search"');
     expect(read("app/api/competitions/route.ts")).toContain(
-      "hashedRequestActorKey(user?.id)"
+      "hashedRequestActorKey(null, request.headers)"
     );
     expect(read("lib/rate-limit.ts")).toContain("search: { max: 180");
     expect(read("lib/rate-limit.ts")).toContain(

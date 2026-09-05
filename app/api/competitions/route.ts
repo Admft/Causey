@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
 import { getRequestDataSource } from "@/lib/data";
 import { isDiscoveryCategory } from "@/lib/category-discovery";
 import {
@@ -49,10 +48,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const user = await getSessionUser();
   const allowed = await consumeRateLimit(
     "search",
-    await hashedRequestActorKey(user?.id)
+    await hashedRequestActorKey(null, request.headers),
+    request.headers
   );
   if (!allowed) {
     return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });

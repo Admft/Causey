@@ -145,6 +145,7 @@ export default async function NewCompetitionPage({
               <TournamentCreateForm
                 orgId={targetHost.id}
                 orgSlug={view.org.slug}
+                orgName={targetHost.name}
                 orgState={targetHost.state}
                 orgType={targetHost.type}
                 parentOrgId={targetHost.parentOrgId}

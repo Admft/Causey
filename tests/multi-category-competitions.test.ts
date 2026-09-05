@@ -10,6 +10,10 @@ import {
   CompetitionSchema,
   SearchFiltersSchema,
 } from "@/lib/schemas";
+import {
+  primaryFacetsForCategory,
+  requiredOrganizerFacetMessage,
+} from "@/lib/category-discovery";
 import { TournamentCreateSchema } from "@/lib/validation/tournament";
 
 const baseCompetition = {
@@ -124,7 +128,59 @@ describe("multi-category competition contract", () => {
         primaryFacet: "",
       }).success
     ).toBe(false);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...stemCreate,
+        primaryFacet: "mathematics",
+        mathTypeFacet: "",
+      }).success
+    ).toBe(true);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...stemCreate,
+        category: "arts",
+        primaryFacet: "music",
+      }).success
+    ).toBe(true);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...stemCreate,
+        category: "arts",
+        primaryFacet: "",
+      }).success
+    ).toBe(false);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...stemCreate,
+        category: "writing",
+        primaryFacet: "poetry",
+      }).success
+    ).toBe(true);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...stemCreate,
+        category: "debate",
+        primaryFacet: "public_forum",
+      }).success
+    ).toBe(true);
     expect(TournamentCreateSchema.safeParse(chessCreate).success).toBe(true);
+    expect(TournamentCreateSchema.safeParse(validCreate).success).toBe(true);
+    expect(requiredOrganizerFacetMessage("chess")).toBeNull();
+    expect(requiredOrganizerFacetMessage("other")).toBeNull();
+    expect(requiredOrganizerFacetMessage("stem")).toMatch(/required/i);
+    expect(primaryFacetsForCategory("stem").map((facet) => facet.value)).toEqual(
+      [
+        "robotics",
+        "science_fair",
+        "mathematics",
+        "science_bowl",
+        "biology",
+        "chemistry",
+        "physics",
+        "engineering",
+        "computer_science",
+      ]
+    );
     expect(
       TournamentCreateSchema.safeParse({
         ...validCreate,
@@ -245,9 +301,22 @@ describe("multi-category competition contract", () => {
     expect(form).toContain("primaryFacetsForCategory(category)");
     expect(form).toContain("requiredOrganizerFacetMessage");
     expect(form).not.toContain("Not tagged yet");
+    expect(form).toContain("CompetitionHostPreview");
     expect(form).not.toContain('category || "chess"');
-    expect(form).toContain("formatCompetitionFacetLabel");
+    expect(form.indexOf("What it is")).toBeLessThan(
+      form.indexOf('Cover image{" "}')
+    );
+    expect(form.indexOf('Cover image{" "}')).toBeLessThan(
+      form.indexOf("Schedule and place")
+    );
     expect(validation).toContain("requiredOrganizerFacetMessage");
     expect(validation).not.toContain('CompetitionCategorySchema.default("chess")');
+    const page = readFileSync(
+      resolve(process.cwd(), "app/orgs/[slug]/competitions/new/page.tsx"),
+      "utf8"
+    );
+    expect(page.indexOf("Hosting organization")).toBeLessThan(
+      page.indexOf("<TournamentCreateForm")
+    );
   });
 });
