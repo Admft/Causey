@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { GuardianLinkRequestForm } from "@/components/GuardianLinkRequestForm";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { MissingZipCard } from "@/components/MissingZipCard";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
@@ -160,8 +161,10 @@ export default async function MePage() {
     getMyEntrantRows(profile.id),
     profile.role === "student" ? getMyOrgs(profile.id) : Promise.resolve([]),
   ]);
+  // Only a request the student still has to answer is a task. A request the
+  // student sent is waiting on the parent, so it must not drive the mission.
   const pendingParentLinks = parentLinks.filter(
-    (link) => link.status === "pending"
+    (link) => link.status === "pending" && !link.awaiting_parent
   );
 
   const today = new Date().toISOString().slice(0, 10);
@@ -268,6 +271,40 @@ export default async function MePage() {
     ? preferredDiscoveryHref(profile.preferred_competition_category)
     : "/#search";
   const searchAction = { href: searchHref, label: "Search tournaments" };
+  const familyLinkList = (
+    <ul className="mt-3 flex flex-col gap-2">
+      {parentLinks.map((link) => (
+        <li
+          key={link.parent_profile_id}
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3"
+        >
+          <div>
+            <span className="text-sm font-semibold text-foreground">
+              {link.parent_name}
+            </span>
+            <span className="mt-0.5 block text-xs text-muted">
+              {link.status === "active"
+                ? "linked as your parent"
+                : link.awaiting_parent
+                  ? "you asked them to link — waiting for them to accept"
+                  : `wants to link as your parent — they’ll ${orgChrome.parentVisibility}`}
+            </span>
+          </div>
+          <HouseholdRequestActions
+            counterpartyProfileId={link.parent_profile_id}
+            state={
+              link.status === "active"
+                ? "linked"
+                : link.awaiting_parent
+                  ? "awaiting_them"
+                  : "awaiting_me"
+            }
+            confirmUnlinkLabel="Yes, unlink parent"
+          />
+        </li>
+      ))}
+    </ul>
+  );
   const studentMission =
     pendingParentLinks.length > 0
       ? {
@@ -372,29 +409,10 @@ export default async function MePage() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-red">
             Family
           </h2>
-          <ul className="mt-3 flex flex-col gap-2">
-            {parentLinks.map((link) => (
-              <li
-                key={link.parent_profile_id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3"
-              >
-                <div>
-                  <span className="text-sm font-semibold text-foreground">
-                    {link.parent_name}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    {link.status === "pending"
-                      ? `wants to link as your parent — they’ll ${orgChrome.parentVisibility}`
-                      : "linked as your parent"}
-                  </span>
-                </div>
-                <HouseholdRequestActions
-                  parentProfileId={link.parent_profile_id}
-                  linked={link.status === "active"}
-                />
-              </li>
-            ))}
-          </ul>
+          {familyLinkList}
+          <div className="mt-4">
+            <GuardianLinkRequestForm />
+          </div>
         </section>
       ) : null}
 
@@ -555,7 +573,7 @@ export default async function MePage() {
         )}
       </section>
 
-      {parentLinks.length && !pendingParentLinks.length ? (
+      {isStudent && !pendingParentLinks.length ? (
         <section
           id="family"
           className="mt-12 scroll-mt-24 border-t border-line pt-8"
@@ -563,27 +581,17 @@ export default async function MePage() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
             Family
           </h2>
-          <ul className="mt-3 flex flex-col gap-2">
-            {parentLinks.map((link) => (
-              <li
-                key={link.parent_profile_id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3"
-              >
-                <div>
-                  <span className="text-sm font-semibold text-foreground">
-                    {link.parent_name}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-muted">
-                    linked as your parent
-                  </span>
-                </div>
-                <HouseholdRequestActions
-                  parentProfileId={link.parent_profile_id}
-                  linked={link.status === "active"}
-                />
-              </li>
-            ))}
-          </ul>
+          {parentLinks.length ? (
+            familyLinkList
+          ) : (
+            <p className="mt-2 max-w-prose text-sm text-muted">
+              No parent is linked. A parent can see your invitations and answer
+              them with you once you both agree.
+            </p>
+          )}
+          <div className="mt-4">
+            <GuardianLinkRequestForm />
+          </div>
         </section>
       ) : null}
 

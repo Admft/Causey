@@ -7,12 +7,13 @@ import { MissingZipCard } from "@/components/MissingZipCard";
 import { LinkChildForm } from "@/components/LinkChildForm";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
+import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { StudentAccountHandoff } from "@/components/StudentAccountHandoff";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import { getNotificationPreferences } from "@/lib/data/district";
-import { getChildrenWithEvents, getMyRecommendations, getPendingChildRequestCount, isSupabaseConfigured, isUpcomingEvent, type EntrantWithEvent } from "@/lib/data/portal";
+import { getChildrenWithEvents, getIncomingChildLinkRequests, getMyRecommendations, getPendingChildRequestCount, isSupabaseConfigured, isUpcomingEvent, type EntrantWithEvent } from "@/lib/data/portal";
 import { todayIsoInTimeZone } from "@/lib/competition-timing";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
 import { studentOrgChromeFromTypes } from "@/lib/portal-copy";
@@ -56,9 +57,16 @@ export default async function FamilyPage() {
   const profile = await getCurrentProfile();
   if (profile && profile.role !== "parent") redirect("/me");
 
-  const [children, pendingCount, recommendations, preferences] = await Promise.all([
+  const [
+    children,
+    pendingCount,
+    incomingRequests,
+    recommendations,
+    preferences,
+  ] = await Promise.all([
     getChildrenWithEvents(user.id),
     getPendingChildRequestCount(user.id),
+    getIncomingChildLinkRequests(user.id),
     getMyRecommendations(user.id),
     getNotificationPreferences(user.id),
   ]);
@@ -124,7 +132,15 @@ export default async function FamilyPage() {
   let missionAction: { href: string; label: string } | undefined;
   let missionSecondary: { href: string; label: string } | undefined =
     undefined;
-  if (!children.length) {
+  if (incomingRequests.length) {
+    missionTitle =
+      incomingRequests.length === 1
+        ? `${incomingRequests[0].child_name} asked you to link`
+        : `${incomingRequests.length} students asked you to link`;
+    missionDescription =
+      "Accept to see their invitations and answer them together. Decline if you do not recognize the student.";
+    missionAction = { href: "#requests", label: "Review requests" };
+  } else if (!children.length) {
     missionTitle = pendingCount
       ? "Waiting for your student"
       : "Set up your student’s account";
@@ -280,6 +296,39 @@ export default async function FamilyPage() {
                 Link student
               </a>
             </nav>
+          ) : null}
+
+          {incomingRequests.length ? (
+            <section id="requests" className="mt-10 scroll-mt-24">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+                Link requests
+              </h2>
+              <p className="mt-2 max-w-prose text-sm text-muted">
+                These students asked you to link. Accepting lets you see their
+                invitations, RSVPs, and results, and answer for them.
+              </p>
+              <ul className="mt-3 flex flex-col gap-2">
+                {incomingRequests.map((request) => (
+                  <li
+                    key={request.child_profile_id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3"
+                  >
+                    <div>
+                      <span className="text-sm font-semibold text-foreground">
+                        {request.child_name}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted">
+                        asked you to be their parent on Causey
+                      </span>
+                    </div>
+                    <HouseholdRequestActions
+                      counterpartyProfileId={request.child_profile_id}
+                      state="awaiting_me"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : null}
 
           {!children.length ? (

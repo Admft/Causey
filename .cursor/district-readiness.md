@@ -117,9 +117,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 11. **P1 · Contract-to-access handoff was a multi-step ops task · M · shipped 2026-09-04**  
    Surface: `/admin/organizations` → Provision district. One super-admin action creates the district, invites its first administrator, and returns a claim link plus a typable activation code (`0074`). `/claim` accepts the code; login/signup keep the staff persona for code claims.
 
+12. **P1 · Guardian linking was silent and one-way · M · shipped 2026-09-04**  
+   Surface: student Plan/Account family rows are direction-aware and carry an "Ask a parent to link" form with a copyable parent-signup handoff; `/family#requests` gives the parent an inbox for student-opened requests. `0075` adds `household_links.requested_by`, so the participant who opened a request can never accept it — enforced in both the update policy and the new `respond_to_household_link` RPC. Both directions notify the other side, and acceptance notifies whoever asked. A parent still cannot confirm a student exists by guessing an email; a student-opened request is the only case where a pending counterpart becomes visible, because the student is disclosing their own name. `0075` also allowlists the `comment` and `geo` rate-limit buckets `0062` omitted.
+
 ### Recommended next shippable win
 
-Guardian linking is still silent: `request_child_link` notifies neither side, and a student cannot start the request. Fix the silence without breaking student consent. After that, ops proof of email at school volume (and apply migrations through `0074` in each environment). Defer to owner/legal gates — do not invent FERPA/price UI.
+Ops proof of email at school volume, and apply migrations through `0075` in each environment (`0074` and `0075` are both hard gates — see the runbook). Then the P5 staff team-entry path: coaches and school admins marking a student as going, audited as staff-entered, with the student and linked parents notified. Defer to owner/legal gates — do not invent FERPA/price UI.
 
 ### Out-of-scope refusals this pass
 

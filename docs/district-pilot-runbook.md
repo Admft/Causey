@@ -14,7 +14,7 @@ the verified `mail.causey.dev` Resend integration.
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0074_district_provisioning_codes.sql` (including
+   `0075_guardian_link_consent.sql` (including
    `0045_atomic_district_school_creation.sql`,
    `0046_district_hosted_reporting.sql`,
    `0060_district_admin_activity.sql`,
@@ -29,6 +29,10 @@ the verified `mail.causey.dev` Resend integration.
    district administrator or school administrator can be invited at all.
    `0074` restores the search path and adds the typable activation code. If a
    claim link or invitation has ever failed on the target project, this is why.
+   `0075` is a second hard gate for the same reason: `consume_rate_limit`
+   shipped in `0062` with an allowlist that never included the `comment` or
+   `geo` buckets the app already sends, so event comments fail closed on any
+   project running `0062` without `0075`.
    A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch

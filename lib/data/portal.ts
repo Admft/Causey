@@ -1023,6 +1023,8 @@ export type ParentRequest = {
   parent_name: string;
   status: "pending" | "active";
   created_at: string;
+  /** True when the student opened the request, so the parent still has to accept. */
+  awaiting_parent: boolean;
 };
 
 /** For a student's /me page: who has asked to link (or is linked) as parent. */
@@ -1031,7 +1033,7 @@ export async function getParentLinks(userId: string): Promise<ParentRequest[]> {
   const { data } = await supabase
     .from("household_links")
     .select(
-      "parent_profile_id, status, created_at, profiles!household_links_parent_profile_id_fkey(display_name)"
+      "parent_profile_id, status, created_at, requested_by, profiles!household_links_parent_profile_id_fkey(display_name)"
     )
     .eq("child_profile_id", userId)
     .in("status", ["pending", "active"]);
@@ -1042,7 +1044,43 @@ export async function getParentLinks(userId: string): Promise<ParentRequest[]> {
         ?.display_name ?? "") || "A parent",
     status: row.status as "pending" | "active",
     created_at: row.created_at as string,
+    awaiting_parent:
+      row.status === "pending" && (row.requested_by as string | null) === userId,
   }));
+}
+
+export type ChildLinkRequest = {
+  child_profile_id: string;
+  child_name: string;
+  created_at: string;
+};
+
+/**
+ * For a parent's /family page: students who asked this parent to link. Only
+ * student-initiated requests appear, so a parent's own outgoing request never
+ * confirms whether the address matched an account.
+ */
+export async function getIncomingChildLinkRequests(
+  userId: string,
+  client?: PortalSupabase
+): Promise<ChildLinkRequest[]> {
+  const supabase = await portalClient(client);
+  const { data } = await supabase
+    .from("household_links")
+    .select(
+      "child_profile_id, created_at, requested_by, profiles!household_links_child_profile_id_fkey(display_name)"
+    )
+    .eq("parent_profile_id", userId)
+    .eq("status", "pending");
+  return (data ?? [])
+    .filter((row) => (row.requested_by as string | null) === row.child_profile_id)
+    .map((row) => ({
+      child_profile_id: row.child_profile_id as string,
+      child_name:
+        ((row.profiles as unknown as { display_name: string } | null)
+          ?.display_name ?? "") || "A student",
+      created_at: row.created_at as string,
+    }));
 }
 
 /** Parent's outgoing pending requests (no child names before acceptance). */
