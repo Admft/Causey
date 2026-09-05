@@ -9,6 +9,7 @@ import {
   type NotificationKind,
 } from "@/lib/notifications";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { AuthedSupabase } from "@/lib/supabase/authed";
 
 const CreateSchema = z.object({
   recipientId: z.string().uuid(),
@@ -45,12 +46,21 @@ const FANOUT_CONCURRENCY = 10;
  * directive, so callers cannot invoke this helper as a public server action.
  */
 export async function createInAppNotifications(
-  inputs: CreateInAppNotificationInput[]
+  inputs: CreateInAppNotificationInput[],
+  options?: {
+    client?: AuthedSupabase;
+  }
 ): Promise<NotificationFanoutResult> {
   if (!inputs.length) return { requested: 0, created: 0, failures: [] };
 
-  const user = await getSessionUser();
-  if (!user) {
+  const supabase =
+    options?.client ??
+    (await (async () => {
+      const user = await getSessionUser();
+      if (!user) return null;
+      return createServerSupabaseClient();
+    })());
+  if (!supabase) {
     return {
       requested: inputs.length,
       created: 0,
@@ -60,8 +70,6 @@ export async function createInAppNotifications(
       })),
     };
   }
-
-  const supabase = await createServerSupabaseClient();
   const failures: NotificationFanoutResult["failures"] = [];
   let created = 0;
 

@@ -79,6 +79,12 @@ export default function TermsPage() {
               Organizers are responsible for the accuracy and authority of
               information they publish.
             </li>
+            <li>
+              The iOS and Android apps are the same service as the website.
+              They are for ages 13 and up, not a kids app, and do not sell
+              subscriptions or tournament entry. Create an account on the
+              website. Organizer registration may open an external site.
+            </li>
           </ul>
         </section>
 

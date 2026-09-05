@@ -15,6 +15,7 @@ export default defineConfig([
     "supabase/.temp/**",
     "Upcoming Tournaments _ US Chess.org_files/**",
     "WebsiteHTMLs/**",
+    "mobile/**",
     "next-env.d.ts",
   ]),
 ]);

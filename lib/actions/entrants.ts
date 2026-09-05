@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { actionErrorMessage } from "@/lib/actions/errors";
 import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/actions/in-app-notifications";
 import { getChildSchoolsForDistrict } from "@/lib/data/portal";
+import { performSetRsvp } from "@/lib/rsvp-write";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 
@@ -36,53 +37,22 @@ export async function setRsvp(input: {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("competition_entrants")
-    .update({
-      status: input.status,
-      responded_by: user.id,
-      responded_at: new Date().toISOString(),
-    })
-    .eq("competition_id", input.competitionId)
-    .eq("profile_id", input.profileId)
-    .select("profile_id, invited_by");
-  if (error || !data?.length) {
-    return { ok: false, error: "Could not save your RSVP." };
+  const result = await performSetRsvp({
+    supabase,
+    userId: user.id,
+    competitionId: input.competitionId,
+    profileId: input.profileId,
+    status: input.status,
+    eventSlug: input.eventSlug,
+  });
+  if (
+    result.ok ||
+    result.error ===
+      "Your RSVP was saved, but the coach update could not be created."
+  ) {
+    revalidateEventSurfaces(input.eventSlug);
   }
-
-  const invitedBy = data[0]?.invited_by as string | null | undefined;
-  if (invitedBy && invitedBy !== user.id) {
-    const { data: competition } = await supabase
-      .from("competitions")
-      .select("name, slug")
-      .eq("id", input.competitionId)
-      .maybeSingle();
-    const eventName = competition?.name ?? "a tournament";
-    const slug = competition?.slug ?? input.eventSlug;
-    const statusLabel = input.status === "going" ? "going" : "not going";
-    const notifications = await createInAppNotifications([
-      {
-        recipientId: invitedBy,
-        kind: "rsvp_update",
-        title: `RSVP update: ${eventName}`,
-        body: `Someone marked ${statusLabel}. Open the event roster to review.`,
-        href: slug ? `/event/${slug}/manage` : "/orgs",
-        entityType: "competition",
-        entityId: input.competitionId,
-        dedupeKey: `rsvp:${input.competitionId}:${input.profileId}:${input.status}`,
-      },
-    ]);
-    if (notifications.failures.length) {
-      revalidateEventSurfaces(input.eventSlug);
-      return {
-        ok: false,
-        error: "Your RSVP was saved, but the coach update could not be created.",
-      };
-    }
-  }
-
-  revalidateEventSurfaces(input.eventSlug);
-  return { ok: true };
+  return result;
 }
 
 export async function inviteEntrants(

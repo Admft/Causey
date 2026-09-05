@@ -124,6 +124,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className="flex flex-col gap-2"
               >
                 <Link
+                  href="/support"
+                  className="font-medium text-muted-strong transition-colors hover:text-brand-red"
+                >
+                  Support
+                </Link>
+                <Link
                   href="/privacy"
                   className="font-medium text-muted-strong transition-colors hover:text-brand-red"
                 >
