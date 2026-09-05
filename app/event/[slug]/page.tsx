@@ -56,7 +56,12 @@ import {
   type CoachOrgAttendance,
   type RecommendTarget,
 } from "@/lib/data/portal";
-import type { EntrantStatus } from "@/lib/auth/orgs";
+import {
+  allowsFamilyDiscoveryRsvp,
+  buildEventRsvpTargets,
+  organizerRegistrationProfileIds,
+  type EventRsvpTarget,
+} from "@/lib/event-rsvp-targets";
 import {
   goingFromOrgHeading,
   orgMembershipKindsFromTypes,
@@ -170,11 +175,7 @@ export default async function EventPage({ params }: Params) {
   let canManage = false;
   let viewerOrgMatch = false;
   let viewerIsPlatformAdmin = false;
-  let rsvpTargets: {
-    profileId: string;
-    label: string;
-    status: EntrantStatus;
-  }[] = [];
+  let rsvpTargets: EventRsvpTarget[] = [];
   let registrationTargets: {
     profileId: string;
     label: string;
@@ -226,33 +227,21 @@ export default async function EventPage({ params }: Params) {
       user.id,
       ...childIds,
     ]);
-    rsvpTargets = entrants.map((entrant) => ({
-      profileId: entrant.profile_id,
-      label:
-        entrant.profile_id === user.id
-          ? "You"
-          : children.find((c) => c.profile_id === entrant.profile_id)
-              ?.display_name ?? "Your student",
-      status: entrant.status,
-    }));
+    rsvpTargets = buildEventRsvpTargets({
+      viewerId: user.id,
+      viewerRole: profile?.role ?? null,
+      children,
+      entrants,
+      familyDiscovery: allowsFamilyDiscoveryRsvp(competition),
+      ended,
+    });
 
     const supabase = await createServerSupabaseClient();
-    const registrationProfileIds = (() => {
-      const childEntrants = entrants.filter((row) =>
-        childIds.includes(row.profile_id)
-      );
-      if (childEntrants.length) {
-        return childEntrants
-          .filter(
-            (row) => row.status === "going" || row.status === "invited"
-          )
-          .map((row) => row.profile_id);
-      }
-      const selfEntrant = entrants.find((row) => row.profile_id === user.id);
-      if (selfEntrant) return [user.id];
-      // Open discovery with no club invite: track the signed-in viewer.
-      return [user.id];
-    })();
+    const registrationProfileIds = organizerRegistrationProfileIds({
+      viewerId: user.id,
+      childIds,
+      entrants,
+    });
 
     const [{ data: saved }, { data: rating }, { data: registrations }] =
       await Promise.all([
@@ -295,13 +284,26 @@ export default async function EventPage({ params }: Params) {
     }));
   }
 
-  const needsRsvp = rsvpTargets.some((t) => t.status === "invited");
+  const needsCoachRsvp = rsvpTargets.some((t) => t.status === "invited");
+  const needsFamilyRsvp = rsvpTargets.some((t) => t.status === "unanswered");
+  const needsRsvp = needsCoachRsvp || needsFamilyRsvp;
   const hasAnsweredRsvp = rsvpTargets.some(
     (t) => t.status === "going" || t.status === "not_going"
   );
   const registrationComplete =
     registrationTargets.length > 0 &&
     registrationTargets.every((t) => t.status === "registered");
+  const registerPeople = registrationTargets.length
+    ? registrationTargets
+    : rsvpTargets.some((t) => t.label !== "You")
+      ? []
+      : [
+          {
+            profileId: undefined as string | undefined,
+            label: "You",
+            status: null as ExternalRegistrationStatus | null,
+          },
+        ];
   // One primary job in the main column; everything else demotes to the aside.
   // Hosts see the same attendee view as everyone else — their tools live in
   // the host bar above, not in place of the attendee's next step.
@@ -550,14 +552,24 @@ export default async function EventPage({ params }: Params) {
                   id="event-next-step"
                   className="font-display text-xl font-bold text-foreground"
                 >
-                  {rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
-                    ? "Your coach needs an RSVP"
-                    : "An RSVP needs your response"}
+                  {needsCoachRsvp
+                    ? rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
+                      ? "Your coach needs an RSVP"
+                      : "An RSVP needs your response"
+                    : rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
+                      ? "Are you going?"
+                      : rsvpTargets.length === 1
+                        ? `Is ${rsvpTargets[0].label} going?`
+                        : "Who is going?"}
                 </h2>
                 <p className="mt-2 max-w-prose text-sm text-muted">
-                  {competition.reg_url
-                    ? "Answer so your organization knows who is coming, then finish organizer registration if the event requires it."
-                    : "Answer so your organization knows who is coming. Entry is through your club invite, not open registration."}
+                  {needsCoachRsvp
+                    ? competition.reg_url
+                      ? "Answer so your organization knows who is coming, then finish organizer registration if the event requires it."
+                      : "Answer so your organization knows who is coming. Entry is through your club invite, not open registration."
+                    : competition.reg_url
+                      ? "Going on Causey is for Family and Plan. Save is only a bookmark for this account. Entry and payment still happen on the organizer’s site — mark that complete after you finish there."
+                      : "Going on Causey is for Family and Plan. Save is only a bookmark for this account. This listing has no organizer registration link."}
                 </p>
                 <div className="mt-5 flex flex-col gap-4">
                   {rsvpTargets.map((target) => (
@@ -570,6 +582,12 @@ export default async function EventPage({ params }: Params) {
                         profileId={target.profileId}
                         status={target.status}
                         eventSlug={competition.slug}
+                        forLabel={
+                          target.label !== "You" ? target.label : undefined
+                        }
+                        tone={
+                          target.status === "invited" ? "invite" : "family"
+                        }
                       />
                     </div>
                   ))}
@@ -597,16 +615,7 @@ export default async function EventPage({ params }: Params) {
                   </p>
                 ) : null}
                 <div className="mt-4 flex flex-col gap-6">
-                  {(registrationTargets.length
-                    ? registrationTargets
-                    : [
-                        {
-                          profileId: undefined as string | undefined,
-                          label: "You",
-                          status: null as ExternalRegistrationStatus | null,
-                        },
-                      ]
-                  ).map((target) => (
+                  {registerPeople.map((target) => (
                     <div key={target.profileId ?? "self"}>
                       {registrationTargets.length > 1 ||
                       target.label !== "You" ? (
@@ -722,7 +731,9 @@ export default async function EventPage({ params }: Params) {
           {showRsvpInAside ? (
             <div className="border-b border-line pb-5">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
-                Your RSVP
+                {rsvpTargets.some((t) => t.label !== "You")
+                  ? "Family RSVP"
+                  : "Your RSVP"}
               </h2>
               <div className="mt-3 flex flex-col gap-4">
                 {rsvpTargets.map((target) => (
@@ -735,6 +746,10 @@ export default async function EventPage({ params }: Params) {
                       profileId={target.profileId}
                       status={target.status}
                       eventSlug={competition.slug}
+                      forLabel={
+                        target.label !== "You" ? target.label : undefined
+                      }
+                      tone={target.status === "invited" ? "invite" : "family"}
                     />
                   </div>
                 ))}
@@ -777,6 +792,11 @@ export default async function EventPage({ params }: Params) {
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
               Save &amp; rate
             </h2>
+            <p className="mt-2 text-xs text-muted">
+              Save is a bookmark for this account. It does not mark a student
+              going, and Causey does not import RSVPs from the organizer&rsquo;s
+              site.
+            </p>
             {user ? (
               <div className="mt-3 flex flex-col gap-4">
                 <SaveCompetitionButton

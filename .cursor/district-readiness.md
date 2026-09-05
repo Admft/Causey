@@ -44,6 +44,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Host a competition preview shows the real search card and event-page start (not a fact dump) — 2026-09-04
 - [x] Host a competition requires type plus a visible discipline chip (same catalog as search); no silent chess default — 2026-09-04
 - [x] Staff team-entry: coaches and school admins mark a student going / not going on Manage event (`0076`); audited `response_source = staff`; student + linked parents notified; Family labels staff entry; owner-run backfill drops the authenticated update guard before data repair and recreates it afterward — 2026-09-05
+- [x] Family can mark a linked student Going on a public listing without a school/club invite (`0080`); organizer-site entry is still Mark complete, not an import — 2026-09-05
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -81,7 +82,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters`; `origin_org_id` stamped (`0070`) |
 | Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school |
 | Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
-| Family RSVP + organizer registration | **works** | `/family` (org-agnostic RSVP copy) |
+| Family RSVP + organizer registration | **works** | `/family` plus event-page Going without a roster invite (`0080`); organizer mark-complete still required |
 | School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
 | District-hosted reply follow-up by school | **works** | manage labels RSVP/attendance rows with connected-school name; sorts by school; going rows show organizer-registration status |
 | District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; action inserts per school + district copy (`0043` operator access) |
@@ -131,9 +132,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 15. **P1 · Super admin could not provision a school under a district · M · shipped 2026-09-05**  
    Surface: `/admin/organizations` → Provision school. One super-admin action creates a child school and invites its named administrator (`0078`). Directory is a district tree with School account rows and invited/waiting/claimed status. Orphan-school create is gone. People shows the activation code, not only the claim link.
 
+16. **P0 · Parent could not tell if an unaffiliated student was going · M · shipped 2026-09-05**  
+   Surface: event page Going/Can't go for linked children on published public listings; Family shows Going and unfinished organizer registration. Save stays a parent-account bookmark. Causey still does not import RSVPs from the organizer site (`0080`). Apply `0080` in each environment.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0078` in each environment (`0074`–`0078` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
+Ops proof of email at school volume, and apply migrations through `0080` in each environment (`0074`–`0080` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
 
 ### Out-of-scope refusals this pass
 
