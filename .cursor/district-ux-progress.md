@@ -17,7 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
-- [x] P5 staff team-entry: coaches/school admins mark going / not going on Manage event; `response_source = staff` audit (`0076`); student + linked parents notified; Family “Marked by staff”; assistants stay read-only — 2026-09-05
+- [x] Super-admin Provision school under a district (`0078`): child school + named school-admin claim pack; `/admin/organizations` nests School account rows with invited/waiting/claimed status; orphan-school create removed; People shows the activation code — 2026-09-05
 - [x] Chess nationals pin rebuild (user-directed): flat red slab → gradient face with resting red aura, inner edge light, and a slow sheen loop (the old one-shot shine fired before first scroll); labeled local → state → national-invitationals ladder rail fills the panel on home + `/chess` (no more empty bubble); rgba-first paint with color-mix only as an enhancement layer and `min-width` media queries so older WebKit/Gecko get the full look; reduced-motion kills sheen/pulse/lift — 2026-09-05
 - [x] P4: labeled “Get your kid to chess nationals” pin above chess search results and the homepage chess rail routes to `/pathways`; explorer auto-opens a state-championship chain from seeded rules; not an official US Chess ruling — 2026-09-05
 - [x] Tournament search 429 was a lying limiter: RPC errors and `user:` keys without a JWT were shown as “too often”; search/geo now fail open, always pass `ip:<hash>`, and use the cookie client (`0069`) — 2026-09-04

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AdminDistrictProvisionForm } from "@/components/AdminDistrictProvisionForm";
 import { AdminDistrictSchoolBulkVerify } from "@/components/AdminDistrictSchoolBulkVerify";
-import { AdminOrganizationForm } from "@/components/AdminOrganizationForm";
 import { AdminOrganizationReviewActions } from "@/components/AdminOrganizationReviewActions";
+import { AdminSchoolProvisionForm } from "@/components/AdminSchoolProvisionForm";
 import type { AdminOrganizationRow } from "@/lib/data/admin";
 import {
   getDistrictReadinessSummary,
@@ -62,6 +62,57 @@ function formatDate(value: string | null) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function schoolTypeLine(org: AdminOrganizationRow): string {
+  if (org.type !== "school") {
+    return [
+      TYPE_LABELS[org.type],
+      org.state,
+      org.parent?.name,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  const parts = [
+    "School account",
+    org.state,
+    org.parent ? `part of ${org.parent.name}` : "not under a district",
+  ];
+  return parts.join(" · ");
+}
+
+function schoolAdminLine(org: AdminOrganizationRow): string | null {
+  if (org.type !== "school") return null;
+  if (!org.schoolAdminStaffing) return null;
+  if (!org.schoolAdminStaffing.ok) {
+    return "School administrator status unavailable";
+  }
+  return org.schoolAdminStaffing.label;
+}
+
+function orgMatchesFilters(
+  org: AdminOrganizationRow,
+  query: string,
+  statusFilter: StatusFilter,
+  typeFilter: string,
+  options?: { ignoreType?: boolean }
+): boolean {
+  if (
+    statusFilter !== "all" &&
+    org.verification_status !== statusFilter
+  ) {
+    return false;
+  }
+  if (!options?.ignoreType && typeFilter !== "all" && org.type !== typeFilter) {
+    return false;
+  }
+  if (!query) return true;
+  return (
+    org.name.toLowerCase().includes(query) ||
+    (org.state ?? "").toLowerCase().includes(query) ||
+    (org.parent?.name ?? "").toLowerCase().includes(query)
+  );
 }
 
 function StatusDot({ status, className = "" }: { status: Status; className?: string }) {
@@ -131,6 +182,15 @@ function OrganizationPanel({
             : "—"}
         </Fact>
         {org.parent ? <Fact label="Part of">{org.parent.name}</Fact> : null}
+        {org.type === "school" ? (
+          <Fact label="School administrator">
+            {org.schoolAdminStaffing == null
+              ? "—"
+              : org.schoolAdminStaffing.ok
+                ? org.schoolAdminStaffing.label
+                : "Unavailable"}
+          </Fact>
+        ) : null}
         {review ? (
           <Fact label="Last reviewed">{formatDate(review.reviewed_at)}</Fact>
         ) : null}
@@ -212,28 +272,6 @@ function OrganizationPanel({
         />
       ) : null}
 
-      {isDistrict && schools.length ? (
-        <div>
-          <p className="text-2xs font-semibold uppercase tracking-wide text-muted">
-            Schools in this district
-          </p>
-          <ul className="mt-2 grid gap-1.5">
-            {schools.map((school) => (
-              <li
-                key={school.id}
-                className="flex items-center gap-2 text-sm text-foreground"
-              >
-                <StatusDot status={school.verification_status} />
-                <span className="min-w-0 flex-1 truncate">{school.name}</span>
-                <span className="text-xs text-muted">
-                  {STATUS_META[school.verification_status].label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
       <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-line pt-4 text-xs">
         <Link
           href={`/orgs/${org.slug}`}
@@ -269,8 +307,9 @@ export function AdminOrganizationsExplorer({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [provisionOpen, setProvisionOpen] = useState(false);
+  const [provisionKind, setProvisionKind] = useState<
+    null | "district" | "school"
+  >(null);
 
   const schoolsByDistrict = useMemo(() => {
     const map = new Map<string, AdminOrganizationRow[]>();
@@ -283,26 +322,86 @@ export function AdminOrganizationsExplorer({
     return map;
   }, [organizations]);
 
-  const filtered = useMemo(() => {
+  const districts = useMemo(
+    () =>
+      organizations
+        .filter((org) => org.type === "district")
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((org) => ({
+          id: org.id,
+          name: org.name,
+          state: org.state,
+        })),
+    [organizations]
+  );
+
+  const directory = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return organizations
-      .filter((org) => {
-        if (statusFilter !== "all" && org.verification_status !== statusFilter)
-          return false;
-        if (typeFilter !== "all" && org.type !== typeFilter) return false;
-        if (!q) return true;
-        return (
-          org.name.toLowerCase().includes(q) ||
-          (org.state ?? "").toLowerCase().includes(q) ||
-          (org.parent?.name ?? "").toLowerCase().includes(q)
+    type DirectoryItem = {
+      org: AdminOrganizationRow;
+      nested: boolean;
+    };
+    const items: DirectoryItem[] = [];
+    const nestedSchoolIds = new Set<string>();
+    const useTree = typeFilter === "all" || typeFilter === "district";
+
+    if (useTree) {
+      const districtsInScope = organizations
+        .filter((org) => org.type === "district")
+        .slice()
+        .sort(
+          (a, b) =>
+            STATUS_ORDER[a.verification_status] -
+              STATUS_ORDER[b.verification_status] ||
+            a.name.localeCompare(b.name)
         );
+
+      for (const district of districtsInScope) {
+        const childSchools = (schoolsByDistrict.get(district.id) ?? [])
+          .filter((school) =>
+            orgMatchesFilters(school, q, statusFilter, typeFilter, {
+              ignoreType: typeFilter === "district",
+            })
+          )
+          .sort(
+            (a, b) =>
+              STATUS_ORDER[a.verification_status] -
+                STATUS_ORDER[b.verification_status] ||
+              a.name.localeCompare(b.name)
+          );
+        const districtMatches = orgMatchesFilters(
+          district,
+          q,
+          statusFilter,
+          typeFilter
+        );
+        if (!districtMatches && !childSchools.length) continue;
+        items.push({ org: district, nested: false });
+        for (const school of childSchools) {
+          nestedSchoolIds.add(school.id);
+          items.push({ org: school, nested: true });
+        }
+      }
+    }
+
+    const leaves = organizations
+      .filter((org) => {
+        if (nestedSchoolIds.has(org.id)) return false;
+        if (useTree && org.type === "district") return false;
+        if (useTree && org.type === "school" && org.parent_org_id) return false;
+        return orgMatchesFilters(org, q, statusFilter, typeFilter);
       })
       .sort(
         (a, b) =>
           STATUS_ORDER[a.verification_status] -
             STATUS_ORDER[b.verification_status] || a.name.localeCompare(b.name)
       );
-  }, [organizations, query, statusFilter, typeFilter]);
+    for (const org of leaves) {
+      items.push({ org, nested: false });
+    }
+    return items;
+  }, [organizations, query, schoolsByDistrict, statusFilter, typeFilter]);
 
   return (
     <div className="grid gap-6">
@@ -333,36 +432,36 @@ export function AdminOrganizationsExplorer({
           </select>
         </label>
         {canProvisionDistrict ? (
-          <button
-            type="button"
-            onClick={() => {
-              setProvisionOpen((open) => !open);
-              setCreateOpen(false);
-            }}
-            aria-expanded={provisionOpen}
-            className="cta-enabled"
-          >
-            {provisionOpen ? "Close form" : "Provision district"}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                setProvisionKind((kind) =>
+                  kind === "district" ? null : "district"
+                )
+              }
+              aria-expanded={provisionKind === "district"}
+              className="cta-enabled"
+            >
+              {provisionKind === "district" ? "Close form" : "Provision district"}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setProvisionKind((kind) =>
+                  kind === "school" ? null : "school"
+                )
+              }
+              aria-expanded={provisionKind === "school"}
+              className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red"
+            >
+              {provisionKind === "school" ? "Close form" : "Provision school"}
+            </button>
+          </>
         ) : null}
-        <button
-          type="button"
-          onClick={() => {
-            setCreateOpen((open) => !open);
-            setProvisionOpen(false);
-          }}
-          aria-expanded={createOpen}
-          className={
-            canProvisionDistrict
-              ? "rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red"
-              : "cta-enabled"
-          }
-        >
-          {createOpen ? "Close form" : "Add organization"}
-        </button>
       </div>
 
-      {provisionOpen && canProvisionDistrict ? (
+      {provisionKind === "district" && canProvisionDistrict ? (
         <section
           aria-label="Provision a district"
           className="rounded-xl border border-line bg-surface p-5"
@@ -372,8 +471,8 @@ export function AdminOrganizationsExplorer({
           </h2>
           <p className="mt-1 text-xs text-muted">
             Creates the district, invites its first administrator, and gives you
-            a claim link and a code to read over the phone. The district then
-            connects its own schools.
+            a claim link and a code to read over the phone. Add schools under
+            it next — from here or from the district office.
           </p>
           <div className="mt-4">
             <AdminDistrictProvisionForm />
@@ -381,24 +480,21 @@ export function AdminOrganizationsExplorer({
         </section>
       ) : null}
 
-      {createOpen ? (
+      {provisionKind === "school" && canProvisionDistrict ? (
         <section
-          aria-label="Add an organization"
+          aria-label="Provision a school"
           className="rounded-xl border border-line bg-surface p-5"
         >
           <h2 className="text-sm font-semibold text-foreground">
-            Add a district or school
+            Provision a school under a district
           </h2>
           <p className="mt-1 text-xs text-muted">
-            New records start as pending — verify them after checking their
-            identity. Clubs and teams are started by their own coaches, not
-            here.{" "}
-            {canProvisionDistrict
-              ? "Use “Provision district” instead when a district is starting fresh — it also creates the administrator invitation."
-              : "Creating a district is reserved for founder super admins."}
+            Creates a school account as a child of the district and invites its
+            named administrator. Students join that school, never the district
+            office.
           </p>
           <div className="mt-4">
-            <AdminOrganizationForm />
+            <AdminSchoolProvisionForm districts={districts} />
           </div>
         </section>
       ) : null}
@@ -409,17 +505,21 @@ export function AdminOrganizationsExplorer({
             No organizations yet
           </p>
           <p className="mt-1 text-sm text-muted">
-            Add the first district or school to start building the directory.
+            {canProvisionDistrict
+              ? "Provision the first district after the contract lands, then add its schools."
+              : "Districts and schools are created by founder super admins. Clubs and teams are started by their coaches."}
           </p>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cta-enabled mt-4"
-          >
-            Add organization
-          </button>
+          {canProvisionDistrict ? (
+            <button
+              type="button"
+              onClick={() => setProvisionKind("district")}
+              className="cta-enabled mt-4"
+            >
+              Provision district
+            </button>
+          ) : null}
         </div>
-      ) : !filtered.length ? (
+      ) : !directory.length ? (
         <div className="rounded-xl border border-line bg-surface px-5 py-10 text-center">
           <p className="text-sm font-semibold text-foreground">
             Nothing matches
@@ -442,7 +542,7 @@ export function AdminOrganizationsExplorer({
         </div>
       ) : (
         <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-          {filtered.map((org) => {
+          {directory.map(({ org, nested }) => {
             const open = expandedId === org.id;
             const schools = schoolsByDistrict.get(org.id) ?? [];
             const readinessResult =
@@ -453,13 +553,16 @@ export function AdminOrganizationsExplorer({
               readinessResult?.ok === true
                 ? getDistrictReadinessSummary(readinessResult.data)
                 : null;
+            const adminLine = schoolAdminLine(org);
             return (
-              <li key={org.id}>
+              <li key={`${nested ? "nested" : "root"}-${org.id}`}>
                 <button
                   type="button"
                   onClick={() => setExpandedId(open ? null : org.id)}
                   aria-expanded={open}
-                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-soft sm:px-5"
+                  className={`flex w-full items-center gap-3 py-3.5 text-left transition-colors hover:bg-surface-soft sm:px-5 ${
+                    nested ? "bg-surface-soft/60 pl-8 pr-4 sm:pl-12" : "px-4"
+                  }`}
                 >
                   <StatusDot status={org.verification_status} />
                   <span className="min-w-0 flex-1">
@@ -467,9 +570,7 @@ export function AdminOrganizationsExplorer({
                       {org.name}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-muted">
-                      {TYPE_LABELS[org.type]}
-                      {org.state ? ` · ${org.state}` : ""}
-                      {org.parent ? ` · ${org.parent.name}` : ""}
+                      {schoolTypeLine(org)}
                       {org.type === "district" && schools.length
                         ? ` · ${schools.length} ${
                             schools.length === 1 ? "school" : "schools"
@@ -485,6 +586,11 @@ export function AdminOrganizationsExplorer({
                                 : "schools"
                             } ready · ${readiness.nextAction.title}`
                           : "Pilot readiness unavailable · retry before operating"}
+                      </span>
+                    ) : null}
+                    {adminLine ? (
+                      <span className="mt-1 block truncate text-xs font-semibold text-muted-strong">
+                        {adminLine}
                       </span>
                     ) : null}
                   </span>

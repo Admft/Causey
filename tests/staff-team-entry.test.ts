@@ -50,6 +50,21 @@ describe("staff team-entry for going / not going", () => {
     expect(guard.sql).toContain("origin_org_id is distinct from old.origin_org_id");
   });
 
+  it("removes the authenticated guard before the owner-run backfill", () => {
+    const migration = source("supabase/migrations/0076_staff_team_entry.sql");
+    const dropGuard = migration.indexOf(
+      "drop trigger if exists competition_entrants_guard_update"
+    );
+    const backfill = migration.indexOf("update public.competition_entrants");
+    const recreateGuard = migration.indexOf(
+      "create trigger competition_entrants_guard_update"
+    );
+
+    expect(dropGuard).toBeGreaterThan(-1);
+    expect(dropGuard).toBeLessThan(backfill);
+    expect(recreateGuard).toBeGreaterThan(backfill);
+  });
+
   it("notifies the student and linked parents after staff entry", () => {
     const notification = effectiveFunction("create_in_app_notification");
     const action = source("lib/actions/entrants.ts");

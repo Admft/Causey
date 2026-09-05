@@ -14,14 +14,16 @@ the verified `mail.causey.dev` Resend integration.
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0075_guardian_link_consent.sql` (including
+   `0078_admin_provision_district_school.sql` (including
    `0045_atomic_district_school_creation.sql`,
    `0046_district_hosted_reporting.sql`,
    `0060_district_admin_activity.sql`,
    `0061_search_competitions_radius.sql`,
    `0062_rate_limits.sql`,
-   `0069_p1_isolation_email_comments.sql`, and
-   `0070_p2_origin_reports_invites.sql`).
+   `0069_p1_isolation_email_comments.sql`,
+   `0070_p2_origin_reports_invites.sql`,
+   `0074_district_provisioning_codes.sql`, and
+   `0075_guardian_link_consent.sql`).
    **`0074` is a hard gate, not an optional newer file.** `0070` recreated
    `create_org_invitation` with `search_path = public`, which reverted the
    extension search path `0030` had set. On any project that applied `0070`,
@@ -33,6 +35,7 @@ the verified `mail.causey.dev` Resend integration.
    shipped in `0062` with an allowlist that never included the `comment` or
    `geo` buckets the app already sends, so event comments fail closed on any
    project running `0062` without `0075`.
+   Apply `0078` before using **Provision school** from `/admin/organizations`.
    A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch
@@ -80,7 +83,8 @@ the verified `mail.causey.dev` Resend integration.
 1. Sign in as a **super administrator**. Creating a district is reserved for
    the protected founder tier (`is_super_admin()`), enforced in the insert
    policy, the governance trigger, and both admin actions. A platform admin
-   without super-admin can still create schools, verify records, and moderate.
+   without super-admin can still verify records and moderate. Child schools
+   are created by the district office or by a super admin via Provision school.
 2. Open `/admin/organizations` and choose **Provision district**.
 3. Enter the district's official name, state, and the email address of the
    person who will run the program. Use a named person, not a shared inbox:
@@ -96,10 +100,13 @@ the verified `mail.causey.dev` Resend integration.
    email address before the membership is created.
 6. Verify the district only after checking its identity with the pilot owner.
 7. Open the district workspace and confirm the next action says to add its
-   first school.
+   first school. You can also add that school from `/admin/organizations`
+   with **Provision school** (same claim link + code, locked to the campus
+   administrator's email).
 
 Districts are platform-created. Do not create a district as a generic coach
-organization or attach students directly to the district.
+organization or attach students directly to the district. Do not create a
+school without a parent district.
 
 An activation code is not access on its own. It expires in 7 days, is rate
 limited, and still requires control of the invited mailbox. Do not treat it as
@@ -114,14 +121,24 @@ the platform operations record.
 
 ## 3. Create and delegate each school
 
-For every participating school:
+For every participating school, use **one** of these paths:
 
-1. From the district workspace, open Settings → District schools.
+**Causey ops (super admin).** From `/admin/organizations`, choose
+**Provision school**, pick the parent district, name the school, and enter
+the campus administrator's work email. Causey creates the child school and
+shows a claim link plus an eight-character code once. Send those to that
+person. They enter the code at `/claim` or open the link, create a staff
+account with that email, and accept.
+
+**District office.** From the district workspace:
+
+1. Open Settings → District schools.
 2. Create the school with its official name and state.
 3. Causey redirects to the school People page. Create a
    `school_admin` invitation.
 4. Confirm Causey queued the invitation email. Keep the generated claim link
-   as a fallback through the district's approved communication channel.
+   **and activation code** as a fallback through the district's approved
+   communication channel.
 5. After the administrator claims the account, open school Settings →
    Ownership and transfer ownership to them.
 6. Return to the district workspace and confirm the school advances to

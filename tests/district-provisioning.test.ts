@@ -16,11 +16,23 @@ function readRepoFile(relativePath: string): string {
 const migration = readRepoFile(
   "supabase/migrations/0074_district_provisioning_codes.sql"
 );
+const schoolMigration = readRepoFile(
+  "supabase/migrations/0078_admin_provision_district_school.sql"
+);
 const adminActions = readRepoFile("lib/actions/admin.ts");
 const districtActions = readRepoFile("lib/actions/district.ts");
 const provisionForm = readRepoFile("components/AdminDistrictProvisionForm.tsx");
+const schoolProvisionForm = readRepoFile(
+  "components/AdminSchoolProvisionForm.tsx"
+);
+const invitationCopyRow = readRepoFile(
+  "components/AdminInvitationCopyRow.tsx"
+);
 const adminOrgsPage = readRepoFile("app/admin/organizations/page.tsx");
 const explorer = readRepoFile("components/AdminOrganizationsExplorer.tsx");
+const peopleManager = readRepoFile(
+  "components/OrganizationPeopleManager.tsx"
+);
 const claimCodePage = readRepoFile("app/claim/page.tsx");
 
 describe("activation code helpers", () => {
@@ -121,7 +133,7 @@ describe("district provision pack", () => {
   it("tells the operator the code cannot be shown again", () => {
     expect(provisionForm).toContain("Shown once");
     expect(provisionForm).toContain("reissue the invitation");
-    expect(provisionForm).toContain("Copy {label.toLowerCase()}");
+    expect(invitationCopyRow).toContain("Copy {label.toLowerCase()}");
   });
 
   it("keeps the code entry page unindexed and fails closed", () => {
@@ -131,5 +143,71 @@ describe("district provision pack", () => {
     expect(claimCodePage).toContain(
       "That code is invalid, expired, or already used."
     );
+  });
+});
+
+describe("school provision pack", () => {
+  it("gates child-school provision on super admin and an existing district", () => {
+    expect(schoolMigration).toContain("not public.is_super_admin()");
+    expect(schoolMigration).toContain("super_admin_required");
+    expect(schoolMigration).toContain("district.type is distinct from 'district'");
+    expect(adminActions).toContain("adminProvisionDistrictSchool");
+    expect(adminActions).toContain("SUPER_ADMIN_SCHOOL_MESSAGE");
+    expect(explorer).toContain("Provision school");
+    expect(explorer).toContain("AdminSchoolProvisionForm");
+  });
+
+  it("creates a connected school without making the founder a school administrator", () => {
+    expect(schoolMigration).toContain(
+      "parent_org_id,\n    created_by,\n    owner_profile_id"
+    );
+    expect(schoolMigration).toContain(
+      "p_district_id,\n    actor,\n    coalesce(district.owner_profile_id, actor)"
+    );
+    expect(schoolMigration).not.toContain("insert into public.org_memberships");
+    expect(schoolMigration).toContain("'school_admin'");
+  });
+
+  it("returns a one-time claim pack and keeps the school if the invite fails", () => {
+    expect(schoolMigration).toContain("activation_code text");
+    expect(schoolMigration).toContain("encode(digest(raw_code, 'sha256'), 'hex')");
+    expect(schoolMigration).not.toMatch(
+      /insert into public.org_invitations[\s\S]*?activation_code text/
+    );
+    expect(adminActions).toContain("invitationError:");
+    expect(schoolProvisionForm).toContain(
+      "School created, but the invitation did not send"
+    );
+    expect(schoolProvisionForm).toContain("is a school account");
+  });
+
+  it("stops orphan-school create from the admin directory", () => {
+    expect(adminActions).toContain("ORPHAN_SCHOOL_MESSAGE");
+    expect(adminActions).toContain("Schools belong under a district. Use Provision school.");
+    expect(adminActions).toContain("USE_DISTRICT_PACK_MESSAGE");
+    expect(explorer).not.toContain("AdminOrganizationForm");
+    expect(explorer).not.toContain("Add organization");
+    expect(explorer).toContain("School account");
+    expect(explorer).toContain("part of ${org.parent.name}");
+  });
+
+  it("shows named-admin status from a platform-admin staffing RPC", () => {
+    expect(schoolMigration).toContain("get_admin_school_staffing");
+    expect(schoolMigration).toContain("platform_admin_required");
+    expect(adminActions).not.toContain("get_admin_school_staffing");
+    expect(readRepoFile("lib/data/admin.ts")).toContain(
+      'supabase.rpc("get_admin_school_staffing")'
+    );
+    expect(readRepoFile("lib/data/admin.ts")).toContain(
+      "Needs school administrator"
+    );
+    expect(explorer).toContain("School administrator status unavailable");
+  });
+
+  it("surfaces the activation code on People invite success", () => {
+    expect(peopleManager).toContain("setActivationCode(result.activationCode)");
+    expect(peopleManager).toContain("formatActivationCode(activationCode)");
+    expect(peopleManager).toContain("Copy code");
+    expect(peopleManager).toContain("type the code at /claim");
   });
 });

@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { actionErrorMessage } from "@/lib/actions/errors";
 import type { ActionResult } from "@/lib/actions/result";
 import { inviteOrganizationMember } from "@/lib/actions/district";
 import {
   getPlatformAdminUser,
   getSuperAdminUser,
 } from "@/lib/auth/platform-admin";
+import { flushPendingInvitationEmails } from "@/lib/email/delivery";
+import { buildClaimPath } from "@/lib/invitations/claim-path";
 import { DISCOVERY_CATEGORIES } from "@/lib/category-discovery";
 import {
   DISTRICT_AUDIENCE_UNAVAILABLE_MESSAGE,
@@ -34,6 +37,12 @@ import {
 
 const SUPER_ADMIN_DISTRICT_MESSAGE =
   "Creating a district is limited to founder super admins.";
+const SUPER_ADMIN_SCHOOL_MESSAGE =
+  "Provisioning a school under a district is limited to founder super admins.";
+const ORPHAN_SCHOOL_MESSAGE =
+  "Schools belong under a district. Use Provision school.";
+const USE_DISTRICT_PACK_MESSAGE =
+  "Use Provision district so the first administrator is invited in the same step.";
 
 function revalidatePublicDiscovery() {
   for (const category of DISCOVERY_CATEGORIES) {
@@ -64,6 +73,22 @@ const AdminDistrictProvisionSchema = z.object({
     .string()
     .trim()
     .email("Enter the district contact's email address.")
+    .max(320),
+  contactName: z.string().trim().max(100).optional(),
+});
+
+const AdminSchoolProvisionSchema = z.object({
+  districtId: z.string().uuid(),
+  name: z.string().trim().min(2, "Name the school.").max(80),
+  state: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{2}$/, "Pick the school's state."),
+  contactEmail: z
+    .string()
+    .trim()
+    .email("Enter the school administrator's email address.")
     .max(320),
   contactName: z.string().trim().max(100).optional(),
 });
@@ -583,37 +608,17 @@ export async function adminCreateOrganization(input: {
   if (parsed.data.type === "district" && !(await getSuperAdminUser())) {
     return { ok: false, error: SUPER_ADMIN_DISTRICT_MESSAGE };
   }
-
-  const base = slugifyName(parsed.data.name);
-  if (!base) return { ok: false, error: "Name the organization." };
-
-  const supabase = await createServerSupabaseClient();
-  for (let attempt = 1; attempt <= 5; attempt += 1) {
-    const slug = attempt === 1 ? base : withSlugSuffix(base, attempt);
-    const { data, error } = await supabase
-      .from("organizations")
-      .insert({
-        name: parsed.data.name,
-        slug,
-        type: parsed.data.type,
-        state: parsed.data.state,
-        created_by: admin.id,
-        owner_profile_id: admin.id,
-      })
-      .select("id, slug")
-      .single();
-
-    if (error) {
-      if (error.code === "23505") continue;
-      return { ok: false, error: "Could not create the organization." };
-    }
-
-    revalidatePath("/admin");
-    revalidatePath("/admin/organizations");
-    return { ok: true, id: data.id, slug: data.slug };
+  if (parsed.data.type === "district") {
+    return { ok: false, error: USE_DISTRICT_PACK_MESSAGE };
+  }
+  if (parsed.data.type === "school") {
+    return { ok: false, error: ORPHAN_SCHOOL_MESSAGE };
   }
 
-  return { ok: false, error: "That name is already in use." };
+  return {
+    ok: false,
+    error: "Clubs and teams are started by their own coaches.",
+  };
 }
 
 export type DistrictProvisionPack = {
@@ -714,6 +719,178 @@ export async function adminProvisionDistrict(input: {
       claimPath: invitation.claimPath,
       activationCode: invitation.activationCode,
       expiresAt: invitation.expiresAt,
+    },
+  };
+}
+
+export type SchoolProvisionPack = {
+  id: string;
+  slug: string;
+  name: string;
+  districtName: string;
+  invitation:
+    | {
+        email: string;
+        claimPath: string;
+        activationCode: string | null;
+        expiresAt: string;
+      }
+    | null;
+  invitationError?: string;
+};
+
+/**
+ * Super-admin ops shortcut: create a child school under an existing district
+ * and invite its named school administrator. The district office can still
+ * add schools itself; this does not make the founder a school admin.
+ */
+export async function adminProvisionDistrictSchool(input: {
+  districtId: string;
+  name: string;
+  state: string;
+  contactEmail: string;
+  contactName?: string;
+}): Promise<ActionResult<SchoolProvisionPack>> {
+  const admin = await getSuperAdminUser();
+  if (!admin) return { ok: false, error: SUPER_ADMIN_SCHOOL_MESSAGE };
+
+  const parsed = AdminSchoolProvisionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Check the school details.",
+    };
+  }
+
+  const base = slugifyName(parsed.data.name);
+  if (!base) return { ok: false, error: "Name the school." };
+
+  const supabase = await createServerSupabaseClient();
+  const { data: district, error: districtError } = await supabase
+    .from("organizations")
+    .select("id, name, slug")
+    .eq("id", parsed.data.districtId)
+    .eq("type", "district")
+    .maybeSingle();
+  if (districtError) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        districtError,
+        "Could not load that district."
+      ),
+    };
+  }
+  if (!district) {
+    return { ok: false, error: "Choose an existing district." };
+  }
+
+  let school: { id: string; slug: string } | null = null;
+  let invitation:
+    | {
+        invitation_id: string | null;
+        claim_token: string | null;
+        expires_at: string | null;
+        activation_code: string | null;
+      }
+    | null = null;
+  let lastError: { code?: string; message?: string } | null = null;
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const slug = attempt === 1 ? base : withSlugSuffix(base, attempt);
+    const { data, error } = await supabase.rpc(
+      "admin_provision_district_school",
+      {
+        p_district_id: parsed.data.districtId,
+        p_name: parsed.data.name,
+        p_slug: slug,
+        p_state: parsed.data.state,
+        p_email: parsed.data.contactEmail,
+        p_display_name: parsed.data.contactName || null,
+      }
+    );
+    if (error) {
+      lastError = error;
+      if (error.code === "23505") continue;
+      if (
+        error.code === "42501" ||
+        error.message.includes("super_admin_required")
+      ) {
+        return { ok: false, error: SUPER_ADMIN_SCHOOL_MESSAGE };
+      }
+      if (error.message.includes("district_not_found")) {
+        return { ok: false, error: "Choose an existing district." };
+      }
+      return {
+        ok: false,
+        error: actionErrorMessage(error, "Could not create the school."),
+      };
+    }
+    const row = data?.[0] as
+      | {
+          school_id: string;
+          school_slug: string;
+          invitation_id: string | null;
+          claim_token: string | null;
+          expires_at: string | null;
+          activation_code: string | null;
+        }
+      | undefined;
+    if (!row?.school_id) {
+      return {
+        ok: false,
+        error: "Could not confirm the new school. Refresh before retrying.",
+      };
+    }
+    school = { id: row.school_id, slug: row.school_slug };
+    invitation = {
+      invitation_id: row.invitation_id,
+      claim_token: row.claim_token,
+      expires_at: row.expires_at,
+      activation_code: row.activation_code,
+    };
+    break;
+  }
+
+  if (!school) {
+    return {
+      ok: false,
+      error:
+        lastError?.code === "23505"
+          ? "That school name is already in use."
+          : actionErrorMessage(lastError, "Could not create the school."),
+    };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/organizations");
+  revalidatePath(`/orgs/${district.slug}`);
+  revalidatePath(`/orgs/${school.slug}`);
+  await flushPendingInvitationEmails();
+
+  if (!invitation?.invitation_id || !invitation.claim_token) {
+    return {
+      ok: true,
+      id: school.id,
+      slug: school.slug,
+      name: parsed.data.name,
+      districtName: district.name,
+      invitation: null,
+      invitationError: "Could not create the school administrator invitation.",
+    };
+  }
+
+  return {
+    ok: true,
+    id: school.id,
+    slug: school.slug,
+    name: parsed.data.name,
+    districtName: district.name,
+    invitation: {
+      email: parsed.data.contactEmail,
+      claimPath: buildClaimPath(invitation.claim_token),
+      activationCode: invitation.activation_code,
+      expiresAt: invitation.expires_at ?? new Date().toISOString(),
     },
   };
 }

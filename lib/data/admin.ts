@@ -17,6 +17,14 @@ import {
 } from "@/lib/tournament-readiness";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+export type SchoolAdminStaffing =
+  | { ok: false }
+  | {
+      ok: true;
+      stage: "needs_invite" | "awaiting_claim" | "claimed";
+      label: string;
+    };
+
 export type AdminOrganizationRow = {
   id: string;
   name: string;
@@ -39,6 +47,7 @@ export type AdminOrganizationRow = {
   }[];
   member_count: number;
   tournament_count: number;
+  schoolAdminStaffing: SchoolAdminStaffing | null;
 };
 
 export type AdminUserDirectoryRow = {
@@ -518,12 +527,37 @@ export async function getAdminOverview() {
   };
 }
 
+function schoolAdminStaffingFromCounts(
+  pendingInvites: number,
+  delegatedAdmins: number
+): Extract<SchoolAdminStaffing, { ok: true }> {
+  if (pendingInvites > 0 && delegatedAdmins === 0) {
+    return {
+      ok: true,
+      stage: "awaiting_claim",
+      label: "Awaiting administrator claim",
+    };
+  }
+  if (delegatedAdmins === 0) {
+    return {
+      ok: true,
+      stage: "needs_invite",
+      label: "Needs school administrator",
+    };
+  }
+  return {
+    ok: true,
+    stage: "claimed",
+    label: "School administrator claimed",
+  };
+}
+
 export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
   const supabase = await createServerSupabaseClient();
   // Keep the org list query embed-light: a bad PostgREST relationship hint
   // (or a review table that is not on the linked project yet) used to fail the
   // whole select, and callers treated that as an empty directory.
-  const [organizations, memberships, orgCompetitions, reviews] =
+  const [organizations, memberships, orgCompetitions, reviews, staffing] =
     await Promise.all([
       supabase
         .from("organizations")
@@ -537,6 +571,7 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
       supabase
         .from("organization_verification_reviews")
         .select("org_id, note, reviewed_at"),
+      supabase.rpc("get_admin_school_staffing"),
     ]);
 
   if (organizations.error) {
@@ -573,13 +608,51 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
     }
   }
 
-  return (organizations.data ?? []).map((row) => ({
-    ...row,
-    parent: Array.isArray(row.parent) ? (row.parent[0] ?? null) : row.parent,
-    organization_verification_reviews: reviewsByOrgId.get(row.id) ?? [],
-    member_count: memberCounts.get(row.id) ?? 0,
-    tournament_count: tournamentCounts.get(row.id) ?? 0,
-  })) as unknown as AdminOrganizationRow[];
+  const staffingUnavailable = Boolean(staffing.error);
+  if (staffing.error && !isMissingAdminRpc(staffing.error, "get_admin_school_staffing")) {
+    console.error("get_admin_school_staffing failed", staffing.error);
+  }
+  const staffingBySchool = new Map<
+    string,
+    { pending_admin_invites: number; active_delegated_admins: number }
+  >();
+  if (!staffing.error) {
+    for (const row of staffing.data ?? []) {
+      staffingBySchool.set(row.school_id, {
+        pending_admin_invites: Number(row.pending_admin_invites ?? 0),
+        active_delegated_admins: Number(row.active_delegated_admins ?? 0),
+      });
+    }
+  }
+
+  return (organizations.data ?? []).map((row) => {
+    const isConnectedSchool =
+      row.type === "school" && Boolean(row.parent_org_id);
+    let schoolAdminStaffing: SchoolAdminStaffing | null = null;
+    if (isConnectedSchool) {
+      if (staffingUnavailable) {
+        schoolAdminStaffing = { ok: false };
+      } else {
+        const counts = staffingBySchool.get(row.id) ?? {
+          pending_admin_invites: 0,
+          active_delegated_admins: 0,
+        };
+        schoolAdminStaffing = schoolAdminStaffingFromCounts(
+          counts.pending_admin_invites,
+          counts.active_delegated_admins
+        );
+      }
+    }
+
+    return {
+      ...row,
+      parent: Array.isArray(row.parent) ? (row.parent[0] ?? null) : row.parent,
+      organization_verification_reviews: reviewsByOrgId.get(row.id) ?? [],
+      member_count: memberCounts.get(row.id) ?? 0,
+      tournament_count: tournamentCounts.get(row.id) ?? 0,
+      schoolAdminStaffing,
+    };
+  }) as unknown as AdminOrganizationRow[];
 }
 
 function mapAdminDirectoryUsers(

@@ -13,6 +13,7 @@ import {
   ORG_ROLE_LABELS,
   type OrgMemberRole,
 } from "@/lib/auth/orgs";
+import { formatActivationCode } from "@/lib/invitations/activation-code";
 import { invitationRoleFitsOrganization } from "@/lib/invitations/claim-path";
 import type { OrgInvitationRow } from "@/lib/data/district";
 
@@ -81,6 +82,7 @@ export function OrganizationPeopleManager({
   );
   const [message, setMessage] = useState<string | null>(null);
   const [claimPath, setClaimPath] = useState<string | null>(null);
+  const [activationCode, setActivationCode] = useState<string | null>(null);
   const [bulkClaims, setBulkClaims] = useState<BulkInviteClaimRow[]>([]);
   const [failedRows, setFailedRows] = useState<
     { row: number; email: string; error: string }[]
@@ -109,6 +111,7 @@ export function OrganizationPeopleManager({
     setError(null);
     setMessage(null);
     setClaimPath(null);
+    setActivationCode(null);
     setBulkClaims([]);
     setFailedRows([]);
     setCopied(false);
@@ -126,6 +129,7 @@ export function OrganizationPeopleManager({
       }
       setMessage(`Invitation created for ${email}.`);
       setClaimPath(result.claimPath);
+      setActivationCode(result.activationCode);
       setEmail("");
       setDisplayName("");
       router.refresh();
@@ -147,6 +151,7 @@ export function OrganizationPeopleManager({
     setError(null);
     setMessage(null);
     setClaimPath(null);
+    setActivationCode(null);
     setBulkClaims([]);
     setFailedRows([]);
     setCopied(false);
@@ -187,6 +192,7 @@ export function OrganizationPeopleManager({
     setError(null);
     setMessage(null);
     setClaimPath(null);
+    setActivationCode(null);
     setBulkClaims([]);
     setFailedRows([]);
     setCopied(false);
@@ -202,6 +208,7 @@ export function OrganizationPeopleManager({
       }
       setMessage(`New claim link ready for ${result.email}.`);
       setClaimPath(result.claimPath);
+      setActivationCode(result.activationCode);
       await copyText(result.claimPath);
       router.refresh();
     } finally {
@@ -212,6 +219,11 @@ export function OrganizationPeopleManager({
   async function copyClaimPath() {
     if (!claimPath) return;
     await copyText(claimPath);
+  }
+
+  async function copyActivationCode() {
+    if (!activationCode) return;
+    await copyText(formatActivationCode(activationCode));
   }
 
   async function copyBulkClaims() {
@@ -328,8 +340,10 @@ export function OrganizationPeopleManager({
           {claimPath ? (
             <div className="mt-3">
               <p className="text-sm text-muted-strong">
-                Causey queued the invitation email. Keep this claim link as a
-                fallback — it expires, and they set their own password.
+                Causey queued the invitation email. Keep this claim link
+                {activationCode ? " and activation code" : ""} as a fallback —
+                they expire, and the person sets their own password. Staff can
+                type the code at /claim.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <code className="max-w-full break-all rounded-md border border-line bg-white px-2 py-1 text-xs text-foreground">
@@ -343,6 +357,20 @@ export function OrganizationPeopleManager({
                   {copied ? "Copied" : "Copy link"}
                 </button>
               </div>
+              {activationCode ? (
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <code className="rounded-md border border-line bg-white px-2 py-1 font-mono text-xs tracking-[0.18em] text-foreground">
+                    {formatActivationCode(activationCode)}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={copyActivationCode}
+                    className="text-sm font-semibold text-brand-red hover:underline"
+                  >
+                    Copy code
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
           {bulkClaims.length ? (
@@ -491,8 +519,9 @@ export function OrganizationPeopleManager({
         )}
         {invitations.some(canReissueInvitation) ? (
           <p className="mt-3 text-xs text-muted">
-            Reissue creates a fresh claim link and revokes the previous pending
-            one. Causey queues a new email; copy the link as a delivery fallback.
+            Reissue creates a fresh claim link and activation code and revokes
+            the previous pending one. Causey queues a new email; copy the link
+            or code as a delivery fallback.
           </p>
         ) : null}
       </section>

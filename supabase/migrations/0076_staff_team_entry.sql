@@ -18,6 +18,11 @@ alter table public.competition_entrants
 comment on column public.competition_entrants.response_source is
   'Who recorded the going / not-going answer: the student, a linked parent, or competition staff. Null while still invited or for legacy rows.';
 
+-- The guard installed by 0064 requires an authenticated app actor. Remove it
+-- before this owner-run backfill; the updated guard is recreated below.
+drop trigger if exists competition_entrants_guard_update
+  on public.competition_entrants;
+
 -- Honest backfill: only rows where the student answered themselves.
 update public.competition_entrants
 set response_source = 'self'
@@ -209,8 +214,6 @@ begin
 end;
 $$;
 
-drop trigger if exists competition_entrants_guard_update
-  on public.competition_entrants;
 create trigger competition_entrants_guard_update
   before update on public.competition_entrants
   for each row execute function public.guard_competition_entrant_update();
