@@ -66,7 +66,7 @@ export default async function NotificationsPage() {
         Updates that need attention
       </h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        In-app updates for invitations, RSVPs, announcements, account changes,
+        In-app updates for invitations, recommended events, RSVPs, announcements, account changes,
         and tournament schedule or cancellation notices.
         {profile?.role === "parent"
           ? " Linked-student actions appear here and open in the family desk."
@@ -168,9 +168,10 @@ export default async function NotificationsPage() {
         </div>
         {!notifications.length ? (
           <p className="mt-3 max-w-prose text-sm text-muted">
-            Nothing has been recorded for your account yet. When coaches invite
-            you, RSVPs change, announcements post, or tracked tournaments change
-            dates or cancel, those updates appear here.
+            Nothing has been recorded for your account yet. When a parent
+            recommends an event, coaches invite you, RSVPs change, announcements
+            post, or tracked tournaments change dates or cancel, those updates
+            appear here.
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">

@@ -17,6 +17,9 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Tournament invite used the same empty upsert body as recommend: Manage said “already invited” and skipped Alerts; invite now re-reads invited rows for the coach, then fans out student + parent alerts — 2026-09-05
+- [x] Parent recommend-event now writes an Alerts row for the student (`0079` notify_event_recommendation + backfill) and lists the rec on Plan, not only a buried Orgs section — 2026-09-05
+- [x] Parent recommend-event count was lying: upsert `ignoreDuplicates` returns an empty body even after a real send, so the event page said “Sent to 0 people”; send now re-reads saved recipient ids, names who got it, and marks already-sent people — 2026-09-05
 - [x] Super-admin Provision school under a district (`0078`): child school + named school-admin claim pack; `/admin/organizations` nests School account rows with invited/waiting/claimed status; orphan-school create removed; People shows the activation code — 2026-09-05
 - [x] Chess nationals pin rebuild (user-directed): flat red slab → gradient face with resting red aura, inner edge light, and a slow sheen loop (the old one-shot shine fired before first scroll); labeled local → state → national-invitationals ladder rail fills the panel on home + `/chess` (no more empty bubble); rgba-first paint with color-mix only as an enhancement layer and `min-width` media queries so older WebKit/Gecko get the full look; reduced-motion kills sheen/pulse/lift — 2026-09-05
 - [x] P4: labeled “Get your kid to chess nationals” pin above chess search results and the homepage chess rail routes to `/pathways`; explorer auto-opens a state-championship chain from seeded rules; not an official US Chess ruling — 2026-09-05

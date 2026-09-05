@@ -50,6 +50,7 @@ import {
   getOrganizationSlugById,
   getRatingSummary,
   getRecommendTargets,
+  getSentRecommendationRecipientIds,
   viewerHasOrganizationContext,
   type ClubGoingGroup,
   type CoachOrgAttendance,
@@ -181,6 +182,7 @@ export default async function EventPage({ params }: Params) {
   }[] = [];
   let coachOrgs: CoachOrgAttendance[] = [];
   let recommendTargets: RecommendTarget[] = [];
+  let sentRecommendationIds: string[] = [];
   let clubGoing: ClubGoingGroup[] = [];
   let goingFromOrgLabel = "Going from your club";
   const [ratingSummary, hostOrgSlug, comments] = await Promise.all([
@@ -209,9 +211,10 @@ export default async function EventPage({ params }: Params) {
         competition.org_id
       );
     }
-    [recommendTargets, clubGoing] = await Promise.all([
+    [recommendTargets, clubGoing, sentRecommendationIds] = await Promise.all([
       getRecommendTargets(user.id),
       getClubGoing(competition.id),
+      getSentRecommendationRecipientIds(competition.id, user.id),
     ]);
     const viewerOrgs = await getMyOrgs(user.id);
     goingFromOrgLabel = goingFromOrgHeading(
@@ -767,6 +770,7 @@ export default async function EventPage({ params }: Params) {
               competitionId={competition.id}
               eventSlug={competition.slug}
               targets={recommendTargets}
+              alreadySentIds={sentRecommendationIds}
             />
           ) : null}
           <div className="border-b border-line pb-5">
