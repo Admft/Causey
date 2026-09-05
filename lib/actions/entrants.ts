@@ -55,6 +55,149 @@ export async function setRsvp(input: {
   return result;
 }
 
+/**
+ * Coach / school-admin team entry: mark a rostered student going or not going
+ * when the family has not answered. Audited as response_source = staff.
+ * Assistants stay read-only at the RLS boundary.
+ */
+export async function markEntrantStaffRsvp(input: {
+  competitionId: string;
+  profileId: string;
+  eventSlug: string;
+  status: "going" | "not_going";
+}): Promise<ActionResult> {
+  const user = await getSessionUser();
+  if (!user) return { ok: false, error: "Sign in to continue." };
+  if (input.status !== "going" && input.status !== "not_going") {
+    return { ok: false, error: "Pick going or not going." };
+  }
+  if (input.profileId === user.id) {
+    return setRsvp({
+      competitionId: input.competitionId,
+      profileId: input.profileId,
+      status: input.status,
+      eventSlug: input.eventSlug,
+    });
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const [managementCheck, entrantCheck] = await Promise.all([
+    supabase.rpc("can_manage_competition", {
+      p_competition_id: input.competitionId,
+      p_profile_id: user.id,
+    }),
+    supabase.rpc("can_invite_to_competition", {
+      p_competition_id: input.competitionId,
+      p_entrant_id: input.profileId,
+      p_inviter_id: user.id,
+    }),
+  ]);
+  const canManage = managementCheck.data === true || entrantCheck.data === true;
+  if (!canManage && managementCheck.error && entrantCheck.error) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        managementCheck.error,
+        "Could not verify staff entry access."
+      ),
+    };
+  }
+  if (!canManage) {
+    return {
+      ok: false,
+      error: "Only coaches and administrators can mark a student going.",
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("competition_entrants")
+    .update({
+      status: input.status,
+      responded_by: user.id,
+      responded_at: new Date().toISOString(),
+      response_source: "staff",
+    })
+    .eq("competition_id", input.competitionId)
+    .eq("profile_id", input.profileId)
+    .in("status", ["invited", "going", "not_going"])
+    .select("profile_id");
+  if (error || !data?.length) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "That reply could not be saved. Reload and try again.",
+        "You don’t have permission to mark this student going."
+      ),
+    };
+  }
+
+  const { data: competition } = await supabase
+    .from("competitions")
+    .select("name, slug")
+    .eq("id", input.competitionId)
+    .maybeSingle();
+  const eventName = competition?.name ?? "a tournament";
+  const slug = competition?.slug ?? input.eventSlug;
+  const statusLabel = input.status === "going" ? "going" : "not going";
+
+  const studentNote = [
+    {
+      recipientId: input.profileId,
+      kind: "rsvp_update" as const,
+      title: `Staff marked you ${statusLabel}: ${eventName}`,
+      body:
+        input.status === "going"
+          ? "A coach marked you going. You or a linked parent can still change this on the event page."
+          : "A coach marked you not going. You or a linked parent can still change this on the event page.",
+      href: `/event/${slug}`,
+      entityType: "competition",
+      entityId: input.competitionId,
+      dedupeKey: `staff-rsvp:${input.competitionId}:${input.profileId}:${input.status}`,
+    },
+  ];
+  const guardians = await getActiveGuardiansForProfiles([input.profileId]);
+  if (guardians.error) {
+    revalidateEventSurfaces(input.eventSlug);
+    return {
+      ok: false,
+      error:
+        "The reply was saved, but linked parents could not be notified.",
+    };
+  }
+  const parentNotes = guardians.guardians
+    .filter((guardian) => guardian.parentId !== user.id)
+    .map((guardian) => ({
+      recipientId: guardian.parentId,
+      kind: "rsvp_update" as const,
+      title: `${guardian.childDisplayName} marked ${statusLabel} by staff · ${eventName}`,
+      body:
+        input.status === "going"
+          ? `${guardian.childDisplayName} was marked going by a coach. Open the family desk to review or change the answer.`
+          : `${guardian.childDisplayName} was marked not going by a coach. Open the family desk to review or change the answer.`,
+      href: "/family",
+      entityType: "competition",
+      entityId: input.competitionId,
+      dedupeKey: `staff-rsvp:${input.competitionId}:${input.profileId}:parent:${guardian.parentId}:${input.status}`,
+    }));
+  const notifications = await createInAppNotifications([
+    ...studentNote,
+    ...parentNotes,
+  ]);
+  if (notifications.failures.length) {
+    revalidateEventSurfaces(input.eventSlug);
+    return {
+      ok: false,
+      error: `The reply was saved, but ${notifications.failures.length} in-app ${
+        notifications.failures.length === 1 ? "update" : "updates"
+      } could not be created.`,
+    };
+  }
+
+  revalidateEventSurfaces(input.eventSlug);
+  return { ok: true };
+}
+
 export async function inviteEntrants(
   competitionId: string,
   eventSlug: string,

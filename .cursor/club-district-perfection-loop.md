@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- P4: chess nationals pin above chess search → `/pathways` — 2026-09-05
+- P5: staff team-entry — coaches/school admins mark student going on manage (`0076`) — 2026-09-05
 
 ## Last tick
 
+- 2026-09-05 — Staff team-entry: coaches and school admins can mark an invited student going / not going on Manage event; audited as `response_source = staff`; student + linked parents get in-app alerts; Family and reply meta label staff entry. Apply `0076`.
 - 2026-09-05 — Chess search and the homepage chess rail pin a labeled “Get your kid to chess nationals” placement above the list; click opens `/pathways` on the current seeded chains (not an official US Chess ruling).
 - 2026-09-04 — Tournament search: limiter RPC errors no longer 429 as “too often”; search/geo fail open; actor key is always hashed IP plus cookie JWT.
 - 2026-09-04 — Host create preview: search card and event-page start (same CompetitionCard / event hero), not a fact dump.

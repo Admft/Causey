@@ -126,16 +126,22 @@ export type ManageReplyRegistrationStatus =
  * name; organizer-registration follow-up only appears for students marked going
  * when the listing has an external registration URL.
  */
+export type ResponseSource = "self" | "parent" | "staff";
+
 export function formatManageReplyMeta(options: {
   status: RsvpStatus | AttendanceOutcome;
   orgName?: string | null;
   memberStatus?: string | null;
   hasRegUrl?: boolean;
   registrationStatus?: ManageReplyRegistrationStatus;
+  responseSource?: ResponseSource | string | null;
 }): string {
   const parts = [rsvpLabel(options.status)];
   const school = options.orgName?.trim();
   if (school) parts.push(school);
+  if (options.responseSource === "staff") {
+    parts.push("entered by staff");
+  }
   if (options.memberStatus && options.memberStatus !== "active") {
     parts.push("no longer on roster");
   }

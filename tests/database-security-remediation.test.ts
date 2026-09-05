@@ -55,7 +55,7 @@ describe("effective database security remediation", () => {
   it("authorizes each notification relationship and rejects external hrefs", () => {
     const definition = effectiveFunction("create_in_app_notification");
     expect(definition.file).toBe(
-      "0067_household_alerts_and_event_covers.sql"
+      "0076_staff_team_entry.sql"
     );
     expect(definition.sql).toContain("left(p_href, 2) = '//'");
     expect(definition.sql).toContain(
@@ -68,6 +68,8 @@ describe("effective database security remediation", () => {
     expect(definition.sql).toContain(":parent:");
     expect(definition.sql).toContain("p_kind = 'result'");
     expect(definition.sql).toContain("authorized is not true");
+    expect(definition.sql).toContain("response_source = 'staff'");
+    expect(definition.sql).toContain("staff-rsvp:");
     expect(remediation).toContain(
       ") to authenticated;\n\ncomment on function public.create_in_app_notification"
     );
@@ -130,6 +132,7 @@ describe("effective database security remediation", () => {
     const guard = effectiveFunction(
       "guard_competition_entrant_update"
     );
+    expect(guard.file).toBe("0076_staff_team_entry.sql");
     expect(guard.sql).toContain(
       "new.responded_by is distinct from actor"
     );
@@ -142,6 +145,8 @@ describe("effective database security remediation", () => {
     expect(guard.sql).toContain("entrant_result_update_not_authorized");
     expect(guard.sql).toContain("entrant_identity_fields_locked");
     expect(guard.sql).toContain("result_marked_by is distinct from actor");
+    expect(guard.sql).toContain("response_source is distinct from 'staff'");
+    expect(guard.sql).toContain("expected_source");
     expect(remediation).toContain("attendance_marked_by,");
     expect(remediation).toContain("attendance_marked_at");
   });
@@ -155,12 +160,13 @@ describe("effective database security remediation", () => {
     const history = effectiveFunction(
       "get_org_member_competition_history"
     );
-    expect(attendance.file).toBe("0064_entrant_results.sql");
+    expect(attendance.file).toBe("0076_staff_team_entry.sql");
     expect(attendance.sql).toContain(
       "public.can_operate_org_competitions("
     );
     expect(attendance.sql).toContain("entrant.placement");
     expect(attendance.sql).toContain("entrant.award_label");
+    expect(attendance.sql).toContain("entrant.response_source");
     expect(history.sql).toContain("public.is_parent_of(actor, p_profile_id)");
     expect(history.sql).not.toContain("date_of_birth");
     expect(history.sql).not.toContain("email");

@@ -43,6 +43,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Finding tournaments no longer shows “too often” when the limiter RPC errors or a signed-in search sent a `user:` key `0069` rejects — 2026-09-04
 - [x] Host a competition preview shows the real search card and event-page start (not a fact dump) — 2026-09-04
 - [x] Host a competition requires type plus a visible discipline chip (same catalog as search); no silent chess default — 2026-09-04
+- [x] Staff team-entry: coaches and school admins mark a student going / not going on Manage event (`0076`); audited `response_source = staff`; student + linked parents notified; Family labels staff entry — 2026-09-05
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -123,9 +124,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 13. **P4 · Chess federation pin was missing · M · shipped 2026-09-05**  
    Surface: `/chess` results and the homepage chess rail now have a labeled “Get your kid to chess nationals” placement into `/pathways`. Uses seeded Denker/Barber/Rockefeller/Haring chains. Not an official US Chess ruling; swap copy when they send written pathway info.
 
+14. **P5 · Staff could not mark a student going · M · shipped 2026-09-05**  
+   Surface: `/event/[slug]/manage` replies now offer Mark going / Can’t go for coaches and school admins. Migration `0076` audits `response_source = staff` + `responded_by`, notifies the student and linked parents, and keeps assistants read-only. Family desk labels “Marked by staff.” Students and parents can still change the answer.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0075` in each environment (`0074` and `0075` are both hard gates — see the runbook). Then the P5 staff team-entry path: coaches and school admins marking a student as going, audited as staff-entered, with the student and linked parents notified. Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
+Ops proof of email at school volume, and apply migrations through `0076` in each environment (`0074`–`0076` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
 
 ### Out-of-scope refusals this pass
 

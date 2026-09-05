@@ -161,4 +161,14 @@ describe("formatManageReplyMeta", () => {
       })
     ).toBe("Going · no longer on roster");
   });
+
+  it("labels staff team-entry on manage replies", () => {
+    expect(
+      formatManageReplyMeta({
+        status: "going",
+        orgName: "East Middle",
+        responseSource: "staff",
+      })
+    ).toBe("Going · East Middle · entered by staff");
+  });
 });

@@ -77,7 +77,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Rosters and groups | School/club roster, groups for invites and attendance | Yes |
 | Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters, stamps school of origin, and labels replies by school | Yes |
 | Event audiences | Public, district-only, school-only, invite-only | Yes |
-| RSVP and attendance | Going / not going, attendance on the day, season view | Yes |
+| RSVP and attendance | Going / not going (student, parent, or staff team-entry), attendance on the day, season view | Yes |
 | Organizer registration tracking | Families mark when they finished the external registration | Yes |
 | Family follow-through | Parent inbox of named child actions | Yes |
 | Announcements | Short notes from district or school staff; district overview can post once to every connected school | Yes |

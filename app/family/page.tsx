@@ -498,12 +498,14 @@ export default async function FamilyPage() {
                           meta={`${formatDateRange(
                             row.competition!.start_date,
                             row.competition!.end_date
-                          )}${
+                          )                          }${
                             row.responded_by === user.id
                               ? " · RSVP’d by you"
                               : row.responded_by === child.profile_id
                                 ? ` · RSVP’d by ${child.display_name}`
-                                : ""
+                                : row.response_source === "staff"
+                                  ? " · Marked by staff"
+                                  : ""
                           }${
                             row.registration_status === "registered"
                               ? " · organizer registration marked complete"

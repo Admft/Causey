@@ -6,6 +6,7 @@ import {
   EntrantManager,
   RemoveEntrantButton,
   ResultForm,
+  StaffRsvpButtons,
 } from "@/components/EntrantManager";
 import { EventOrganizerSubnav } from "@/components/EventOrganizerSubnav";
 import { EventPulseStrip } from "@/components/EventPulseStrip";
@@ -368,8 +369,8 @@ export default async function ManageEventPage({
         summary.awaiting === 1 ? "reply is" : "replies are"
       } still open`,
       description: isDistrictHost
-        ? `${summary.going} going · ${summary.notGoing} can’t go. Replies name each school so you can follow up without leaving this page.`
-        : `${summary.going} going · ${summary.notGoing} can’t go. Follow up, or invite more students if the roster grew.`,
+        ? `${summary.going} going · ${summary.notGoing} can’t go. Mark going for a student when the family has not answered — they still can change it. Replies name each school.`
+        : `${summary.going} going · ${summary.notGoing} can’t go. Mark going for a student when the family has not answered, or invite more if the roster grew.`,
       action: { href: "#rsvps", label: "Review replies" },
       secondary:
         candidates.length > 0
@@ -511,6 +512,7 @@ export default async function ManageEventPage({
                             registrationStatus: registrationByUser.get(
                               row.profile_id
                             ),
+                            responseSource: row.response_source,
                           })}
                         </p>
                       </div>
@@ -536,12 +538,24 @@ export default async function ManageEventPage({
                             ) : null}
                           </div>
                         ) : (
-                          <RemoveEntrantButton
-                            competitionId={competition.id}
-                            eventSlug={competition.slug}
-                            profileId={row.profile_id}
-                            displayName={row.display_name || "this student"}
-                          />
+                          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+                            {row.status === "invited" ||
+                            row.status === "going" ||
+                            row.status === "not_going" ? (
+                              <StaffRsvpButtons
+                                competitionId={competition.id}
+                                eventSlug={competition.slug}
+                                profileId={row.profile_id}
+                                status={row.status}
+                              />
+                            ) : null}
+                            <RemoveEntrantButton
+                              competitionId={competition.id}
+                              eventSlug={competition.slug}
+                              profileId={row.profile_id}
+                              displayName={row.display_name || "this student"}
+                            />
+                          </div>
                         )}
                       </div>
                     </li>
