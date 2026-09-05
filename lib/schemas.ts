@@ -89,7 +89,7 @@ export const TournamentSectionDraftSchema = z.object({
  * a coach can leave at any point and resume without relying on browser storage.
  */
 export const TournamentDraftDataSchema = z.object({
-  category: CompetitionCategorySchema.default("chess"),
+  category: z.union([CompetitionCategorySchema, z.literal("")]).default(""),
   customCategoryName: z.string().trim().max(80).default(""),
   participationMode: ParticipationModeSchema.default("in_person"),
   name: z.string().max(120).default(""),

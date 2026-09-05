@@ -34,6 +34,7 @@ const values = TournamentUpdateSchema.parse({
     },
   ],
   rated: false,
+  primaryFacet: "robotics",
 });
 
 describe("atomic multi-category mutations", () => {

@@ -17,7 +17,9 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Host a competition requires an explicit type and, for STEM/arts/writing/debate, a visible discipline chip from the search catalog; create no longer defaults to chess — 2026-09-04
 - [x] Skip link no longer sits in the header as plain text: production CSS had dropped `.skip-to-content`, so the clip/`sr-only` `.skip-link` only appears on Tab — 2026-09-04
+- [x] Platform admin account stats open the matching directory: Total accounts lists everyone, Platform admins lists only platform admins (`/admin/users?access=admins`, migration `0073`) — 2026-09-04
 - [x] P3 remaining (layout + honesty): `/billing` adds entitlements, invoices, and dunning; `/portals` is a Vercel-404 custom-host preview; Privacy/Terms name processors and keep subscription not in force; skip-to-content + single `main` + footer legal nav — 2026-09-03
 - [x] P3 `/billing` Stripe Checkout panel uses the same hero card and fact-row recipe as the rest of the page (no Checkout clone widget) — 2026-09-03
 - [x] P3 club SaaS layout preview: `/billing` shows Stripe Checkout and a billing desk (active / past due / canceled) with unpublished amounts; Vercel always 404s; no payment SDK — 2026-09-02
@@ -53,6 +55,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
+- [x] Mobile Add to Home Screen: Android uses the native install prompt when Chromium fires it; iPhone/iPad (and Chrome-on-iOS) get a Safari Share walkthrough; in-app browsers are sent to a real browser. Footer CTA plus signed-in More menu; hidden once the icon is already on the Home Screen — 2026-09-04
 - [x] Home organizer board switch is a massive sliding "window" control (user feedback: the district section was easy to scroll past in the default club view): full-width red/blue track with a draggable thumb that carries white mirrored labels across the halves, live-switches at the midpoint, and snaps with the brand curve; the district half sheens on a slow 4.8s loop until tried once; mode changes slide the board copy/body in the thumb's travel direction; keyboard keeps real buttons with aria-pressed + track focus ring, reduced motion gets instant snaps — 2026-08-27
 - [x] Chess search cards copy Google Sites / Facebook covers into `tournament-covers` so signed `lh3.googleusercontent.com` URLs do not 403 as empty boxes (Farmers Branch TLA and similar) — 2026-08-26
 - [x] Public event travel handoff is roster-first: clubs, teams, and schools use one “Bring your roster” chooser instead of repeated organization buttons; district offices are excluded because they coordinate through connected school rosters, and the server action rejects forged district attendance — 2026-08-26

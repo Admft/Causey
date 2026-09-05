@@ -19,6 +19,7 @@ import {
 } from "@/lib/data/tournament-mutations";
 import {
   getAdminUsers,
+  parseAdminUserAccess,
   type AdminUserDirectoryRow,
 } from "@/lib/data/admin";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
@@ -143,6 +144,7 @@ const AdminOrgMembershipSchema = z.object({
 const AdminUserSearchSchema = z.object({
   query: z.string().trim().max(200),
   page: z.number().int().min(1).max(10_000),
+  access: z.enum(["all", "admins"]).optional(),
 });
 
 const AdminOrganizationVerificationSchema = z
@@ -174,6 +176,7 @@ const AdminBulkSchoolVerificationSchema = z.object({
 export async function adminSearchUsers(input: {
   query: string;
   page: number;
+  access?: string;
 }): Promise<
   ActionResult<{
     users: AdminUserDirectoryRow[];
@@ -197,6 +200,7 @@ export async function adminSearchUsers(input: {
     query: parsed.data.query,
     limit: 50,
     offset: (parsed.data.page - 1) * 50,
+    access: parseAdminUserAccess(parsed.data.access),
   });
   if (result.error) return { ok: false, error: result.error };
   return {

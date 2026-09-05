@@ -28,6 +28,7 @@ const coach = { id: "coach-1", role: "coach", role_unlocked: true };
 const validTournament = {
   orgId: "11111111-1111-1111-1111-111111111111",
   orgSlug: "probe-school",
+  category: "chess" as const,
   name: "Spring Scholastic Open",
   startDate: "2027-03-01",
   endDate: null,

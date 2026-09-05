@@ -82,6 +82,21 @@ const validCreate = {
   rated: false,
 };
 
+const stemCreate = {
+  ...validCreate,
+  category: "stem" as const,
+  customCategoryName: "",
+  primaryFacet: "robotics",
+};
+
+const chessCreate = {
+  ...validCreate,
+  category: "chess" as const,
+  customCategoryName: "",
+  primaryFacet: "",
+  rated: true,
+};
+
 describe("multi-category competition contract", () => {
   it("parses an online non-chess competition without a physical location", () => {
     const parsed = CompetitionSchema.parse(baseCompetition);
@@ -97,6 +112,29 @@ describe("multi-category competition contract", () => {
       TournamentCreateSchema.safeParse({
         ...validCreate,
         customCategoryName: "",
+      }).success
+    ).toBe(false);
+  });
+
+  it("requires a discipline for types that have one and never defaults to chess", () => {
+    expect(TournamentCreateSchema.safeParse(stemCreate).success).toBe(true);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...stemCreate,
+        primaryFacet: "",
+      }).success
+    ).toBe(false);
+    expect(TournamentCreateSchema.safeParse(chessCreate).success).toBe(true);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...validCreate,
+        category: "",
+      }).success
+    ).toBe(false);
+    expect(
+      TournamentCreateSchema.safeParse({
+        ...validCreate,
+        category: undefined,
       }).success
     ).toBe(false);
   });
@@ -141,6 +179,7 @@ describe("multi-category competition contract", () => {
         customCategoryName: "Academic decathlon",
       })
     ).toBe("Academic decathlon");
+    expect(competitionTypeLabel({ category: "" })).toBe("Type not chosen");
   });
 
   it("keeps district authority and category checks at the database boundary", () => {
@@ -190,5 +229,25 @@ describe("multi-category competition contract", () => {
     expect(card).toContain("Organization hosted");
     expect(card).toContain("border-org-gold");
     expect(tokens).toContain("--org-gold");
+  });
+
+  it("hosts with required discipline chips and no silent chess default", () => {
+    const form = readFileSync(
+      resolve(process.cwd(), "components/TournamentCreateForm.tsx"),
+      "utf8"
+    );
+    const validation = readFileSync(
+      resolve(process.cwd(), "lib/validation/tournament.ts"),
+      "utf8"
+    );
+    expect(form).toContain("CategoryGraphic");
+    expect(form).toContain("host-discipline-label");
+    expect(form).toContain("primaryFacetsForCategory(category)");
+    expect(form).toContain("requiredOrganizerFacetMessage");
+    expect(form).not.toContain("Not tagged yet");
+    expect(form).not.toContain('category || "chess"');
+    expect(form).toContain("formatCompetitionFacetLabel");
+    expect(validation).toContain("requiredOrganizerFacetMessage");
+    expect(validation).not.toContain('CompetitionCategorySchema.default("chess")');
   });
 });

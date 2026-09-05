@@ -98,9 +98,8 @@ export default async function NewCompetitionPage({
           {requestedDraft ? "Resume competition draft" : "Host a competition"}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Choose the competition type, add the details families need, and
-          select who can see it. Member events publish immediately; public
-          listings go to platform review.
+          Pick the type and discipline, then the details families need. Member
+          events publish immediately; public listings go to platform review.
         </p>
 
         {view.org.type === "district" && !requestedDraft ? (

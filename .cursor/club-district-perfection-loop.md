@@ -30,10 +30,12 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- P3 remaining: local `/billing` (invoices, dunning, entitlements) + `/portals` custom-host preview; both 404 on Vercel — 2026-09-03
+- Host competition: required type + discipline chips (search catalog); create/preview layout lead with what it is — 2026-09-04
 
 ## Last tick
 
+- 2026-09-04 — Host a competition: type tiles with category marks, required discipline/format/genre chips, no silent chess default on draft or publish.
+- 2026-09-04 — Platform admin account stats filter the directory: Total accounts → every account, Platform admins → `/admin/users?access=admins` (`0073`).
 - 2026-09-03 — P3 remaining: `/billing` shows entitlements, unpublished invoices, and dunning; `/portals` is a local custom-host preview (UUID bind, fail-closed unknown host). Privacy/Terms name Vercel, Supabase, Resend, Sentry, OpenAI, and GitHub Actions; club subscription is not in force. Skip-to-content; nested `<main>` removed; footer legal nav. Still no Stripe SDK, no pairings/dues/DMs, no DPA or VPAT.
 - 2026-09-03 — P3: `/billing` Stripe Checkout panel matches the page’s hero card and fact rows (same shell as the left column). Still not connected.
 - 2026-09-03 — District school-student chrome: grade help on Account, My tournaments empty copy, search “My school is going,” event “Going from your school” derive nouns from org memberships.

@@ -325,6 +325,23 @@ textarea.field {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
+/* Home Screen walkthrough — native <dialog> so Escape and focus stay with the OS. */
+.home-screen-dialog {
+  width: min(calc(100% - 2rem), 24rem);
+  max-height: min(40rem, calc(100% - 2rem));
+  overflow: auto;
+  margin: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-2xl);
+  background: var(--surface);
+  padding: 1.25rem;
+  color: var(--foreground);
+  box-shadow: var(--shadow-panel-lg);
+}
+.home-screen-dialog::backdrop {
+  background: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
 .cta-disabled {
   display: inline-flex;
   align-items: center;

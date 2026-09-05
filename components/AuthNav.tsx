@@ -6,6 +6,11 @@ import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { AccountRole } from "@/lib/auth/types";
 import {
+  readHomeScreenEnvironment,
+  requestAddToHomeScreen,
+  shouldOfferAddToHomeScreen,
+} from "@/lib/add-to-home-screen";
+import {
   discoveryCategory,
   parseDiscoveryCategory,
   type DiscoveryCategory,
@@ -66,6 +71,12 @@ export function AuthNav() {
   const [hasClubAccess, setHasClubAccess] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
   const [shortcut, setShortcut] = useState<DiscoveryCategory | null>(null);
+  const [offerHomeScreen, setOfferHomeScreen] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- phone vs desktop is client-only
+    setOfferHomeScreen(shouldOfferAddToHomeScreen(readHomeScreenEnvironment()));
+  }, []);
 
   useEffect(() => {
     if (!configured) return;
@@ -410,6 +421,15 @@ export function AuthNav() {
           {adminMenu}
           {alertsMenu}
           {accountMenu}
+          {offerHomeScreen ? (
+            <button
+              type="button"
+              onClick={requestAddToHomeScreen}
+              className={menuItemClass(false)}
+            >
+              Add to Home Screen
+            </button>
+          ) : null}
           {signOutMenu}
         </div>
       </details>

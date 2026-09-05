@@ -194,3 +194,45 @@ describe("platform admin count migration", () => {
     expect(sql).not.toMatch(/grant select[^;]*platform_admins/i);
   });
 });
+
+describe("platform user directory access filter", () => {
+  const sql = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/0073_search_platform_users_access.sql"
+    ),
+    "utf8"
+  );
+  const directory = readFileSync(
+    resolve(process.cwd(), "components/AdminUserDirectory.tsx"),
+    "utf8"
+  );
+  const usersPage = readFileSync(
+    resolve(process.cwd(), "app/admin/users/page.tsx"),
+    "utf8"
+  );
+
+  it("adds an admins-only argument without broadening grants", () => {
+    expect(sql).toContain(
+      "drop function if exists public.search_platform_users(text, integer, integer)"
+    );
+    expect(sql).toContain("p_access text default 'all'");
+    expect(sql).toContain("admins_only boolean");
+    expect(sql).toContain("not admins_only or a.profile_id is not null");
+    expect(sql).toContain("not public.is_platform_admin()");
+    expect(sql).toContain(
+      "revoke execute on function public.search_platform_users(text, integer, integer, text)"
+    );
+    expect(sql).toContain(
+      "grant execute on function public.search_platform_users(text, integer, integer, text)"
+    );
+    expect(sql).not.toMatch(/grant select[^;]*platform_admins/i);
+  });
+
+  it("keeps the users list on the selected access filter", () => {
+    expect(usersPage).toContain("parseAdminUserAccess");
+    expect(directory).toContain("access?: AdminUserAccessFilter");
+    expect(directory).toContain("access,");
+    expect(directory).toContain("Platform admins");
+  });
+});
