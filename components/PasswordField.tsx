@@ -1,6 +1,11 @@
 "use client";
 
 import { useId, useState } from "react";
+import {
+  PASSWORD_HINT,
+  scorePassword,
+  type PasswordStrength,
+} from "@/lib/password-strength";
 
 export function PasswordField({
   label,
@@ -10,6 +15,7 @@ export function PasswordField({
   required,
   minLength,
   name,
+  showStrength = false,
 }: {
   label: string;
   value: string;
@@ -18,10 +24,14 @@ export function PasswordField({
   required?: boolean;
   minLength?: number;
   name?: string;
+  /** New-password fields only. Login must not show a meter. */
+  showStrength?: boolean;
 }) {
   const id = useId();
+  const hintId = useId();
   const [visible, setVisible] = useState(false);
   const action = visible ? "Hide" : "Show";
+  const strength = showStrength ? scorePassword(value) : null;
 
   return (
     <div className="flex flex-col gap-1">
@@ -42,6 +52,7 @@ export function PasswordField({
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
+          aria-describedby={showStrength ? hintId : undefined}
         />
         <button
           type="button"
@@ -54,6 +65,63 @@ export function PasswordField({
           {visible ? <EyeOffIcon /> : <EyeIcon />}
         </button>
       </div>
+      {strength ? (
+        <PasswordStrengthMeter id={hintId} password={value} strength={strength} />
+      ) : null}
+    </div>
+  );
+}
+
+function PasswordStrengthMeter({
+  id,
+  password,
+  strength,
+}: {
+  id: string;
+  password: string;
+  strength: PasswordStrength;
+}) {
+  if (!password) {
+    return (
+      <p id={id} className="text-2xs text-muted">
+        {PASSWORD_HINT}
+      </p>
+    );
+  }
+
+  const fillClass =
+    strength.score <= 1
+      ? "bg-brand-red"
+      : strength.score === 2
+        ? "bg-org-gold"
+        : "bg-ok";
+  const labelClass =
+    strength.score <= 1
+      ? "text-brand-red"
+      : strength.acceptable
+        ? "text-ok"
+        : "text-org-gold-strong";
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div
+        className="password-strength-track"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={4}
+        aria-valuenow={strength.score}
+        aria-valuetext={strength.label}
+        aria-label="Password strength"
+      >
+        <span
+          className={`password-strength-fill ${fillClass}`}
+          style={{ width: `${Math.max(strength.score, 1) * 25}%` }}
+        />
+      </div>
+      <p id={id} className={`text-2xs font-medium ${labelClass}`} role="status">
+        {strength.label}
+        {strength.acceptable ? "" : ` · ${PASSWORD_HINT}`}
+      </p>
     </div>
   );
 }
