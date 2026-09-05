@@ -15,6 +15,7 @@ import {
   buildClaimPath,
   invitationRoleFitsOrganization,
 } from "@/lib/invitations/claim-path";
+import { performMarkAttendance } from "@/lib/attendance-write";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
@@ -1048,56 +1049,14 @@ export async function markEntrantAttendance(input: {
   const user = await currentUserOrError();
   if (!user.ok) return user;
   const supabase = await createServerSupabaseClient();
-  const [managementCheck, entrantCheck] = await Promise.all([
-    supabase.rpc("can_manage_competition", {
-      p_competition_id: parsed.data.competitionId,
-      p_profile_id: user.id,
-    }),
-    supabase.rpc("can_invite_to_competition", {
-      p_competition_id: parsed.data.competitionId,
-      p_entrant_id: parsed.data.profileId,
-      p_inviter_id: user.id,
-    }),
-  ]);
-  const canManage = managementCheck.data === true || entrantCheck.data === true;
-  if (!canManage && managementCheck.error && entrantCheck.error) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        managementCheck.error,
-        "Could not verify attendance management access."
-      ),
-    };
-  }
-  if (!canManage) {
-    return {
-      ok: false,
-      error: "Only competition staff can record attendance.",
-    };
-  }
-
-  const { count, error } = await supabase
-    .from("competition_entrants")
-    .update(
-      {
-        status: parsed.data.status,
-        attendance_marked_by: user.id,
-        attendance_marked_at: new Date().toISOString(),
-      },
-      { count: "exact" }
-    )
-    .eq("competition_id", parsed.data.competitionId)
-    .eq("profile_id", parsed.data.profileId);
-  if (error || count !== 1) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        error,
-        "That entrant was not found or attendance could not be saved.",
-        "You don’t have permission to record attendance for this entrant."
-      ),
-    };
-  }
+  const result = await performMarkAttendance({
+    supabase,
+    userId: user.id,
+    competitionId: parsed.data.competitionId,
+    profileId: parsed.data.profileId,
+    status: parsed.data.status,
+  });
+  if (!result.ok) return result;
   revalidatePath(`/event/${parsed.data.eventSlug}/manage`);
   return { ok: true };
 }

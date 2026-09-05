@@ -1,5 +1,5 @@
-import { Redirect } from "expo-router";
+import { AccountHomeRedirect } from "../src/RoleHomeGuard";
 
 export default function Index() {
-  return <Redirect href="/family" />;
+  return <AccountHomeRedirect />;
 }

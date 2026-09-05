@@ -21,7 +21,8 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   if (session && access?.allowed === false) return <Redirect href="/blocked" />;
-  if (session && access?.allowed) return <Redirect href="/family" />;
+  // "/" resolves the role's own home once the profile lands.
+  if (session && access?.allowed) return <Redirect href="/" />;
 
   async function onSubmit() {
     setBusy(true);
@@ -29,7 +30,7 @@ export default function LoginScreen() {
     const message = await signIn(email, password);
     setBusy(false);
     if (message) setError(message);
-    else router.replace("/family");
+    else router.replace("/");
   }
 
   const canSubmit = Boolean(email.trim() && password);
@@ -89,6 +90,10 @@ export default function LoginScreen() {
         <LinkButton
           label="Forgot password?"
           onPress={() => router.push("/forgot-password")}
+        />
+        <LinkButton
+          label="Browse tournaments without an account"
+          onPress={() => router.replace("/search")}
         />
       </Screen>
     </KeyboardAvoidingView>

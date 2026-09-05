@@ -6,7 +6,11 @@ Weekend target: internal builds (TestFlight + Play internal). Apple/Google **app
 
 ## What this app is
 
-Native Family / Search / Me. Parents and coaches sign up, sign in, reset a password, and delete their account entirely in-app. Parents RSVP in-app. Chess search uses the same public API as the website, and an event can be added to the device calendar or shared. Organizer registration may open an external browser. Students under 13 are blocked at sign-in.
+Native Search / Me plus one home per role: **Family** for a parent, **My tournaments** for a student, **My team** for a coach. Parents and coaches sign up, sign in, reset a password, and delete their account entirely in-app. Parents answer RSVPs for their students; a student answers their own; a coach opens a roster and takes day-of attendance. Chess search uses the same public API as the website, and an event can be added to the device calendar or shared. Organizer registration may open an external browser. Students under 13 are blocked at sign-in.
+
+Chess search and the event screen work **signed out** — the app opens on Search for a visitor, and sign-in lives on the Me tab. Account work (Family, My tournaments, My team) requires a session.
+
+Desk work stays on the website: invitations, CSV, groups, organization settings, results, and reports. Do not add a role to sign-up without giving that role a home tab — `tests/mobile-companion.test.ts` enforces this.
 
 ## Two machines, one git branch
 
