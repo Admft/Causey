@@ -14,7 +14,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 - Create club/team; join link; CSV/email staff+student invites; assistants
 - Groups, announcements, member-only website + meeting note, leave club
-- Public search + “My club is going”; mark club attending; teammate going list (website event page + phone `ClubGoingCard`); phone Chess Pathways tool + nationals pin (sheen on the red banner)
+- Public search + “My club is going”; mark club attending on website and phone (`BringRosterCard`); teammate going list (`ClubGoingCard`); phone Chess Pathways tool + nationals pin (sheen on the red banner)
 - Host any listed type (draft → review → publish); club/team-only audience (not “school only”)
 - RSVP, organizer-registration checkbox, attendance on hosted **and** travel events
 - Hosted/travel manage shows an event pulse (invited / RSVP / unfinished registration / blank results) and People vs Listing
@@ -23,6 +23,11 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 ## Need for a professional club (priority)
 
+- [x] Phone Going / Can't go / Clear no longer lose the tap to a stale list reload — 2026-09-06
+- [x] Parent invite → student Plan accept → parent Family confirm works on the phone the same way as the website; Going / Can't go can be unmarked (`0082`) — 2026-09-06
+- [x] Phone Bring your roster is coach-only and falls back to the website when `/api/mobile/org-attendance` is not on that server; event Going distinguishes a club invite RSVP from public-listing family Going — 2026-09-06
+- [x] Phone Family lists settled upcoming tournaments by name (Going / Can't go / registration complete) and opens the event; it no longer stops at "1 upcoming tournament" — 2026-09-06
+- [x] Phone event page lets a coach Bring your roster / Mark club as going on a public listing (`GET/POST /api/mobile/org-attendance`); inviting students still opens website manage — 2026-09-06
 - [x] Phone event details show the listing photo, US Chess rated/not rated, Going/Can't go, and “did you finish organizer registration?” after the organizer site; calendar falls back outside Expo Go — 2026-09-06
 - [x] Support problem reports from `/support` with optional screenshot; founding-team email and Alerts replies — 2026-09-06
 - [x] Phone Search is simple name/zip with Advanced search covering the website filters — 2026-09-06

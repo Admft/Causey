@@ -1,16 +1,33 @@
 /**
- * RSVP state machine for competition_entrants. Kid-simple by design: two
- * buttons, and once you've answered you can change your answer but never
- * return to "no response".
+ * RSVP state machine for competition_entrants. Going and Can't go are
+ * changeable, and either answer can be cleared back to no response.
  */
 
 export const RSVP_STATUSES = ["invited", "going", "not_going"] as const;
 export type RsvpStatus = (typeof RSVP_STATUSES)[number];
 export type AttendanceOutcome = "attended" | "did_not_attend";
 
-/** The only forbidden target is un-answering back to invited. */
+/**
+ * Family-discovery rows (parent or student created the going/not_going
+ * answer) delete back to unanswered. Coach invites reset to invited.
+ */
+export function clearRsvpMode(row: {
+  invited_by: string | null;
+  profile_id: string;
+  callerId: string;
+}): "delete" | "reset" {
+  if (
+    row.invited_by === row.callerId ||
+    row.invited_by === row.profile_id
+  ) {
+    return "delete";
+  }
+  return "reset";
+}
+
 export function canTransition(from: RsvpStatus, to: RsvpStatus): boolean {
-  return to !== "invited";
+  if (to === "invited") return from === "going" || from === "not_going";
+  return to === "going" || to === "not_going";
 }
 
 export function rsvpLabel(status: RsvpStatus | AttendanceOutcome): string {

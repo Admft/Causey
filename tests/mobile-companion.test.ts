@@ -115,12 +115,39 @@ describe("family desk payload", () => {
               reg_url: null,
             },
           },
+          {
+            competition_id: "c-settled",
+            profile_id: "child-1",
+            status: "going",
+            responded_by: "parent-1",
+            response_source: "parent",
+            placement: null,
+            award_label: null,
+            section_name: null,
+            registration_status: "registered",
+            competition: {
+              slug: "winter-closed",
+              name: "Winter Closed",
+              city: "Houston",
+              state: "TX",
+              start_date: "2099-04-01",
+              end_date: "2099-04-01",
+              reg_url: "https://example.test/winter",
+            },
+          },
         ],
       },
     ];
     const payload = serializeFamilyDesk(children, "2026-09-04");
-    expect(payload[0]?.needs_action[0]?.competition?.slug).toBe("fall-open");
-    expect(payload[0]?.needs_action[1]?.needs_organizer_registration).toBe(true);
+    expect(payload[0]?.needs_action.map((row) => row.competition?.slug)).toEqual([
+      "fall-open",
+      "spring-open",
+    ]);
+    expect(payload[0]?.upcoming.map((row) => row.competition?.slug)).toEqual([
+      "fall-open",
+      "winter-closed",
+      "spring-open",
+    ]);
   });
 });
 
@@ -129,6 +156,16 @@ describe("mobile companion sources", () => {
     expect(read("app/api/mobile/me/route.ts")).toContain("getMobileAuth");
     expect(read("app/api/mobile/family/route.ts")).toContain("getMobileAuth");
     expect(read("app/api/mobile/rsvp/route.ts")).toContain("performSetRsvp");
+    expect(read("app/api/mobile/rsvp/route.ts")).toContain("performClearRsvp");
+    expect(read("app/api/mobile/rsvp/route.ts")).toContain('"clear"');
+    expect(read("app/api/mobile/family/route.ts")).toContain(
+      "getOutgoingFamilyRecommendations"
+    );
+    expect(read("lib/data/mobile-family.ts")).toContain("pending_invites");
+    expect(read("lib/data/mobile-plan.ts")).toContain("getMyRecommendations");
+    expect(read("app/api/mobile/recommendations/route.ts")).toContain(
+      "performSendRecommendation"
+    );
     expect(read("app/api/mobile/rsvp/route.ts")).toContain("auth.access.allowed");
     expect(read("app/api/mobile/event-attendance/route.ts")).toContain(
       "getMobileAuth"
@@ -149,6 +186,23 @@ describe("mobile companion sources", () => {
     expect(read("mobile/app/(tabs)/_layout.tsx")).toContain("Family");
     expect(read("mobile/app/(tabs)/_layout.tsx")).toContain("Search");
     expect(read("mobile/app/(tabs)/family.tsx")).toContain("needs_action");
+    expect(read("mobile/app/(tabs)/family.tsx")).toContain("settledEntrants");
+    expect(read("mobile/app/(tabs)/family.tsx")).toContain("Settled upcoming");
+    expect(read("mobile/app/(tabs)/family.tsx")).toContain("pending_invites");
+    expect(read("mobile/app/(tabs)/family.tsx")).toContain("clearAnswer");
+    expect(read("mobile/app/(tabs)/family.tsx")).toContain("onDeskChanged");
+    expect(read("mobile/app/(tabs)/family.tsx")).toContain("loadGate.abort()");
+    expect(read("mobile/app/(tabs)/family.tsx")).not.toContain(
+      "await clearAnswer(row)"
+    );
+    expect(read("mobile/src/EntrantRow.tsx")).toContain("Clear answer");
+    expect(read("mobile/src/EntrantRow.tsx")).toContain("pending_invite");
+    expect(read("mobile/app/(tabs)/family.tsx")).not.toContain(
+      "upcoming tournament"
+    );
+    expect(read("mobile/src/EntrantRow.tsx")).toContain(
+      "/event/${encodeURIComponent(event.slug)}"
+    );
     expect(read("mobile/app/(tabs)/search.tsx")).toContain("/api/competitions");
     expect(read("mobile/app/(tabs)/family.tsx")).not.toContain("WebView");
     expect(read("mobile/app/(tabs)/search.tsx")).not.toContain("WebView");
@@ -457,6 +511,11 @@ describe("every signed-in role has a home", () => {
     expect(plan).toContain("/api/mobile/plan");
     expect(plan).toContain("/api/mobile/rsvp");
     expect(plan).toContain("EntrantRow");
+    expect(plan).toContain("Recommended to you");
+    expect(plan).toContain("clearAnswer");
+    expect(plan).toContain("onDeskChanged");
+    expect(plan).toContain("loadGate.abort()");
+    expect(plan).not.toContain("await clearAnswer(row)");
     expect(read("app/api/mobile/plan/route.ts")).toContain("getMobilePlan");
   });
 

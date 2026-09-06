@@ -43,7 +43,9 @@ describe("staff team-entry for going / not going", () => {
     const guard = effectiveFunction("guard_competition_entrant_update");
     expect(migration).toContain("response_source text");
     expect(migration).toContain("'self', 'parent', 'staff'");
-    expect(guard.file).toBe("0076_staff_team_entry.sql");
+    // 0082 re-declares the guard to allow clearing an answer; the staff rules
+    // below must survive every rewrite.
+    expect(guard.file).toBe("0082_clear_family_rsvp.sql");
     expect(guard.sql).toContain("response_source is distinct from 'staff'");
     expect(guard.sql).toContain("when actor = old.profile_id then 'self'");
     expect(guard.sql).toContain("elsif manager then");

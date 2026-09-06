@@ -1,5 +1,5 @@
 export type RegistrationMark = "opened" | "registered" | "not_registered";
-export type RsvpMark = "going" | "not_going";
+export type RsvpMark = "going" | "not_going" | "unanswered";
 
 /**
  * Local marks win so “Yes, registration is complete” can update the screen
@@ -21,5 +21,11 @@ export function resolveRsvpStatus<T extends string>(input: {
   serverStatus: T;
   localStatus?: RsvpMark | null;
 }): T | RsvpMark {
+  if (input.localStatus === "unanswered") {
+    if (input.serverStatus === "going" || input.serverStatus === "not_going") {
+      return "unanswered";
+    }
+    return input.serverStatus;
+  }
   return input.localStatus ?? input.serverStatus;
 }

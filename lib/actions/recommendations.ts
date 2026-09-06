@@ -5,12 +5,23 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
-import { actionErrorMessage } from "@/lib/actions/errors";
+import {
+  performDismissRecommendation,
+  performSendRecommendation,
+} from "@/lib/recommendation-write";
 
 const NoteSchema = z
   .string()
   .trim()
   .max(280, "Keep the note under 280 characters.");
+
+function revalidateRecommendationSurfaces(eventSlug?: string) {
+  revalidatePath("/me");
+  revalidatePath("/me/notifications");
+  revalidatePath("/orgs");
+  revalidatePath("/family");
+  if (eventSlug) revalidatePath(`/event/${eventSlug}`);
+}
 
 /**
  * Send an event to connected accounts (linked children, org-mates). RLS
@@ -38,80 +49,15 @@ export async function sendRecommendation(input: {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.from("event_recommendations").upsert(
-    toProfileIds.map((toProfileId) => ({
-      competition_id: input.competitionId,
-      from_profile_id: user.id,
-      to_profile_id: toProfileId,
-      note: note.data || null,
-    })),
-    {
-      onConflict: "competition_id,from_profile_id,to_profile_id",
-      ignoreDuplicates: true,
-    }
-  );
-  if (error) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        error,
-        "Could not send the recommendation.",
-        "You can only recommend competitions to connected accounts."
-      ),
-    };
-  }
-
-  const { data: saved, error: readError } = await supabase
-    .from("event_recommendations")
-    .select("to_profile_id")
-    .eq("competition_id", input.competitionId)
-    .eq("from_profile_id", user.id)
-    .in("to_profile_id", toProfileIds);
-  if (readError) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        readError,
-        "Could not confirm the recommendation.",
-        "You can only recommend competitions to connected accounts."
-      ),
-    };
-  }
-  const savedIds = [
-    ...new Set((saved ?? []).map((row) => row.to_profile_id as string)),
-  ];
-  if (!savedIds.length) {
-    return {
-      ok: false,
-      error: "Could not send the recommendation. You can only recommend competitions to connected accounts.",
-    };
-  }
-
-  const alertOutcomes = await Promise.all(
-    savedIds.map((toProfileId) =>
-      supabase.rpc("notify_event_recommendation", {
-        p_competition_id: input.competitionId,
-        p_recipient_id: toProfileId,
-      })
-    )
-  );
-  if (alertOutcomes.some((outcome) => outcome.error)) {
-    return {
-      ok: false,
-      error: actionErrorMessage(
-        alertOutcomes.find((outcome) => outcome.error)?.error,
-        "The recommendation was saved, but the alert could not be created.",
-        "The recommendation was saved, but the alert could not be created."
-      ),
-    };
-  }
-
-  revalidatePath("/me");
-  revalidatePath("/me/notifications");
-  revalidatePath("/orgs");
-  revalidatePath("/family");
-  revalidatePath(`/event/${input.eventSlug}`);
-  return { ok: true, sent: savedIds.length, toProfileIds: savedIds };
+  const result = await performSendRecommendation({
+    supabase,
+    userId: user.id,
+    competitionId: input.competitionId,
+    toProfileIds,
+    note: note.data,
+  });
+  if (result.ok) revalidateRecommendationSurfaces(input.eventSlug);
+  return result;
 }
 
 export async function dismissRecommendation(id: string): Promise<ActionResult> {
@@ -119,19 +65,11 @@ export async function dismissRecommendation(id: string): Promise<ActionResult> {
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("event_recommendations")
-    .update({ status: "dismissed" })
-    .eq("id", id)
-    .eq("to_profile_id", user.id)
-    .select("id");
-  if (error || !data?.length) {
-    return { ok: false, error: "Could not dismiss this." };
-  }
-
-  revalidatePath("/me");
-  revalidatePath("/me/notifications");
-  revalidatePath("/orgs");
-  revalidatePath("/family");
-  return { ok: true };
+  const result = await performDismissRecommendation({
+    supabase,
+    userId: user.id,
+    id,
+  });
+  if (result.ok) revalidateRecommendationSurfaces();
+  return result;
 }

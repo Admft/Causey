@@ -51,7 +51,7 @@ Chess is the working surface. Other competition types exist in the product but a
 - Edit or cancel a hosted event after it is published.
 
 ### Parents
-- Link to a child account and use a **family desk**: which child still needs an RSVP or still needs to finish organizer registration.
+- Link to a child account and use a **family desk**: invite them to a listing so they can accept on Plan, then confirm organizer registration. Going / Can't go can be cleared. Kids who are not on Causey can still be marked going from the event.
 - Get **alerts** for invites, deadlines, and schedule changes (in the app; email follows the same types when delivery is running).
 
 ### Students
@@ -79,7 +79,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Event audiences | Public, district-only, school-only, invite-only | Yes |
 | RSVP and attendance | Going / not going (student, parent, or staff team-entry), attendance on the day, season view | Yes |
 | Organizer registration tracking | Families mark when they finished the external registration | Yes |
-| Family follow-through | Parent inbox of named child actions, including Going on public listings without a school roster invite; signed-in phone event shows who from the school marked going | Yes |
+| Family follow-through | Parent Invite → student Plan → parent Mark complete; Clear answer on Going / Can't go; Going on public listings without a school roster invite; phone Family lists settled upcoming by name; signed-in phone event shows who from the school marked going | Yes |
 | Announcements | Short notes from district or school staff; district overview can post to chosen schools or every connected school, and choose staff vs students/parents | Yes |
 | Alerts | Invites, deadlines, 7-day and 1-day reminders, changes, cancel | Website `/me/notifications` and phone `/alerts` (same `notifications` table); email is configured but not yet proven at school volume |
 | Aggregate reports + CSV | School-level counts, type filter, participating-school origin on district-hosted invites; not student browsing | Yes |

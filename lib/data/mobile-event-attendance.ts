@@ -12,6 +12,7 @@ import {
   getActiveChildren,
   getEntrantsForCompetition,
   getRatingSummary,
+  getSentRecommendationRecipientIds,
 } from "@/lib/data/portal";
 
 export type MobileRegistrationTarget = {
@@ -24,6 +25,7 @@ export type MobileEventAttendance = {
   ended: boolean;
   rsvp: EventRsvpTarget[];
   registration: MobileRegistrationTarget[];
+  sent_recommendation_ids: string[];
   my_score: number | null;
   rating: { avg_score: number; rating_count: number } | null;
 };
@@ -70,7 +72,7 @@ export async function getMobileEventAttendance(input: {
     childIds,
     entrants,
   });
-  const [{ data: scoreRow }, rating, { data: registrations }] =
+  const [{ data: scoreRow }, rating, { data: registrations }, sentIds] =
     await Promise.all([
       input.supabase
         .from("competition_ratings")
@@ -88,6 +90,11 @@ export async function getMobileEventAttendance(input: {
         : Promise.resolve({
             data: [] as { user_id: string; status: string }[],
           }),
+      getSentRecommendationRecipientIds(
+        input.competitionId,
+        input.userId,
+        input.supabase
+      ),
     ]);
 
   const registrationByUser = new Map(
@@ -112,6 +119,7 @@ export async function getMobileEventAttendance(input: {
     ended,
     rsvp,
     registration,
+    sent_recommendation_ids: sentIds,
     my_score:
       typeof scoreRow?.score === "number" ? (scoreRow.score as number) : null,
     rating,

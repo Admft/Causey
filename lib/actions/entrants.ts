@@ -5,7 +5,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { actionErrorMessage } from "@/lib/actions/errors";
 import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/actions/in-app-notifications";
 import { getChildSchoolsForDistrict } from "@/lib/data/portal";
-import { performSetRsvp } from "@/lib/rsvp-write";
+import { performClearRsvp, performSetRsvp } from "@/lib/rsvp-write";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
 
@@ -44,6 +44,32 @@ export async function setRsvp(input: {
     competitionId: input.competitionId,
     profileId: input.profileId,
     status: input.status,
+    eventSlug: input.eventSlug,
+  });
+  if (
+    result.ok ||
+    result.error ===
+      "Your RSVP was saved, but the coach update could not be created."
+  ) {
+    revalidateEventSurfaces(input.eventSlug);
+  }
+  return result;
+}
+
+export async function clearRsvp(input: {
+  competitionId: string;
+  profileId: string;
+  eventSlug?: string;
+}): Promise<ActionResult> {
+  const user = await getSessionUser();
+  if (!user) return { ok: false, error: "Sign in to RSVP." };
+
+  const supabase = await createServerSupabaseClient();
+  const result = await performClearRsvp({
+    supabase,
+    userId: user.id,
+    competitionId: input.competitionId,
+    profileId: input.profileId,
     eventSlug: input.eventSlug,
   });
   if (

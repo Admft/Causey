@@ -6,6 +6,10 @@ import {
   buildEventRsvpTargets,
   organizerRegistrationProfileIds,
 } from "@/lib/event-rsvp-targets";
+import {
+  pendingInvitesForChild,
+  serializeFamilyDesk,
+} from "@/lib/data/mobile-family";
 
 function source(path: string) {
   return readFileSync(resolve(process.cwd(), path), "utf8");
@@ -122,6 +126,12 @@ describe("family discovery RSVP", () => {
     expect(sql).toContain("c.audience = 'public'");
     expect(sql).toContain("can_invite_to_competition");
     expect(source("lib/rsvp-write.ts")).toContain(".insert(");
+    expect(source("lib/rsvp-write.ts")).toContain("performClearRsvp");
+    expect(source("lib/rsvp.ts")).toContain("clearRsvpMode");
+    expect(migrations).toContain("0082_clear_family_rsvp.sql");
+    const clearSql = source("supabase/migrations/0082_clear_family_rsvp.sql");
+    expect(clearSql).toContain("entrants_delete_own_family_rsvp");
+    expect(clearSql).toContain("new.status = 'invited'");
     expect(source("app/event/[slug]/page.tsx")).toContain(
       "buildEventRsvpTargets"
     );
@@ -137,6 +147,65 @@ describe("family discovery RSVP", () => {
     expect(source("app/family/page.tsx")).not.toContain(
       "No upcoming tournament invites."
     );
+    expect(source("app/family/page.tsx")).toContain("Waiting on a student");
+    expect(source("app/event/[slug]/page.tsx")).toContain("InviteStudentButton");
+    expect(source("components/InviteStudentButton.tsx")).toContain(
+      "They accept on Plan"
+    );
+    expect(source("components/RsvpButtons.tsx")).toContain("Clear answer");
+    expect(source("components/RsvpButtons.tsx")).toContain("clearRsvp");
+  });
+
+  it("keeps a parent invite off Family action lists until the student answers", () => {
+    const outgoing = [
+      {
+        to_profile_id: "child-1",
+        competition_id: "c-rec",
+        competition: {
+          slug: "spring-open",
+          name: "Spring Open",
+          city: "Austin",
+          state: "TX",
+          start_date: "2099-05-01",
+          end_date: "2099-05-01",
+        },
+      },
+    ];
+    expect(
+      pendingInvitesForChild(
+        { profile_id: "child-1", upcoming: [] },
+        outgoing,
+        "2026-09-06"
+      )
+    ).toHaveLength(1);
+    expect(
+      pendingInvitesForChild(
+        {
+          profile_id: "child-1",
+          upcoming: [{ competition_id: "c-rec" }],
+        },
+        outgoing,
+        "2026-09-06"
+      )
+    ).toHaveLength(0);
+    const desk = serializeFamilyDesk(
+      [
+        {
+          profile_id: "child-1",
+          display_name: "Jordan",
+          orgs: [],
+          entrants: [],
+        },
+      ],
+      "2026-09-06",
+      outgoing
+    );
+    expect(desk[0]?.pending_invites).toEqual([
+      expect.objectContaining({
+        competition_id: "c-rec",
+        status: "pending_invite",
+      }),
+    ]);
   });
 
   it("keeps Family organizer actions on one row when titles are long", () => {

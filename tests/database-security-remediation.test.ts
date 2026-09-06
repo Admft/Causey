@@ -133,7 +133,7 @@ describe("effective database security remediation", () => {
     const guard = effectiveFunction(
       "guard_competition_entrant_update"
     );
-    expect(guard.file).toBe("0076_staff_team_entry.sql");
+    expect(guard.file).toBe("0082_clear_family_rsvp.sql");
     expect(guard.sql).toContain(
       "new.responded_by is distinct from actor"
     );

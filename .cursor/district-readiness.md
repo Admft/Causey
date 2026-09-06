@@ -19,6 +19,10 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 
 ## Need for a district that wants school tournaments (priority)
 
+- [x] Phone Going / Can't go / Clear no longer snap back after a stale reload — 2026-09-06
+- [x] Family invite handshake (parent Invite → student Plan → parent Mark complete) and Clear answer for Going / Can't go on phone and website (`0082`) — 2026-09-06
+- [x] Phone Bring your roster is coach-only and does not 404 at parents; event Going matches website invite vs family discovery — 2026-09-06
+- [x] Phone Family lists each child's settled upcoming tournaments by name and opens the event — 2026-09-06
 - [x] After schools are ready, next action is **run/review competitions**, not “stare at empty reports” — 2026-08-24
 - [x] Command center shows **upcoming district + school events** with host names — 2026-08-24
 - [x] Guided multi-school invite to a district-hosted event — 2026-08-24
@@ -90,7 +94,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters`; `origin_org_id` stamped (`0070`) |
 | Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school |
 | Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
-| Family RSVP + organizer registration | **works** | `/family` plus event-page Going without a roster invite (`0080`); organizer mark-complete still required |
+| Family RSVP + organizer registration | **works** | `/family` plus event-page Invite then Going without a roster invite (`0080`/`0082`); organizer mark-complete still required |
 | School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
 | District-hosted reply follow-up by school | **works** | manage labels RSVP/attendance rows with connected-school name; sorts by school; going rows show organizer-registration status |
 | District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; optional school picker; staff vs student/parent notify; action inserts per school + district copy (`0043` operator access) |

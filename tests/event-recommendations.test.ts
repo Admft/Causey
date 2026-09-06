@@ -8,13 +8,16 @@ function source(path: string) {
 
 describe("event recommendations", () => {
   it("confirms sends by reading saved recipients, not the upsert body", () => {
-    const action = source("lib/actions/recommendations.ts");
-    expect(action).toContain("ignoreDuplicates: true");
-    expect(action).not.toContain("return { ok: true, sent: data?.length ?? 0 }");
-    expect(action).toContain('.select("to_profile_id")');
-    expect(action).toContain('.in("to_profile_id", toProfileIds)');
-    expect(action).toContain("if (!savedIds.length)");
-    expect(action).toContain("toProfileIds: savedIds");
+    const write = source("lib/recommendation-write.ts");
+    expect(write).toContain("ignoreDuplicates: true");
+    expect(write).not.toContain("return { ok: true, sent: data?.length ?? 0 }");
+    expect(write).toContain('.select("to_profile_id")');
+    expect(write).toContain('.in("to_profile_id", toProfileIds)');
+    expect(write).toContain("if (!savedIds.length)");
+    expect(write).toContain("toProfileIds: savedIds");
+    expect(source("lib/actions/recommendations.ts")).toContain(
+      "performSendRecommendation"
+    );
   });
 
   it("names who received the recommendation instead of Sent to 0 people", () => {
@@ -26,12 +29,19 @@ describe("event recommendations", () => {
     expect(panel).not.toContain('person" : "people');
     expect(eventPage).toContain("getSentRecommendationRecipientIds");
     expect(eventPage).toContain("alreadySentIds={sentRecommendationIds}");
+    expect(eventPage).toContain("InviteStudentButton");
+    expect(source("mobile/app/(tabs)/plan.tsx")).toContain("Recommended to you");
+    expect(source("lib/data/mobile-plan.ts")).toContain("getMyRecommendations");
+    expect(source("app/api/mobile/recommendations/route.ts")).toContain(
+      "performSendRecommendation"
+    );
   });
 
   it("writes an Alerts row for the student without widening the shared notification gate", () => {
     const migration = source(
       "supabase/migrations/0079_event_recommendation_alerts.sql"
     );
+    const write = source("lib/recommendation-write.ts");
     const action = source("lib/actions/recommendations.ts");
     const plan = source("app/me/page.tsx");
     expect(migration).toContain(
@@ -45,7 +55,8 @@ describe("event recommendations", () => {
     expect(migration).toContain("'recommendation:'");
     expect(migration).toContain("prefs.invitation is false");
     expect(migration).toContain("insert into public.notifications");
-    expect(action).toContain('rpc("notify_event_recommendation"');
+    expect(write).toContain('rpc("notify_event_recommendation"');
+    expect(action).toContain("performSendRecommendation");
     expect(action).toContain('revalidatePath("/me/notifications")');
     expect(plan).toContain("getMyRecommendations");
     expect(plan).toContain('id="recommended"');
