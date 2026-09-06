@@ -574,9 +574,11 @@ export default async function EventPage({ params }: Params) {
                 <div className="mt-5 flex flex-col gap-4">
                   {rsvpTargets.map((target) => (
                     <div key={target.profileId} className="flex flex-col gap-1.5">
-                      <span className="text-xs font-semibold text-muted-strong">
-                        {target.label}
-                      </span>
+                      {target.label === "You" && rsvpTargets.length === 1 ? null : (
+                        <span className="text-xs font-semibold text-muted-strong">
+                          {target.label}
+                        </span>
+                      )}
                       <RsvpButtons
                         competitionId={competition.id}
                         profileId={target.profileId}
@@ -738,9 +740,11 @@ export default async function EventPage({ params }: Params) {
               <div className="mt-3 flex flex-col gap-4">
                 {rsvpTargets.map((target) => (
                   <div key={target.profileId} className="flex flex-col gap-1.5">
-                    <span className="text-xs font-semibold text-muted-strong">
-                      {target.label}
-                    </span>
+                    {target.label === "You" && rsvpTargets.length === 1 ? null : (
+                      <span className="text-xs font-semibold text-muted-strong">
+                        {target.label}
+                      </span>
+                    )}
                     <RsvpButtons
                       competitionId={competition.id}
                       profileId={target.profileId}

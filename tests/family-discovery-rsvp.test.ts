@@ -126,7 +126,10 @@ describe("family discovery RSVP", () => {
       "buildEventRsvpTargets"
     );
     expect(source("app/event/[slug]/page.tsx")).toContain(
-      "Save is a bookmark for this account"
+      "Save is only a bookmark for this account"
+    );
+    expect(source("app/event/[slug]/page.tsx")).toContain(
+      'target.label === "You" && rsvpTargets.length === 1'
     );
     expect(source("app/family/page.tsx")).toContain(
       "They do not need to be in a club first"
