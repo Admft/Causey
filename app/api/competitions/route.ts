@@ -8,6 +8,7 @@ import {
 } from "@/lib/rate-limit";
 import { DEFAULT_SEARCH_LIMIT, SearchFiltersSchema } from "@/lib/schemas";
 import { reportError } from "@/lib/observability";
+import { accessTokenFromRequest } from "@/lib/supabase/access-token";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
   }
 
-  const data = await getRequestDataSource();
+  const data = await getRequestDataSource(request);
   const filters = {
     ...parsed.data,
     limit: parsed.data.limit ?? DEFAULT_SEARCH_LIMIT,
@@ -75,9 +76,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const page = await data.searchCompetitions(filters);
-    const hasSession = request.cookies
-      .getAll()
-      .some((cookie) => cookie.name.includes("-auth-token"));
+    const hasSession =
+      Boolean(accessTokenFromRequest(request)) ||
+      request.cookies
+        .getAll()
+        .some((cookie) => cookie.name.includes("-auth-token"));
     return NextResponse.json(
       {
         results: page.results,

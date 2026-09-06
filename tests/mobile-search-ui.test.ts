@@ -5,8 +5,18 @@ import {
   defaultPathwaySource as webDefaultSource,
   partnerPromoForCategory,
 } from "@/lib/partner-promos";
+import { GRADE_BANDS, RATING_BANDS } from "@/lib/schemas";
+import { competitionSourceOptionsForCategory } from "@/lib/ingestion-sources";
 import { defaultPathwaySource } from "../mobile/src/pathway-source";
 import { CHESS_NATIONALS } from "../mobile/src/chess-nationals";
+import {
+  EMPTY_ADVANCED,
+  GRADE_OPTIONS,
+  RATING_OPTIONS,
+  advancedCount,
+  orgGoingFilterLabel,
+  sourceOptions,
+} from "../mobile/src/search-filters";
 
 const read = (path: string) =>
   readFileSync(resolve(process.cwd(), path), "utf8");
@@ -33,6 +43,7 @@ describe("phone search matches website discovery chrome", () => {
     expect(grid).toContain("CATEGORY_MARKS");
     expect(grid).toContain('id !== "arts"');
     expect(grid).toContain('id === "writing"');
+    expect(read("mobile/app/(tabs)/search.tsx")).not.toContain("CATEGORY_MARKS");
   });
 
   it("pins the chess nationals promise with the same copy as the website", () => {
@@ -46,10 +57,90 @@ describe("phone search matches website discovery chrome", () => {
     expect(CHESS_NATIONALS.honesty).toMatch(/not an official US Chess ruling/i);
 
     const pin = read("mobile/src/ChessNationalsPin.tsx");
-    expect(pin).toContain("CHESS_NATIONALS.dek");
+    expect(pin).toContain("CHESS_NATIONALS.headline");
     expect(pin).toContain("CHESS_NATIONALS.ctaLabel");
+    expect(pin).toContain('alignSelf: "flex-end"');
+    expect(pin).not.toContain("CHESS_NATIONALS.honesty");
+    expect(pin).not.toContain("CHESS_NATIONALS.dek");
+    expect(pin).not.toContain("CHESS_NATIONALS.eyebrow");
     expect(pin).not.toContain("Local and weekend");
     expect(pin).not.toContain("WebView");
+
+    const search = read("mobile/app/(tabs)/search.tsx");
+    expect(search.indexOf('label="Search"')).toBeLessThan(
+      search.indexOf("<ChessNationalsPin")
+    );
+    expect(search.indexOf("<ChessNationalsPin")).toBeLessThan(
+      search.indexOf("{error ? <ErrorText>{error}</ErrorText> : null}")
+    );
+  });
+
+  it("keeps a simple name/zip search and puts website filters behind Advanced search", () => {
+    const search = read("mobile/app/(tabs)/search.tsx");
+    const advanced = read("mobile/src/AdvancedSearch.tsx");
+    const filters = read("mobile/src/search-filters.ts");
+    const ui = read("mobile/src/ui.tsx");
+    const competitions = read("app/api/competitions/route.ts");
+    const data = read("lib/data/index.ts");
+
+    expect(search).toContain('label="Tournament name"');
+    expect(search).toContain('label="Zip"');
+    expect(search).toContain("Advanced search");
+    expect(search).toContain("AdvancedSearch");
+    expect(search).toContain('params.set("radius_miles"');
+    expect(search).toContain('params.set("featured", "1")');
+    expect(search).toContain('params.set("club_going", "1")');
+    expect(search).toContain('params.set("grade_band"');
+    expect(search).toContain('params.set("rating_band"');
+    expect(search).toContain('"max_fee_cents"');
+    expect(search).toContain('params.set("date_from"');
+    expect(search).toContain('params.set("date_to"');
+    expect(search).toContain('params.set("facet"');
+    expect(search).toContain('params.set("source"');
+    expect(search).toContain('params.set("state"');
+    expect(search).toContain("session?.access_token");
+    expect(search.indexOf('label="Search"')).toBeLessThan(
+      search.indexOf("Advanced search")
+    );
+
+    expect(advanced).toContain('label="When"');
+    expect(advanced).toContain("Featured only");
+    expect(advanced).toContain("Listing source");
+    expect(advanced).toContain("Entry fee");
+    expect(advanced).toContain("From date");
+    expect(advanced).toContain("clubGoingLabel");
+    expect(filters).toContain('value: "ended"');
+    expect(filters).toContain("My club is going");
+    expect(filters).toContain("My school is going");
+    expect(ui).toContain("export function SelectField");
+
+    expect(competitions).toContain("getRequestDataSource(request)");
+    expect(competitions).toContain("accessTokenFromRequest(request)");
+    expect(data).toContain("createSupabaseClientWithAccessToken");
+  });
+
+  it("uses the same grade, rating, and live sources as the website rail", () => {
+    expect(
+      GRADE_OPTIONS.filter((option) => option.value).map((option) => option.value)
+    ).toEqual(Object.keys(GRADE_BANDS));
+    expect(
+      RATING_OPTIONS.filter((option) => option.value).map((option) => option.value)
+    ).toEqual(Object.keys(RATING_BANDS));
+    for (const category of ["chess", "debate", "stem", "arts", "writing"] as const) {
+      expect(
+        sourceOptions(category)
+          .filter((option) => option.value)
+          .map((option) => option.value)
+      ).toEqual(
+        competitionSourceOptionsForCategory(category).map((option) => option.value)
+      );
+    }
+    expect(orgGoingFilterLabel(["school"])).toBe("My school is going");
+    expect(orgGoingFilterLabel(["club"])).toBe("My club is going");
+    expect(advancedCount(EMPTY_ADVANCED)).toBe(0);
+    expect(
+      advancedCount({ ...EMPTY_ADVANCED, timing: "ended", featured: true })
+    ).toBe(2);
   });
 
   it("defaults the phone explorer to a state series the same way the website does", () => {

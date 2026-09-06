@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Maine P3 district walkthrough: People invite status, claim mismatch, alerts, orgs sections, school-targeted announcements — 2026-09-05
+- Phone Search: simple name/zip + Advanced search disclosure — 2026-09-06
 
 ## Last tick
 
+- 2026-09-06 — Phone Search is a simple name + zip (+ distance) form. Website filters (when, featured, club/school going, source, grade, rating, fee, state, dates, type facets) sit behind Advanced search. Sort stays with the listings. The chess nationals pin is still under Search. `/api/competitions` now uses a phone Bearer token so club-going can actually match.
 - 2026-09-05 — District walkthrough (P3 PDF): People invitation status filters pending vs revoked with distinct colors; claim links refuse Accept when the signed-in mailbox is not the invited hint; signup can resend confirmation; alerts mark read when opened; `/orgs` splits district/school/club; district announcements default to staff-only and can pick schools plus staff vs students/parents; native password reveal hidden; event difficulty ratings can be cleared.
 - 2026-09-05 — Phone `/orgs` lists the signed-in account’s clubs, teams, schools, and districts (`GET /api/mobile/orgs`, same `getMyOrgs` as the website). Coaches with a roster open `/roster/[orgId]`. No create, settings, CSV, or public directory. District offices have `has_roster: false`.
 - 2026-09-05 — Phone event screen can show the same “going from your club or school” groups as the website (`get_club_going` via `/api/mobile/club-going` + `ClubGoingCard`). Unsigned stays quiet; empty groups are not an error.

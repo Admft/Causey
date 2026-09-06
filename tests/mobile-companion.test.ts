@@ -365,11 +365,12 @@ describe("every signed-in role has a home", () => {
   it("searches each public directory with Soonest and Popular sorts", () => {
     const search = read("mobile/app/(tabs)/search.tsx");
     expect(search).toContain("CategoryTileGrid");
-    expect(search).toContain("CATEGORY_MARKS");
+    expect(search).not.toContain("CATEGORY_MARKS");
+    expect(search).not.toContain("styles.hero");
     expect(search).toContain('useState<DiscoveryCategoryId>("chess")');
-    expect(search).toContain('useState<Sort>("soonest")');
-    expect(search).toContain('label: "Soonest"');
-    expect(search).toContain('label: "Popular"');
+    expect(search).toContain('useState<SearchSort>("soonest")');
+    expect(read("mobile/src/search-filters.ts")).toContain('label: "Soonest"');
+    expect(read("mobile/src/search-filters.ts")).toContain('label: "Popular"');
     expect(search).not.toContain("Official first");
     expect(search).not.toContain('"official"');
     expect(search).toContain("sort: nextSort");

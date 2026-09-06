@@ -23,11 +23,23 @@ export function getDataSource(): DataSource {
 
 /**
  * Request-bound search data source. Supabase search needs the viewer's cookie
- * session so RLS can include private org events and rank their organizations.
+ * session (website) or Bearer token (phone) so RLS can include private org
+ * events and rank their organizations.
  */
-export async function getRequestDataSource(): Promise<DataSource> {
+export async function getRequestDataSource(
+  request?: Request
+): Promise<DataSource> {
   if ((process.env.DATA_SOURCE ?? "mock") !== "supabase") {
     return getDataSource();
+  }
+
+  if (request) {
+    const { accessTokenFromRequest, createSupabaseClientWithAccessToken } =
+      await import("@/lib/supabase/access-token");
+    const token = accessTokenFromRequest(request);
+    if (token) {
+      return new SupabaseDataSource(createSupabaseClientWithAccessToken(token));
+    }
   }
 
   const { createServerSupabaseClient } = await import("@/lib/supabase/server");

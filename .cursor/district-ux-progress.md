@@ -17,6 +17,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Phone Search is name + zip (+ distance) with an Advanced search disclosure for the website filters (when, featured, club/school going, source, grade, rating, fee, state, dates, facets). Sort sits with results. `/api/competitions` honors the phone Bearer token. — 2026-09-06
+- [x] Phone Search keeps type-tile marks and drops the duplicate selected-category image above the heading — 2026-09-06
 - [x] Chess search pin is red-only (headline + CTA); homepage keeps the split card with the Local/State/Nationals path — 2026-09-06
 - [x] Maine P3 district walkthrough: People pending vs revoked filters + colors; claim mailbox mismatch; confirmation resend; alerts mark-read on open; `/orgs` type sections; school-targeted announcements; password native-reveal hidden; difficulty rating can be cleared — 2026-09-05
 - [x] Chess pathways pin dropped the local → state → nationals ladder (dek already names the climb). Same cut on website `PartnerPromoSlot` and phone `ChessNationalsPin` — 2026-09-05
