@@ -14,6 +14,7 @@ import {
   getOrgRoster,
   isSupabaseConfigured,
   isUpcomingEvent,
+  type MyOrgRow,
 } from "@/lib/data/portal";
 import { canCreateOrg } from "@/lib/org-permissions";
 import { formatDateRange } from "@/lib/format";
@@ -45,6 +46,94 @@ function staffRoleLabel(
   if (memberRole === "assistant_coach") return "assistant coach";
   if (memberRole === "coach" || isCoach) return "coach";
   return null;
+}
+
+function OrgDirectory({
+  rows,
+  needingStudents,
+}: {
+  rows: MyOrgRow[];
+  needingStudents: Set<string>;
+}) {
+  const groups = [
+    {
+      title: "Districts",
+      rows: rows.filter(({ org }) => org.type === "district"),
+    },
+    {
+      title: "Schools",
+      rows: rows.filter(({ org }) => org.type === "school"),
+    },
+    {
+      title: "Clubs and teams",
+      rows: rows.filter(
+        ({ org }) => org.type === "club" || org.type === "team"
+      ),
+    },
+  ].filter((group) => group.rows.length);
+  const showGroupHeadings = groups.length > 1;
+
+  function list(groupRows: MyOrgRow[], omitType: boolean) {
+    return (
+      <ul className="mt-2">
+        {groupRows.map(({ org, isCoach, memberRole }) => {
+          const role = staffRoleLabel(memberRole, isCoach);
+          const needsStudents = needingStudents.has(org.id);
+          const meta = [
+            omitType ? null : ORG_TYPE_LABEL[org.type] ?? org.type,
+            org.state,
+            role ? `your role: ${role}` : null,
+            needsStudents ? "empty roster" : null,
+          ]
+            .filter(Boolean)
+            .join(" · ");
+
+          return (
+            <PortalListRow
+              key={org.id}
+              href={`/orgs/${org.slug}`}
+              title={org.name}
+              meta={meta}
+              trailing={
+                needsStudents ? (
+                  <Link
+                    href={`/orgs/${org.slug}/roster#add-students`}
+                    className="shrink-0 text-sm font-semibold text-brand-red hover:underline"
+                  >
+                    Invite students
+                  </Link>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="nudge-x hidden text-muted sm:inline"
+                  >
+                    →
+                  </span>
+                )
+              }
+            />
+          );
+        })}
+      </ul>
+    );
+  }
+
+  if (!showGroupHeadings) {
+    return list(groups[0]?.rows ?? rows, false);
+  }
+
+  return (
+    <div className="mt-4 grid gap-8">
+      {groups.map((group) => (
+        <section key={group.title}>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+            {group.title}
+          </h3>
+          {list(group.rows, true)}
+        </section>
+      ))}
+    </div>
+  );
 }
 
 export default async function OrgsPage({
@@ -356,46 +445,10 @@ export default async function OrgsPage({
               : "You haven’t joined a club yet."}
           </p>
         ) : (
-          <ul className="mt-2">
-            {sortedOrgs.map(({ org, isCoach, memberRole }) => {
-              const role = staffRoleLabel(memberRole, isCoach);
-              const needsStudents = staffOrgsNeedingStudents.has(org.id);
-              const meta = [
-                ORG_TYPE_LABEL[org.type] ?? org.type,
-                org.state,
-                role ? `your role: ${role}` : null,
-                needsStudents ? "empty roster" : null,
-              ]
-                .filter(Boolean)
-                .join(" · ");
-
-              return (
-                <PortalListRow
-                  key={org.id}
-                  href={`/orgs/${org.slug}`}
-                  title={org.name}
-                  meta={meta}
-                  trailing={
-                    needsStudents ? (
-                      <Link
-                        href={`/orgs/${org.slug}/roster#add-students`}
-                        className="shrink-0 text-sm font-semibold text-brand-red hover:underline"
-                      >
-                        Invite students
-                      </Link>
-                    ) : (
-                      <span
-                        aria-hidden="true"
-                        className="nudge-x hidden text-muted sm:inline"
-                      >
-                        →
-                      </span>
-                    )
-                  }
-                />
-              );
-            })}
-          </ul>
+          <OrgDirectory
+            rows={sortedOrgs}
+            needingStudents={staffOrgsNeedingStudents}
+          />
         )}
 
         {isStaffWorkspace && canStartOrganization ? (

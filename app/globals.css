@@ -178,6 +178,18 @@ textarea.field {
 .field.field-password {
   padding-right: 2.75rem;
 }
+/* Hide the browser’s built-in reveal so signup does not show two eye buttons. */
+.field.field-password::-ms-reveal,
+.field.field-password::-ms-clear {
+  display: none;
+}
+.field.field-password::-webkit-credentials-auto-fill-button,
+.field.field-password::-webkit-contacts-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
 
 .password-strength-track {
   height: 0.25rem;

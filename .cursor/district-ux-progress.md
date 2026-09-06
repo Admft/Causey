@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Maine P3 district walkthrough: People pending vs revoked filters + colors; claim mailbox mismatch; confirmation resend; alerts mark-read on open; `/orgs` type sections; school-targeted announcements; password native-reveal hidden; difficulty rating can be cleared — 2026-09-05
 - [x] Chess pathways pin dropped the local → state → nationals ladder (dek already names the climb). Same cut on website `PartnerPromoSlot` and phone `ChessNationalsPin` — 2026-09-05
 - [x] Phone Saved / Orgs / Alerts / join / results / club-going APIs shipped so Expo hitting `causey.dev` gets JSON (401 unsigned, 200 signed) instead of HTML 404. HTML 404s no longer show a generic “Something went wrong.” EAS still pins production — 2026-09-05
 - [x] Phone never creates student accounts in-app (no date of birth on a phone). Sign-in, parent/coach signup, and Me guest all offer “Create a student account (13+) on the website” → Safari `causey.dev/signup?role=student`. Under 13 stays on a parent account — 2026-09-05

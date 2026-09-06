@@ -64,6 +64,30 @@ export function isClaimNextPath(next: string | null | undefined): boolean {
   return Boolean(extractClaimToken(next) ?? extractClaimCode(next));
 }
 
+/**
+ * Preview RPCs only return a masked hint (`j***@school.edu`). Used to hide
+ * Accept when the signed-in mailbox is clearly not the invited one.
+ */
+export function invitationEmailHintMatches(
+  email: string,
+  hint: string
+): boolean {
+  const at = email.trim().toLowerCase().lastIndexOf("@");
+  const hintAt = hint.trim().toLowerCase().lastIndexOf("@");
+  if (at < 1 || hintAt < 1) return false;
+  const local = email.trim().toLowerCase().slice(0, at);
+  const domain = email.trim().toLowerCase().slice(at + 1);
+  const hintLocal = hint.trim().toLowerCase().slice(0, hintAt);
+  const hintDomain = hint.trim().toLowerCase().slice(hintAt + 1);
+  const prefix = hintLocal.replace(/\*+$/, "");
+  return prefix.length > 0 && local.startsWith(prefix) && domain === hintDomain;
+}
+
+export function claimSignupHref(next: string, memberRole: string): string {
+  const role = accountRoleForOrgInvitationRole(memberRole);
+  return `/signup?role=${role}&next=${encodeURIComponent(next)}`;
+}
+
 export function invitationRoleFitsOrganization(
   orgType: string,
   role: OrgMemberRole | string

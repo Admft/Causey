@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   MarkAllNotificationsReadButton,
-  MarkNotificationReadButton,
+  NotificationInboxItem,
 } from "@/components/NotificationInboxActions";
 import { PageBackLink } from "@/components/PageBackLink";
 import { PortalMission } from "@/components/PortalPrimitives";
@@ -93,8 +93,8 @@ export default async function NotificationsPage() {
           description={
             hasAnything
               ? profile?.role === "parent"
-                ? "Handle linked-student invitations and registration first, then clear recent in-app updates."
-                : "Handle invitations and upcoming plans first, then clear recent in-app updates."
+                ? "Handle linked-student invitations and registration first. Opening an update marks it read."
+                : "Handle invitations and upcoming plans first. Opening an update marks it read."
               : "Saved and going tournaments, invitations, and schedule changes will show here. Alert preferences control what appears."
           }
           action={
@@ -175,55 +175,17 @@ export default async function NotificationsPage() {
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">
-            {notifications.map((notification) => {
-              const unread = !notification.read_at;
-              return (
-                <li key={notification.id} className="py-3">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      {notification.href ? (
-                        <Link href={notification.href} className="group block">
-                          <span
-                            className={
-                              unread
-                                ? "text-sm font-semibold text-foreground group-hover:text-brand-red"
-                                : "text-sm font-medium text-muted-strong group-hover:text-brand-red"
-                            }
-                          >
-                            {unread ? "· " : ""}
-                            {notification.title}
-                          </span>
-                          <span className="mt-1 block text-xs text-muted">
-                            {notification.body}
-                          </span>
-                        </Link>
-                      ) : (
-                        <>
-                          <p
-                            className={
-                              unread
-                                ? "text-sm font-semibold text-foreground"
-                                : "text-sm font-medium text-muted-strong"
-                            }
-                          >
-                            {unread ? "· " : ""}
-                            {notification.title}
-                          </p>
-                          <p className="mt-1 text-xs text-muted">
-                            {notification.body}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    {unread ? (
-                      <MarkNotificationReadButton id={notification.id} />
-                    ) : (
-                      <span className="text-xs text-muted">Read</span>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+            {notifications.map((notification) => (
+              <li key={notification.id} className="py-3">
+                <NotificationInboxItem
+                  id={notification.id}
+                  href={notification.href}
+                  unread={!notification.read_at}
+                  title={notification.title}
+                  body={notification.body}
+                />
+              </li>
+            ))}
           </ul>
         )}
       </section>

@@ -30,11 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Phone Search: chess nationals pin + Pathways tool, category-mark grid, two-column results — 2026-09-05
+- Maine P3 district walkthrough: People invite status, claim mismatch, alerts, orgs sections, school-targeted announcements — 2026-09-05
 
 ## Last tick
 
-- 2026-09-05 — Phone Search matches website discovery: category-mark 3+2 tiles, two-column results, chess nationals pin, Chess Pathways tool on `GET /api/pathways`.
+- 2026-09-05 — District walkthrough (P3 PDF): People invitation status filters pending vs revoked with distinct colors; claim links refuse Accept when the signed-in mailbox is not the invited hint; signup can resend confirmation; alerts mark read when opened; `/orgs` splits district/school/club; district announcements default to staff-only and can pick schools plus staff vs students/parents; native password reveal hidden; event difficulty ratings can be cleared.
 - 2026-09-05 — Phone `/orgs` lists the signed-in account’s clubs, teams, schools, and districts (`GET /api/mobile/orgs`, same `getMyOrgs` as the website). Coaches with a roster open `/roster/[orgId]`. No create, settings, CSV, or public directory. District offices have `has_roster: false`.
 - 2026-09-05 — Phone event screen can show the same “going from your club or school” groups as the website (`get_club_going` via `/api/mobile/club-going` + `ClubGoingCard`). Unsigned stays quiet; empty groups are not an error.
 - 2026-09-05 — Phone Search covers all five public directories (not chess-only), with Upcoming/All and honest empty copy per type.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ClaimInvitationAuth } from "@/components/ClaimInvitationAuth";
 import { ClaimInvitationButton } from "@/components/ClaimInvitationButton";
 import { getSessionUser } from "@/lib/auth/session";
 import { getOrganizationInvitationPreview } from "@/lib/data/portal";
@@ -72,45 +73,13 @@ export default async function ClaimInvitationPage({
       </p>
 
       <section className="mt-8 rounded-2xl border border-line bg-surface p-6 shadow-[var(--shadow-panel)]">
-        {user ? (
-          <>
-            <h2 className="font-display text-xl font-bold text-foreground">
-              Accept this invitation
-            </h2>
-            <p className="mt-2 text-sm text-muted">
-              The signed-in email must match {invitation.email_hint}.
-            </p>
-            <div className="mt-5">
-              <ClaimInvitationButton token={token} />
-            </div>
-          </>
-        ) : (
-          <>
-            <h2 className="font-display text-xl font-bold text-foreground">
-              Sign in or create your account first
-            </h2>
-            <p className="mt-2 text-sm text-muted">
-              {invitation.member_role === "student"
-                ? "Create a student account or sign in."
-                : "Create a staff account or sign in."}{" "}
-              You will return here automatically without losing the invitation.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link
-                href={`/login?next=${encodeURIComponent(next)}`}
-                className="cta-enabled"
-              >
-                Sign in to accept
-              </Link>
-              <Link
-                href={`/signup?next=${encodeURIComponent(next)}`}
-                className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red"
-              >
-                Create an account
-              </Link>
-            </div>
-          </>
-        )}
+        <ClaimInvitationAuth
+          invitation={invitation}
+          next={next}
+          signedIn={Boolean(user)}
+          signedInEmail={user?.email ?? null}
+          claimControl={<ClaimInvitationButton token={token} />}
+        />
       </section>
     </div>
   );

@@ -1156,7 +1156,7 @@ export default async function OrgPage({
                 </h2>
                 <p className="mt-2 text-sm text-muted">
                   {org.type === "district"
-                    ? "Share one clear operational update with connected schools — or keep it on district staff only. Avoid student-specific information."
+                    ? "Share with district staff, every connected school, or the schools you pick. Club-only notes belong on that club’s workspace."
                     : "Share one clear operational update with members and linked parents. Avoid student-specific information."}
                 </p>
               </div>
@@ -1164,7 +1164,10 @@ export default async function OrgPage({
                 orgId={org.id}
                 orgSlug={org.slug}
                 orgType={org.type}
-                connectedSchoolCount={connectedSchools.length}
+                connectedSchools={connectedSchools.map((school) => ({
+                  id: school.id,
+                  name: school.name,
+                }))}
               />
             </div>
           </section>

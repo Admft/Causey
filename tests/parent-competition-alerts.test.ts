@@ -13,6 +13,7 @@ describe("parent competition alerts", () => {
     );
     const invites = read("lib/actions/entrants.ts");
     const district = read("lib/actions/district.ts");
+    const results = read("lib/results-write.ts");
 
     expect(migration).toContain("get_active_guardians_for_profiles");
     expect(migration).toContain("/family#needs-response");
@@ -22,7 +23,7 @@ describe("parent competition alerts", () => {
     expect(invites).toContain("/family#needs-response");
     expect(invites).toContain(":parent:");
     expect(district).toContain("announcement:${row.id}:parent:");
-    expect(district).toContain('kind: "result"');
+    expect(results).toContain('kind: "result"');
     expect(district).toContain("/family");
   });
 
@@ -49,6 +50,11 @@ describe("parent competition alerts", () => {
     expect(family).toContain("getNotificationPreferences");
     expect(alerts).toContain("todayIsoInTimeZone");
     expect(alerts).toContain("buildLinkedChildAttentionItems");
+    expect(alerts).toContain("NotificationInboxItem");
+    expect(alerts).toContain("Opening an update marks");
+    expect(read("components/NotificationInboxActions.tsx")).toContain(
+      "markNotificationRead"
+    );
     expect(enqueue).toContain("todayIsoInTimeZone");
   });
 

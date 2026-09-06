@@ -144,7 +144,7 @@ function DifficultyRatingControl({
     );
   }
 
-  async function rate(next: number) {
+  async function rate(next: number | null) {
     setPending(true);
     setError(null);
     try {
@@ -153,6 +153,18 @@ function DifficultyRatingControl({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in.");
+
+      if (next === null || next === score) {
+        const { error: deleteError } = await supabase
+          .from("competition_ratings")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("competition_id", competitionId);
+        if (deleteError) throw deleteError;
+        setScore(null);
+        router.refresh();
+        return;
+      }
 
       const { error: upsertError } = await supabase.from("competition_ratings").upsert(
         {
@@ -203,6 +215,16 @@ function DifficultyRatingControl({
           </button>
         ))}
       </div>
+      {score != null ? (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => rate(null)}
+          className="self-start text-xs font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
+        >
+          Remove rating
+        </button>
+      ) : null}
       {error ? (
         <p className="text-xs font-medium text-brand-red" role="alert">
           {error}

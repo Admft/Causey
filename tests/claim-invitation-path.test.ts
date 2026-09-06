@@ -5,8 +5,10 @@ import {
   accountRoleForOrgInvitationRole,
   buildClaimCodePath,
   buildClaimPath,
+  claimSignupHref,
   extractClaimCode,
   extractClaimToken,
+  invitationEmailHintMatches,
   invitationRoleFitsOrganization,
   isClaimNextPath,
   isJoinCodeNextPath,
@@ -86,11 +88,50 @@ describe("claim invitation path helpers", () => {
     expect(inviteActions).toContain("reissueOrganizationInvitation");
     expect(inviteActions).toContain("claims: BulkInviteClaimRow[]");
     expect(peopleManager).toContain("Reissue & copy link");
+    expect(peopleManager).toContain("Filter invitations by status");
+    expect(peopleManager).toContain('id: "pending"');
+    expect(peopleManager).toContain('id: "revoked"');
+    expect(peopleManager).toContain("text-brand-red");
     expect(peopleManager).toContain("Download CSV");
     expect(peopleManager).toContain("Copy all claim links");
     expect(peopleManager).toContain("Copy code");
     expect(peopleManager).toContain("type the code at /claim");
     expect(loginPage).toContain("getInvitationPreviewForClaimPath");
     expect(loginPage).toContain("Create staff account");
+  });
+
+  it("masks invitation emails and blocks a clearly mismatched signed-in mailbox", () => {
+    expect(
+      invitationEmailHintMatches("jordan@school.edu", "j***@school.edu")
+    ).toBe(true);
+    expect(
+      invitationEmailHintMatches("alex@school.edu", "j***@school.edu")
+    ).toBe(false);
+    expect(
+      invitationEmailHintMatches("jordan@other.edu", "j***@school.edu")
+    ).toBe(false);
+    expect(claimSignupHref("/claim/abc", "student")).toBe(
+      `/signup?role=student&next=${encodeURIComponent("/claim/abc")}`
+    );
+    expect(claimSignupHref("/claim/abc", "school_admin")).toBe(
+      `/signup?role=coach&next=${encodeURIComponent("/claim/abc")}`
+    );
+
+    const auth = readFileSync(
+      resolve(process.cwd(), "components/ClaimInvitationAuth.tsx"),
+      "utf8"
+    );
+    const tokenPage = readFileSync(
+      resolve(process.cwd(), "app/claim/[token]/page.tsx"),
+      "utf8"
+    );
+    const codePage = readFileSync(
+      resolve(process.cwd(), "app/claim/page.tsx"),
+      "utf8"
+    );
+    expect(auth).toContain("This invitation is for a different email");
+    expect(auth).toContain("Sign out to use the invited email");
+    expect(tokenPage).toContain("ClaimInvitationAuth");
+    expect(codePage).toContain("ClaimInvitationAuth");
   });
 });

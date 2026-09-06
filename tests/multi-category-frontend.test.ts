@@ -162,6 +162,8 @@ describe("event difficulty rating layout", () => {
   it("places 1–10 in one segmented row", () => {
     expect(ratingActions).toContain("grid-cols-10");
     expect(ratingActions).toContain("aria-pressed");
+    expect(ratingActions).toContain("Remove rating");
+    expect(ratingActions).toContain(".delete()");
     expect(ratingActions).not.toContain("grid w-full grid-cols-5 gap-1");
     expect(eventPage).toContain("DifficultyRating");
   });
