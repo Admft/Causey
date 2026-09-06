@@ -17,7 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
-- [x] Home chess pathways pin is a split card: red promise + CTA, white Local/State/Nationals path on a brand-red rail (design-system path UI). Same rounded-3xl shell as Upcoming chess. Search stays a compact red ticket. No invitational names — 2026-09-06
+- [x] Chess search pin is red-only (headline + CTA); homepage keeps the split card with the Local/State/Nationals path — 2026-09-06
 - [x] Maine P3 district walkthrough: People pending vs revoked filters + colors; claim mailbox mismatch; confirmation resend; alerts mark-read on open; `/orgs` type sections; school-targeted announcements; password native-reveal hidden; difficulty rating can be cleared — 2026-09-05
 - [x] Chess pathways pin dropped the local → state → nationals ladder (dek already names the climb). Same cut on website `PartnerPromoSlot` and phone `ChessNationalsPin` — 2026-09-05
 - [x] Phone Saved / Orgs / Alerts / join / results / club-going APIs shipped so Expo hitting `causey.dev` gets JSON (401 unsigned, 200 signed) instead of HTML 404. HTML 404s no longer show a generic “Something went wrong.” EAS still pins production — 2026-09-05

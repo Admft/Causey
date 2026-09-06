@@ -45,13 +45,13 @@ describe("chess nationals placement", () => {
     );
     expect(slot).toContain('href={promo.href}');
     expect(slot).toContain("{promo.headline}");
-    expect(slot).toContain("partner-promo--featured");
-    expect(slot).toContain("partner-promo--search");
+    expect(slot).toContain("partner-promo--${layout}");
     expect(slot).toContain("CHESS_PATHWAY_STEPS");
     expect(slot).toContain("partner-promo-face");
+    expect(slot).toContain("featured ?");
     expect(slot).toContain("partner-promo-path-list");
-    expect(slot).toContain("partner-promo-path-node");
-    expect(slot).toContain("partner-promo-climb");
+    expect(slot).toContain("sr-only");
+    expect(slot).not.toContain("partner-promo-climb");
     expect(slot).not.toContain("{promo.dek}");
     expect(slot).not.toContain("partner-promo-dek");
     expect(slot).not.toContain("partner-promo-sheen");
@@ -59,6 +59,9 @@ describe("chess nationals placement", () => {
     expect(slot).not.toContain("partner-promo-head-cluster");
     expect(read("app/globals.css")).not.toContain("partner-promo-sheen");
     expect(read("app/globals.css")).not.toContain("@keyframes partner-promo-sheen");
+    expect(read("app/globals.css")).not.toContain("partner-promo-climb");
+    expect(read("app/globals.css")).toContain(".partner-promo--featured {");
+    expect(read("app/globals.css")).toContain(".partner-promo--search {");
     expect(search).not.toContain("partner-promos");
     expect(search).not.toContain("PARTNER_PROMOS");
     expect(standing).not.toContain("partner-promos");

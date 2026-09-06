@@ -287,8 +287,7 @@ textarea.field {
 }
 
 /* Chess (and later partner) pin above results — labeled placement, not ranking.
- * Home is a split card: brand-red promise, white §8.11 path. Search is a
- * compact red ticket. */
+ * Home: split card (red promise, white §8.11 path). Search: red face only. */
 .partner-promo {
   text-decoration: none;
 }
@@ -342,8 +341,6 @@ textarea.field {
   line-height: 1.4;
 }
 
-/* Home: same shell as the listings card below it. Red holds the promise;
- * the path sits on white the way §8.11 specifies. */
 .partner-promo--featured {
   display: grid;
   overflow: hidden;
@@ -353,13 +350,24 @@ textarea.field {
   box-shadow: var(--shadow-card);
   color: var(--foreground);
 }
+.partner-promo--search {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--brand-red);
+  color: #ffffff;
+  box-shadow: var(--shadow-card);
+}
 .partner-promo-face {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   padding: 1.5rem;
   background: var(--brand-red);
   color: #ffffff;
+}
+.partner-promo--search .partner-promo-face {
+  padding: 1.25rem 1.5rem;
 }
 .partner-promo-face .partner-promo-headline {
   max-width: 18ch;
@@ -369,7 +377,6 @@ textarea.field {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.75rem;
 }
 .partner-promo-path {
   display: flex;
@@ -445,8 +452,8 @@ textarea.field {
   .partner-promo--featured {
     grid-template-columns: minmax(0, 1fr);
   }
-  .partner-promo-face,
-  .partner-promo-path {
+  .partner-promo--featured .partner-promo-face,
+  .partner-promo--featured .partner-promo-path {
     padding: 2rem;
   }
   .partner-promo-face {
@@ -454,18 +461,15 @@ textarea.field {
     align-items: flex-end;
     justify-content: space-between;
     gap: 2rem;
-    padding-bottom: 1.5rem;
   }
   .partner-promo-face .partner-promo-headline {
     max-width: none;
   }
   .partner-promo-face-action {
     align-items: flex-end;
-    text-align: right;
   }
   .partner-promo-path {
     border-top: 1px solid var(--line);
-    padding-top: 1.75rem;
   }
   .partner-promo-path-list {
     display: grid;
@@ -487,78 +491,6 @@ textarea.field {
     left: auto;
     margin-bottom: 0.5rem;
   }
-}
-
-/* Search: compact red ticket. Same words, listing scale. */
-.partner-promo--search {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 1.25rem;
-  border-radius: var(--radius-2xl);
-  background: var(--brand-red);
-  color: #ffffff;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
-    0 6px 20px rgba(194, 59, 50, 0.28),
-    0 20px 48px rgba(194, 59, 50, 0.24);
-  transition: transform 220ms var(--ease-brand), box-shadow 220ms var(--ease-brand);
-}
-.partner-promo--search:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
-    0 8px 24px rgba(168, 50, 42, 0.34),
-    0 26px 60px rgba(194, 59, 50, 0.3);
-}
-.partner-promo--search:active {
-  transform: translateY(0);
-}
-.partner-promo--search .partner-promo-headline,
-.partner-promo--search .partner-promo-note {
-  color: #ffffff;
-}
-.partner-promo-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1.25rem;
-}
-.partner-promo-foot {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-self: stretch;
-}
-.partner-promo-climb {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  min-width: 0;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  line-height: 1.35;
-  color: #ffffff;
-}
-.partner-promo-climb li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.partner-promo-climb-mark {
-  font-weight: 500;
-  opacity: 0.72;
-}
-.partner-promo--search .partner-promo-cta {
-  height: 2.5rem;
-  font-size: var(--text-sm);
-  margin-left: auto;
 }
 
 /* Compact page-back control — design system §8.4 (nav outline). Shorter than
