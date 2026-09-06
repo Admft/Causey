@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { causeyFetch, formatDateRange, formatFeeCents } from "../../src/api";
 import { addTournamentToCalendar } from "../../src/calendar";
 import { categoryLabel } from "../../src/categories";
@@ -11,6 +11,7 @@ import { EventGoingCard } from "../../src/EventGoingCard";
 import { EventPathways } from "../../src/EventPathways";
 import { EventSections, type EventSection } from "../../src/EventSections";
 import { feedback } from "../../src/haptics";
+import { sharePlainText } from "../../src/open-url";
 import { SaveEventButton } from "../../src/SaveEventButton";
 import { siteUrl } from "../../src/theme";
 import {
@@ -64,6 +65,18 @@ function calendarLocation(event: Competition): string | null {
   return parts.length ? parts.join(", ") : null;
 }
 
+/**
+ * A 200 with no listing in it is still a failure. Without this the screen
+ * would hold a spinner that never resolves and offer no way back.
+ */
+function asCompetition(value: unknown): Competition | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Partial<Competition>;
+  if (typeof row.slug !== "string" || !row.slug) return null;
+  if (typeof row.name !== "string" || !row.name) return null;
+  return row as Competition;
+}
+
 function asRating(value: unknown): RatingSummary | null {
   if (!value || typeof value !== "object") return null;
   const row = value as { avg_score?: unknown; rating_count?: unknown };
@@ -83,15 +96,23 @@ export default function EventScreen() {
   const [addingToCalendar, setAddingToCalendar] = useState(false);
 
   const load = useCallback(async () => {
-    if (!slug) return;
+    if (!slug) {
+      setError("That link is missing a tournament address.");
+      return;
+    }
     setError(null);
     try {
       const data = (await causeyFetch(`/api/competitions/${slug}`)) as {
-        competition: Competition;
+        competition?: unknown;
         unlocks?: unknown[];
         rating?: unknown;
       };
-      setEvent(data.competition);
+      const competition = asCompetition(data?.competition);
+      if (!competition) {
+        setError("We could not find that tournament.");
+        return;
+      }
+      setEvent(competition);
       setUnlocks(Array.isArray(data.unlocks) ? data.unlocks : []);
       setRating(asRating(data.rating));
     } catch (err) {
@@ -130,7 +151,7 @@ export default function EventScreen() {
   async function onShare() {
     if (!event) return;
     const url = `${siteUrl}/event/${event.slug}`;
-    await Share.share({
+    const message = await sharePlainText({
       title: event.name,
       message: `${event.name} — ${formatDateRange(
         event.start_date,
@@ -138,6 +159,7 @@ export default function EventScreen() {
       )}\n${url}`,
       url,
     });
+    if (message) Alert.alert("Share", message);
   }
 
   if (error) {

@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -79,18 +80,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccess(data.access);
   }, []);
 
+  // Accounts can change without a clean sign-out: a token expires, or a second
+  // person signs in on a shared phone.
+  const lastUserId = useRef<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
-      if (cancelled) return;
-      setSession(data.session ?? null);
-      refreshMe(data.session)
-        .catch((err: Error) => setError(err.message))
-        .finally(() => {
-          if (!cancelled) setReady(true);
-        });
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setSession(data.session ?? null);
+        refreshMe(data.session)
+          .catch((err: Error) => setError(err.message))
+          .finally(() => {
+            if (!cancelled) setReady(true);
+          });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSession(null);
+        setProfile(null);
+        setAccess(null);
+        setReady(true);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      const nextUserId = next?.user.id ?? null;
+      if (lastUserId.current && lastUserId.current !== nextUserId) {
+        // A different account, so the previous profile, access decision, and
+        // cached payloads are wrong rather than stale. Clearing them in the
+        // same commit as the session is what stops one render from pairing
+        // account B's token with account A's name or blocked verdict.
+        void clearCache();
+        setProfile(null);
+        setAccess(null);
+        setError(null);
+      }
       setSession(next);
       if (!next) {
         setProfile(null);
@@ -105,6 +130,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sub.subscription.unsubscribe();
     };
   }, [refreshMe]);
+
+  useEffect(() => {
+    lastUserId.current = session?.user.id ?? null;
+  }, [session?.user.id]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (!supabaseConfigured) return NOT_CONFIGURED;

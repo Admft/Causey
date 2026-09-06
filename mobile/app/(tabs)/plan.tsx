@@ -5,6 +5,11 @@ import { causeyFetch } from "../../src/api";
 import { useAuth } from "../../src/auth";
 import { formatSavedAt, readCache, writeCache } from "../../src/cache";
 import { EntrantRow, type EntrantRowData } from "../../src/EntrantRow";
+import {
+  actionEntrants,
+  mapEntrantDecision,
+  type EntrantTap,
+} from "../../src/entrant-decision";
 import { feedback } from "../../src/haptics";
 import { RoleHomeGuard } from "../../src/RoleHomeGuard";
 import { colors } from "../../src/theme";
@@ -26,6 +31,19 @@ type PlanPayload = {
   upcoming: EntrantRowData[];
 };
 
+function applyPlanTap(
+  current: PlanPayload | null,
+  row: EntrantRowData,
+  decision: EntrantTap
+): PlanPayload | null {
+  if (!current) return current;
+  const upcoming = mapEntrantDecision(current.upcoming, row, decision);
+  return {
+    upcoming,
+    needs_action: actionEntrants(upcoming),
+  };
+}
+
 export default function PlanScreen() {
   return (
     <RoleHomeGuard home="/plan">
@@ -36,6 +54,7 @@ export default function PlanScreen() {
 
 function PlanDesk() {
   const { session } = useAuth();
+  const userId = session?.user.id ?? null;
   const [data, setData] = useState<PlanPayload | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [stale, setStale] = useState(false);
@@ -44,9 +63,18 @@ function PlanDesk() {
   const [hydrated, setHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // Scoped to this account, and cleared first, so a shared phone never shows
+  // the previous student's tournaments to the next one.
   useEffect(() => {
     let cancelled = false;
-    readCache<PlanPayload>(CACHE_KEY)
+    setData(null);
+    setSavedAt(null);
+    setHydrated(false);
+    if (!userId) {
+      setHydrated(true);
+      return;
+    }
+    readCache<PlanPayload>(CACHE_KEY, userId)
       .then((cached) => {
         if (cancelled || !cached) return;
         setData(cached.value);
@@ -59,10 +87,10 @@ function PlanDesk() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [userId]);
 
   const load = useCallback(async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token || !userId) return;
     setRefreshing(true);
     try {
       const fresh = (await causeyFetch("/api/mobile/plan", {
@@ -72,7 +100,7 @@ function PlanDesk() {
       setSavedAt(Date.now());
       setStale(false);
       setError(null);
-      await writeCache(CACHE_KEY, fresh);
+      await writeCache(CACHE_KEY, userId, fresh);
     } catch (err) {
       setStale(true);
       setError(
@@ -81,7 +109,7 @@ function PlanDesk() {
     } finally {
       setRefreshing(false);
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -91,7 +119,9 @@ function PlanDesk() {
 
   async function rsvp(row: EntrantRowData, status: "going" | "not_going") {
     if (!session?.access_token || !row.competition) return;
+    const previous = data;
     setBusy(true);
+    setData((current) => applyPlanTap(current, row, status));
     try {
       await causeyFetch("/api/mobile/rsvp", {
         token: session.access_token,
@@ -106,6 +136,7 @@ function PlanDesk() {
       feedback("success");
       await load();
     } catch (err) {
+      setData(previous);
       feedback("error");
       setError(
         err instanceof Error ? err.message : "Could not save that RSVP."
@@ -117,7 +148,9 @@ function PlanDesk() {
 
   async function markRegistered(row: EntrantRowData) {
     if (!session?.access_token) return;
+    const previous = data;
     setBusy(true);
+    setData((current) => applyPlanTap(current, row, "registered"));
     try {
       await causeyFetch("/api/mobile/registration", {
         token: session.access_token,
@@ -131,6 +164,7 @@ function PlanDesk() {
       feedback("success");
       await load();
     } catch (err) {
+      setData(previous);
       feedback("error");
       setError(
         err instanceof Error ? err.message : "Could not save registration."

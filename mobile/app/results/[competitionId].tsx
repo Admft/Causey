@@ -4,6 +4,7 @@ import { StyleSheet, Text } from "react-native";
 import { causeyFetch, formatDateRange } from "../../src/api";
 import { useAuth } from "../../src/auth";
 import { feedback } from "../../src/haptics";
+import { RequireSession } from "../../src/RequireSession";
 import { colors } from "../../src/theme";
 import {
   Card,
@@ -76,6 +77,14 @@ function statusLabel(status: string): string {
 }
 
 export default function ResultsScreen() {
+  return (
+    <RequireSession>
+      <ResultsBody />
+    </RequireSession>
+  );
+}
+
+function ResultsBody() {
   const { competitionId } = useLocalSearchParams<{ competitionId: string }>();
   const { session } = useAuth();
   const [data, setData] = useState<ResultsPayload | null>(null);
@@ -84,11 +93,15 @@ export default function ResultsScreen() {
   const [busyProfile, setBusyProfile] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!competitionId || !session?.access_token) return;
+    if (!competitionId) {
+      setError("That link is missing a tournament address.");
+      return;
+    }
+    if (!session?.access_token) return;
     setError(null);
     try {
       const fresh = (await causeyFetch(
-        `/api/mobile/results?competitionId=${competitionId}`,
+        `/api/mobile/results?competitionId=${encodeURIComponent(competitionId)}`,
         { token: session.access_token }
       )) as ResultsPayload;
       setData(fresh);

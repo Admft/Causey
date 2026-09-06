@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { causeyFetch, formatDateRange } from "../../src/api";
 import { useAuth } from "../../src/auth";
 import { feedback } from "../../src/haptics";
+import { RequireSession } from "../../src/RequireSession";
 import { colors } from "../../src/theme";
 import {
   Card,
@@ -40,6 +41,14 @@ type AttendancePayload = {
 };
 
 export default function AttendanceScreen() {
+  return (
+    <RequireSession>
+      <AttendanceBody />
+    </RequireSession>
+  );
+}
+
+function AttendanceBody() {
   const { competitionId } = useLocalSearchParams<{ competitionId: string }>();
   const { session } = useAuth();
   const router = useRouter();
@@ -48,11 +57,15 @@ export default function AttendanceScreen() {
   const [busyProfile, setBusyProfile] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!competitionId || !session?.access_token) return;
+    if (!competitionId) {
+      setError("That link is missing a tournament address.");
+      return;
+    }
+    if (!session?.access_token) return;
     setError(null);
     try {
       const fresh = (await causeyFetch(
-        `/api/mobile/attendance?competitionId=${competitionId}`,
+        `/api/mobile/attendance?competitionId=${encodeURIComponent(competitionId)}`,
         { token: session.access_token }
       )) as AttendancePayload;
       setData(fresh);

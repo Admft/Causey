@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { causeyFetch } from "../../src/api";
 import { useAuth } from "../../src/auth";
+import { RequireSession } from "../../src/RequireSession";
 import { colors } from "../../src/theme";
 import {
   Card,
@@ -35,18 +36,31 @@ function gradeLabel(grade: number | null): string | null {
 }
 
 export default function RosterScreen() {
+  return (
+    <RequireSession>
+      <RosterBody />
+    </RequireSession>
+  );
+}
+
+function RosterBody() {
   const { orgId } = useLocalSearchParams<{ orgId: string }>();
   const { session } = useAuth();
   const [data, setData] = useState<RosterPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!orgId || !session?.access_token) return;
+    if (!orgId) {
+      setError("That link is missing an organization address.");
+      return;
+    }
+    if (!session?.access_token) return;
     setError(null);
     try {
-      const fresh = (await causeyFetch(`/api/mobile/roster?orgId=${orgId}`, {
-        token: session.access_token,
-      })) as RosterPayload;
+      const fresh = (await causeyFetch(
+        `/api/mobile/roster?orgId=${encodeURIComponent(orgId)}`,
+        { token: session.access_token }
+      )) as RosterPayload;
       setData(fresh);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load the roster.");

@@ -25,8 +25,8 @@ export default async function SupportPage() {
       </h1>
       <p className="mt-4 max-w-2xl text-md text-muted">
         Causey is an early build. Use this page if something is broken, you
-        cannot sign in, need an account deleted, or need to report a listing or
-        comment.
+        cannot sign in, cannot finish deleting an account yourself, or need to
+        report a listing or comment.
       </p>
 
       <div className="mt-10 space-y-10">
@@ -87,12 +87,12 @@ export default async function SupportPage() {
             Account and deletion
           </h2>
           <p className="mt-4 text-base text-muted">
-            You can export or delete your own account from{" "}
+            You can delete your account in the Causey app (Me tab) or from{" "}
             <Link href="/account#data" className="font-semibold text-brand-red hover:underline">
               Account
             </Link>{" "}
-            after signing in on the website. Organization owners must transfer
-            ownership first.
+            after signing in. Export is on Account. Organization owners must
+            transfer ownership first.
           </p>
         </section>
 
@@ -105,8 +105,10 @@ export default async function SupportPage() {
           </h2>
           <p className="mt-4 text-base text-muted">
             The Causey phone app is for people 13 and older. It is not a kids
-            app. Students under 13 should not sign in on a phone; a parent can
-            use a parent account. Create accounts on the website.
+            app. Parents and coaches create an account in the app. Students 13
+            or older create a student account on the website, then sign in.
+            Students under 13 should not use the app; a parent can use a parent
+            account.
           </p>
         </section>
       </div>

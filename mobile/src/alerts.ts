@@ -34,6 +34,27 @@ export function isWebsiteOnlyHref(href: string | null | undefined): boolean {
   );
 }
 
+/** Safari URL for a website-only alert. Only Causey paths, never an arbitrary href. */
+export function websiteHrefToOpen(
+  href: string | null | undefined,
+  origin: string
+): string | null {
+  if (!href || !isWebsiteOnlyHref(href)) return null;
+  if (/^https?:\/\//i.test(href)) {
+    try {
+      const url = new URL(href);
+      if (url.hostname === "causey.dev" || url.hostname === "www.causey.dev") {
+        return url.toString();
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+  if (!href.startsWith("/")) return null;
+  return `${origin}${href}`;
+}
+
 export function formatAlertTime(createdAt: string, nowMs = Date.now()): string {
   const then = Date.parse(createdAt);
   if (Number.isNaN(then)) return createdAt;

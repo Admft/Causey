@@ -30,11 +30,13 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Chess nationals banners: restore the slow sheen on the red face (home + `/chess` + phone pin) — 2026-09-06
+- Phone shared-device privacy + no-dead-end review pass — 2026-09-06
 
 ## Last tick
 
-- 2026-09-06 — Chess nationals banners (home split card, `/chess` pin, phone Search pin) sheen again: the same slow sweep + rest as the district window, clipped to the red face so the homepage Local/State/Nationals path stays still. Reduced motion kills it.
+- 2026-09-06 — Phone shared-device privacy and dead ends: the offline cache is scoped per account and cleared when the signed-in user changes (a coach's cached roster could render for the next person on the same phone); every screen that waits on `/api/mobile/me` now offers retry or sign out instead of a spinner; a 200 with no listing, a deep link with no id, and a failed attendance read all end somewhere a person can act; organizer links from scraped listings go through one http(s) guard.
+- 2026-09-06 — Phone App Store review pack: no invented “You” RSVP, coach screens redirect when unsigned, website-only alerts open Safari, nationals pin disclaimer, privacy/terms/support match in-app signup and deletion, iPhone-only, privacy nutrition types in the manifest.
+- 2026-09-06 — Phone tournament Going / Can't go updates from the tap, same as Yes on organizer registration, when the attendance reload is missing
 - 2026-09-06 — Report a problem is a labeled footer link on every website page; the header stays Sign in / Account.
 - 2026-09-06 — Report a problem left the header; it sits with Support in the footer, Account data, sign-in, the error page, and phone Me trust links.
 - 2026-09-06 — Phone tournament details match the website job: show the listing photo and US Chess rating, ask Going / Can't go, and after organizer registration ask whether they finished and confirm they are going. Add to calendar falls back to an .ics / Calendar template in Expo Go.

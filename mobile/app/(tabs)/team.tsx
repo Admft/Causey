@@ -1,4 +1,3 @@
-import * as Linking from "expo-linking";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
@@ -6,6 +5,7 @@ import { causeyFetch, formatDateRange } from "../../src/api";
 import { useAuth } from "../../src/auth";
 import { formatSavedAt, readCache, writeCache } from "../../src/cache";
 import { RoleHomeGuard } from "../../src/RoleHomeGuard";
+import { openExternalUrl } from "../../src/open-url";
 import { colors, siteUrl } from "../../src/theme";
 import {
   Card,
@@ -57,6 +57,7 @@ export default function TeamScreen() {
 
 function TeamDesk() {
   const { session } = useAuth();
+  const userId = session?.user.id ?? null;
   const router = useRouter();
   const [data, setData] = useState<TeamPayload | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -65,9 +66,18 @@ function TeamDesk() {
   const [refreshing, setRefreshing] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
+  // A cached roster is the most sensitive payload in the app, so it is scoped
+  // to this coach and dropped before the next account can render it.
   useEffect(() => {
     let cancelled = false;
-    readCache<TeamPayload>(CACHE_KEY)
+    setData(null);
+    setSavedAt(null);
+    setHydrated(false);
+    if (!userId) {
+      setHydrated(true);
+      return;
+    }
+    readCache<TeamPayload>(CACHE_KEY, userId)
       .then((cached) => {
         if (cancelled || !cached) return;
         setData(cached.value);
@@ -80,10 +90,10 @@ function TeamDesk() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [userId]);
 
   const load = useCallback(async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token || !userId) return;
     setRefreshing(true);
     try {
       const fresh = (await causeyFetch("/api/mobile/team", {
@@ -93,14 +103,14 @@ function TeamDesk() {
       setSavedAt(Date.now());
       setStale(false);
       setError(null);
-      await writeCache(CACHE_KEY, fresh);
+      await writeCache(CACHE_KEY, userId, fresh);
     } catch (err) {
       setStale(true);
       setError(err instanceof Error ? err.message : "Could not load your team.");
     } finally {
       setRefreshing(false);
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -220,7 +230,7 @@ function TeamDesk() {
           </Meta>
           <LinkButton
             label="Open my organizations on the web"
-            onPress={() => Linking.openURL(`${siteUrl}/orgs`)}
+            onPress={() => void openExternalUrl(`${siteUrl}/orgs`)}
           />
         </View>
       ) : null}

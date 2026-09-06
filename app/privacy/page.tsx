@@ -179,15 +179,20 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-4 text-base text-muted">
             The phone apps use the same accounts and privacy rules as the
-            website. They are for ages 13 and up. Students under 13 cannot
-            sign in on a phone. Account export and deletion stay on{" "}
+            website. They are for ages 13 and up, not a kids app. Parents and
+            coaches create an account in the app. Students 13 or older create a
+            student account on the website (that form asks for a date of birth;
+            the phone never collects one), then sign in. Students under 13 who
+            sign in on a phone see a blocked screen and can delete the account
+            there. Account deletion is in the app (Me tab, and the blocked
+            screen) and also on{" "}
             <Link
               href="/account#data"
               className="font-semibold text-brand-red hover:underline"
             >
               Account
             </Link>
-            . Support is at{" "}
+            . Export stays on Account. Support is at{" "}
             <Link href="/support" className="font-semibold text-brand-red hover:underline">
               Support
             </Link>

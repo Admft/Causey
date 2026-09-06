@@ -2,10 +2,12 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { useAuth } from "./auth";
-import { colors } from "./theme";
+import { openExternalUrl } from "./open-url";
+import { colors, siteUrl } from "./theme";
 import {
   ErrorText,
   Field,
+  LinkButton,
   Meta,
   PrimaryButton,
   SecondaryButton,
@@ -79,6 +81,12 @@ export function DeleteAccountSection() {
           textContentType="emailAddress"
         />
         {error ? <ErrorText>{error}</ErrorText> : null}
+        {error?.includes("Contact Causey") ? (
+          <LinkButton
+            label="Report a problem"
+            onPress={() => void openExternalUrl(`${siteUrl}/support`)}
+          />
+        ) : null}
         <PrimaryButton
           label="Delete my account"
           onPress={confirm}

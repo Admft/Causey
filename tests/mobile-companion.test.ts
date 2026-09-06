@@ -158,7 +158,9 @@ describe("mobile companion sources", () => {
     expect(read("app/support/page.tsx")).toContain("Ages 13 and up");
     expect(read("app/privacy/page.tsx")).toContain("iOS and Android apps");
     expect(read("app/privacy/page.tsx")).toContain("not currently collect push tokens");
+    expect(read("app/privacy/page.tsx")).toContain("Account deletion is in the app");
     expect(read("app/terms/page.tsx")).toContain("not a kids app");
+    expect(read("app/terms/page.tsx")).toContain("Parents and coaches create an");
     expect(read("app/layout.tsx")).toContain('href="/support"');
     expect(read("app/layout.tsx")).toContain("Report a problem");
     expect(read("mobile/app/(tabs)/me.tsx")).toContain("Report a problem");
@@ -240,6 +242,10 @@ describe("App Store readiness", () => {
     expect(JSON.parse(appJson).expo.ios.privacyManifests.NSPrivacyTracking).toBe(
       false
     );
+    expect(appJson).toContain("NSPrivacyCollectedDataTypeEmailAddress");
+    expect(appJson).toContain("NSPrivacyCollectedDataTypeUserID");
+    expect(appJson).toContain("NSPrivacyCollectedDataTypeOtherUserContent");
+    expect(JSON.parse(appJson).expo.ios.supportsTablet).toBe(false);
   });
 
   it("pins the production API in every EAS build profile", () => {
@@ -272,7 +278,7 @@ describe("App Store readiness", () => {
   it("has native depth beyond a list of links", () => {
     const event = read("mobile/app/event/[slug].tsx");
     expect(event).toContain("addTournamentToCalendar");
-    expect(event).toContain("Share.share");
+    expect(event).toContain("sharePlainText");
     expect(read("mobile/src/calendar.ts")).toContain(
       "requestCalendarPermissions"
     );
@@ -305,6 +311,9 @@ describe("App Store readiness", () => {
     expect(kit).toContain("/support");
     expect(kit).toContain("/privacy");
     expect(kit).toContain("/terms");
+    expect(kit).toContain("Difficulty ratings");
+    expect(kit).toContain("/api/mobile/alerts");
+    expect(kit).not.toContain("User-generated content:** No");
   });
 });
 
@@ -364,7 +373,8 @@ describe("every signed-in role has a home", () => {
     expect(me).toContain("browsing as a guest");
     expect(me).toContain('router.push("/login")');
     expect(me).toContain('router.push("/signup")');
-    expect(me).toContain("ready && !session");
+    expect(me).toContain("if (!ready) return <Spinner />");
+    expect(me).toContain("if (!session)");
 
     // Login is no longer the forced entry point, so it needs a way back out.
     expect(read("mobile/app/login.tsx")).toContain(
@@ -435,6 +445,11 @@ describe("every signed-in role has a home", () => {
     const attendance = read("mobile/app/attendance/[competitionId].tsx");
     expect(attendance).toContain("/api/mobile/attendance");
     expect(attendance).toContain("did_not_attend");
+    expect(attendance).toContain("RequireSession");
+    expect(read("mobile/app/results/[competitionId].tsx")).toContain(
+      "RequireSession"
+    );
+    expect(read("mobile/app/roster/[orgId].tsx")).toContain("RequireSession");
   });
 
   it("lets a student answer their own invitations", () => {
@@ -458,7 +473,7 @@ describe("every signed-in role has a home", () => {
     }
   });
 
-  it("keeps desk work off the phone", () => {
+  it("keeps desk work off the phone, except what a coach does standing up", () => {
     // Invites, CSV, settings, and reports stay on the website by design.
     const team = read("mobile/app/(tabs)/team.tsx");
     for (const deskWord of ["CSV", "settings", "reports"]) {
@@ -468,5 +483,146 @@ describe("every signed-in role has a home", () => {
     expect(read("app/api/mobile/roster/route.ts")).toContain(
       "canMarkOrganizationAttending"
     );
+  });
+});
+
+describe("a shared phone never leaks the previous account", () => {
+  it("scopes every cached payload to the account that fetched it", () => {
+    const cache = read("mobile/src/cache.ts");
+    expect(cache).toContain("function scopedKey(key: string, userId: string)");
+    // An unscoped `PREFIX + key` entry is readable by whoever signs in next.
+    expect(cache).not.toContain("PREFIX + key");
+
+    for (const screen of [
+      "mobile/app/(tabs)/family.tsx",
+      "mobile/app/(tabs)/plan.tsx",
+      "mobile/app/(tabs)/team.tsx",
+    ]) {
+      const source = read(screen);
+      expect(source).toContain("session?.user.id ?? null");
+      expect(source).toContain("CACHE_KEY, userId");
+      // Re-reading on account change is only safe if the old payload is gone.
+      expect(source).toContain("setData(null)");
+      expect(source).toContain("}, [userId]);");
+    }
+  });
+
+  it("drops cached payloads when the signed-in account changes", () => {
+    // Sign-out already clears; a token swap on a shared phone did not.
+    const auth = read("mobile/src/auth.tsx");
+    expect(auth).toContain("lastUserId");
+    expect(auth).toContain("void clearCache()");
+    expect(auth).toContain("}, [session?.user.id]);");
+  });
+
+  it("clears the account's profile and access in the same commit as the session", () => {
+    // Otherwise one render pairs account B's token with account A's name, or
+    // with account A's blocked verdict.
+    const auth = read("mobile/src/auth.tsx");
+    const swap = auth.slice(auth.indexOf("onAuthStateChange"));
+    expect(swap).toContain("lastUserId.current !== nextUserId");
+    expect(swap.indexOf("setProfile(null)")).toBeLessThan(
+      swap.indexOf("setSession(next)")
+    );
+  });
+
+  it("does not let screen state outlive the account that loaded it", () => {
+    // Remounting on account change covers every RequireSession screen at once.
+    expect(read("mobile/src/RequireSession.tsx")).toContain(
+      "<Fragment key={session.user.id}>"
+    );
+    // Saved listings serve guests too, so that screen resets its own list.
+    const saved = read("mobile/app/saved.tsx");
+    expect(saved).toContain("setSaved(null)");
+    expect(saved).toContain("}, [userId]);");
+  });
+});
+
+describe("no screen can strand a reviewer on a spinner", () => {
+  it("offers a retry when account details never load", () => {
+    const guard = read("mobile/src/RequireSession.tsx");
+    expect(guard).toContain("AccountError");
+    expect(read("mobile/src/RoleHomeGuard.tsx")).toContain(
+      "export function AccountError"
+    );
+    // Alerts and Organizations gate through the same component instead of
+    // hand-rolling a spinner that outlives the request it waits on.
+    for (const screen of ["mobile/app/alerts.tsx", "mobile/app/orgs.tsx"]) {
+      const source = read(screen);
+      expect(source).toContain("RequireSession");
+      expect(source).not.toContain("if (!access) return <Spinner />");
+    }
+  });
+
+  it("treats a 200 with no listing as an error", () => {
+    const event = read("mobile/app/event/[slug].tsx");
+    expect(event).toContain("function asCompetition");
+    expect(event).toContain("We could not find that tournament.");
+    expect(event).toContain("Try again");
+  });
+
+  it("says so when a deep link is missing its id", () => {
+    const screens: [string, string][] = [
+      ["mobile/app/attendance/[competitionId].tsx", "!competitionId"],
+      ["mobile/app/results/[competitionId].tsx", "!competitionId"],
+      ["mobile/app/roster/[orgId].tsx", "!orgId"],
+    ];
+    for (const [screen, guard] of screens) {
+      const source = read(screen);
+      expect(source).toContain(`if (${guard}) {`);
+      expect(source).toContain("is missing a");
+      expect(source).toContain("Try again");
+      expect(source).toContain("encodeURIComponent");
+    }
+  });
+
+  it("keeps the going card usable when attendance cannot load", () => {
+    const going = read("mobile/src/EventGoingCard.tsx");
+    expect(going).toContain("loadError");
+    expect(going).toContain("Try again");
+    // Opening the organizer still works when Causey's own read failed.
+    expect(going).toContain("Open organizer registration on ${host}");
+  });
+
+  it("does not leave the login form up on top of a live session", () => {
+    expect(read("mobile/app/login.tsx")).toContain(
+      'if (session) return <Redirect href="/" />'
+    );
+  });
+});
+
+describe("external links stay narrow", () => {
+  it("only hands http and https destinations to the system browser", () => {
+    const openUrl = read("mobile/src/open-url.ts");
+    expect(openUrl).toContain("export function safeRegUrl");
+    expect(openUrl).toContain('url.protocol !== "https:"');
+    for (const source of [
+      "mobile/src/EntrantRow.tsx",
+      "mobile/src/EventGoingCard.tsx",
+    ]) {
+      expect(read(source)).toContain("safeRegUrl");
+    }
+    // An alert row cannot talk the app into opening an arbitrary host.
+    expect(read("mobile/src/alerts.ts")).toContain('hostname === "causey.dev"');
+  });
+});
+
+describe("submission docs match the app", () => {
+  it("describes the under-13 flow the app actually has", () => {
+    // Sign-in succeeds, then the account lands on the blocked screen. Telling
+    // Apple it is "blocked at sign-in" describes a flow that does not exist.
+    for (const doc of ["mobile/APP-STORE.md", "mobile/README.md"]) {
+      expect(read(doc)).not.toContain("blocked at sign-in");
+    }
+    expect(read("mobile/APP-STORE.md")).toContain("A student under 13 can sign in");
+  });
+
+  it("does not call in-app features website-only", () => {
+    const readme = read("mobile/README.md");
+    expect(readme).not.toContain("organization settings, results, and reports");
+    expect(readme).toContain("Attendance and per-event results are in the app");
+    const kit = read("mobile/APP-STORE.md");
+    expect(kit).toContain("records places from My team");
+    expect(kit).toContain("saved listings");
   });
 });

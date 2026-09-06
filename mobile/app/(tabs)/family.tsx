@@ -5,6 +5,11 @@ import { causeyFetch } from "../../src/api";
 import { useAuth } from "../../src/auth";
 import { formatSavedAt, readCache, writeCache } from "../../src/cache";
 import { EntrantRow, type EntrantRowData } from "../../src/EntrantRow";
+import {
+  actionEntrants,
+  mapEntrantDecision,
+  type EntrantTap,
+} from "../../src/entrant-decision";
 import { feedback } from "../../src/haptics";
 import { RoleHomeGuard } from "../../src/RoleHomeGuard";
 import { colors } from "../../src/theme";
@@ -36,6 +41,25 @@ type FamilyPayload = {
   pending_link_count: number;
 };
 
+function applyFamilyTap(
+  current: FamilyPayload | null,
+  row: FamilyEntrant,
+  decision: EntrantTap
+): FamilyPayload | null {
+  if (!current) return current;
+  return {
+    ...current,
+    children: current.children.map((child) => {
+      const upcoming = mapEntrantDecision(child.upcoming, row, decision);
+      return {
+        ...child,
+        upcoming,
+        needs_action: actionEntrants(upcoming),
+      };
+    }),
+  };
+}
+
 export default function FamilyScreen() {
   return (
     <RoleHomeGuard home="/family">
@@ -46,6 +70,7 @@ export default function FamilyScreen() {
 
 function FamilyDesk() {
   const { session, profile } = useAuth();
+  const userId = session?.user.id ?? null;
   const [data, setData] = useState<FamilyPayload | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [stale, setStale] = useState(false);
@@ -54,10 +79,19 @@ function FamilyDesk() {
   const [hydrated, setHydrated] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
-  // Show the last good payload immediately, then reconcile with the network.
+  // Show this account's last good payload, then reconcile with the network.
+  // Dropping `data` first is what stops one account's children from flashing
+  // into the next account's screen on a shared phone.
   useEffect(() => {
     let cancelled = false;
-    readCache<FamilyPayload>(CACHE_KEY)
+    setData(null);
+    setSavedAt(null);
+    setHydrated(false);
+    if (!userId) {
+      setHydrated(true);
+      return;
+    }
+    readCache<FamilyPayload>(CACHE_KEY, userId)
       .then((cached) => {
         if (cancelled || !cached) return;
         setData(cached.value);
@@ -70,10 +104,10 @@ function FamilyDesk() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [userId]);
 
   const load = useCallback(async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token || !userId) return;
     setRefreshing(true);
     try {
       const fresh = (await causeyFetch("/api/mobile/family", {
@@ -83,14 +117,14 @@ function FamilyDesk() {
       setSavedAt(Date.now());
       setStale(false);
       setError(null);
-      await writeCache(CACHE_KEY, fresh);
+      await writeCache(CACHE_KEY, userId, fresh);
     } catch (err) {
       setStale(true);
       setError(err instanceof Error ? err.message : "Could not load Family.");
     } finally {
       setRefreshing(false);
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -100,7 +134,9 @@ function FamilyDesk() {
 
   async function rsvp(row: FamilyEntrant, status: "going" | "not_going") {
     if (!session?.access_token || !row.competition) return;
+    const previous = data;
     setBusyKey(`${row.competition_id}:${status}`);
+    setData((current) => applyFamilyTap(current, row, status));
     try {
       await causeyFetch("/api/mobile/rsvp", {
         token: session.access_token,
@@ -115,6 +151,7 @@ function FamilyDesk() {
       feedback("success");
       await load();
     } catch (err) {
+      setData(previous);
       feedback("error");
       setError(
         err instanceof Error ? err.message : "Could not save that RSVP."
@@ -126,7 +163,9 @@ function FamilyDesk() {
 
   async function markRegistered(row: FamilyEntrant) {
     if (!session?.access_token || !row.competition) return;
+    const previous = data;
     setBusyKey(`${row.competition_id}:registered`);
+    setData((current) => applyFamilyTap(current, row, "registered"));
     try {
       await causeyFetch("/api/mobile/registration", {
         token: session.access_token,
@@ -140,6 +179,7 @@ function FamilyDesk() {
       feedback("success");
       await load();
     } catch (err) {
+      setData(previous);
       feedback("error");
       setError(
         err instanceof Error ? err.message : "Could not save registration."

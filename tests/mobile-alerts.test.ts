@@ -5,6 +5,7 @@ import {
   formatAlertTime,
   inAppEventPath,
   isWebsiteOnlyHref,
+  websiteHrefToOpen,
 } from "../mobile/src/alerts";
 
 const read = (path: string) =>
@@ -48,13 +49,16 @@ describe("mobile alerts screen", () => {
       "No alerts yet. Invitations and results show up here."
     );
     expect(screen).toContain("Mark all read");
+    expect(screen).toContain("unread_count: 0");
     expect(screen).toContain("Open on the website");
     expect(screen).toContain("router.push(eventPath)");
     expect(screen).toContain("inAppEventPath");
     expect(screen).toContain("isWebsiteOnlyHref");
+    expect(screen).toContain("websiteHrefToOpen");
+    expect(screen).toContain("openExternalUrl");
+    expect(screen).toContain("Try again");
     expect(screen).toContain("fontWeight: \"800\"");
     expect(screen).not.toContain("WebView");
-    expect(screen).not.toContain("Linking.openURL");
     expect(screen).not.toContain("direct_message");
     expect(screen).not.toContain("comment");
   });
@@ -92,6 +96,22 @@ describe("alert href destinations", () => {
       expect(inAppEventPath(href)).toBeNull();
       expect(isWebsiteOnlyHref(href)).toBe(true);
     }
+  });
+
+  it("opens website-only hrefs in Safari on causey.dev, never arbitrary hosts", () => {
+    expect(websiteHrefToOpen("/family", "https://causey.dev")).toBe(
+      "https://causey.dev/family"
+    );
+    expect(websiteHrefToOpen("/orgs/lincoln", "https://causey.dev")).toBe(
+      "https://causey.dev/orgs/lincoln"
+    );
+    expect(
+      websiteHrefToOpen("https://causey.dev/account#data", "https://causey.dev")
+    ).toBe("https://causey.dev/account#data");
+    expect(
+      websiteHrefToOpen("https://evil.example/family", "https://causey.dev")
+    ).toBeNull();
+    expect(websiteHrefToOpen("/event/spring-open", "https://causey.dev")).toBeNull();
   });
 
   it("does not invent an in-app destination for a missing href", () => {

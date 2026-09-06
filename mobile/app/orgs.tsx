@@ -1,8 +1,9 @@
-import { Redirect, Stack, useFocusEffect, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { RefreshControl, StyleSheet, Text } from "react-native";
 import { causeyFetch } from "../src/api";
 import { useAuth } from "../src/auth";
+import { RequireSession } from "../src/RequireSession";
 import { colors } from "../src/theme";
 import {
   Card,
@@ -55,18 +56,18 @@ function membershipRoleLabel(role: string | null, isCoach: boolean): string {
 }
 
 export default function OrgsScreen() {
-  const { ready, session, access } = useAuth();
-
-  if (!ready) return <Spinner />;
-  if (!session) return <Redirect href="/login" />;
-  if (access && access.allowed === false) return <Redirect href="/blocked" />;
-
   return (
-    <>
+    <RequireSession>
       <Stack.Screen options={{ title: "Organizations" }} />
-      <OrgsDesk token={session.access_token} />
-    </>
+      <OrgsBody />
+    </RequireSession>
   );
+}
+
+function OrgsBody() {
+  const { session } = useAuth();
+  if (!session) return null;
+  return <OrgsDesk token={session.access_token} />;
 }
 
 function OrgsDesk({ token }: { token: string }) {
