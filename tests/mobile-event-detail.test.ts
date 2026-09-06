@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { organizerCoverUrl } from "../mobile/src/cover-url";
+import { resolveRegistrationStatus } from "../mobile/src/event-registration-state";
 import { sectionConstraint } from "../mobile/src/section-constraint";
 
 const read = (path: string) =>
@@ -47,6 +48,8 @@ describe("phone tournament details", () => {
     expect(going).toContain("safeRegUrl");
     expect(going).toContain("AppState.addEventListener");
     expect(going).toContain("Going on Causey is for Family and Plan");
+    expect(going).toContain("resolveRegistrationStatus");
+    expect(going).toContain("setLocalStatus");
   });
 
   it("falls back when Expo Go has no native calendar", () => {
@@ -120,5 +123,30 @@ describe("section constraints on the phone", () => {
         entry_fee_cents: null,
       })
     ).toBe("Open to all");
+  });
+});
+
+describe("registration confirm status", () => {
+  it("lets a local Yes win over a missing or stale server row", () => {
+    expect(
+      resolveRegistrationStatus({
+        serverStatus: "opened",
+        localStatus: "registered",
+        openedLocally: true,
+      })
+    ).toBe("registered");
+    expect(
+      resolveRegistrationStatus({
+        serverStatus: null,
+        localStatus: "registered",
+        openedLocally: true,
+      })
+    ).toBe("registered");
+    expect(
+      resolveRegistrationStatus({
+        serverStatus: null,
+        openedLocally: true,
+      })
+    ).toBe("opened");
   });
 });

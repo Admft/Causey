@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import { causeyFetch } from "./api";
 import { useAuth } from "./auth";
+import {
+  resolveRegistrationStatus,
+  type RegistrationMark,
+} from "./event-registration-state";
 import { feedback } from "./haptics";
 import { colors } from "./theme";
 import {
@@ -92,6 +96,9 @@ export function EventGoingCard({
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openedLocal, setOpenedLocal] = useState<string[]>([]);
+  const [localStatus, setLocalStatus] = useState<
+    Record<string, RegistrationMark>
+  >({});
 
   const load = useCallback(async () => {
     if (!session?.access_token) {
@@ -156,8 +163,29 @@ export function EventGoingCard({
     status: "opened" | "registered" | "not_registered"
   ) {
     if (!session?.access_token) return;
+    const previous = localStatus[person.profileId] ?? person.status;
+    const wasConfirming =
+      previous === "opened" ||
+      openedLocal.includes(person.profileId) ||
+      awaitingReturn;
     setBusyKey(`${person.profileId}:reg`);
     setError(null);
+    setLocalStatus((current) => ({
+      ...current,
+      [person.profileId]: status,
+    }));
+    if (status === "opened") {
+      setOpenedLocal((current) =>
+        current.includes(person.profileId)
+          ? current
+          : [...current, person.profileId]
+      );
+    } else {
+      setAwaitingReturn(false);
+      setOpenedLocal((current) =>
+        current.filter((id) => id !== person.profileId)
+      );
+    }
     try {
       await causeyFetch("/api/mobile/registration", {
         token: session.access_token,
@@ -168,17 +196,23 @@ export function EventGoingCard({
           status,
         },
       });
-      if (status === "opened") {
-        setOpenedLocal((current) =>
-          current.includes(person.profileId)
-            ? current
-            : [...current, person.profileId]
-        );
-      }
       feedback("success");
       await load();
     } catch (err) {
+      setLocalStatus((current) => {
+        const next = { ...current };
+        if (previous) next[person.profileId] = previous;
+        else delete next[person.profileId];
+        return next;
+      });
       if (status !== "opened") {
+        if (wasConfirming) {
+          setOpenedLocal((current) =>
+            current.includes(person.profileId)
+              ? current
+              : [...current, person.profileId]
+          );
+        }
         feedback("error");
         setError(
           err instanceof Error
@@ -266,6 +300,32 @@ export function EventGoingCard({
 
   if (!showRsvp && !showRegistration) return null;
 
+  const peopleToAsk: EventRegistrationPerson[] = registrationPeople.length
+    ? registrationPeople
+    : rsvpPeople.some((person) => person.label !== "You")
+      ? []
+      : [
+          {
+            profileId: session.user.id,
+            label: "You",
+            status: null,
+          },
+        ];
+  const resolvedPeople = peopleToAsk.map((person) => ({
+    ...person,
+    status: resolveRegistrationStatus({
+      serverStatus: person.status,
+      localStatus: localStatus[person.profileId],
+      openedLocally: openedLocal.includes(person.profileId),
+    }),
+  }));
+  const allRegistered =
+    resolvedPeople.length > 0 &&
+    resolvedPeople.every((row) => row.status === "registered");
+  const askingConfirm =
+    !allRegistered &&
+    (awaitingReturn || resolvedPeople.some((row) => row.status === "opened"));
+
   return (
     <Card>
       {showRsvp ? (
@@ -308,12 +368,9 @@ export function EventGoingCard({
       {showRegistration && host ? (
         <View style={showRsvp ? styles.regBlock : undefined}>
           <Text style={styles.heading} accessibilityRole="header">
-            {awaitingReturn ||
-            registrationPeople.some((row) => row.status === "opened") ||
-            openedLocal.length
+            {askingConfirm
               ? "Did you finish organizer registration?"
-              : registrationPeople.every((row) => row.status === "registered") &&
-                  registrationPeople.length > 0
+              : allRegistered
                 ? "Organizer registration is marked complete"
                 : "Register on the organizer’s site"}
           </Text>
@@ -321,21 +378,8 @@ export function EventGoingCard({
             Entry and payment happen on {host}, not on Causey. Open that site,
             then confirm here so Plan stays accurate.
           </Meta>
-          {(registrationPeople.length
-            ? registrationPeople
-            : rsvpPeople.some((person) => person.label !== "You")
-              ? []
-              : [
-                  {
-                    profileId: session.user.id,
-                    label: "You",
-                    status: null as EventRegistrationPerson["status"],
-                  },
-                ]
-          ).map((person) => {
-            const status =
-              person.status ??
-              (openedLocal.includes(person.profileId) ? "opened" : null);
+          {resolvedPeople.map((person) => {
+            const status = person.status;
             const busy = busyKey === `${person.profileId}:reg`;
             return (
               <View key={person.profileId} style={styles.block}>
@@ -359,7 +403,7 @@ export function EventGoingCard({
                       }
                     />
                   </>
-                ) : status === "opened" || awaitingReturn ? (
+                ) : status === "opened" || (awaitingReturn && !allRegistered) ? (
                   <>
                     <Meta>
                       Causey cannot see the organizer’s checkout. Confirm after
@@ -383,6 +427,7 @@ export function EventGoingCard({
                       label="Open registration site again"
                       onPress={() => void openOrganizerSite(person)}
                     />
+                    {error ? <ErrorText>{error}</ErrorText> : null}
                   </>
                 ) : (
                   <>
