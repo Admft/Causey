@@ -356,15 +356,15 @@ export default async function FamilyPage() {
                     {rsvpInbox.map(({ child, row }) => (
                       <li
                         key={`rsvp-${child.profile_id}-${row.competition_id}`}
-                        className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
                       >
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold text-muted-strong">
                             {child.display_name}
                           </p>
                           <Link
                             href={`/event/${row.competition!.slug}`}
-                            className="font-semibold text-foreground hover:text-brand-red"
+                            className="block font-semibold text-foreground hover:text-brand-red"
                           >
                             {row.competition!.name}
                           </Link>
@@ -404,15 +404,15 @@ export default async function FamilyPage() {
                     {registrationInbox.map(({ child, row }) => (
                       <li
                         key={`reg-${child.profile_id}-${row.competition_id}`}
-                        className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+                        className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
                       >
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="text-xs font-semibold text-muted-strong">
                             {child.display_name}
                           </p>
                           <Link
                             href={`/event/${row.competition!.slug}`}
-                            className="font-semibold text-foreground hover:text-brand-red"
+                            className="block font-semibold text-foreground hover:text-brand-red"
                           >
                             {row.competition!.name}
                           </Link>
