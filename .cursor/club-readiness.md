@@ -14,7 +14,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 - Create club/team; join link; CSV/email staff+student invites; assistants
 - Groups, announcements, member-only website + meeting note, leave club
-- Public search + “My club is going”; mark club attending; teammate going list (website event page + phone `ClubGoingCard`); phone Chess Pathways tool + nationals pin
+- Public search + “My club is going”; mark club attending; teammate going list (website event page + phone `ClubGoingCard`); phone Chess Pathways tool + nationals pin (sheen on the red banner)
 - Host any listed type (draft → review → publish); club/team-only audience (not “school only”)
 - RSVP, organizer-registration checkbox, attendance on hosted **and** travel events
 - Hosted/travel manage shows an event pulse (invited / RSVP / unfinished registration / blank results) and People vs Listing

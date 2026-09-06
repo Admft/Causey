@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Phone event details: cover, US Chess rating, Going RSVP, organizer-registration confirm, Expo Go calendar fallback — 2026-09-06
+- Chess nationals banners: restore the slow sheen on the red face (home + `/chess` + phone pin) — 2026-09-06
 
 ## Last tick
 
+- 2026-09-06 — Chess nationals banners (home split card, `/chess` pin, phone Search pin) sheen again: the same slow sweep + rest as the district window, clipped to the red face so the homepage Local/State/Nationals path stays still. Reduced motion kills it.
 - 2026-09-06 — Report a problem is a labeled footer link on every website page; the header stays Sign in / Account.
 - 2026-09-06 — Report a problem left the header; it sits with Support in the footer, Account data, sign-in, the error page, and phone Me trust links.
 - 2026-09-06 — Phone tournament details match the website job: show the listing photo and US Chess rating, ask Going / Can't go, and after organizer registration ask whether they finished and confirm they are going. Add to calendar falls back to an .ics / Calendar template in Expo Go.

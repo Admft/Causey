@@ -59,6 +59,10 @@ describe("chess nationals placement", () => {
     expect(slot).not.toContain("partner-promo-head-cluster");
     expect(read("app/globals.css")).not.toContain("partner-promo-sheen");
     expect(read("app/globals.css")).not.toContain("@keyframes partner-promo-sheen");
+    expect(read("app/globals.css")).toContain(".partner-promo-face::before");
+    expect(read("app/globals.css")).toContain(
+      "animation: mode-sheen-sweep 6.5s var(--ease-brand) 900ms infinite"
+    );
     expect(read("app/globals.css")).not.toContain("partner-promo-climb");
     expect(read("app/globals.css")).toContain(".partner-promo--featured {");
     expect(read("app/globals.css")).toContain(".partner-promo--search {");

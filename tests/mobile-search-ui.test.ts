@@ -60,6 +60,9 @@ describe("phone search matches website discovery chrome", () => {
     expect(pin).toContain("CHESS_NATIONALS.headline");
     expect(pin).toContain("CHESS_NATIONALS.ctaLabel");
     expect(pin).toContain('alignSelf: "flex-end"');
+    expect(pin).toContain('overflow: "hidden"');
+    expect(pin).toContain("PinSheen");
+    expect(pin).toContain("AccessibilityInfo.isReduceMotionEnabled");
     expect(pin).not.toContain("CHESS_NATIONALS.honesty");
     expect(pin).not.toContain("CHESS_NATIONALS.dek");
     expect(pin).not.toContain("CHESS_NATIONALS.eyebrow");
