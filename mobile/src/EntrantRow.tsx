@@ -4,7 +4,7 @@ import { formatDateRange } from "./api";
 import type { EntrantRowData } from "./entrant-row-data";
 import { openExternalUrl, safeRegUrl } from "./open-url";
 import { colors } from "./theme";
-import { Meta } from "./ui";
+import { AnswerButton, Meta } from "./ui";
 
 export type { EntrantRowData };
 
@@ -12,6 +12,7 @@ function rsvpMeta(row: EntrantRowData): string {
   if (row.status === "going") return " · Going";
   if (row.status === "not_going") return " · Can't go";
   if (row.status === "pending_invite") return " · Waiting for them to answer";
+  if (row.status === "invited") return " · Needs an answer";
   return "";
 }
 
@@ -75,38 +76,18 @@ export function EntrantRow({
       ) : null}
       {needsRsvp || answered || pendingInvite ? (
         <View style={styles.row}>
-          <Pressable
+          <AnswerButton
+            label="Going"
+            selected={row.status === "going"}
+            disabled={busy}
             onPress={onGoing}
+          />
+          <AnswerButton
+            label="Can't go"
+            selected={row.status === "not_going"}
             disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel={`Mark going to ${event.name}`}
-            accessibilityState={{ disabled: busy, selected: row.status === "going" }}
-            style={[
-              row.status === "going" ? styles.secondary : styles.primary,
-              busy && styles.inactive,
-            ]}
-          >
-            <Text
-              style={
-                row.status === "going" ? styles.secondaryText : styles.primaryText
-              }
-            >
-              Going
-            </Text>
-          </Pressable>
-          <Pressable
             onPress={onNotGoing}
-            disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel={`Mark not going to ${event.name}`}
-            accessibilityState={{
-              disabled: busy,
-              selected: row.status === "not_going",
-            }}
-            style={[styles.secondary, busy && styles.inactive]}
-          >
-            <Text style={styles.secondaryText}>Can&apos;t go</Text>
-          </Pressable>
+          />
           {answered && onClear ? (
             <Pressable
               onPress={onClear}
@@ -160,24 +141,13 @@ const styles = StyleSheet.create({
   },
   nameHit: { minHeight: 44, justifyContent: "center" },
   eventName: { fontSize: 16, fontWeight: "700", color: colors.foreground },
-  row: { flexDirection: "row", gap: 12, marginTop: 10, flexWrap: "wrap" },
-  primary: {
-    minHeight: 44,
-    justifyContent: "center",
-    backgroundColor: colors.brandRed,
-    borderRadius: 10,
-    paddingHorizontal: 18,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 10,
+    flexWrap: "wrap",
   },
-  primaryText: { color: "#ffffff", fontWeight: "700" },
-  secondary: {
-    minHeight: 44,
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 10,
-    paddingHorizontal: 18,
-  },
-  secondaryText: { color: colors.foreground, fontWeight: "700" },
   linkHit: { minHeight: 44, justifyContent: "center" },
   link: { color: colors.brandRed, fontWeight: "700" },
   inactive: { opacity: 0.45 },

@@ -305,6 +305,25 @@ describe("plan and family taps", () => {
     ]);
   });
 
+  it("tints only the answer someone actually gave", () => {
+    const ui = read("mobile/src/ui.tsx");
+    const entrantRow = read("mobile/src/EntrantRow.tsx");
+    const goingCard = read("mobile/src/EventGoingCard.tsx");
+
+    expect(ui).toContain("export function AnswerButton");
+    expect(ui).toContain("selected && styles.answerSelected");
+    // Both surfaces share one button, so Family cannot drift from the event
+    // screen or from the website's RSVP buttons.
+    expect(entrantRow).toContain('selected={row.status === "going"}');
+    expect(entrantRow).toContain('selected={row.status === "not_going"}');
+    expect(goingCard).toContain('selected={person.status === "going"}');
+    expect(goingCard).toContain('selected={person.status === "not_going"}');
+    // The old row styled the answer you had not given as the filled button,
+    // so Can't go made Going look chosen.
+    expect(entrantRow).not.toContain("styles.primary");
+    expect(entrantRow).toContain('" · Needs an answer"');
+  });
+
   it("keeps one student's tap off their siblings and their keys unique", () => {
     const family = read("mobile/app/(tabs)/family.tsx");
     expect(family).toContain(
