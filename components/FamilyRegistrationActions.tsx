@@ -60,13 +60,13 @@ export function FamilyRegistrationActions({
   }
 
   return (
-    <div className="flex flex-col items-stretch gap-2 sm:items-end">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="w-full shrink-0 sm:inline-block sm:w-auto">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-nowrap sm:items-center">
         <a
           href={registrationHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="cta-enabled inline-flex h-9 px-3 text-sm"
+          className="cta-enabled inline-flex h-9 shrink-0 whitespace-nowrap px-3 text-sm"
           aria-label={`Open organizer registration for ${childName}; opens in a new tab`}
         >
           Open registration <span aria-hidden="true">↗</span>
@@ -75,17 +75,20 @@ export function FamilyRegistrationActions({
           type="button"
           disabled={pending}
           onClick={() => void markComplete()}
-          className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground disabled:opacity-60"
+          className="h-9 shrink-0 whitespace-nowrap rounded-lg border border-line bg-white px-3 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground disabled:opacity-60"
         >
           {pending ? "Saving…" : "Mark complete"}
         </button>
       </div>
       {error ? (
-        <p className="text-xs font-medium text-brand-red" role="alert">
+        <p
+          className="mt-2 text-xs font-medium text-brand-red sm:w-0 sm:min-w-full sm:text-right"
+          role="alert"
+        >
           {error}
         </p>
       ) : (
-        <p className="text-2xs text-muted">
+        <p className="mt-2 text-2xs text-muted sm:w-0 sm:min-w-full sm:text-right">
           Finish on the organizer site, then mark it here for {childName}.
         </p>
       )}

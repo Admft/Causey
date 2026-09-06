@@ -138,4 +138,15 @@ describe("family discovery RSVP", () => {
       "No upcoming tournament invites."
     );
   });
+
+  it("keeps Family organizer actions on one row when titles are long", () => {
+    const actions = source("components/FamilyRegistrationActions.tsx");
+    const family = source("app/family/page.tsx");
+    expect(actions).toContain("sm:flex-nowrap");
+    expect(actions).toContain("whitespace-nowrap");
+    expect(actions).toContain("shrink-0");
+    expect(actions).not.toContain("flex-wrap");
+    expect(family).toContain("min-w-0 flex-1");
+    expect(family).toContain("sm:items-start sm:justify-between sm:gap-4");
+  });
 });
