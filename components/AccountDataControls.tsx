@@ -1,12 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { deleteOwnAccount } from "@/lib/actions/account-data";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { signOutAndLeave } from "@/lib/auth/sign-out";
 
 export function AccountDataControls({ email }: { email: string }) {
-  const router = useRouter();
   const [confirmation, setConfirmation] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,10 +19,9 @@ export function AccountDataControls({ email }: { email: string }) {
         setError(result.error);
         return;
       }
-      const supabase = createBrowserSupabaseClient();
-      await supabase.auth.signOut();
-      router.push("/");
-      router.refresh();
+      await signOutAndLeave("/");
+    } catch {
+      setError("Could not reach Causey. Check your connection, then try again.");
     } finally {
       setPending(false);
     }

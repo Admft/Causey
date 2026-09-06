@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Phone shared-device privacy + no-dead-end review pass — 2026-09-06
+- Website pass for the same four bug classes the phone review found — 2026-09-06
 
 ## Last tick
 
+- 2026-09-06 — Website audited against the phone's findings. The cross-account cache leak does not exist here (no browser storage, no `unstable_cache`, no `revalidate`, per-request Supabase clients), but the untrusted-URL class does and reaches further: zod `.url()` accepts `javascript:`, and the event page's pathway panel put a scraped `reg_url` straight into a public `href`. One guard now covers every external link and both write paths. Dead ends closed: a 15s fetch deadline for search and pathways, a dropped connection can no longer look like a successful save, "Profile not ready" has a retry and a sign-out, `/family` guards a null profile, and the root and family error boundaries exist. Sign-out is a document replacement so a school computer's back button cannot reach the last account.
 - 2026-09-06 — Phone shared-device privacy and dead ends: the offline cache is scoped per account and cleared when the signed-in user changes (a coach's cached roster could render for the next person on the same phone); every screen that waits on `/api/mobile/me` now offers retry or sign out instead of a spinner; a 200 with no listing, a deep link with no id, and a failed attendance read all end somewhere a person can act; organizer links from scraped listings go through one http(s) guard.
 - 2026-09-06 — Phone App Store review pack: no invented “You” RSVP, coach screens redirect when unsigned, website-only alerts open Safari, nationals pin disclaimer, privacy/terms/support match in-app signup and deletion, iPhone-only, privacy nutrition types in the manifest.
 - 2026-09-06 — Phone tournament Going / Can't go updates from the tap, same as Yes on organizer registration, when the attendance reload is missing

@@ -5,6 +5,7 @@ import type { PathwayNode } from "@/lib/qualification";
 import type { CompetitionRef } from "@/lib/data/types";
 import type { Series } from "@/lib/schemas";
 import { PathwayList } from "@/components/PathwayList";
+import { fetchWithTimeout } from "@/lib/browser-fetch";
 import { defaultPathwaySource } from "@/lib/partner-promos";
 
 /**
@@ -32,7 +33,7 @@ export function PathwayExplorer() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/pathways")
+    fetchWithTimeout("/api/pathways")
       .then(async (res) => {
         if (!res.ok) throw new Error();
         const body = await res.json();
@@ -56,9 +57,10 @@ export function PathwayExplorer() {
   useEffect(() => {
     if (!source) return;
     const controller = new AbortController();
-    fetch(`/api/pathways?source=${encodeURIComponent(source)}&placement=${placement}`, {
-      signal: controller.signal,
-    })
+    fetchWithTimeout(
+      `/api/pathways?source=${encodeURIComponent(source)}&placement=${placement}`,
+      { signal: controller.signal }
+    )
       .then(async (res) => {
         if (!res.ok) throw new Error();
         const body = await res.json();

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { joinOrgWithCode } from "@/lib/actions/orgs";
+import { attemptAction } from "@/lib/attempt-action";
 
 /** Single-tap join on the /join/[code] deep-link page. */
 export function JoinByCodeButton({
@@ -20,7 +21,7 @@ export function JoinByCodeButton({
     setError(null);
     setPending(true);
     try {
-      const result = await joinOrgWithCode(code);
+      const result = await attemptAction(() => joinOrgWithCode(code));
       if (!result.ok) {
         setError(result.error);
         return;

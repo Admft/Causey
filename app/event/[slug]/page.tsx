@@ -14,6 +14,7 @@ import {
   formatFeeCents,
 } from "@/lib/format";
 import { organizerCoverUrl } from "@/lib/cover-url";
+import { externalUrlHost, safeExternalUrl } from "@/lib/safe-url";
 import type { PathwayStatus } from "@/lib/schemas";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
@@ -120,9 +121,11 @@ export default async function EventPage({ params }: Params) {
     new Map(seriesList.map((s) => [s.id, s]))
   );
 
-  const regHost = competition.reg_url
-    ? new URL(competition.reg_url).hostname.replace(/^www\./, "")
-    : null;
+  // Listing URLs are scraped or organizer-typed. An unusable one is treated
+  // as no registration link at all, which this page already knows how to say.
+  // The bare `new URL()` this replaces also threw on an unparseable value.
+  const registrationUrl = safeExternalUrl(competition.reg_url);
+  const regHost = externalUrlHost(competition.reg_url);
   const feeLabel =
     competition.entry_fee_cents === null || competition.entry_fee_cents === undefined
       ? "Fee not listed"
@@ -312,7 +315,7 @@ export default async function EventPage({ params }: Params) {
       ? "ended"
       : needsRsvp
         ? "rsvp"
-        : competition.reg_url
+        : registrationUrl
           ? "register"
           : competition.audience === "invite_only"
             ? "invite_only"
@@ -564,10 +567,10 @@ export default async function EventPage({ params }: Params) {
                 </h2>
                 <p className="mt-2 max-w-prose text-sm text-muted">
                   {needsCoachRsvp
-                    ? competition.reg_url
+                    ? registrationUrl
                       ? "Answer so your organization knows who is coming, then finish organizer registration if the event requires it."
                       : "Answer so your organization knows who is coming. Entry is through your club invite, not open registration."
-                    : competition.reg_url
+                    : registrationUrl
                       ? "Going on Causey is for Family and Plan. Save is only a bookmark for this account. Entry and payment still happen on the organizer’s site — mark that complete after you finish there."
                       : "Going on Causey is for Family and Plan. Save is only a bookmark for this account. This listing has no organizer registration link."}
                 </p>
@@ -597,7 +600,7 @@ export default async function EventPage({ params }: Params) {
               </>
             ) : null}
 
-            {primaryAction === "register" && competition.reg_url && regHost ? (
+            {primaryAction === "register" && registrationUrl && regHost ? (
               <>
                 <h2
                   id="event-next-step"

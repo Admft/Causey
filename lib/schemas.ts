@@ -3,6 +3,7 @@ import {
   facetBelongsToCategory,
   PUBLIC_DISCOVERY_CATEGORY_IDS,
 } from "@/lib/category-discovery";
+import { safeExternalUrl } from "@/lib/safe-url";
 
 /**
  * Zod schemas for every record the app touches. Field names are snake_case on
@@ -171,6 +172,16 @@ export const CompetitionDetailsSchema = z
   })
   .passthrough();
 
+/**
+ * Drop a link we could never safely render, and keep the stored string
+ * byte-for-byte otherwise. Zod's `.url()` accepts `javascript:` and `data:`,
+ * so a listing field validated only that way becomes a stored XSS the moment
+ * it reaches an href. Nulling one field beats rejecting the whole listing.
+ */
+function renderableUrl(value: string | null): string | null {
+  return safeExternalUrl(value) ? value : null;
+}
+
 export const CompetitionSchema = z.object({
   id: z.string().uuid(),
   slug: z.string().min(1),
@@ -190,7 +201,7 @@ export const CompetitionSchema = z.object({
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   reg_deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   /** null = no external registration — org events RSVP on Causey instead. */
-  reg_url: z.string().url().nullable(),
+  reg_url: z.string().url().nullable().transform(renderableUrl),
   /** null = fee not listed on source; 0 = explicitly free. */
   entry_fee_cents: z.number().int().nonnegative().nullable(),
   rated: z.boolean(),
@@ -206,12 +217,12 @@ export const CompetitionSchema = z.object({
    */
   source: CompetitionSourceSchema,
   /** Exact upstream page the scraper read (null for hand-entered rows). */
-  source_url: z.string().url().nullable().default(null),
+  source_url: z.string().url().nullable().default(null).transform(renderableUrl),
   /**
    * Optional cover from the event/organizer page. Null is normal — UI must
    * not reserve empty image chrome when missing.
    */
-  image_url: z.string().url().nullable().default(null),
+  image_url: z.string().url().nullable().default(null).transform(renderableUrl),
   /**
    * Cross-source identity (ingestion/fingerprint.ts). Null until a scrape
    * stamps it. Search ignores rows with canonical_id set (archived dupes).

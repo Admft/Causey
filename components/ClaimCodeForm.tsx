@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ACTIVATION_CODE_LENGTH,
@@ -12,7 +12,9 @@ export function ClaimCodeForm({ initialCode = "" }: { initialCode?: string }) {
   const router = useRouter();
   const [code, setCode] = useState(initialCode);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  // A navigation is the only work here, so let the transition own the busy
+  // state. A manual flag had nothing to reset it and the button stayed dead.
+  const [pending, startTransition] = useTransition();
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -24,8 +26,9 @@ export function ClaimCodeForm({ initialCode = "" }: { initialCode?: string }) {
       return;
     }
     setError(null);
-    setPending(true);
-    router.push(`/claim?code=${encodeURIComponent(normalized)}`);
+    startTransition(() => {
+      router.push(`/claim?code=${encodeURIComponent(normalized)}`);
+    });
   }
 
   return (

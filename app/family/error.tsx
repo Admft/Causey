@@ -2,25 +2,30 @@
 
 import Link from "next/link";
 
-export default function AdminError({ reset }: { reset: () => void }) {
+/**
+ * /family had a loading skeleton but no boundary, so a failed read fell
+ * through to the generic page error and a parent lost the thread of what
+ * they were doing.
+ */
+export default function FamilyError({ reset }: { reset: () => void }) {
   return (
     <div className="mx-auto max-w-3xl px-5 py-16 sm:px-8">
       <h1 className="font-display text-display-sm font-bold text-foreground">
-        The administration workspace could not load
+        Your family desk could not load
       </h1>
       <p className="mt-3 max-w-prose text-sm text-muted">
-        Causey could not retrieve this administrative view. Retry once; no
-        moderation or account changes were made.
+        Causey could not read your students right now. Retry once; no RSVP,
+        registration, or family link was changed.
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-4">
         <button type="button" onClick={reset} className="cta-enabled">
-          Retry administration
+          Retry family
         </button>
         <Link
-          href="/admin"
+          href="/account"
           className="text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red"
         >
-          Back to the admin home
+          Go to account settings
         </Link>
       </div>
     </div>

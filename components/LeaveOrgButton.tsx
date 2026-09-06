@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { leaveOrg } from "@/lib/actions/orgs";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: string }) {
   const router = useRouter();
@@ -14,7 +15,7 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
     setError(null);
     setPending(true);
     try {
-      const result = await leaveOrg(orgId);
+      const result = await attemptAction(() => leaveOrg(orgId));
       if (!result.ok) {
         setError(result.error);
         return;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { claimOrganizationInvitation } from "@/lib/actions/district";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function ClaimInvitationButton({ token }: { token: string }) {
   const router = useRouter();
@@ -13,7 +14,9 @@ export function ClaimInvitationButton({ token }: { token: string }) {
     setPending(true);
     setError(null);
     try {
-      const result = await claimOrganizationInvitation(token);
+      const result = await attemptAction(() =>
+        claimOrganizationInvitation(token)
+      );
       if (!result.ok) {
         setError(result.error);
         return;

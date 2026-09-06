@@ -27,6 +27,7 @@ import {
   discoveryCategory,
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
+import { FetchTimeoutError, fetchWithTimeout } from "@/lib/browser-fetch";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
 import { partnerPromoForCategory } from "@/lib/partner-promos";
 
@@ -264,7 +265,7 @@ export function SearchClient({
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(
+        const res = await fetchWithTimeout(
           `/api/competitions?${buildApiParams(resolvePageLimit(pageSize), 0)}`,
           { signal: controller.signal }
         );
@@ -287,7 +288,9 @@ export function SearchClient({
         setStatus({
           kind: "error",
           message:
-            "Couldn't reach tournament search. Check your connection, then retry.",
+            error instanceof FetchTimeoutError
+              ? "Tournament search took too long to answer. Retry, or try a narrower search."
+              : "Couldn't reach tournament search. Check your connection, then retry.",
         });
       }
     }, 250);
@@ -306,7 +309,9 @@ export function SearchClient({
     setLoadMoreError(null);
     try {
       const chunk = resolvePageLimit(pageSize);
-      const res = await fetch(`/api/competitions?${buildApiParams(chunk, offset)}`);
+      const res = await fetchWithTimeout(
+        `/api/competitions?${buildApiParams(chunk, offset)}`
+      );
       const body = await res.json();
       if (!res.ok) {
         setLoadMoreError(body.error ?? "Couldn't load more tournaments.");

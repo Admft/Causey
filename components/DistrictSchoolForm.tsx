@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createDistrictSchool } from "@/lib/actions/district";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function DistrictSchoolForm({
   districtId,
@@ -24,12 +25,9 @@ export function DistrictSchoolForm({
     setPending(true);
     setError(null);
     try {
-      const result = await createDistrictSchool({
-        districtId,
-        districtSlug,
-        name,
-        state,
-      });
+      const result = await attemptAction(() =>
+        createDistrictSchool({ districtId, districtSlug, name, state })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

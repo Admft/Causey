@@ -13,6 +13,7 @@ import {
   parseCompetitionCommentBody,
 } from "@/lib/competition-comments";
 import type { CompetitionCommentRow } from "@/lib/data/competition-comments";
+import { attemptAction } from "@/lib/attempt-action";
 
 function formatCommentTime(iso: string): string {
   const date = new Date(iso);
@@ -58,11 +59,9 @@ export function CompetitionComments({
     }
     setPending(true);
     try {
-      const result = await postCompetitionComment({
-        competitionId,
-        eventSlug,
-        body: parsed,
-      });
+      const result = await attemptAction(() =>
+        postCompetitionComment({ competitionId, eventSlug, body: parsed })
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -78,7 +77,9 @@ export function CompetitionComments({
     setError(null);
     setRemovingId(commentId);
     try {
-      const result = await deleteCompetitionComment({ commentId, eventSlug });
+      const result = await attemptAction(() =>
+        deleteCompetitionComment({ commentId, eventSlug })
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -93,7 +94,9 @@ export function CompetitionComments({
     setError(null);
     setReportingId(commentId);
     try {
-      const result = await reportCompetitionComment({ commentId, eventSlug });
+      const result = await attemptAction(() =>
+        reportCompetitionComment({ commentId, eventSlug })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

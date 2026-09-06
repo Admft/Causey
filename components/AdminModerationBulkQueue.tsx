@@ -5,9 +5,11 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModerationReviewForm } from "@/components/ModerationReviewForm";
 import { adminBulkReviewTournaments } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 import { competitionTypeLabel } from "@/lib/competition-types";
 import { formatDateRange, formatFeeCents } from "@/lib/format";
 import { competitionSourceLabel } from "@/lib/ingestion-sources";
+import { safeExternalUrl } from "@/lib/safe-url";
 import type { CompetitionCategory, ParticipationMode } from "@/lib/schemas";
 
 type QueueRow = {
@@ -100,11 +102,13 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
     setError(null);
     setMessage(null);
     try {
-      const result = await adminBulkReviewTournaments({
-        competitionIds: [...selected],
-        decision,
-        note,
-      });
+      const result = await attemptAction(() =>
+        adminBulkReviewTournaments({
+          competitionIds: [...selected],
+          decision,
+          note,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -323,10 +327,10 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
                   Registration
                 </dt>
                 <dd className="mt-0.5 text-foreground">
-                  {tournament.reg_url ? (
+                  {safeExternalUrl(tournament.reg_url) ? (
                     <>
                       <a
-                        href={tournament.reg_url}
+                        href={safeExternalUrl(tournament.reg_url)!}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`Open registration for ${tournament.name} in a new tab`}

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { signOutAndLeave } from "@/lib/auth/sign-out";
 import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { AccountRole } from "@/lib/auth/types";
@@ -55,7 +56,6 @@ function SignedOutPair() {
 }
 
 export function AuthNav() {
-  const router = useRouter();
   const pathname = usePathname();
   const configured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -229,10 +229,7 @@ export function AuthNav() {
   }
 
   async function signOut() {
-    const supabase = createBrowserSupabaseClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    await signOutAndLeave("/");
   }
 
   const organizationLink = {

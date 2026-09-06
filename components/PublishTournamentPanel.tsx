@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { publishTournament } from "@/lib/actions/tournaments";
+import { attemptAction } from "@/lib/attempt-action";
 import type { CompetitionAudience } from "@/lib/schemas";
 
 /**
@@ -33,7 +34,9 @@ export function PublishTournamentPanel({
     setPending(true);
     setError(null);
     try {
-      const result = await publishTournament({ competitionId, eventSlug });
+      const result = await attemptAction(() =>
+        publishTournament({ competitionId, eventSlug })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

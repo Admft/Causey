@@ -11,6 +11,7 @@ import {
   AdminInvitationCopyRow,
   formatInvitationExpiry,
 } from "@/components/AdminInvitationCopyRow";
+import { attemptAction } from "@/lib/attempt-action";
 import { formatActivationCode } from "@/lib/invitations/activation-code";
 
 const STATES = [
@@ -58,13 +59,15 @@ export function AdminSchoolProvisionForm({
     setPack(null);
     setPending(true);
     try {
-      const result = await adminProvisionDistrictSchool({
-        districtId,
-        name,
-        state,
-        contactEmail,
-        contactName,
-      });
+      const result = await attemptAction(() =>
+        adminProvisionDistrictSchool({
+          districtId,
+          name,
+          state,
+          contactEmail,
+          contactName,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

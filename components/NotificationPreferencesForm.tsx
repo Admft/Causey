@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { saveNotificationPreferences } from "@/lib/actions/district";
+import { attemptAction } from "@/lib/attempt-action";
 import type { NotificationPreferenceRow } from "@/lib/data/district";
 
 const DEFAULTS: NotificationPreferenceRow = {
@@ -42,20 +43,22 @@ export function NotificationPreferencesForm({
     setMessage(null);
     setError(null);
     try {
-      const result = await saveNotificationPreferences({
-        invitation: values.invitation,
-        registrationDeadline: values.registration_deadline,
-        reminder7Day: values.reminder_7_day,
-        reminder1Day: values.reminder_1_day,
-        scheduleChange: values.schedule_change,
-        cancellation: values.cancellation,
-        rsvpUpdate: values.rsvp_update,
-        announcement: values.announcement,
-        result: values.result,
-        emailEnabled: values.email_enabled,
-        guardianRouting: values.guardian_routing,
-        timezone: values.timezone,
-      });
+      const result = await attemptAction(() =>
+        saveNotificationPreferences({
+          invitation: values.invitation,
+          registrationDeadline: values.registration_deadline,
+          reminder7Day: values.reminder_7_day,
+          reminder1Day: values.reminder_1_day,
+          scheduleChange: values.schedule_change,
+          cancellation: values.cancellation,
+          rsvpUpdate: values.rsvp_update,
+          announcement: values.announcement,
+          result: values.result,
+          emailEnabled: values.email_enabled,
+          guardianRouting: values.guardian_routing,
+          timezone: values.timezone,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

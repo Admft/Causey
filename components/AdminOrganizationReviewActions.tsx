@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminReviewOrganization } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 
 type VerificationStatus = "pending" | "verified" | "rejected";
 
@@ -30,12 +31,9 @@ export function AdminOrganizationReviewActions({
     setMessage(null);
     setError(null);
     startTransition(async () => {
-      const result = await adminReviewOrganization({
-        orgId,
-        orgSlug,
-        status,
-        note: correctionNote,
-      });
+      const result = await attemptAction(() =>
+        adminReviewOrganization({ orgId, orgSlug, status, note: correctionNote })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { saveProfileZip } from "@/lib/actions/profile-location";
+import { attemptAction } from "@/lib/attempt-action";
 import { ZipCaptureField } from "@/components/ZipCaptureField";
 
 export function MissingZipCard() {
@@ -14,7 +15,7 @@ export function MissingZipCard() {
     setError(null);
     setPending(true);
     try {
-      const result = await saveProfileZip(zip.trim());
+      const result = await attemptAction(() => saveProfileZip(zip.trim()));
       if (!result.ok) setError(result.error);
     } finally {
       setPending(false);
@@ -47,7 +48,7 @@ export function MissingZipCard() {
             setPending(true);
             setError(null);
             try {
-              const result = await saveProfileZip(next);
+              const result = await attemptAction(() => saveProfileZip(next));
               if (!result.ok) setError(result.error);
             } finally {
               setPending(false);

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
 import { createGroup, deleteGroup, setGroupMembers } from "@/lib/actions/groups";
+import { attemptAction } from "@/lib/attempt-action";
 import type { GroupWithMembers } from "@/lib/data/portal";
 
 type RosterEntry = { profile_id: string; display_name: string };
@@ -41,20 +42,27 @@ export function GroupManager({
     setPendingAction("create");
     const groupName = newName.trim();
     startTransition(async () => {
-      const result = await createGroup(orgId, orgSlug, groupName);
-      if (!result.ok) {
-        setError(`${result.error} Try again.`);
-        return;
+      try {
+        const result = await attemptAction(() =>
+          createGroup(orgId, orgSlug, groupName)
+        );
+        if (!result.ok) {
+          setError(`${result.error} Try again.`);
+          return;
+        }
+        setNewName("");
+        setShowCreate(false);
+        setEditingId(result.id);
+        setStatus(
+          roster.length
+            ? `${groupName} added. Choose the students who belong in this group.`
+            : `${groupName} added. Share the join link above, then add students to this group.`
+        );
+        router.refresh();
+      } finally {
+        // Left set, this labels the next action's button "Saving…".
+        setPendingAction(null);
       }
-      setNewName("");
-      setShowCreate(false);
-      setEditingId(result.id);
-      setStatus(
-        roster.length
-          ? `${groupName} added. Choose the students who belong in this group.`
-          : `${groupName} added. Share the join link above, then add students to this group.`
-      );
-      router.refresh();
     });
   }
 
@@ -66,15 +74,21 @@ export function GroupManager({
       ? group.member_ids.filter((id) => id !== profileId)
       : [...group.member_ids, profileId];
     startTransition(async () => {
-      const result = await setGroupMembers(group.id, orgSlug, next);
-      if (!result.ok) {
-        setError(`${result.error} Try again.`);
-        return;
+      try {
+        const result = await attemptAction(() =>
+          setGroupMembers(group.id, orgSlug, next)
+        );
+        if (!result.ok) {
+          setError(`${result.error} Try again.`);
+          return;
+        }
+        setStatus(
+          `${group.name} updated. You can use this group when inviting students.`
+        );
+        router.refresh();
+      } finally {
+        setPendingAction(null);
       }
-      setStatus(
-        `${group.name} updated. You can use this group when inviting students.`
-      );
-      router.refresh();
     });
   }
 
@@ -90,14 +104,20 @@ export function GroupManager({
     setStatus(null);
     setPendingAction(`delete-${group.id}`);
     startTransition(async () => {
-      const result = await deleteGroup(group.id, orgSlug);
-      if (!result.ok) {
-        setError(`${result.error} Try again.`);
-        return;
+      try {
+        const result = await attemptAction(() =>
+          deleteGroup(group.id, orgSlug)
+        );
+        if (!result.ok) {
+          setError(`${result.error} Try again.`);
+          return;
+        }
+        if (editingId === group.id) setEditingId(null);
+        setStatus(`${group.name} deleted. Students are still on your roster.`);
+        router.refresh();
+      } finally {
+        setPendingAction(null);
       }
-      if (editingId === group.id) setEditingId(null);
-      setStatus(`${group.name} deleted. Students are still on your roster.`);
-      router.refresh();
     });
   }
 

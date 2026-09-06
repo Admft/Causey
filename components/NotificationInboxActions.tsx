@@ -7,6 +7,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/actions/notifications";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function NotificationInboxItem({
   id,
@@ -29,9 +30,10 @@ export function NotificationInboxItem({
 
   function markThen(next?: string) {
     startTransition(async () => {
-      if (unread) {
-        await markNotificationRead(id);
-      }
+      // Marking read is a courtesy, not the point of the tap. If it fails the
+      // alert stays unread, which is honest, and the navigation still happens
+      // — the alternative was an unhandled rejection taking down the inbox.
+      if (unread) await attemptAction(() => markNotificationRead(id));
       if (next) {
         router.push(next);
         return;
@@ -102,7 +104,9 @@ export function MarkAllNotificationsReadButton({
         onClick={() => {
           setError(null);
           startTransition(async () => {
-            const result = await markAllNotificationsRead();
+            const result = await attemptAction(() =>
+              markAllNotificationsRead()
+            );
             if (!result.ok) {
               setError(result.error);
               return;

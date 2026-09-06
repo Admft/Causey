@@ -14,6 +14,11 @@ import { getHomeFeaturedCompetitions } from "@/lib/data/home-featured";
 import { getHomeMyTournaments } from "@/lib/data/home-my-tournaments";
 import { isHomeMyTournamentsView } from "@/lib/home-my-tournaments";
 
+// Reads the signed-in account, so this response is never shareable.
+// Declared rather than inferred from cookies(): the day someone moves the
+// session read out of this file, the caching contract should not move too.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Find student competitions",
   description:
