@@ -256,6 +256,45 @@ export function LinkButton({
   );
 }
 
+/**
+ * One answer in a Going / Can't go pair. Only the answer someone actually gave
+ * is tinted, so an unanswered row never reads as a decision, and the phone
+ * matches the website's RSVP buttons.
+ */
+export function AnswerButton({
+  label,
+  selected,
+  disabled = false,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected, disabled }}
+      style={({ pressed }) => [
+        styles.answer,
+        selected && styles.answerSelected,
+        disabled && styles.inactive,
+        pressed && !disabled && styles.pressed,
+      ]}
+    >
+      <Text
+        style={[styles.answerLabel, selected && styles.answerLabelSelected]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 export function ChipRow<T extends string>({
   label,
   options,
@@ -467,6 +506,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipLabel: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+  answer: {
+    minHeight: TAP_TARGET,
+    minWidth: 96,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+  },
+  answerSelected: {
+    borderColor: colors.brandRed,
+    backgroundColor: colors.accentSoft,
+  },
+  answerLabel: { fontSize: 15, fontWeight: "700", color: colors.foreground },
+  answerLabelSelected: { color: colors.brandRed },
   choiceRow: { marginTop: 8, gap: 10 },
   choice: {
     borderWidth: 1,

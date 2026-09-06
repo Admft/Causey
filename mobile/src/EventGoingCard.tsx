@@ -1,12 +1,6 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  AppState,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { AppState, StyleSheet, Text, View } from "react-native";
 import { causeyFetch } from "./api";
 import { useAuth } from "./auth";
 import {
@@ -24,6 +18,7 @@ import {
 import { notifyDeskChanged } from "./desk-sync";
 import { colors } from "./theme";
 import {
+  AnswerButton,
   Card,
   ErrorText,
   LinkButton,
@@ -689,15 +684,15 @@ export function EventGoingCard({
                 )
               ) : null}
               <View style={styles.row}>
-                <ChoiceButton
+                <AnswerButton
                   label="Going"
-                  active={person.status === "going"}
+                  selected={person.status === "going"}
                   disabled={busyKey !== null}
                   onPress={() => void rsvp(person, "going")}
                 />
-                <ChoiceButton
+                <AnswerButton
                   label="Can't go"
-                  active={person.status === "not_going"}
+                  selected={person.status === "not_going"}
                   disabled={busyKey !== null}
                   onPress={() => void rsvp(person, "not_going")}
                 />
@@ -844,37 +839,6 @@ export function EventGoingCard({
   );
 }
 
-function ChoiceButton({
-  label,
-  active,
-  disabled,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected: active, disabled }}
-      style={[
-        styles.choice,
-        active && styles.choiceActive,
-        disabled && styles.inactive,
-      ]}
-    >
-      <Text style={[styles.choiceLabel, active && styles.choiceLabelActive]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   heading: {
     fontSize: 16,
@@ -895,21 +859,5 @@ const styles = StyleSheet.create({
     borderTopColor: colors.line,
   },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10 },
-  choice: {
-    minHeight: 44,
-    minWidth: 96,
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    backgroundColor: colors.surface,
-  },
-  choiceActive: {
-    borderColor: colors.brandRed,
-    backgroundColor: colors.accentSoft,
-  },
-  choiceLabel: { fontWeight: "700", color: colors.foreground },
-  choiceLabelActive: { color: colors.brandRed },
   inactive: { opacity: 0.45 },
 });
