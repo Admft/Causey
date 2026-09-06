@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { setRsvp } from "@/lib/actions/entrants";
+import { clearRsvp, setRsvp } from "@/lib/actions/entrants";
 import type { RsvpUiStatus } from "@/lib/event-rsvp-targets";
 
 /**
@@ -30,10 +30,13 @@ export function RsvpButtons(props: RsvpButtonsProps) {
 }
 
 function confirmationMessage(
-  next: "going" | "not_going",
+  next: "going" | "not_going" | "clear",
   tone: "invite" | "family",
   forLabel?: string
 ) {
+  if (next === "clear") {
+    return `Answer cleared${forLabel ? ` for ${forLabel}` : ""}. This is no RSVP until someone answers again.`;
+  }
   if (tone === "family") {
     return next === "going"
       ? `Causey RSVP saved${forLabel ? ` for ${forLabel}` : ""}. This is not entry on the organizer’s site.`
@@ -66,7 +69,11 @@ function RsvpButtonState({
     tone ?? (status === "unanswered" ? "family" : "invite");
 
   async function respond(next: "going" | "not_going") {
-    if (pending || current === next) return;
+    if (pending) return;
+    if (current === next) {
+      await clearAnswer();
+      return;
+    }
     setError(null);
     setConfirmation(null);
     setPending(true);
@@ -89,6 +96,35 @@ function RsvpButtonState({
     } catch {
       setCurrent(previous);
       setError("Could not save your RSVP. Check your connection and try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function clearAnswer() {
+    if (pending) return;
+    if (current !== "going" && current !== "not_going") return;
+    setError(null);
+    setConfirmation(null);
+    setPending(true);
+    const previous = current;
+    setCurrent(status === "invited" ? "invited" : "unanswered");
+    try {
+      const result = await clearRsvp({
+        competitionId,
+        profileId,
+        eventSlug,
+      });
+      if (!result.ok) {
+        setCurrent(previous);
+        setError(result.error);
+        return;
+      }
+      setConfirmation(confirmationMessage("clear", resolvedTone, forLabel));
+      router.refresh();
+    } catch {
+      setCurrent(previous);
+      setError("Could not clear that RSVP. Check your connection and try again.");
     } finally {
       setPending(false);
     }
@@ -121,6 +157,16 @@ function RsvpButtonState({
         >
           {pending && current === "not_going" ? "Saving…" : "Can't go"}
         </button>
+        {current === "going" || current === "not_going" ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => void clearAnswer()}
+            className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
+          >
+            {pending ? "Saving…" : "Clear answer"}
+          </button>
+        ) : null}
       </div>
       {error ? (
         <p className="text-xs font-medium text-brand-red" role="alert">

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getMobileAuth, mobileAuthError } from "@/lib/auth/mobile-request";
-import { performSetRsvp } from "@/lib/rsvp-write";
+import { performClearRsvp, performSetRsvp } from "@/lib/rsvp-write";
 
 export const dynamic = "force-dynamic";
 
 const BodySchema = z.object({
   competitionId: z.string().uuid(),
   profileId: z.string().uuid(),
-  status: z.enum(["going", "not_going"]),
+  status: z.enum(["going", "not_going", "clear"]),
   eventSlug: z.string().trim().min(1).max(200).optional(),
 });
 
@@ -33,14 +33,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Check the RSVP details." }, { status: 400 });
   }
 
-  const result = await performSetRsvp({
-    supabase: auth.supabase,
-    userId: auth.user.id,
-    competitionId: parsed.data.competitionId,
-    profileId: parsed.data.profileId,
-    status: parsed.data.status,
-    eventSlug: parsed.data.eventSlug,
-  });
+  const result =
+    parsed.data.status === "clear"
+      ? await performClearRsvp({
+          supabase: auth.supabase,
+          userId: auth.user.id,
+          competitionId: parsed.data.competitionId,
+          profileId: parsed.data.profileId,
+          eventSlug: parsed.data.eventSlug,
+        })
+      : await performSetRsvp({
+          supabase: auth.supabase,
+          userId: auth.user.id,
+          competitionId: parsed.data.competitionId,
+          profileId: parsed.data.profileId,
+          status: parsed.data.status,
+          eventSlug: parsed.data.eventSlug,
+        });
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

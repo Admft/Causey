@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AppState,
   Pressable,
@@ -17,6 +17,11 @@ import {
 } from "./event-registration-state";
 import { feedback } from "./haptics";
 import { openExternalUrl, safeRegUrl } from "./open-url";
+import {
+  createRequestGate,
+  isAbortError,
+} from "./request-gate";
+import { notifyDeskChanged } from "./desk-sync";
 import { colors } from "./theme";
 import {
   Card,
@@ -51,6 +56,7 @@ type AttendancePayload = {
   ended: boolean;
   rsvp: EventRsvpPerson[];
   registration: EventRegistrationPerson[];
+  sent_recommendation_ids: string[];
 };
 
 function asAttendance(payload: unknown): AttendancePayload | null {
@@ -61,6 +67,9 @@ function asAttendance(payload: unknown): AttendancePayload | null {
     ended: row.ended === true,
     rsvp: row.rsvp as EventRsvpPerson[],
     registration: row.registration as EventRegistrationPerson[],
+    sent_recommendation_ids: Array.isArray(row.sent_recommendation_ids)
+      ? (row.sent_recommendation_ids as string[])
+      : [],
   };
 }
 
@@ -70,6 +79,44 @@ function registrationHost(regUrl: string): string {
   } catch {
     return "the organizer’s site";
   }
+}
+
+function rsvpHeading(people: EventRsvpPerson[]): string {
+  const invited = people.some((person) => person.status === "invited");
+  const unansweredChild = people.some(
+    (person) => person.status === "unanswered" && person.label !== "You"
+  );
+  const allDeclined =
+    people.length > 0 && people.every((person) => person.status === "not_going");
+  const onlyYou = people.length === 1 && people[0]?.label === "You";
+  const onlyOne = people.length === 1;
+  if (invited) {
+    return onlyYou ? "Your coach needs an RSVP" : "An RSVP needs your response";
+  }
+  if (unansweredChild) {
+    if (onlyOne) return `Invite ${people[0]?.label}?`;
+    return "Invite who should look at this?";
+  }
+  if (allDeclined) {
+    if (onlyYou) return "You're not going";
+    if (onlyOne) return `${people[0]?.label} is not going`;
+    return "No one from this account is going";
+  }
+  if (onlyYou) return "Are you going?";
+  if (onlyOne) return `Is ${people[0]?.label} going?`;
+  return "Who is going?";
+}
+
+function rsvpLede(people: EventRsvpPerson[], hasOrganizerLink: boolean): string {
+  if (people.some((person) => person.status === "invited")) {
+    return hasOrganizerLink
+      ? "Answer so your club or school knows who is coming, then finish organizer registration if the event requires it. This is the same job as Family."
+      : "Answer so your club or school knows who is coming. Entry is through that invite, not open registration.";
+  }
+  if (people.some((person) => person.status === "unanswered" && person.label !== "You")) {
+    return "Invite them so they can accept on Plan. After they mark Going, Family asks you to confirm organizer registration. You can also answer for them here.";
+  }
+  return "Going on Causey is for Family and Plan. It is not entry on the organizer’s site. A club invite is not required on a public listing.";
 }
 
 export function EventGoingCard({
@@ -94,6 +141,9 @@ export function EventGoingCard({
     Record<string, RegistrationMark>
   >({});
   const [localRsvp, setLocalRsvp] = useState<Record<string, RsvpMark>>({});
+  const [localInvited, setLocalInvited] = useState<string[]>([]);
+  const loadGate = useRef(createRequestGate()).current;
+  const userId = session?.user.id ?? null;
 
   const load = useCallback(async () => {
     if (!session?.access_token) {
@@ -102,19 +152,23 @@ export function EventGoingCard({
       setLoaded(true);
       return;
     }
+    const request = loadGate.start();
     try {
       const payload = await causeyFetch(
         `/api/mobile/event-attendance?competitionId=${encodeURIComponent(competitionId)}`,
-        { token: session.access_token }
+        { token: session.access_token, signal: request.signal }
       );
+      if (!loadGate.isCurrent(request)) return;
       const next = asAttendance(payload);
       if (next) {
         setAttendance(next);
+        setLocalRsvp({});
         setLoadError(null);
       } else {
         setLoadError("Causey could not read who can mark going.");
       }
     } catch (err) {
+      if (isAbortError(err) || !loadGate.isCurrent(request)) return;
       // A previous good payload still stands; a first failure needs to say so
       // rather than silently drop the whole card.
       setLoadError(
@@ -123,18 +177,22 @@ export function EventGoingCard({
           : "Could not check who can mark going."
       );
     } finally {
-      setLoaded(true);
+      if (loadGate.isCurrent(request)) setLoaded(true);
     }
-  }, [competitionId, session?.access_token]);
+  }, [competitionId, loadGate, session?.access_token]);
 
   useEffect(() => {
     setLoaded(false);
     setAttendance(null);
     setLocalRsvp({});
+    setLocalInvited([]);
     setLocalStatus({});
     setOpenedLocal([]);
     setError(null);
     setLoadError(null);
+  }, [competitionId, userId]);
+
+  useEffect(() => {
     void load();
   }, [load]);
 
@@ -149,7 +207,9 @@ export function EventGoingCard({
   }, [awaitingReturn, load]);
 
   async function rsvp(person: EventRsvpPerson, status: "going" | "not_going") {
-    if (!session?.access_token || person.status === status) return;
+    if (!session?.access_token) return;
+    if (person.status === status) return;
+    loadGate.abort();
     const previous = localRsvp[person.profileId] ?? person.status;
     setBusyKey(`${person.profileId}:rsvp`);
     setError(null);
@@ -166,6 +226,20 @@ export function EventGoingCard({
           profileId: person.profileId,
           status,
           eventSlug,
+        },
+      });
+      notifyDeskChanged({
+        competition_id: competitionId,
+        profile_id: person.profileId,
+        decision: status,
+        competition: {
+          slug: eventSlug,
+          name: "",
+          city: null,
+          state: null,
+          start_date: "",
+          end_date: null,
+          reg_url: regUrl,
         },
       });
       feedback("success");
@@ -189,8 +263,99 @@ export function EventGoingCard({
     }
   }
 
+  async function clearAnswer(person: EventRsvpPerson) {
+    if (!session?.access_token) return;
+    if (person.status !== "going" && person.status !== "not_going") return;
+    loadGate.abort();
+    const previous = localRsvp[person.profileId] ?? person.status;
+    setBusyKey(`${person.profileId}:rsvp`);
+    setError(null);
+    setLocalRsvp((current) => ({
+      ...current,
+      [person.profileId]: "unanswered",
+    }));
+    try {
+      await causeyFetch("/api/mobile/rsvp", {
+        token: session.access_token,
+        method: "POST",
+        body: {
+          competitionId,
+          profileId: person.profileId,
+          status: "clear",
+          eventSlug,
+        },
+      });
+      notifyDeskChanged({
+        competition_id: competitionId,
+        profile_id: person.profileId,
+        decision: "clear",
+        competition: {
+          slug: eventSlug,
+          name: "",
+          city: null,
+          state: null,
+          start_date: "",
+          end_date: null,
+          reg_url: regUrl,
+        },
+      });
+      feedback("success");
+      await load();
+    } catch (err) {
+      setLocalRsvp((current) => {
+        const next = { ...current };
+        if (previous === "going" || previous === "not_going") {
+          next[person.profileId] = previous;
+        } else {
+          delete next[person.profileId];
+        }
+        return next;
+      });
+      feedback("error");
+      setError(
+        err instanceof Error ? err.message : "Could not clear that RSVP."
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  async function invite(person: EventRsvpPerson) {
+    if (!session?.access_token) return;
+    loadGate.abort();
+    setBusyKey(`${person.profileId}:invite`);
+    setError(null);
+    try {
+      await causeyFetch("/api/mobile/recommendations", {
+        token: session.access_token,
+        method: "POST",
+        body: {
+          competitionId,
+          eventSlug,
+          toProfileIds: [person.profileId],
+        },
+      });
+      setLocalInvited((current) =>
+        current.includes(person.profileId)
+          ? current
+          : [...current, person.profileId]
+      );
+      notifyDeskChanged();
+      feedback("success");
+      await load();
+    } catch (err) {
+      feedback("error");
+      setError(
+        err instanceof Error ? err.message : "Could not send that invite."
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
   async function leave(person: EventRegistrationPerson) {
     if (!session?.access_token) return;
+    loadGate.abort();
     const previousReg = localStatus[person.profileId] ?? person.status;
     const rsvpPerson = (attendance?.rsvp ?? []).find(
       (row) => row.profileId === person.profileId
@@ -226,6 +391,20 @@ export function EventGoingCard({
           profileId: person.profileId,
           status: "not_going",
           eventSlug,
+        },
+      });
+      notifyDeskChanged({
+        competition_id: competitionId,
+        profile_id: person.profileId,
+        decision: "not_going",
+        competition: {
+          slug: eventSlug,
+          name: "",
+          city: null,
+          state: null,
+          start_date: "",
+          end_date: null,
+          reg_url: regUrl,
         },
       });
       feedback("success");
@@ -269,6 +448,7 @@ export function EventGoingCard({
     status: "opened" | "registered" | "not_registered"
   ) {
     if (!session?.access_token) return;
+    loadGate.abort();
     const previous = localStatus[person.profileId] ?? person.status;
     const wasConfirming =
       previous === "opened" ||
@@ -366,6 +546,10 @@ export function EventGoingCard({
   }
 
   const ended = attendance?.ended === true;
+  const sentIds = new Set([
+    ...(attendance?.sent_recommendation_ids ?? []),
+    ...localInvited,
+  ]);
   const serverRsvp = attendance?.rsvp ?? [];
   const rsvpPeople: EventRsvpPerson[] = serverRsvp.map((person) => ({
     ...person,
@@ -377,7 +561,9 @@ export function EventGoingCard({
   const registrationPeople = attendance?.registration ?? [];
   const host = regUrl ? registrationHost(regUrl) : null;
   const showRsvp = Boolean(session) && rsvpPeople.length > 0 && !ended;
-  const showRegistration = Boolean(regUrl) && !ended;
+  const someoneGoing = rsvpPeople.some((person) => person.status === "going");
+  const showRegistration =
+    Boolean(regUrl) && !ended && (someoneGoing || rsvpPeople.length === 0);
 
   if (!session && !regUrl) return null;
 
@@ -466,20 +652,41 @@ export function EventGoingCard({
       {showRsvp ? (
         <>
           <Text style={styles.heading} accessibilityRole="header">
-            {rsvpPeople.length === 1 && rsvpPeople[0]?.label === "You"
-              ? "Are you going?"
-              : rsvpPeople.length === 1
-                ? `Is ${rsvpPeople[0]?.label} going?`
-                : "Who is going?"}
+            {rsvpHeading(rsvpPeople)}
           </Text>
-          <Meta>
-            Going on Causey is for Family and Plan. It is not entry on the
-            organizer’s site.
-          </Meta>
-          {rsvpPeople.map((person) => (
+          <Meta>{rsvpLede(rsvpPeople, Boolean(regUrl))}</Meta>
+          {rsvpPeople.map((person) => {
+            const canInvite =
+              person.label !== "You" && person.status === "unanswered";
+            const invitedThem = sentIds.has(person.profileId);
+            const answered =
+              person.status === "going" || person.status === "not_going";
+            return (
             <View key={person.profileId} style={styles.block}>
               {rsvpPeople.length > 1 || person.label !== "You" ? (
                 <Text style={styles.person}>{person.label}</Text>
+              ) : null}
+              {canInvite ? (
+                invitedThem ? (
+                  <Meta>
+                    Waiting for {person.label} to answer on Plan. After they
+                    mark Going, Family asks you to confirm organizer
+                    registration.
+                  </Meta>
+                ) : (
+                  <>
+                    <PrimaryButton
+                      label={`Invite ${person.label}`}
+                      onPress={() => void invite(person)}
+                      busy={busyKey === `${person.profileId}:invite`}
+                      disabled={busyKey !== null}
+                    />
+                    <Meta>
+                      They accept on Plan. Then you confirm organizer
+                      registration on Family.
+                    </Meta>
+                  </>
+                )
               ) : null}
               <View style={styles.row}>
                 <ChoiceButton
@@ -495,8 +702,18 @@ export function EventGoingCard({
                   onPress={() => void rsvp(person, "not_going")}
                 />
               </View>
+              {canInvite && !invitedThem ? (
+                <Meta>Or answer for them if they are not on Causey.</Meta>
+              ) : null}
+              {answered ? (
+                <LinkButton
+                  label="Clear answer"
+                  onPress={() => void clearAnswer(person)}
+                />
+              ) : null}
             </View>
-          ))}
+            );
+          })}
         </>
       ) : null}
 

@@ -4,6 +4,7 @@ import { Alert, StyleSheet, Text, View } from "react-native";
 import { causeyFetch, formatDateRange, formatFeeCents } from "../../src/api";
 import { addTournamentToCalendar } from "../../src/calendar";
 import { categoryLabel } from "../../src/categories";
+import { BringRosterCard } from "../../src/BringRosterCard";
 import { ClubGoingCard } from "../../src/ClubGoingCard";
 import { EventCover } from "../../src/EventCover";
 import { EventDifficultyRating } from "../../src/EventDifficultyRating";
@@ -207,6 +208,10 @@ export default function EventScreen() {
         competitionId={event.id}
         eventSlug={event.slug}
         regUrl={event.reg_url}
+      />
+      <BringRosterCard
+        competitionId={event.id}
+        eventSlug={event.slug}
       />
 
       <SecondaryButton

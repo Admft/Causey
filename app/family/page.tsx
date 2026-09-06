@@ -14,7 +14,8 @@ import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import { getNotificationPreferences } from "@/lib/data/district";
-import { getChildrenWithEvents, getIncomingChildLinkRequests, getMyRecommendations, getPendingChildRequestCount, isSupabaseConfigured, isUpcomingEvent, type EntrantWithEvent } from "@/lib/data/portal";
+import { getChildrenWithEvents, getIncomingChildLinkRequests, getMyRecommendations, getOutgoingFamilyRecommendations, getPendingChildRequestCount, isSupabaseConfigured, isUpcomingEvent, type EntrantWithEvent } from "@/lib/data/portal";
+import { pendingInvitesForChild } from "@/lib/data/mobile-family";
 import { todayIsoInTimeZone } from "@/lib/competition-timing";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
 import { studentOrgChromeFromTypes } from "@/lib/portal-copy";
@@ -74,6 +75,10 @@ export default async function FamilyPage() {
     getMyRecommendations(user.id),
     getNotificationPreferences(user.id),
   ]);
+  const outgoingInvites = await getOutgoingFamilyRecommendations(
+    user.id,
+    children.map((child) => child.profile_id)
+  );
   const today = todayIsoInTimeZone(preferences?.timezone ?? "America/Chicago");
   const childrenByPriority = children
     .map((child) => {
@@ -94,12 +99,18 @@ export default async function FamilyPage() {
       ).length;
       const registrationCount = upcoming.filter(needsOrganizerRegistration)
         .length;
+      const inviteCount = pendingInvitesForChild(
+        { profile_id: child.profile_id, upcoming },
+        outgoingInvites,
+        today
+      ).length;
       return {
         ...child,
         upcoming,
         responseCount,
         registrationCount,
-        actionCount: responseCount + registrationCount,
+        inviteCount,
+        actionCount: responseCount + registrationCount + inviteCount,
       };
     })
     .sort(
@@ -115,7 +126,12 @@ export default async function FamilyPage() {
     (total, child) => total + child.registrationCount,
     0
   );
-  const totalActionsNeeded = totalResponsesNeeded + totalRegistrationsNeeded;
+  const totalInvitesNeeded = childrenByPriority.reduce(
+    (total, child) => total + child.inviteCount,
+    0
+  );
+  const totalActionsNeeded =
+    totalResponsesNeeded + totalRegistrationsNeeded + totalInvitesNeeded;
   const firstChildNeedingAction = childrenByPriority.find(
     (child) => child.actionCount > 0
   );
@@ -124,6 +140,12 @@ export default async function FamilyPage() {
     child.upcoming
       .filter((row) => row.status === "invited")
       .map((row) => ({ child, row }))
+  );
+  const pendingInviteInbox = childrenByPriority.flatMap((child) =>
+    pendingInvitesForChild(child, outgoingInvites, today).map((rec) => ({
+      child,
+      rec,
+    }))
   );
   const registrationInbox = childrenByPriority.flatMap((child) =>
     child.upcoming
@@ -174,6 +196,13 @@ export default async function FamilyPage() {
         `${totalRegistrationsNeeded} organizer ${
           totalRegistrationsNeeded === 1 ? "registration" : "registrations"
         }`
+      );
+    }
+    if (totalInvitesNeeded) {
+      parts.push(
+        `${totalInvitesNeeded} ${
+          totalInvitesNeeded === 1 ? "invite" : "invites"
+        } waiting on a student`
       );
     }
     const childOrgTypes = childrenByPriority.flatMap((child) =>
@@ -342,11 +371,54 @@ export default async function FamilyPage() {
             </>
           ) : null}
 
-          {rsvpInbox.length || registrationInbox.length ? (
+          {rsvpInbox.length ||
+          pendingInviteInbox.length ||
+          registrationInbox.length ? (
             <section id="needs-response" className="mt-10 scroll-mt-24">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-red">
                 Needs attention
               </h2>
+              {pendingInviteInbox.length ? (
+                <div className="mt-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Waiting on a student
+                  </h3>
+                  <p className="mt-1 text-sm text-muted">
+                    You invited them. They accept on Plan, then you confirm
+                    organizer registration here.
+                  </p>
+                  <ul className="mt-1">
+                    {pendingInviteInbox.map(({ child, rec }) => (
+                      <li
+                        key={`invite-${child.profile_id}-${rec.competition_id}`}
+                        className="flex flex-col gap-3 border-b border-line py-4 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-muted-strong">
+                            {child.display_name}
+                          </p>
+                          <Link
+                            href={`/event/${rec.competition!.slug}`}
+                            className="block font-semibold text-foreground hover:text-brand-red"
+                          >
+                            {rec.competition!.name}
+                          </Link>
+                          <span className="mt-1 block text-xs text-muted">
+                            {formatDateRange(
+                              rec.competition!.start_date,
+                              rec.competition!.end_date
+                            )}
+                            {rec.competition!.city
+                              ? ` · ${rec.competition!.city}, ${rec.competition!.state}`
+                              : ""}
+                            {" · waiting for them to answer"}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               {rsvpInbox.length ? (
                 <div className="mt-4">
                   <h3 className="text-sm font-semibold text-foreground">

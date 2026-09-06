@@ -37,6 +37,7 @@ import {
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
 import { RecommendEventPanel } from "@/components/RecommendEventPanel";
+import { InviteStudentButton } from "@/components/InviteStudentButton";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { ExternalRegistrationPanel } from "@/components/ExternalRegistrationPanel";
 import type { ExternalRegistrationStatus } from "@/lib/actions/external-registrations";
@@ -289,6 +290,9 @@ export default async function EventPage({ params }: Params) {
 
   const needsCoachRsvp = rsvpTargets.some((t) => t.status === "invited");
   const needsFamilyRsvp = rsvpTargets.some((t) => t.status === "unanswered");
+  const unansweredChild = rsvpTargets.some(
+    (t) => t.status === "unanswered" && t.label !== "You"
+  );
   const needsRsvp = needsCoachRsvp || needsFamilyRsvp;
   const hasAnsweredRsvp = rsvpTargets.some(
     (t) => t.status === "going" || t.status === "not_going"
@@ -562,6 +566,10 @@ export default async function EventPage({ params }: Params) {
                     ? rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
                       ? "Your coach needs an RSVP"
                       : "An RSVP needs your response"
+                    : unansweredChild
+                      ? rsvpTargets.length === 1
+                        ? `Invite ${rsvpTargets[0].label}?`
+                        : "Invite who should look at this?"
                     : allDeclined
                       ? rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
                         ? "You’re not going"
@@ -579,6 +587,8 @@ export default async function EventPage({ params }: Params) {
                     ? registrationUrl
                       ? "Answer so your organization knows who is coming, then finish organizer registration if the event requires it."
                       : "Answer so your organization knows who is coming. Entry is through your club invite, not open registration."
+                    : unansweredChild
+                      ? "Invite them so they can accept on Plan. After they mark Going, Family asks you to confirm organizer registration. You can also answer for them here."
                     : allDeclined
                       ? registrationUrl && regHost
                         ? `Causey will keep this off the Plan. If you already registered or paid on ${regHost}, withdraw there — Causey cannot cancel organizer entry.`
@@ -595,6 +605,18 @@ export default async function EventPage({ params }: Params) {
                           {target.label}
                         </span>
                       )}
+                      {target.status === "unanswered" &&
+                      target.label !== "You" ? (
+                        <InviteStudentButton
+                          competitionId={competition.id}
+                          eventSlug={competition.slug}
+                          profileId={target.profileId}
+                          forLabel={target.label}
+                          alreadySent={sentRecommendationIds.includes(
+                            target.profileId
+                          )}
+                        />
+                      ) : null}
                       <RsvpButtons
                         competitionId={competition.id}
                         profileId={target.profileId}
@@ -773,6 +795,18 @@ export default async function EventPage({ params }: Params) {
                         {target.label}
                       </span>
                     )}
+                    {target.status === "unanswered" &&
+                    target.label !== "You" ? (
+                      <InviteStudentButton
+                        competitionId={competition.id}
+                        eventSlug={competition.slug}
+                        profileId={target.profileId}
+                        forLabel={target.label}
+                        alreadySent={sentRecommendationIds.includes(
+                          target.profileId
+                        )}
+                      />
+                    ) : null}
                     <RsvpButtons
                       competitionId={competition.id}
                       profileId={target.profileId}

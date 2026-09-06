@@ -7,6 +7,7 @@ import {
 import { serializeFamilyDesk } from "@/lib/data/mobile-family";
 import {
   getChildrenWithEvents,
+  getOutgoingFamilyRecommendations,
   getPendingChildRequestCount,
 } from "@/lib/data/portal";
 import { todayIsoInTimeZone } from "@/lib/competition-timing";
@@ -31,11 +32,16 @@ export async function GET(request: Request) {
     getPendingChildRequestCount(auth.user.id, auth.supabase),
   ]);
   const today = todayIsoInTimeZone("America/Chicago");
+  const outgoing = await getOutgoingFamilyRecommendations(
+    auth.user.id,
+    children.map((child) => child.profile_id),
+    auth.supabase
+  );
 
   return NextResponse.json({
     profile: mobilePublicProfile(auth.profile, auth.user.email ?? null),
     access: auth.access,
     pending_link_count: pendingCount,
-    children: serializeFamilyDesk(children, today),
+    children: serializeFamilyDesk(children, today, outgoing),
   });
 }

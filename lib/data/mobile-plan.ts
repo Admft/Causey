@@ -2,8 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { needsOrganizerRegistration } from "@/lib/data/mobile-family";
 import {
   getMyEntrantRows,
+  getMyRecommendations,
   isUpcomingEvent,
   type EntrantWithEvent,
+  type RecommendationRow,
 } from "@/lib/data/portal";
 
 export type MobilePlanEntrant = {
@@ -26,6 +28,12 @@ export type MobilePlanEntrant = {
 export type MobilePlan = {
   needs_action: MobilePlanEntrant[];
   upcoming: MobilePlanEntrant[];
+  recommendations: {
+    id: string;
+    from_name: string;
+    note: string | null;
+    competition: MobilePlanEntrant["competition"];
+  }[];
 };
 
 function serialize(row: EntrantWithEvent): MobilePlanEntrant {
@@ -49,17 +57,34 @@ function serialize(row: EntrantWithEvent): MobilePlanEntrant {
   };
 }
 
-/**
- * A student's own tournaments on the phone: the same invited / going /
- * organizer-registration decisions a parent answers on the Family tab, for the
- * one account that is signed in. Attendance and results stay with the coach.
- */
+function serializeRecommendation(row: RecommendationRow) {
+  return {
+    id: row.id,
+    from_name: row.from_name,
+    note: row.note,
+    competition: row.competition
+      ? {
+          slug: row.competition.slug,
+          name: row.competition.name,
+          city: row.competition.city,
+          state: row.competition.state,
+          start_date: row.competition.start_date,
+          end_date: row.competition.end_date,
+          reg_url: null,
+        }
+      : null,
+  };
+}
+
 export async function getMobilePlan(
   userId: string,
   supabase: SupabaseClient,
   todayIso: string
 ): Promise<MobilePlan> {
-  const rows = await getMyEntrantRows(userId, supabase);
+  const [rows, recommendations] = await Promise.all([
+    getMyEntrantRows(userId, supabase),
+    getMyRecommendations(userId, supabase),
+  ]);
   const { data: registrations } = await supabase
     .from("external_registrations")
     .select("competition_id, status")
@@ -95,5 +120,11 @@ export async function getMobilePlan(
       )
       .map(serialize),
     upcoming: upcoming.map(serialize),
+    recommendations: recommendations
+      .filter(
+        (row) =>
+          row.competition && isUpcomingEvent(row.competition, todayIso)
+      )
+      .map(serializeRecommendation),
   };
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { setOrgAttendance } from "@/lib/actions/attendance";
+import { attemptAction } from "@/lib/attempt-action";
 import type { CoachOrgAttendance } from "@/lib/data/portal";
 
 const orgTypeLabel: Record<CoachOrgAttendance["org"]["type"], string> = {
@@ -41,13 +42,15 @@ export function OrgAttendancePanel({
     setError(null);
     setPendingOrgId(entry.org.id);
     try {
-      const result = await setOrgAttendance({
-        orgId: entry.org.id,
-        orgSlug: entry.org.slug,
-        competitionId,
-        eventSlug,
-        attending: !entry.attending,
-      });
+      const result = await attemptAction(() =>
+        setOrgAttendance({
+          orgId: entry.org.id,
+          orgSlug: entry.org.slug,
+          competitionId,
+          eventSlug,
+          attending: !entry.attending,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -67,7 +70,8 @@ export function OrgAttendancePanel({
       </h2>
       <p className="mt-1 text-xs text-muted">
         Add this event to a club, team, or school calendar, then invite its
-        students to RSVP.
+        students to RSVP. Students and parents answer on Family — this does not
+        mark them going.
       </p>
 
       {attendingOrgs.length ? (

@@ -1,5 +1,5 @@
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshControl, StyleSheet, Text } from "react-native";
 import { causeyFetch } from "../../src/api";
 import { useAuth } from "../../src/auth";
@@ -8,9 +8,18 @@ import { EntrantRow, type EntrantRowData } from "../../src/EntrantRow";
 import {
   actionEntrants,
   mapEntrantDecision,
+  settledEntrants,
   type EntrantTap,
 } from "../../src/entrant-decision";
 import { feedback } from "../../src/haptics";
+import {
+  createRequestGate,
+  isAbortError,
+} from "../../src/request-gate";
+import {
+  deskChangeRow,
+  onDeskChanged,
+} from "../../src/desk-sync";
 import { RoleHomeGuard } from "../../src/RoleHomeGuard";
 import { colors } from "../../src/theme";
 import {
@@ -32,6 +41,7 @@ type FamilyChild = {
   profile_id: string;
   display_name: string;
   orgs: { name: string; type: string }[];
+  pending_invites: FamilyEntrant[];
   needs_action: FamilyEntrant[];
   upcoming: FamilyEntrant[];
 };
@@ -50,14 +60,33 @@ function applyFamilyTap(
   return {
     ...current,
     children: current.children.map((child) => {
+      // Only the student who owns this row moves. Editing every child would
+      // copy one student's tournament onto their siblings.
+      if (child.profile_id !== row.profile_id) return child;
       const upcoming = mapEntrantDecision(child.upcoming, row, decision);
+      const pending_invites = (child.pending_invites ?? []).filter(
+        (invite) =>
+          decision === "clear" || invite.competition_id !== row.competition_id
+      );
       return {
         ...child,
         upcoming,
-        needs_action: actionEntrants(upcoming),
+        pending_invites,
+        needs_action: actionEntrants([...pending_invites, ...upcoming]),
       };
     }),
   };
+}
+
+/** One row per student and tournament, so React never sees a repeated key. */
+function dedupeEntrants(rows: FamilyEntrant[]): FamilyEntrant[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = `${row.profile_id}:${row.competition_id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export default function FamilyScreen() {
@@ -78,6 +107,7 @@ function FamilyDesk() {
   const [refreshing, setRefreshing] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const loadGate = useRef(createRequestGate()).current;
 
   // Show this account's last good payload, then reconcile with the network.
   // Dropping `data` first is what stops one account's children from flashing
@@ -108,32 +138,50 @@ function FamilyDesk() {
 
   const load = useCallback(async () => {
     if (!session?.access_token || !userId) return;
+    const request = loadGate.start();
     setRefreshing(true);
     try {
       const fresh = (await causeyFetch("/api/mobile/family", {
         token: session.access_token,
+        signal: request.signal,
       })) as FamilyPayload;
+      if (!loadGate.isCurrent(request)) return;
       setData(fresh);
       setSavedAt(Date.now());
       setStale(false);
       setError(null);
       await writeCache(CACHE_KEY, userId, fresh);
     } catch (err) {
+      if (isAbortError(err) || !loadGate.isCurrent(request)) return;
       setStale(true);
       setError(err instanceof Error ? err.message : "Could not load Family.");
     } finally {
-      setRefreshing(false);
+      if (loadGate.isCurrent(request)) setRefreshing(false);
     }
-  }, [session?.access_token, userId]);
+  }, [loadGate, session?.access_token, userId]);
+
+  useEffect(() => {
+    return onDeskChanged((change) => {
+      if (change) {
+        setData((current) =>
+          applyFamilyTap(current, deskChangeRow(change), change.decision)
+        );
+      }
+      void load();
+    });
+  }, [load]);
 
   useFocusEffect(
     useCallback(() => {
       void load();
-    }, [load])
+      return () => loadGate.abort();
+    }, [load, loadGate])
   );
 
   async function rsvp(row: FamilyEntrant, status: "going" | "not_going") {
     if (!session?.access_token || !row.competition) return;
+    if (row.status === status) return;
+    loadGate.abort();
     const previous = data;
     setBusyKey(`${row.competition_id}:${status}`);
     setData((current) => applyFamilyTap(current, row, status));
@@ -161,8 +209,40 @@ function FamilyDesk() {
     }
   }
 
+  async function clearAnswer(row: FamilyEntrant) {
+    if (!session?.access_token || !row.competition) return;
+    if (row.status !== "going" && row.status !== "not_going") return;
+    loadGate.abort();
+    const previous = data;
+    setBusyKey(`${row.competition_id}:clear`);
+    setData((current) => applyFamilyTap(current, row, "clear"));
+    try {
+      await causeyFetch("/api/mobile/rsvp", {
+        token: session.access_token,
+        method: "POST",
+        body: {
+          competitionId: row.competition_id,
+          profileId: row.profile_id,
+          status: "clear",
+          eventSlug: row.competition.slug,
+        },
+      });
+      feedback("success");
+      await load();
+    } catch (err) {
+      setData(previous);
+      feedback("error");
+      setError(
+        err instanceof Error ? err.message : "Could not clear that RSVP."
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
   async function markRegistered(row: FamilyEntrant) {
     if (!session?.access_token || !row.competition) return;
+    loadGate.abort();
     const previous = data;
     setBusyKey(`${row.competition_id}:registered`);
     setData((current) => applyFamilyTap(current, row, "registered"));
@@ -200,7 +280,10 @@ function FamilyDesk() {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={load}
+          onRefresh={() => {
+            if (busyKey) return;
+            void load();
+          }}
           tintColor={colors.brandRed}
         />
       }
@@ -226,33 +309,58 @@ function FamilyDesk() {
         </Lede>
       ) : null}
 
-      {children.map((child) => (
-        <Card key={child.profile_id}>
-          <Text style={styles.childName}>{child.display_name}</Text>
-          {child.orgs.length ? (
-            <Meta>{child.orgs.map((org) => org.name).join(" · ")}</Meta>
-          ) : null}
-          {child.needs_action.map((row) => (
-            <EntrantRow
-              key={`${row.competition_id}-action`}
-              row={row}
-              busy={Boolean(busyKey)}
-              onGoing={() => rsvp(row, "going")}
-              onNotGoing={() => rsvp(row, "not_going")}
-              onRegistered={() => markRegistered(row)}
-            />
-          ))}
-          {!child.needs_action.length ? (
-            <Meta>
-              {child.upcoming.length
-                ? `Nothing waiting. ${child.upcoming.length} upcoming tournament${
-                    child.upcoming.length === 1 ? "" : "s"
-                  }.`
-                : "Nothing waiting right now."}
-            </Meta>
-          ) : null}
-        </Card>
-      ))}
+      {children.map((child) => {
+        const pendingInvites = child.pending_invites ?? [];
+        const actionRows = dedupeEntrants([
+          ...pendingInvites,
+          ...child.needs_action,
+        ]);
+        const settled = dedupeEntrants(settledEntrants(child.upcoming)).filter(
+          (row) =>
+            !actionRows.some(
+              (action) => action.competition_id === row.competition_id
+            )
+        );
+        return (
+          <Card key={child.profile_id}>
+            <Text style={styles.childName}>{child.display_name}</Text>
+            {child.orgs.length ? (
+              <Meta>{child.orgs.map((org) => org.name).join(" · ")}</Meta>
+            ) : null}
+            {actionRows.map((row) => (
+              <EntrantRow
+                key={`action:${row.profile_id}:${row.competition_id}`}
+                row={row}
+                busy={Boolean(busyKey)}
+                onGoing={() => rsvp(row, "going")}
+                onNotGoing={() => rsvp(row, "not_going")}
+                onRegistered={() => markRegistered(row)}
+                onClear={() => void clearAnswer(row)}
+              />
+            ))}
+            {settled.length ? (
+              <>
+                <Meta>
+                  {actionRows.length ? "Settled upcoming" : "Upcoming"}
+                </Meta>
+                {settled.map((row) => (
+                  <EntrantRow
+                    key={`upcoming:${row.profile_id}:${row.competition_id}`}
+                    row={row}
+                    busy={Boolean(busyKey)}
+                    onGoing={() => rsvp(row, "going")}
+                    onNotGoing={() => rsvp(row, "not_going")}
+                    onRegistered={() => markRegistered(row)}
+                    onClear={() => void clearAnswer(row)}
+                  />
+                ))}
+              </>
+            ) : !actionRows.length ? (
+              <Meta>Nothing waiting right now.</Meta>
+            ) : null}
+          </Card>
+        );
+      })}
     </Screen>
   );
 }

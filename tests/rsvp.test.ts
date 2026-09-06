@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   attendanceReplyBucket,
   canTransition,
+  clearRsvpMode,
   formatManageReplyMeta,
   groupAttendanceByReplyStatus,
   orderedAttendanceReplySections,
@@ -22,11 +23,46 @@ describe("canTransition", () => {
     expect(canTransition("not_going", "going")).toBe(true);
   });
 
-  it("never allows returning to invited", () => {
-    const statuses: RsvpStatus[] = ["invited", "going", "not_going"];
-    for (const from of statuses) {
-      expect(canTransition(from, "invited")).toBe(false);
-    }
+  it("allows clearing an answer back to invited", () => {
+    expect(canTransition("going", "invited")).toBe(true);
+    expect(canTransition("not_going", "invited")).toBe(true);
+    expect(canTransition("invited", "invited")).toBe(false);
+  });
+});
+
+describe("clearRsvpMode", () => {
+  it("deletes family-discovery rows the parent or student created", () => {
+    expect(
+      clearRsvpMode({
+        invited_by: "parent-1",
+        profile_id: "child-1",
+        callerId: "parent-1",
+      })
+    ).toBe("delete");
+    expect(
+      clearRsvpMode({
+        invited_by: "child-1",
+        profile_id: "child-1",
+        callerId: "parent-1",
+      })
+    ).toBe("delete");
+  });
+
+  it("resets a coach invite to unanswered instead of deleting it", () => {
+    expect(
+      clearRsvpMode({
+        invited_by: "coach-1",
+        profile_id: "child-1",
+        callerId: "parent-1",
+      })
+    ).toBe("reset");
+    expect(
+      clearRsvpMode({
+        invited_by: null,
+        profile_id: "child-1",
+        callerId: "parent-1",
+      })
+    ).toBe("reset");
   });
 });
 

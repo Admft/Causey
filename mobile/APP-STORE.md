@@ -54,7 +54,7 @@ The account must have, in production:
 - At least one entrant row with `status = 'invited'` on an upcoming
   competition, so the Family tab opens on a real "Going / Can't go" decision.
 - At least one `status = 'going'` entrant on a competition with a `reg_url`, so
-  "Open organizer registration" and "Mark registered" both appear.
+  "Open organizer registration" and "Mark complete" both appear.
 
 **Notes for the reviewer** (paste into App Store Connect):
 

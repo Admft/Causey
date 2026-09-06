@@ -28,7 +28,7 @@ A club is not a school and not a district. Coaches create club or team workspace
 - Record **attendance**, then **division / place / award**. Open a student from the roster for club-scoped history. The club overview shows a **This season** list of recorded places.
 
 ### Parents
-- Link a child and use the **family desk** for RSVP and unfinished organizer registration, including public listings with no club invite.
+- Link a child and use the **family desk**: invite them to a listing so they can accept on Plan, then confirm organizer registration. Going / Can't go can be cleared. Kids who are not on Causey can still be marked going from the event.
 - See recorded results when a coach entered them (blank means not recorded).
 
 ### Students
@@ -46,12 +46,12 @@ A club is not a school and not a district. Coaches create club or team workspace
 | Roster, groups, staff/student invites | Claim links; assistants read-only | Yes |
 | Public chess search | Zip/radius/date/grade filters | Yes, coverage incomplete |
 | Other-type directories | Debate, STEM, arts, writing search | Hosting yes; indexes thin |
-| “My club is going” | Signed-in directory chip; event page teammate names (website + phone) | Yes (live data, not mock) |
+| “My club is going” | Website + phone: mark club/team/school attending on a public listing; teammate names; invite roster is website manage | Yes (live data, not mock) |
 | Hosted competitions | Draft → review → publish | Yes |
 | Competitions inventory | Hosted records plus travel events the club marked as attending | Yes |
 | RSVP + organizer registration | Distinct from paying the organizer | Yes |
 | Attendance + recorded results | Place/award; blanks are honest; overview lists this season’s recorded places | Yes |
-| Family desk + alerts | Per-child actions; in-app alerts on website `/me/notifications` and phone `/alerts` | Yes; email not volume-proven |
+| Family desk + alerts | Per-child actions on website and phone; parent Invite → student Plan → parent Mark complete; Clear answer on Going / Can't go; phone Family lists settled upcoming by name; in-app alerts on website `/me/notifications` and phone `/alerts` | Yes; email not volume-proven |
 | Season report + CSV | Hosted + travel the club attended | Yes |
 | Grade + credential IDs | Typed USCF / NSDA / other | IDs only; no live lookups |
 | Website + meeting note | Members only | Yes |

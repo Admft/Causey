@@ -113,6 +113,7 @@ describe("a failed save says so", () => {
     "components/AnnouncementForm.tsx",
     "components/CompetitionComments.tsx",
     "components/RecommendEventPanel.tsx",
+    "components/InviteStudentButton.tsx",
     "components/OrganizationSettingsForm.tsx",
     "components/PublishTournamentPanel.tsx",
     "components/CancelTournamentButton.tsx",
@@ -129,6 +130,7 @@ describe("a failed save says so", () => {
     "components/GroupManager.tsx",
     "components/NotificationInboxActions.tsx",
     "components/ExternalRegistrationPanel.tsx",
+    "components/OrgAttendancePanel.tsx",
   ])("%s cannot swallow a dropped connection", (path) => {
     const source = read(path);
     expect(source).toContain("attemptAction");

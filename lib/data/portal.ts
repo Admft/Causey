@@ -729,11 +729,12 @@ export type RecommendTarget = {
  * PII-light roster RPC / household reads.
  */
 export async function getRecommendTargets(
-  userId: string
+  userId: string,
+  client?: PortalSupabase
 ): Promise<RecommendTarget[]> {
   const [children, myOrgs] = await Promise.all([
-    getActiveChildren(userId),
-    getMyOrgs(userId),
+    getActiveChildren(userId, client),
+    getMyOrgs(userId, client),
   ]);
   const targets = new Map<string, RecommendTarget>();
   for (const child of children) {
@@ -746,7 +747,7 @@ export async function getRecommendTargets(
   const rosters = await Promise.all(
     myOrgs.map(async ({ org }) => ({
       org,
-      roster: await getOrgRoster(org.id),
+      roster: await getOrgRoster(org.id, client),
     }))
   );
   for (const { org, roster } of rosters) {
@@ -781,9 +782,10 @@ export type RecommendationRow = {
 /** Recipients this viewer has already recommended this event to. */
 export async function getSentRecommendationRecipientIds(
   competitionId: string,
-  fromProfileId: string
+  fromProfileId: string,
+  client?: PortalSupabase
 ): Promise<string[]> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const { data, error } = await supabase
     .from("event_recommendations")
     .select("to_profile_id")
@@ -795,9 +797,10 @@ export async function getSentRecommendationRecipientIds(
 
 /** Recommendations sent to the viewer, sender names resolved via RPC. */
 export async function getMyRecommendations(
-  userId: string
+  userId: string,
+  client?: PortalSupabase
 ): Promise<RecommendationRow[]> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const { data } = await supabase
     .from("event_recommendations")
     .select(
@@ -828,6 +831,39 @@ export async function getMyRecommendations(
     competition:
       (row.competitions as unknown as RecommendationRow["competition"]) ?? null,
   }));
+}
+
+export type OutgoingFamilyRecommendation = {
+  to_profile_id: string;
+  competition_id: string;
+  competition: RecommendationRow["competition"];
+};
+
+/** Recs this parent sent to linked students that still need an answer. */
+export async function getOutgoingFamilyRecommendations(
+  fromProfileId: string,
+  toProfileIds: string[],
+  client?: PortalSupabase
+): Promise<OutgoingFamilyRecommendation[]> {
+  if (!toProfileIds.length) return [];
+  const supabase = await portalClient(client);
+  const { data } = await supabase
+    .from("event_recommendations")
+    .select(
+      "to_profile_id, competition_id, competitions(slug, name, city, state, start_date, end_date)"
+    )
+    .eq("from_profile_id", fromProfileId)
+    .eq("status", "sent")
+    .in("to_profile_id", toProfileIds);
+  return (data ?? [])
+    .filter((row) => row.competitions)
+    .map((row) => ({
+      to_profile_id: row.to_profile_id as string,
+      competition_id: row.competition_id as string,
+      competition:
+        (row.competitions as unknown as RecommendationRow["competition"]) ??
+        null,
+    }));
 }
 
 export type RatingSummary = { avg_score: number; rating_count: number };
@@ -898,9 +934,11 @@ export type CoachOrgAttendance = {
 export async function getCoachOrgsWithAttendance(
   userId: string,
   competitionId: string,
-  hostingOrgId: string | null
+  hostingOrgId: string | null,
+  client?: PortalSupabase
 ): Promise<CoachOrgAttendance[]> {
-  const coached = (await getMyOrgs(userId)).filter(
+  const supabase = await portalClient(client);
+  const coached = (await getMyOrgs(userId, supabase)).filter(
     (row) =>
       row.isCoach &&
       row.org.id !== hostingOrgId &&
@@ -908,7 +946,6 @@ export async function getCoachOrgsWithAttendance(
   );
   if (!coached.length) return [];
 
-  const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from("org_competition_attendance")
     .select("org_id")
