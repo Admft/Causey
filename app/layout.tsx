@@ -129,7 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Link>
               <Link
                 href="/support"
-                className="font-semibold text-muted-strong transition-colors hover:text-brand-red"
+                className="font-medium text-muted-strong transition-colors hover:text-brand-red"
               >
                 Report a problem
               </Link>

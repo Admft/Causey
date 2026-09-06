@@ -44,9 +44,6 @@ const MORE_CHIP_CLASS = `${SIGN_UP_CHIP_CLASS} cursor-pointer list-none [&::-web
 function SignedOutPair() {
   return (
     <div className="flex shrink-0 items-center gap-3">
-      <Link href="/support" className={SIGN_IN_LINK_CLASS}>
-        Report a problem
-      </Link>
       <Link href="/login" className={SIGN_IN_LINK_CLASS}>
         Sign in
       </Link>
@@ -221,7 +218,6 @@ export function AuthNav() {
         aria-busy="true"
         aria-label="Checking sign-in"
       >
-        <span className={SIGN_IN_LINK_CLASS}>Report a problem</span>
         <span className={SIGN_IN_LINK_CLASS}>Sign in</span>
         <span className={SIGN_UP_CHIP_CLASS}>Sign up</span>
       </div>
@@ -284,7 +280,6 @@ export function AuthNav() {
   const alertsActive = pathname.startsWith("/me/notifications");
   const accountActive = pathname.startsWith("/account");
   const adminActive = pathname.startsWith("/admin");
-  const supportActive = pathname.startsWith("/support");
 
   function findLink() {
     return (
@@ -376,24 +371,6 @@ export function AuthNav() {
       Account
     </Link>
   );
-  const supportRow = (
-    <Link
-      href="/support"
-      aria-current={supportActive ? "page" : undefined}
-      className={navLinkClass(supportActive)}
-    >
-      Report a problem
-    </Link>
-  );
-  const supportMenu = (
-    <Link
-      href="/support"
-      aria-current={supportActive ? "page" : undefined}
-      className={menuItemClass(supportActive)}
-    >
-      Report a problem
-    </Link>
-  );
   const adminRow = isAdmin ? (
     <Link
       href="/admin"
@@ -444,7 +421,6 @@ export function AuthNav() {
           {adminMenu}
           {alertsMenu}
           {accountMenu}
-          {supportMenu}
           {offerHomeScreen ? (
             <button
               type="button"
@@ -463,7 +439,6 @@ export function AuthNav() {
         {portalLinks.map((link) => portalNavLink(link, "row"))}
         {alertsRow}
         {accountRow}
-        {supportRow}
         {signOutRow}
       </div>
     </div>

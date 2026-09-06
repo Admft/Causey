@@ -203,7 +203,15 @@ export default async function AccountPage() {
         Your data
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        Download a copy or permanently delete this account.
+        Download a copy or permanently delete this account. If something is
+        broken, or you need a listing or comment taken down,{" "}
+        <Link
+          href="/support"
+          className="font-semibold text-brand-red hover:underline"
+        >
+          report a problem
+        </Link>
+        .
       </p>
       <div className="mt-6">
         <AccountDataControls email={user.email ?? ""} />

@@ -17,7 +17,10 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
-- [x] Report a problem is in the header (signed in and out), footer honesty copy, and phone Me — 2026-09-06
+- [x] Sign-in help is split by job: Forgot password sits under the field, New here? Create an account follows Sign in, Report a problem is a quieter hairline below — 2026-09-06
+- [x] Phone event difficulty is two locked rows (1–5, then 6–10), not a wrapping 1–10 strip — 2026-09-06
+- [x] Phone tournament details: listing photo, US Chess rated/not rated plus difficulty, Going/Can't go, and “did you finish organizer registration?” after the organizer site; Expo Go Add to calendar opens an .ics / Calendar template because `expo-calendar` is stubbed there — 2026-09-06
+- [x] Report a problem is a labeled footer link on every page (plus honesty copy); Account, sign-in, error, and phone Me still point there; not in the header — 2026-09-06
 - [x] Support problem reports: `/support` form (anyone, optional screenshot) emails the founding team; platform admins reply from `/admin/support` into Alerts plus email — 2026-09-06
 - [x] Phone Search is name + zip (+ distance) with an Advanced search disclosure for the website filters (when, featured, club/school going, source, grade, rating, fee, state, dates, facets). Sort sits with results. `/api/competitions` honors the phone Bearer token. — 2026-09-06
 - [x] Phone Search keeps type-tile marks and drops the duplicate selected-category image above the heading — 2026-09-06
