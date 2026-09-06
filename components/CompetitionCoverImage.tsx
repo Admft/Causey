@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CauseyLogo } from "@/components/CauseyLogo";
 import { toDisplayCoverUrl } from "@/lib/cover-url";
 import { sourceByCompetitionSource } from "@/lib/ingestion-sources";
@@ -66,14 +66,9 @@ export function CompetitionCoverImage({
   /** Search and homepage featured keep the source mark. */
   sourceFallback?: boolean;
 }) {
-  const [failed, setFailed] = useState(false);
   const photoSrc = toDisplayCoverUrl(src);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [photoSrc]);
-
-  const showPhoto = Boolean(photoSrc) && !failed;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showPhoto = Boolean(photoSrc) && failedSrc !== photoSrc;
   const showSource = !showPhoto && sourceFallback && Boolean(source);
 
   if (!showPhoto && !showSource) {
@@ -102,7 +97,7 @@ export function CompetitionCoverImage({
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
-            onError={() => setFailed(true)}
+            onError={() => setFailedSrc(photoSrc!)}
           />
         </>
       ) : showSource ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   ADD_TO_HOME_SCREEN_EVENT,
   detectHomeScreenKind,
@@ -61,12 +61,11 @@ export function AddToHomeScreen() {
   const dialogId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const installEventRef = useRef<BeforeInstallPromptEvent | null>(null);
-  const addRef = useRef<() => void>(() => {});
   const [kind, setKind] = useState<HomeScreenKind | null>(null);
   const [canPrompt, setCanPrompt] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
-  async function addToHomeScreen() {
+  const addToHomeScreen = useCallback(async () => {
     const env = readHomeScreenEnvironment();
     if (!shouldOfferAddToHomeScreen(env)) return;
     const nextKind = detectHomeScreenKind(
@@ -90,10 +89,7 @@ export function AddToHomeScreen() {
       }
     }
     setTutorialOpen(true);
-  }
-  addRef.current = () => {
-    void addToHomeScreen();
-  };
+  }, []);
 
   useEffect(() => {
     const env = readHomeScreenEnvironment();
@@ -116,7 +112,7 @@ export function AddToHomeScreen() {
       setTutorialOpen(false);
     }
     function onRequest() {
-      addRef.current();
+      void addToHomeScreen();
     }
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
@@ -126,7 +122,7 @@ export function AddToHomeScreen() {
       window.removeEventListener("appinstalled", onInstalled);
       window.removeEventListener(ADD_TO_HOME_SCREEN_EVENT, onRequest);
     };
-  }, []);
+  }, [addToHomeScreen]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
