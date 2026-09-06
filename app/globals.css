@@ -287,99 +287,14 @@ textarea.field {
 }
 
 /* Chess (and later partner) pin above results — labeled placement, not ranking.
- * Deep-red gradient face with a resting red aura (user-requested glow; this
- * extends the sanctioned --shadow-cta language, overriding the default "no
- * colored shadows" rule for this one placement). All critical paint is plain
- * hex/rgba — no color-mix, masks, range media queries, or backdrop-filter in
- * the render path, so older WebKit/Gecko still get the full look. */
+ * Home is a split card: brand-red promise, white §8.11 path. Search is a
+ * compact red ticket. */
 .partner-promo {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  border-radius: var(--radius-2xl);
-  background: var(--brand-red);
-  background: linear-gradient(152deg, #c8402f 0%, var(--brand-red) 44%, #a32e25 100%);
-  color: #ffffff;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
-    0 6px 20px rgba(194, 59, 50, 0.28),
-    0 20px 48px rgba(194, 59, 50, 0.24);
   text-decoration: none;
-  transition: transform 220ms var(--ease-brand), box-shadow 220ms var(--ease-brand);
-}
-.partner-promo:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
-    0 8px 24px rgba(168, 50, 42, 0.34),
-    0 26px 60px rgba(194, 59, 50, 0.3);
-}
-.partner-promo:active {
-  transform: translateY(0);
 }
 .partner-promo:focus-visible {
   outline: 2px solid var(--foreground);
   outline-offset: 3px;
-}
-/* Face gloss. Alpha stays ≤0.14 over the right edge and ≤0.08 across the
- * top so white copy keeps ≥4.5:1 on red. */
-.partner-promo::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(52% 78% at 92% 6%, rgba(255, 255, 255, 0.14), transparent 72%),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.08), transparent 34%);
-}
-/* Slow sheen loop (sweep, then a long rest) so the pin still reads alive when
- * the visitor scrolls to it — the old one-shot fired before first scroll.
- * rgba() gradient first; the color-mix restatement only wins where supported. */
-.partner-promo::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -45%;
-  z-index: 2;
-  width: 40%;
-  pointer-events: none;
-  background: linear-gradient(
-    105deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.75) 42%,
-    rgba(255, 255, 255, 0.5) 50%,
-    transparent 100%
-  );
-  background: linear-gradient(
-    105deg,
-    transparent 0%,
-    color-mix(in srgb, #ffffff 80%, transparent) 42%,
-    color-mix(in srgb, #ffffff 55%, transparent) 50%,
-    transparent 100%
-  );
-  opacity: 0;
-  animation: partner-promo-sheen 6.5s var(--ease-brand) 900ms infinite;
-}
-@keyframes partner-promo-sheen {
-  0% {
-    opacity: 0;
-    transform: translateX(0);
-  }
-  6% {
-    opacity: 0.9;
-  }
-  26% {
-    opacity: 0;
-    transform: translateX(280%);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(280%);
-  }
 }
 .partner-promo-cta {
   display: inline-flex;
@@ -403,6 +318,247 @@ textarea.field {
   background: var(--accent-soft);
   color: var(--brand-red-hover);
   box-shadow: 0 4px 14px rgba(20, 24, 28, 0.24);
+}
+.partner-promo-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.partner-promo-kicker {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+.partner-promo-headline {
+  margin: 0;
+}
+.partner-promo-note {
+  margin: 0;
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+}
+
+/* Home: same shell as the listings card below it. Red holds the promise;
+ * the path sits on white the way §8.11 specifies. */
+.partner-promo--featured {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-3xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: var(--foreground);
+}
+.partner-promo-face {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--brand-red);
+  color: #ffffff;
+}
+.partner-promo-face .partner-promo-headline {
+  max-width: 18ch;
+  color: #ffffff;
+}
+.partner-promo-face-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.partner-promo-path {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: var(--surface);
+}
+.partner-promo-note--path {
+  color: var(--muted);
+}
+.partner-promo-path-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  list-style: none;
+}
+.partner-promo-path-list::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 1.25rem;
+  left: 0.3125rem;
+  width: 2px;
+  background: var(--brand-red);
+  pointer-events: none;
+}
+.partner-promo-path-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.partner-promo-path-node {
+  position: absolute;
+  top: 0.25rem;
+  left: -1.5rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--brand-red);
+  box-shadow: 0 0 0 3px var(--surface);
+  pointer-events: none;
+}
+.partner-promo-path-mark {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-red);
+}
+.partner-promo-path-name {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--foreground);
+}
+.partner-promo-path-copy {
+  max-width: 28ch;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+@media (min-width: 768px) {
+  .partner-promo--featured {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .partner-promo-face,
+  .partner-promo-path {
+    padding: 2rem;
+  }
+  .partner-promo-face {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-bottom: 1.5rem;
+  }
+  .partner-promo-face .partner-promo-headline {
+    max-width: none;
+  }
+  .partner-promo-face-action {
+    align-items: flex-end;
+    text-align: right;
+  }
+  .partner-promo-path {
+    border-top: 1px solid var(--line);
+    padding-top: 1.75rem;
+  }
+  .partner-promo-path-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    padding-left: 0;
+  }
+  .partner-promo-path-list::before {
+    top: 0.3125rem;
+    right: 0.375rem;
+    bottom: auto;
+    left: 0.375rem;
+    width: auto;
+    height: 2px;
+  }
+  .partner-promo-path-node {
+    position: relative;
+    top: auto;
+    left: auto;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Search: compact red ticket. Same words, listing scale. */
+.partner-promo--search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-2xl);
+  background: var(--brand-red);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
+    0 6px 20px rgba(194, 59, 50, 0.28),
+    0 20px 48px rgba(194, 59, 50, 0.24);
+  transition: transform 220ms var(--ease-brand), box-shadow 220ms var(--ease-brand);
+}
+.partner-promo--search:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(20, 24, 28, 0.14),
+    0 8px 24px rgba(168, 50, 42, 0.34),
+    0 26px 60px rgba(194, 59, 50, 0.3);
+}
+.partner-promo--search:active {
+  transform: translateY(0);
+}
+.partner-promo--search .partner-promo-headline,
+.partner-promo--search .partner-promo-note {
+  color: #ffffff;
+}
+.partner-promo-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+.partner-promo-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-self: stretch;
+}
+.partner-promo-climb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: #ffffff;
+}
+.partner-promo-climb li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.partner-promo-climb-mark {
+  font-weight: 500;
+  opacity: 0.72;
+}
+.partner-promo--search .partner-promo-cta {
+  height: 2.5rem;
+  font-size: var(--text-sm);
+  margin-left: auto;
 }
 
 /* Compact page-back control — design system §8.4 (nav outline). Shorter than
@@ -986,9 +1142,9 @@ textarea.field {
   .home-hero-search.is-search-attention,
   .home-hero-search.is-search-attention::before,
   .home-hero-cue,
-  .cta-sheen.is-cta-attention::before,
-  .partner-promo::before {
+  .cta-sheen.is-cta-attention::before {
     animation: none;
+    transition: none;
   }
   .home-featured-rail[data-hint] > ul {
     animation: none;
