@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getMobileAuth, mobileAuthError } from "@/lib/auth/mobile-request";
-import { performSetExternalRegistration } from "@/lib/external-registration-write";
+import {
+  performMarkRegistrationOpened,
+  performSetExternalRegistration,
+} from "@/lib/external-registration-write";
 
 export const dynamic = "force-dynamic";
 
 const BodySchema = z.object({
   competitionId: z.string().uuid(),
   profileId: z.string().uuid(),
-  status: z.enum(["registered", "not_registered"]),
+  status: z.enum(["opened", "registered", "not_registered"]),
 });
 
 export async function POST(request: Request) {
@@ -35,13 +38,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await performSetExternalRegistration({
-    supabase: auth.supabase,
-    userId: auth.user.id,
-    competitionId: parsed.data.competitionId,
-    profileId: parsed.data.profileId,
-    status: parsed.data.status,
-  });
+  const result =
+    parsed.data.status === "opened"
+      ? await performMarkRegistrationOpened({
+          supabase: auth.supabase,
+          userId: auth.user.id,
+          competitionId: parsed.data.competitionId,
+          profileId: parsed.data.profileId,
+        })
+      : await performSetExternalRegistration({
+          supabase: auth.supabase,
+          userId: auth.user.id,
+          competitionId: parsed.data.competitionId,
+          profileId: parsed.data.profileId,
+          status: parsed.data.status,
+        });
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

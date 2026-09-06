@@ -18,6 +18,13 @@ describe("workflow audit follow-ups", () => {
     );
     expect(route).toContain('searchParams.get("for")');
     expect(route).toContain("household_links");
+    expect(route).toContain("performMarkRegistrationOpened");
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "lib/external-registration-write.ts"),
+        "utf8"
+      )
+    ).toContain('status: "opened"');
     expect(family).toContain("register?for=");
     expect(panel).toContain("profileId");
     expect(panel).toContain("Causey RSVP is not");

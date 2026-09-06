@@ -51,6 +51,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Phone event shows who from the school (or club) marked going, using the same `get_club_going` groups as the website — 2026-09-05
 - [x] Phone Alerts inbox lists the same invitation/result/account rows as website `/me/notifications`; public event hrefs open in-app, Family/orgs/account stay on the website — 2026-09-05
 - [x] Phone lists school and district memberships (with Club/Team kept distinct) via `GET /api/mobile/orgs`; district offices have no roster to open — 2026-09-05
+- [x] Phone event details show the listing photo, US Chess rating, Going/Can't go, and organizer-registration confirm after the external site; Expo Go calendar uses an .ics fallback — 2026-09-06
 - [x] Family can mark a linked student Going on a public listing without a school/club invite (`0080`); organizer-site entry is still Mark complete, not an import — 2026-09-05
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory

@@ -663,10 +663,11 @@ export async function getActiveChildren(
 /** Entrant rows on one competition for a set of profiles (self + children). */
 export async function getEntrantsForCompetition(
   competitionId: string,
-  profileIds: string[]
+  profileIds: string[],
+  client?: PortalSupabase
 ): Promise<CompetitionEntrant[]> {
   if (!profileIds.length) return [];
-  const supabase = await createServerSupabaseClient();
+  const supabase = await portalClient(client);
   const { data } = await supabase
     .from("competition_entrants")
     .select("*")
@@ -832,10 +833,11 @@ export async function getMyRecommendations(
 export type RatingSummary = { avg_score: number; rating_count: number };
 
 export async function getRatingSummary(
-  competitionId: string
+  competitionId: string,
+  client?: PortalSupabase
 ): Promise<RatingSummary | null> {
-  if (!isSupabaseConfigured()) return null;
-  const supabase = await createServerSupabaseClient();
+  if (!client && !isSupabaseConfigured()) return null;
+  const supabase = await portalClient(client);
   const { data, error } = await supabase.rpc("get_rating_summary", {
     p_competition_id: competitionId,
   });

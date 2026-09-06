@@ -1,6 +1,7 @@
 import { getSessionUser } from "@/lib/auth/session";
 import { getDataSource } from "@/lib/data";
 import { getCompetitionBySlugAuthed } from "@/lib/data/portal";
+import { performMarkRegistrationOpened } from "@/lib/external-registration-write";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { safeOrganizerRegistrationUrl } from "@/lib/actions/registration-redirect";
 
@@ -64,53 +65,14 @@ export async function GET(
     }
 
     if (targetUserId) {
-      const { data: existing, error: existingError } = await supabase
-        .from("external_registrations")
-        .select("status")
-        .eq("user_id", targetUserId)
-        .eq("competition_id", competition.id)
-        .maybeSingle();
-
-      if (existingError) {
-        console.error("Registration handoff status lookup failed:", {
-          code: existingError.code,
-          message: existingError.message,
-        });
-      } else if (!existing) {
-        const { error: insertError } = await supabase
-          .from("external_registrations")
-          .insert({
-            user_id: targetUserId,
-            competition_id: competition.id,
-            status: "opened",
-          });
-        if (insertError) {
-          console.error("Registration handoff insert failed:", {
-            code: insertError.code,
-            message: insertError.message,
-          });
-        }
-      } else if (existing.status !== "registered") {
-        const openedAt = new Date().toISOString();
-        const { count, error: updateError } = await supabase
-          .from("external_registrations")
-          .update(
-            {
-              status: "opened",
-              opened_at: openedAt,
-              status_updated_at: openedAt,
-            },
-            { count: "exact" }
-          )
-          .eq("user_id", targetUserId)
-          .eq("competition_id", competition.id);
-        if (updateError || count !== 1) {
-          console.error("Registration handoff update failed:", {
-            code: updateError?.code,
-            message: updateError?.message,
-            affectedRows: count,
-          });
-        }
+      const stamped = await performMarkRegistrationOpened({
+        supabase,
+        userId: user.id,
+        competitionId: competition.id,
+        profileId: targetUserId,
+      });
+      if (!stamped.ok) {
+        console.error("Registration handoff stamp failed:", stamped.error);
       }
     }
   }
