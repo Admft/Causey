@@ -1,6 +1,7 @@
 import "server-only";
 
 const DEFAULT_PUBLIC_URL = "https://causey.dev";
+const DEFAULT_SUPPORT_INBOX = "amoffat@causey.dev";
 
 export function hasProductEmailConfig(): boolean {
   return Boolean(
@@ -33,4 +34,9 @@ export function absoluteCauseyUrl(path: string | null | undefined): string {
   const { publicUrl } = getProductEmailConfig();
   if (!path || !path.startsWith("/") || path.startsWith("//")) return publicUrl;
   return `${publicUrl}${path}`;
+}
+
+export function getSupportInboxEmail(): string {
+  const raw = process.env.CAUSEY_SUPPORT_INBOX?.trim();
+  return raw || DEFAULT_SUPPORT_INBOX;
 }

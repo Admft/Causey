@@ -39,7 +39,7 @@ describe("platform admin ops stats", () => {
     const strip = read("components/AdminStatStrip.tsx");
 
     expect(overview).toContain(
-      'getAdminOpsStats([\n      "listings",\n      "readyDrafts",\n      "organizations",\n      "accounts",\n      "ingestion",\n    ])'
+      'getAdminOpsStats([\n      "listings",\n      "readyDrafts",\n      "organizations",\n      "accounts",\n      "ingestion",\n      "support",\n    ])'
     );
     expect(overview).toContain("AdminOpsLedger");
     expect(overview).toContain("Awaiting review");
@@ -69,6 +69,7 @@ describe("platform admin ops stats", () => {
     const orgs = read("app/admin/organizations/page.tsx");
     const users = read("app/admin/users/page.tsx");
     const scrapers = read("app/admin/scrapers/page.tsx");
+    const support = read("app/admin/support/page.tsx");
 
     expect(helpers).toContain("adminChartUnavailable");
     expect(helpers).toContain("scrapeRunBarValue");
@@ -87,6 +88,8 @@ describe("platform admin ops stats", () => {
     expect(users).toContain("remainderCount");
     expect(scrapers).toContain("Rows upserted");
     expect(scrapers).toContain("AdminMixChart");
+    expect(support).toContain("Problem reports");
+    expect(support).toContain("AdminMixChart");
   });
 
   it("fetches only the slice each destination needs", () => {
@@ -121,5 +124,8 @@ describe("platform admin ops stats", () => {
     expect(scrapers).toContain("getAdminIngestionSourceHealth");
     expect(scrapers).toContain("runResult");
     expect(scrapers).toContain("Source health");
+    expect(read("app/admin/support/page.tsx")).toContain(
+      'getAdminOpsStats(["support"])'
+    );
   });
 });

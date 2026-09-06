@@ -23,6 +23,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 ## Need for a professional club (priority)
 
+- [x] Support problem reports from `/support` with optional screenshot; founding-team email and Alerts replies — 2026-09-06
 - [x] Phone Search is simple name/zip with Advanced search covering the website filters — 2026-09-06
 - [x] Phone lists clubs/teams (and any school/district memberships) the signed-in account belongs to (`GET /api/mobile/orgs`); coaches open roster; no create/settings/CSV — 2026-09-05
 - [x] Phone Alerts inbox shows the same invitation/RSVP/result rows as website `/me/notifications`; event pages open in-app, manage/orgs/account stay on the website — 2026-09-05

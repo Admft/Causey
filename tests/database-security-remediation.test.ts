@@ -55,7 +55,7 @@ describe("effective database security remediation", () => {
   it("authorizes each notification relationship and rejects external hrefs", () => {
     const definition = effectiveFunction("create_in_app_notification");
     expect(definition.file).toBe(
-      "0076_staff_team_entry.sql"
+      "0081_support_reports.sql"
     );
     expect(definition.sql).toContain("left(p_href, 2) = '//'");
     expect(definition.sql).toContain(
@@ -70,6 +70,7 @@ describe("effective database security remediation", () => {
     expect(definition.sql).toContain("authorized is not true");
     expect(definition.sql).toContain("response_source = 'staff'");
     expect(definition.sql).toContain("staff-rsvp:");
+    expect(definition.sql).toContain("p_entity_type = 'support_report'");
     expect(remediation).toContain(
       ") to authenticated;\n\ncomment on function public.create_in_app_notification"
     );

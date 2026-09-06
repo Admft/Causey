@@ -15,6 +15,7 @@ import {
   type ProductEmailMessage,
 } from "@/lib/email/template";
 import { reportError } from "@/lib/observability";
+import { SUPPORT_ATTACHMENT_BUCKET } from "@/lib/support";
 
 type EmailOutboxRow = {
   id: string;
@@ -44,8 +45,53 @@ const NotificationPayload = z.object({
   notification_id: z.string().uuid().optional(),
 });
 
+const SupportIntakePayload = z.object({
+  report_id: z.string().uuid(),
+  reporter_email: z.string().email().max(320),
+  body: z.string().min(1).max(2000),
+  page_label: z.string().min(1).max(200).optional(),
+  attachment_path: z.string().min(1).max(500).optional(),
+  reply_to: z.string().email().max(320),
+});
+
+const SupportReplyPayload = z.object({
+  report_id: z.string().uuid(),
+  body: z.string().min(1).max(2000),
+  notification_id: z.string().uuid().optional(),
+  reply_to: z.string().email().max(320).optional(),
+});
+
 function invitationRoleLabel(role: string): string {
   return ORG_ROLE_LABELS[role as OrgMemberRole] ?? role.replaceAll("_", " ");
+}
+
+function collapseEmailBody(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+async function signedSupportAttachmentUrl(
+  path: string | undefined
+): Promise<string | null> {
+  if (!path) return null;
+  const service = getServiceRoleClient();
+  if (!service) return null;
+  const { data, error } = await service.storage
+    .from(SUPPORT_ATTACHMENT_BUCKET)
+    .createSignedUrl(path, 60 * 60 * 24 * 7);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
+function replyToForOutboxRow(row: EmailOutboxRow): string | undefined {
+  if (row.template === "support_intake") {
+    const parsed = SupportIntakePayload.safeParse(row.payload);
+    return parsed.success ? parsed.data.reply_to : undefined;
+  }
+  if (row.template === "support_reply") {
+    const parsed = SupportReplyPayload.safeParse(row.payload);
+    return parsed.success ? parsed.data.reply_to : undefined;
+  }
+  return undefined;
 }
 
 async function messageForOutboxRow(
@@ -102,6 +148,41 @@ async function messageForOutboxRow(
     };
   }
 
+  if (row.template === "support_intake") {
+    const payload = SupportIntakePayload.parse(row.payload);
+    const screenshotUrl = await signedSupportAttachmentUrl(
+      payload.attachment_path
+    );
+    const details = [
+      `${payload.reporter_email} wrote: ${collapseEmailBody(payload.body)}`,
+      payload.page_label ? `Page: ${payload.page_label}` : null,
+      screenshotUrl ? `Screenshot: ${screenshotUrl}` : null,
+      "Reply in Causey to also send an Alert when they have an account. Replying to this email only emails them.",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return {
+      subject: "New problem report",
+      preview: collapseEmailBody(payload.body).slice(0, 140),
+      heading: "New problem report",
+      body: details,
+      actionLabel: "Reply in Causey",
+      actionUrl: absoluteCauseyUrl(`/admin/support/${payload.report_id}`),
+    };
+  }
+
+  if (row.template === "support_reply") {
+    const payload = SupportReplyPayload.parse(row.payload);
+    return {
+      subject: "Reply to your problem report",
+      preview: collapseEmailBody(payload.body).slice(0, 140),
+      heading: "Reply to your problem report",
+      body: collapseEmailBody(payload.body),
+      actionLabel: "Open in Causey",
+      actionUrl: absoluteCauseyUrl("/support#reports"),
+    };
+  }
+
   throw new Error(`Unsupported email template: ${row.template}`);
 }
 
@@ -109,10 +190,12 @@ async function recordNotificationDelivery(
   row: EmailOutboxRow,
   errorMessage?: string
 ) {
-  const parsed = NotificationPayload.safeParse(row.payload);
-  const notificationId = parsed.success
-    ? parsed.data.notification_id
-    : undefined;
+  const notificationId =
+    NotificationPayload.safeParse(row.payload).success
+      ? NotificationPayload.parse(row.payload).notification_id
+      : SupportReplyPayload.safeParse(row.payload).success
+        ? SupportReplyPayload.parse(row.payload).notification_id
+        : undefined;
   if (!notificationId) return;
   const service = getServiceRoleClient();
   if (!service) throw new Error("Supabase service role is not configured.");
@@ -191,6 +274,7 @@ export async function deliverPendingEmailOutbox(
     try {
       const message = await messageForOutboxRow(row);
       const rendered = renderProductEmail(message);
+      const replyTo = replyToForOutboxRow(row);
       const { data: result, error: sendError } = await resend.emails.send(
         {
           from: config.from,
@@ -198,6 +282,7 @@ export async function deliverPendingEmailOutbox(
           subject: message.subject,
           html: rendered.html,
           text: rendered.text,
+          ...(replyTo ? { replyTo } : {}),
         },
         {
           idempotencyKey: `causey/${row.dedupe_key ?? row.id}`.slice(0, 256),
@@ -263,7 +348,7 @@ export async function deliverPendingEmailOutbox(
   return { claimed: rows.length, sent, failed, skipped: false };
 }
 
-/** Send organization invitation mail now instead of waiting for the reminder cron. */
+/** Send invitation and support mail now instead of waiting for the reminder cron. */
 export async function flushPendingInvitationEmails(): Promise<void> {
   if (!hasProductEmailConfig()) return;
   try {

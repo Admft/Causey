@@ -13,6 +13,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - Audiences: public / district-only / school-only / invite-only
 - Competitions inventory with host filter across district + schools
 - Family desk, alerts (in-app; email configured not volume-proven); linked parents get invite/change/result/announcement copies
+- Problem reports from `/support` (optional screenshot) email the founding team; replies can land in Alerts
 - Reports + CSV (school-hosted vs district-hosted split, type filter, participating-school origin); scoped Activity
 - Announcements including district → chosen schools (or all connected), with staff vs student/parent targeting
 

@@ -188,7 +188,10 @@ describe("0075 repairs the rate-limit bucket allowlist", () => {
 
   it("keeps the TypeScript bucket list in sync with the allowlist", () => {
     const limiter = read("lib/rate-limit.ts");
-    const consume = functionBody(migration, "consume_rate_limit");
+    const consume = functionBody(
+      read("supabase/migrations/0081_support_reports.sql"),
+      "consume_rate_limit"
+    );
     const declared = [
       ...limiter
         .slice(

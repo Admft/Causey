@@ -50,6 +50,11 @@ export default function PrivacyPage() {
               in-app notification history.
             </li>
             <li>
+              Problem reports sent from Support, including the contact email,
+              description, optional screenshot, and replies from the founding
+              team.
+            </li>
+            <li>
               Basic technical records needed to secure, operate, and
               troubleshoot the service.
             </li>
@@ -111,7 +116,8 @@ export default function PrivacyPage() {
             process data only to provide those services. Tournament registration
             happens on an organizer&rsquo;s website; information submitted there
             is governed by that organizer&rsquo;s privacy practices, not this
-            notice.
+            notice. Problem reports and optional screenshots are stored and
+            emailed to the founding team so they can reply.
           </p>
         </section>
 
