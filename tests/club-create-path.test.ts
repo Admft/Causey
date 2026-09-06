@@ -53,6 +53,8 @@ describe("club-native create path", () => {
       "Districts and schools"
     );
     expect(read("app/orgs/page.tsx")).toContain("staffOrgListChromeFromTypes");
+    expect(read("app/orgs/page.tsx")).toContain("Districts");
+    expect(read("app/orgs/page.tsx")).toContain("Clubs and teams");
     expect(read("app/orgs/page.tsx")).not.toContain("Start an organization");
   });
 

@@ -29,6 +29,7 @@ describe("password confirmation and visibility", () => {
     expect(passwordField).toContain("aria-pressed={visible}");
     expect(passwordField).toContain('type={visible ? "text" : "password"}');
     expect(passwordField).toContain('type="button"');
+    expect(read("app/globals.css")).toContain(".field.field-password::-ms-reveal");
     expect(signupForm).toContain("showStrength");
     expect(signupForm).toContain("isPasswordAcceptable");
     expect(signupForm).toContain("WEAK_PASSWORD_MESSAGE");

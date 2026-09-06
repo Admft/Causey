@@ -104,6 +104,9 @@ export function SignupForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [resendState, setResendState] = useState<
+    "idle" | "pending" | "sent" | "error"
+  >("idle");
 
   const derivedBand = useMemo((): AgeBand | null => {
     if (!dateOfBirth || !parseDateOnly(dateOfBirth)) return null;
@@ -212,6 +215,8 @@ export function SignupForm({
         </h2>
         <p className="mt-3 text-sm text-muted">
           We sent a confirmation link to <strong className="text-foreground">{email}</strong>.
+          School inboxes often send it to junk — check spam before creating a
+          second account.
         </p>
         <p className="mt-4 text-sm font-semibold text-foreground">
           Open that email on this device next.
@@ -229,8 +234,39 @@ export function SignupForm({
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <button
             type="button"
+            disabled={resendState === "pending" || resendState === "sent"}
+            onClick={async () => {
+              setResendState("pending");
+              try {
+                const supabase = createBrowserSupabaseClient();
+                const callbackUrl = new URL(
+                  "/auth/callback",
+                  window.location.origin
+                );
+                if (next) callbackUrl.searchParams.set("next", next);
+                const { error: resendError } = await supabase.auth.resend({
+                  type: "signup",
+                  email: email.trim(),
+                  options: { emailRedirectTo: callbackUrl.toString() },
+                });
+                setResendState(resendError ? "error" : "sent");
+              } catch {
+                setResendState("error");
+              }
+            }}
+            className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+          >
+            {resendState === "pending"
+              ? "Sending…"
+              : resendState === "sent"
+                ? "Confirmation resent"
+                : "Resend confirmation"}
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setNeedsConfirm(false);
+              setResendState("idle");
               setPassword("");
               setConfirmPassword("");
             }}
@@ -245,6 +281,12 @@ export function SignupForm({
             Already confirmed? Sign in
           </Link>
         </div>
+        {resendState === "error" ? (
+          <p className="mt-3 text-sm font-medium text-brand-red" role="alert">
+            Could not resend. Wait a minute and try again, or sign in if the
+            account already exists.
+          </p>
+        ) : null}
       </div>
     );
   }

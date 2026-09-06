@@ -14,7 +14,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - Competitions inventory with host filter across district + schools
 - Family desk, alerts (in-app; email configured not volume-proven); linked parents get invite/change/result/announcement copies
 - Reports + CSV (school-hosted vs district-hosted split, type filter, participating-school origin); scoped Activity
-- Announcements including district → child schools
+- Announcements including district → chosen schools (or all connected), with staff vs student/parent targeting
 
 ## Need for a district that wants school tournaments (priority)
 
@@ -29,6 +29,9 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] `/districts` hero filled with setup steps; home organizer band pairs club + district without empty lanes — 2026-08-24
 - [x] Home organizer district card is a School/District peer to clubs (same chassis, glanceable heading, assisted-pilot lede, planned-next lower deck) — 2026-08-26
 - [x] District announcement fan-out to connected schools from the district overview — 2026-08-25
+- [x] District announcements default to staff-only and can target chosen schools plus staff vs students/parents — 2026-09-05
+- [x] People invitation status separates pending vs revoked (filters + color) — 2026-09-05
+- [x] Claim links refuse Accept when the signed-in mailbox is not the invited hint; signup can resend confirmation — 2026-09-05
 - [x] School-safe roster/manage composition: invite → group → competitions; progressive group edit; manage replies by status; group-first invites — 2026-08-27
 - [x] Home organizer board: district path is unmissable — massive sliding Club/District window switch (drag or click, midpoint live-switch) with a sheen prompt on the district half until tried — 2026-08-27
 - [x] District-hosted manage replies name each connected school (sorted by school) and surface unfinished organizer registration on going rows — 2026-08-29
@@ -88,7 +91,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Family RSVP + organizer registration | **works** | `/family` plus event-page Going without a roster invite (`0080`); organizer mark-complete still required |
 | School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
 | District-hosted reply follow-up by school | **works** | manage labels RSVP/attendance rows with connected-school name; sorts by school; going rows show organizer-registration status |
-| District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; action inserts per school + district copy (`0043` operator access) |
+| District announcement one-shot to all child schools | **works** | overview `AnnouncementForm` audience `connected_schools`; optional school picker; staff vs student/parent notify; action inserts per school + district copy (`0043` operator access) |
 | Email at school volume | **ops / not proven** | backlog; not a UI claim on `/districts` |
 | `/districts` pitch honesty | **works** | assisted pilot; book conversation; no partner names |
 
@@ -137,6 +140,9 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 
 16. **P0 · Parent could not tell if an unaffiliated student was going · M · shipped 2026-09-05**  
    Surface: event page Going/Can't go for linked children on published public listings; Family shows Going and unfinished organizer registration. Save stays a parent-account bookmark. Causey still does not import RSVPs from the organizer site (`0080`). Apply `0080` in each environment.
+
+17. **P1 · Maine district walkthrough (P3) · M · shipping this tick**  
+   Surface: People invitation status filters pending vs revoked with distinct colors; claim pages hide Accept on mailbox mismatch; signup resends confirmation and names school-inbox filtering; alerts mark read when opened; `/orgs` sections district/school/club; district announcements default staff-only and pick schools (plus staff vs students); native password reveal hidden; event difficulty can be cleared. Email delivery itself remains ops.
 
 ### Recommended next shippable win
 

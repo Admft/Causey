@@ -1,0 +1,262 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.9in]{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage{microtype}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue
+}
+
+\setstretch{1.08}
+\setlength{\parskip}{0.38em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{topsep=0.15em,itemsep=0.12em,leftmargin=1.2em}
+\setlist[enumerate]{topsep=0.15em,itemsep=0.15em,leftmargin=1.3em}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\hyphenation{in-vi-ta-tion}
+
+\title{Causey software engineering\\[0.3em]
+\large How to commit, push, and land work on \texttt{dev}}
+\author{Causey}
+\date{September 5, 2026}
+
+\begin{document}
+\maketitle
+\vspace{-1.2em}
+
+\noindent
+\textbf{For:} Divine \quad
+\textbf{Repo:} Causey\\
+\textbf{Integration branch:} \texttt{dev} \quad
+\textbf{Production:} \texttt{main} --- do not open PRs here unless asked
+
+\vspace{0.35em}
+\hrule
+\vspace{0.7em}
+
+Adam and Divine both work in this repo at the same time. Adam lands most product work and production fires directly on \texttt{dev}. Divine does not share \texttt{dev} as a working copy. Divine uses a short-lived branch, keeps it current with \texttt{dev}, and opens a pull request \textbf{into \texttt{dev}}. That is how both people ship in parallel without overwriting each other.
+
+\section{The rule}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}L{1.35in}L{4.85in}@{}}
+\toprule
+\textbf{Who} & \textbf{What they push} \\
+\midrule
+Adam & Commits and pushes to \texttt{dev} for fires and most product work. \\
+Divine & A feature branch such as \texttt{ui/claim-invite}. Pull request into \texttt{dev}. \\
+Nobody & Force-push \texttt{dev}. Delete \texttt{dev}. Push to \texttt{main}. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+If \texttt{dev} moved three times while Divine was coding, that is expected. Rebase the branch onto latest \texttt{origin/dev}, then open or update the PR. Never push an old local \texttt{dev} to GitHub.
+
+\subsection*{Never do these}
+
+\begin{itemize}
+  \item \texttt{git push} to \texttt{dev} or \texttt{main}.
+  \item \texttt{git push --force} or \texttt{--force-with-lease} on \texttt{dev} or \texttt{main}.
+  \item Commit on local \texttt{dev}. Create a branch first.
+  \item Work for days without updating from \texttt{origin/dev}.
+  \item Open a pull request against \texttt{main}.
+  \item Mix unrelated UI, copy, and backend changes in one PR. One job, one branch.
+\end{itemize}
+
+Force-with-lease is allowed \textbf{only on Divine's feature branch} after a rebase. It is never allowed on \texttt{dev}.
+
+\section{Every ticket, in order}
+
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=5pt,commandchars=\\\{\}]
+git fetch origin
+git checkout -b ui/short-name origin/dev
+# ... edit, then:
+git add -p
+git commit
+# before you ask for review, and again if the PR sits overnight:
+git fetch origin
+git rebase origin/dev
+git push -u origin HEAD
+# after a rebase of an already-pushed branch:
+git push --force-with-lease
+\end{Verbatim}
+
+Then open a GitHub pull request with \textbf{base \texttt{dev}} and \textbf{compare = your branch}. Do not merge it unless Adam says to.
+
+\section{Start a task}
+
+Always branch from the remote, not from a stale local \texttt{dev}. Name the branch so the job is obvious.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}L{1.2in}L{5.0in}@{}}
+\toprule
+\textbf{Prefix} & \textbf{Use for} \\
+\midrule
+\texttt{ui/\ldots} & Layout, copy, styling, empty states, forms, responsive work. \\
+\texttt{fix/\ldots} & A specific bug. Name the screen or symptom. \\
+\texttt{chore/\ldots} & Small cleanup that is not a user-facing change. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Examples: \texttt{ui/claim-invite-auth}, \texttt{fix/search-empty-state}, \texttt{ui/org-people-spacing}.
+
+Before you start, say which screen you are on. If Adam is already in those files, pick a different ticket. Same files at the same time is how merges get ugly even when git is used correctly.
+
+\section{Commits}
+
+Commit on your branch only. Keep commits small enough that a reviewer can see why each one exists. Messages in this repo are why-focused and imperative: what the change does for the user, not a file list.
+
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=5pt]
+# good
+Fix the claim page so a signed-out invitee can sign in and continue
+
+# bad
+update stuff / fix / ui changes / wip
+\end{Verbatim}
+
+Do not commit \texttt{.env}, credentials, or secrets. Do not add listings, fees, partner names, or counts that are not real product data.
+
+\section{Stay current with \texttt{dev}}
+
+Adam will push to \texttt{dev} while Divine is still working. Update before review, and again if the PR sits overnight.
+
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=5pt]
+git fetch origin
+git rebase origin/dev
+\end{Verbatim}
+
+If git stops on a conflict:
+
+\begin{enumerate}
+  \item Open the listed files. Keep Adam's firefixes unless your change is supposed to replace that exact line.
+  \item \texttt{git add} the resolved files, then \texttt{git rebase --continue}. Repeat until it finishes.
+\end{enumerate}
+
+To abort: \texttt{git rebase --abort}. The branch returns to how it was before the rebase.
+
+After a successful rebase of a branch that was already on GitHub, update it with force-with-lease (Divine's branch only):
+
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=5pt]
+git push --force-with-lease
+\end{Verbatim}
+
+If that is rejected, someone else pushed to the branch --- stop and ask. Do not switch to \texttt{--force}.
+
+If GitHub says the branch is out of date, that means \texttt{dev} moved. It does not mean Divine should push to \texttt{dev}. Rebase onto \texttt{origin/dev}, force-with-lease the feature branch, refresh the PR. If it is still blocked, paste the conflict files in Slack and wait. Do not resolve by taking ``theirs'' or ``ours'' blindly.
+
+\section{Pull request}
+
+First push of a new branch: \texttt{git push -u origin HEAD}. Later pushes with no rebase: \texttt{git push}.
+
+\begin{itemize}
+  \item \textbf{Base:} \texttt{dev} \quad \textbf{Compare:} your branch
+  \item \textbf{Title:} same style as a good commit message
+  \item \textbf{Body:} what changed, which screen to click, and any risk (shared components, CSS, auth)
+\end{itemize}
+
+Adam reviews and merges so a fire in the same files does not land on top of an unseen UI change. Prefer squash merge when it is offered. One PR becomes one commit on \texttt{dev}.
+
+After merge, delete the remote branch (GitHub can do this on merge). Do not keep using the old branch. Do not merge \texttt{dev} into a finished branch ``to be safe.'' Start the next task from latest \texttt{origin/dev}:
+
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=5pt]
+git fetch origin
+git checkout -b ui/next-task origin/dev
+\end{Verbatim}
+
+\subsection*{A good PR}
+
+\begin{itemize}
+  \item Branched from current \texttt{origin/dev}, then rebased onto \texttt{origin/dev} before review.
+  \item One user-visible job.
+  \item Reuses existing classes and tokens (\texttt{.field}, \texttt{.cta-enabled}, \texttt{.section-rule}, \texttt{.card-lift}). No one-off hex colors or \texttt{text-[13px]}.
+  \item Copy is specific and honest. No ``Beta,'' ``Live,'' or ``Coming soon'' badges. No fabricated listings, fees, or counts.
+  \item External links open in a new tab with an \texttt{aria-label}. CTAs name the next action (``Search tournaments''), not ``Learn more'' or ``Get started.''
+\end{itemize}
+
+\section{Lanes}
+
+Git cannot save anyone if Adam and Divine rewrite the same component on the same day.
+
+\begin{itemize}
+  \item Say what screen you are on (claim invite, org people, search empty state).
+  \item If Adam is already in those files, pick a different ticket.
+  \item Keep the PR to one screen or one bug. A three-day branch that touches \texttt{globals.css} plus five pages will collide.
+\end{itemize}
+
+Shared files that need extra care: \texttt{app/globals.css}, layout chrome, auth components, invitation and claim paths, and anything under \texttt{lib/} that multiple screens import. If you need a one-line token change in \texttt{globals.css}, make that PR tiny and land it first.
+
+\section{Emergency: committed on \texttt{dev} by mistake}
+
+Do not push. Do not reset other people's history. If the commit exists only on Divine's machine:
+
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=5pt]
+git fetch origin
+git branch ui/rescue-name
+git reset --hard origin/dev
+git checkout ui/rescue-name
+\end{Verbatim}
+
+The commit is now on \texttt{ui/rescue-name}. Rebase onto \texttt{origin/dev} if needed, push the branch, open a PR.
+
+If the commit was already pushed to \texttt{dev}, stop and tell Adam. Do not force-push to undo it.
+
+\clearpage
+\section{Desk card}
+
+Print this page. Tape it next to the laptop.
+
+\subsection*{Every ticket}
+
+\begin{Verbatim}[fontsize=\small,frame=single,framesep=5pt]
+git fetch origin
+git checkout -b ui/short-name origin/dev
+git add -p && git commit
+git fetch origin && git rebase origin/dev
+git push -u origin HEAD
+# PR base = dev. Do not merge unless Adam says to.
+# After rebase of a pushed branch:
+git push --force-with-lease
+\end{Verbatim}
+
+\subsection*{Commands}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.22}
+\begin{tabular}{@{}L{2.15in}L{4.05in}@{}}
+\toprule
+\textbf{You want to} & \textbf{Run} \\
+\midrule
+Start work & \texttt{git fetch origin} then \texttt{git checkout -b ui/name origin/dev} \\
+Save work & \texttt{git add -p} then \texttt{git commit} \\
+Catch up to Adam & \texttt{git fetch origin} then \texttt{git rebase origin/dev} \\
+Publish a new branch & \texttt{git push -u origin HEAD} \\
+Update the PR after rebase & \texttt{git push --force-with-lease} \\
+See whether you are behind & \texttt{git fetch origin} then \texttt{git status} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3em}
+\noindent
+\textbf{Never:} push \texttt{dev} or \texttt{main}; force-push \texttt{dev}; commit on local \texttt{dev}; open a PR to \texttt{main}; work days without rebasing onto \texttt{origin/dev}.
+
+\vspace{0.45em}
+\hrule
+\vspace{0.55em}
+
+\noindent
+The working agreement in one sentence: \textbf{Adam lands on \texttt{dev}; Divine lands through a short branch and a PR into \texttt{dev}; rebase often; never force-push \texttt{dev}; do not edit the same files on the same day without saying so.}
+
+\end{document}

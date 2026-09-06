@@ -83,6 +83,8 @@ describe("staff invitation onboarding", () => {
     expect(signupPage).toContain("getInvitationPreviewForClaimPath");
     expect(signupForm).toContain("invitation?.accountRole ?? initialRole");
     expect(signupForm).toContain('"Create staff account"');
+    expect(signupForm).toContain("Resend confirmation");
+    expect(signupForm).toContain('type: "signup"');
   });
 
   it("derives staff workspace navigation from scoped memberships", () => {

@@ -64,8 +64,11 @@ const AnnouncementSchema = z.object({
   orgSlug: z.string().min(1),
   title: z.string().trim().min(2).max(100),
   body: z.string().trim().min(2).max(2000),
-  /** District overview only: fan out to each connected school workspace. */
+  /** District overview only: fan out to connected school workspaces. */
   audience: z.enum(["org", "connected_schools"]).default("org"),
+  schoolIds: z.array(z.string().uuid()).max(200).optional(),
+  notifyStaff: z.boolean().default(true),
+  notifyStudents: z.boolean().default(true),
 });
 
 const NotificationPreferencesSchema = z.object({
@@ -760,6 +763,9 @@ export async function publishOrganizationAnnouncement(input: {
   title: string;
   body: string;
   audience?: "org" | "connected_schools";
+  schoolIds?: string[];
+  notifyStaff?: boolean;
+  notifyStudents?: boolean;
 }): Promise<ActionResult<{ schoolCount?: number }>> {
   const parsed = AnnouncementSchema.safeParse(input);
   if (!parsed.success) {
@@ -836,11 +842,35 @@ export async function publishOrganizationAnnouncement(input: {
         error: "Could not load connected schools. Try again.",
       };
     }
-    const childSchools = (schools ?? []) as PublishTarget[];
+    let childSchools = (schools ?? []) as PublishTarget[];
+    const requested = parsed.data.schoolIds ?? [];
+    if (requested.length) {
+      const allowed = new Set(childSchools.map((school) => school.id));
+      if (requested.some((id) => !allowed.has(id))) {
+        return {
+          ok: false,
+          error: "One of those schools is not connected to this district.",
+        };
+      }
+      childSchools = childSchools.filter((school) =>
+        requested.includes(school.id)
+      );
+    } else if (parsed.data.schoolIds) {
+      return {
+        ok: false,
+        error: "Choose at least one school.",
+      };
+    }
     if (!childSchools.length) {
       return {
         ok: false,
         error: "Add a school, then publish to connected schools.",
+      };
+    }
+    if (!parsed.data.notifyStaff && !parsed.data.notifyStudents) {
+      return {
+        ok: false,
+        error: "Choose school staff, students, or both.",
       };
     }
 
@@ -850,7 +880,7 @@ export async function publishOrganizationAnnouncement(input: {
         return {
           ok: false,
           error:
-            "You don’t have permission to publish announcements for every connected school.",
+            "You don’t have permission to publish announcements for those schools.",
         };
       }
     }
@@ -913,7 +943,7 @@ export async function publishOrganizationAnnouncement(input: {
   for (const row of published) {
     const { data: members, error: membersError } = await supabase
       .from("org_memberships")
-      .select("profile_id")
+      .select("profile_id, role")
       .eq("org_id", row.orgId)
       .eq("status", "active");
     if (membersError) {
@@ -927,9 +957,15 @@ export async function publishOrganizationAnnouncement(input: {
           "The announcement was published, but recipients could not be loaded for in-app updates.",
       };
     }
+    const isSchoolTarget = row.orgId !== parsed.data.orgId;
     for (const member of members ?? []) {
       const recipientId = member.profile_id as string;
       if (!recipientId || recipientId === profile.id) continue;
+      const isStudent = member.role === "student";
+      if (isSchoolTarget) {
+        if (isStudent && !parsed.data.notifyStudents) continue;
+        if (!isStudent && !parsed.data.notifyStaff) continue;
+      }
       if (seenRecipients.has(recipientId)) continue;
       seenRecipients.add(recipientId);
       notificationInputs.push({
@@ -944,8 +980,12 @@ export async function publishOrganizationAnnouncement(input: {
       });
     }
     const studentIds = (members ?? [])
-      .map((member) => member.profile_id as string)
-      .filter(Boolean);
+      .filter((member) => {
+        if (member.role !== "student") return false;
+        if (isSchoolTarget && !parsed.data.notifyStudents) return false;
+        return Boolean(member.profile_id);
+      })
+      .map((member) => member.profile_id as string);
     const guardians = await getActiveGuardiansForProfiles(studentIds);
     if (guardians.error) {
       for (const item of published) {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   bulkInviteOrganizationMembers,
@@ -25,16 +25,46 @@ const INVITABLE_ROLES: OrgMemberRole[] = [
   "district_admin",
 ];
 
-function invitationStatusLabel(invitation: OrgInvitationRow): string {
+type InvitationBucket = "pending" | "expired" | "revoked" | "claimed";
+type InvitationFilter = InvitationBucket | "all";
+
+const INVITATION_FILTERS: { id: InvitationFilter; label: string }[] = [
+  { id: "pending", label: "Pending" },
+  { id: "revoked", label: "Revoked" },
+  { id: "expired", label: "Expired" },
+  { id: "claimed", label: "Claimed" },
+  { id: "all", label: "All" },
+];
+
+function invitationBucket(invitation: OrgInvitationRow): InvitationBucket {
+  if (invitation.status === "claimed") return "claimed";
+  if (invitation.status === "revoked") return "revoked";
   if (
-    invitation.status === "pending" &&
-    new Date(invitation.expires_at) <= new Date()
+    invitation.status === "expired" ||
+    (invitation.status === "pending" &&
+      new Date(invitation.expires_at) <= new Date())
   ) {
-    return "Expired";
+    return "expired";
   }
-  return (
-    invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)
-  );
+  return "pending";
+}
+
+function invitationStatusLabel(invitation: OrgInvitationRow): string {
+  const bucket = invitationBucket(invitation);
+  return bucket.charAt(0).toUpperCase() + bucket.slice(1);
+}
+
+function invitationStatusClass(bucket: InvitationBucket): string {
+  if (bucket === "pending") {
+    return "rounded-full bg-accent-soft px-2 py-0.5 text-2xs font-semibold text-brand-red";
+  }
+  if (bucket === "revoked") {
+    return "rounded-full bg-surface-soft px-2 py-0.5 text-2xs font-semibold text-muted";
+  }
+  if (bucket === "expired") {
+    return "rounded-full bg-org-gold-soft px-2 py-0.5 text-2xs font-semibold text-org-gold-strong";
+  }
+  return "rounded-full bg-surface-soft px-2 py-0.5 text-2xs font-semibold text-ok";
 }
 
 function canReissueInvitation(invitation: OrgInvitationRow): boolean {
@@ -79,6 +109,11 @@ export function OrganizationPeopleManager({
   const [filename, setFilename] = useState("");
   const [pending, setPending] = useState<"single" | "bulk" | string | null>(
     null
+  );
+  const [inviteFilter, setInviteFilter] = useState<InvitationFilter>(() =>
+    invitations.some((invitation) => invitationBucket(invitation) === "pending")
+      ? "pending"
+      : "all"
   );
   const [message, setMessage] = useState<string | null>(null);
   const [claimPath, setClaimPath] = useState<string | null>(null);
@@ -260,6 +295,36 @@ export function OrganizationPeopleManager({
   const availableRoles = INVITABLE_ROLES.filter((candidate) =>
     invitationRoleFitsOrganization(orgType, candidate)
   );
+  const inviteCounts = useMemo(() => {
+    const counts: Record<InvitationBucket, number> = {
+      pending: 0,
+      revoked: 0,
+      expired: 0,
+      claimed: 0,
+    };
+    for (const invitation of invitations) {
+      counts[invitationBucket(invitation)] += 1;
+    }
+    return counts;
+  }, [invitations]);
+  const groupedInvitations = useMemo(() => {
+    const groups: { bucket: InvitationBucket; label: string; rows: OrgInvitationRow[] }[] =
+      [
+        { bucket: "pending", label: "Pending", rows: [] },
+        { bucket: "expired", label: "Expired", rows: [] },
+        { bucket: "revoked", label: "Revoked", rows: [] },
+        { bucket: "claimed", label: "Claimed", rows: [] },
+      ];
+    for (const invitation of invitations) {
+      const bucket = invitationBucket(invitation);
+      const group = groups.find((item) => item.bucket === bucket);
+      group?.rows.push(invitation);
+    }
+    if (inviteFilter === "all") {
+      return groups.filter((group) => group.rows.length > 0);
+    }
+    return groups.filter((group) => group.bucket === inviteFilter);
+  }, [invitations, inviteFilter]);
 
   return (
     <div className="flex flex-col gap-10">
@@ -340,10 +405,11 @@ export function OrganizationPeopleManager({
           {claimPath ? (
             <div className="mt-3">
               <p className="text-sm text-muted-strong">
-                Causey queued the invitation email. Keep this claim link
-                {activationCode ? " and activation code" : ""} as a fallback —
-                they expire, and the person sets their own password. Staff can
-                type the code at /claim.
+                Causey queued the invitation email. School inboxes often filter
+                it — copy this claim link
+                {activationCode ? " and activation code" : ""} if the message
+                does not arrive. They expire, and the person sets their own
+                password. Staff can type the code at /claim.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <code className="max-w-full break-all rounded-md border border-line bg-white px-2 py-1 text-xs text-foreground">
@@ -477,51 +543,113 @@ export function OrganizationPeopleManager({
             )}
           </p>
         ) : (
-          <ul className="mt-4 divide-y divide-line border-y border-line">
-            {invitations.map((invitation) => {
-              const statusLabel = invitationStatusLabel(invitation);
-              const reissuable = canReissueInvitation(invitation);
-              return (
-                <li
-                  key={invitation.id}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {invitation.display_name || invitation.email}
-                    </p>
-                    <p className="truncate text-xs text-muted">
-                      {invitation.display_name ? `${invitation.email} · ` : ""}
-                      {ORG_ROLE_LABELS[invitation.role]}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-xs font-semibold text-muted-strong">
-                      {statusLabel}
-                    </span>
-                    {reissuable ? (
-                      <button
-                        type="button"
-                        disabled={pending !== null}
-                        onClick={() => reissue(invitation)}
-                        className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
-                      >
-                        {pending === invitation.id
-                          ? "Reissuing…"
-                          : "Reissue & copy link"}
-                      </button>
+          <>
+            <div
+              className="mt-4 flex flex-wrap gap-2"
+              role="group"
+              aria-label="Filter invitations by status"
+            >
+              {INVITATION_FILTERS.map((filter) => {
+                const count =
+                  filter.id === "all"
+                    ? invitations.length
+                    : inviteCounts[filter.id];
+                const selected = inviteFilter === filter.id;
+                return (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setInviteFilter(filter.id)}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                      selected
+                        ? "border-brand-red/40 bg-accent-soft text-brand-red"
+                        : "border-line bg-white text-muted-strong hover:border-brand-red/30 hover:text-brand-red"
+                    }`}
+                  >
+                    {filter.label}
+                    <span className="ml-1 tabular-nums text-muted">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {groupedInvitations.every((group) => !group.rows.length) ? (
+              <p className="mt-3 text-sm text-muted">
+                No {inviteFilter === "all" ? "" : `${inviteFilter} `}
+                invitations in this list. Switch filters to find pending or
+                revoked rows.
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-6">
+                {groupedInvitations.map((group) => (
+                  <div key={group.bucket}>
+                    {inviteFilter === "all" ? (
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-strong">
+                        {group.label}
+                        <span className="ml-1 tabular-nums font-medium text-muted">
+                          {group.rows.length}
+                        </span>
+                      </h3>
                     ) : null}
+                    <ul
+                      className={
+                        inviteFilter === "all"
+                          ? "mt-2 divide-y divide-line border-y border-line"
+                          : "divide-y divide-line border-y border-line"
+                      }
+                    >
+                      {group.rows.map((invitation) => {
+                        const bucket = invitationBucket(invitation);
+                        const reissuable = canReissueInvitation(invitation);
+                        return (
+                          <li
+                            key={invitation.id}
+                            className="flex flex-wrap items-center justify-between gap-3 py-3"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-foreground">
+                                {invitation.display_name || invitation.email}
+                              </p>
+                              <p className="truncate text-xs text-muted">
+                                {invitation.display_name
+                                  ? `${invitation.email} · `
+                                  : ""}
+                                {ORG_ROLE_LABELS[invitation.role]}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                              <span className={invitationStatusClass(bucket)}>
+                                {invitationStatusLabel(invitation)}
+                              </span>
+                              {reissuable ? (
+                                <button
+                                  type="button"
+                                  disabled={pending !== null}
+                                  onClick={() => reissue(invitation)}
+                                  className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                                >
+                                  {pending === invitation.id
+                                    ? "Reissuing…"
+                                    : "Reissue & copy link"}
+                                </button>
+                              ) : null}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
-                </li>
-              );
-            })}
-          </ul>
+                ))}
+              </div>
+            )}
+          </>
         )}
         {invitations.some(canReissueInvitation) ? (
           <p className="mt-3 text-xs text-muted">
-            Reissue creates a fresh claim link and activation code and revokes
-            the previous pending one. Causey queues a new email; copy the link
-            or code as a delivery fallback.
+            Pending uses the red mark; revoked is gray. Reissue creates a
+            fresh claim link and activation code and revokes the previous
+            pending one. Causey queues a new email; copy the link or code if
+            school mail does not arrive.
           </p>
         ) : null}
       </section>

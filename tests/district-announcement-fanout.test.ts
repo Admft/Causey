@@ -14,18 +14,29 @@ describe("district announcement fan-out to connected schools", () => {
 
     expect(page).toContain("getChildSchoolsForDistrict");
     expect(page).toContain("District announcement");
-    expect(page).toContain("connectedSchoolCount={connectedSchools.length}");
+    expect(page).toContain("connectedSchools={connectedSchools.map");
     expect(form).toContain("Every connected school");
+    expect(form).toContain("Choose schools");
     expect(form).toContain("District staff only");
-    expect(form).toContain('audience: isDistrict ? audience : "org"');
+    expect(form).toContain("School staff");
+    expect(form).toContain("Students and linked parents");
+    expect(form).toContain(
+      'audience: isDistrict && fanOut ? "connected_schools" : "org"'
+    );
+    expect(form).toContain("schoolIds: schoolIdsForSubmit");
+    expect(form).toContain('useState<AudienceMode>("org")');
     expect(form).toContain("Publish to connected schools");
     expect(actions).toContain('audience: z.enum(["org", "connected_schools"])');
+    expect(actions).toContain("schoolIds");
+    expect(actions).toContain("notifyStaff");
+    expect(actions).toContain("notifyStudents");
     expect(actions).toContain('host.type !== "district"');
     expect(actions).toContain(
       "Add a school, then publish to connected schools."
     );
     expect(actions).toContain('.eq("parent_org_id", parsed.data.orgId)');
     expect(actions).toContain("targets.push(...childSchools)");
+    expect(actions).toContain("Choose at least one school.");
   });
 
   it("keeps school and club announcement copy coach-scoped", () => {
