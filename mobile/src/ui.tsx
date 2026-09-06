@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -107,6 +107,66 @@ export function Field({
   );
 }
 
+/** Closed row that expands into the option list — no native picker module. */
+export function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (next: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected =
+    options.find((option) => option.value === value) ?? options[0];
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <Pressable
+        onPress={() => setOpen((next) => !next)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={`${label}: ${selected?.label ?? ""}`}
+        style={({ pressed }) => [styles.field, pressed && styles.pressed]}
+      >
+        <Text style={styles.selectValue}>{selected?.label}</Text>
+      </Pressable>
+      {open ? (
+        <View style={styles.selectMenu} accessibilityRole="radiogroup">
+          {options.map((option) => {
+            const chosen = option.value === value;
+            return (
+              <Pressable
+                key={option.value || "any"}
+                onPress={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: chosen }}
+                accessibilityLabel={option.label}
+                style={[styles.selectOption, chosen && styles.choiceSelected]}
+              >
+                <Text
+                  style={[
+                    styles.selectOptionLabel,
+                    chosen && styles.choiceLabelSelected,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 export function PrimaryButton({
   label,
   onPress,
@@ -203,7 +263,7 @@ export function ChipRow<T extends string>({
   onChange,
 }: {
   label: string;
-  options: { value: T; label: string }[];
+  options: readonly { value: T; label: string }[];
   value: T;
   onChange: (next: T) => void;
 }) {
@@ -423,4 +483,20 @@ const styles = StyleSheet.create({
   choiceLabelSelected: { color: colors.brandRed },
   choiceHint: { marginTop: 2, fontSize: 13, color: colors.muted },
   choiceHintSelected: { color: colors.mutedStrong },
+  selectValue: { fontSize: 16, fontWeight: "500", color: colors.foreground },
+  selectMenu: {
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  selectOption: {
+    minHeight: TAP_TARGET,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  selectOptionLabel: { fontSize: 16, fontWeight: "500", color: colors.foreground },
 });
