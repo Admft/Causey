@@ -483,6 +483,8 @@ export function HomeDistrictPitch() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     reducedRef.current = reduce;
     if (reduce) {
+      // prefers-reduced-motion is only known on the client after mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActive(CLUB_STEPS.length - 1);
       return;
     }

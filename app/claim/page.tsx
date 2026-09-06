@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ClaimInvitationAuth } from "@/components/ClaimInvitationAuth";
 import { ClaimCodeForm } from "@/components/ClaimCodeForm";
 import { ClaimCodeInvitationButton } from "@/components/ClaimCodeInvitationButton";
