@@ -1,4 +1,4 @@
-import type { EntrantRowData } from "./EntrantRow";
+import type { EntrantRowData } from "./entrant-row-data";
 
 export type EntrantTap = "going" | "not_going" | "registered" | "clear";
 

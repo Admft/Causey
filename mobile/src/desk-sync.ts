@@ -1,5 +1,5 @@
 import type { EntrantTap } from "./entrant-decision";
-import type { EntrantRowData } from "./EntrantRow";
+import type { EntrantRowData } from "./entrant-row-data";
 
 /** A Going / Can't go / Clear on the event screen must reach Family and Plan. */
 export type DeskRsvpChange = {

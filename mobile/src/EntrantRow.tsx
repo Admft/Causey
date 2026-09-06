@@ -1,26 +1,12 @@
 import { useRouter } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { formatDateRange } from "./api";
+import type { EntrantRowData } from "./entrant-row-data";
 import { openExternalUrl, safeRegUrl } from "./open-url";
 import { colors } from "./theme";
 import { Meta } from "./ui";
 
-export type EntrantRowData = {
-  competition_id: string;
-  profile_id: string;
-  status: string;
-  registration_status?: string | null;
-  needs_organizer_registration: boolean;
-  competition: {
-    slug: string;
-    name: string;
-    city: string | null;
-    state: string | null;
-    start_date: string;
-    end_date: string | null;
-    reg_url: string | null;
-  } | null;
-};
+export type { EntrantRowData };
 
 function rsvpMeta(row: EntrantRowData): string {
   if (row.status === "going") return " · Going";
