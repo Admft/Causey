@@ -189,6 +189,81 @@ export function EventGoingCard({
     }
   }
 
+  async function leave(person: EventRegistrationPerson) {
+    if (!session?.access_token) return;
+    const previousReg = localStatus[person.profileId] ?? person.status;
+    const rsvpPerson = (attendance?.rsvp ?? []).find(
+      (row) => row.profileId === person.profileId
+    );
+    const previousRsvp = rsvpPerson
+      ? (localRsvp[person.profileId] ?? rsvpPerson.status)
+      : undefined;
+    setBusyKey(`${person.profileId}:leave`);
+    setError(null);
+    setLocalStatus((current) => ({
+      ...current,
+      [person.profileId]: "not_registered",
+    }));
+    setLocalRsvp((current) => ({
+      ...current,
+      [person.profileId]: "not_going",
+    }));
+    try {
+      await causeyFetch("/api/mobile/registration", {
+        token: session.access_token,
+        method: "POST",
+        body: {
+          competitionId,
+          profileId: person.profileId,
+          status: "not_registered",
+        },
+      });
+      await causeyFetch("/api/mobile/rsvp", {
+        token: session.access_token,
+        method: "POST",
+        body: {
+          competitionId,
+          profileId: person.profileId,
+          status: "not_going",
+          eventSlug,
+        },
+      });
+      feedback("success");
+      await load();
+    } catch (err) {
+      setLocalStatus((current) => {
+        const next = { ...current };
+        if (
+          previousReg === "opened" ||
+          previousReg === "registered" ||
+          previousReg === "not_registered"
+        ) {
+          next[person.profileId] = previousReg;
+        } else {
+          delete next[person.profileId];
+        }
+        return next;
+      });
+      setLocalRsvp((current) => {
+        const next = { ...current };
+        if (previousRsvp === "going" || previousRsvp === "not_going") {
+          next[person.profileId] = previousRsvp;
+        } else {
+          delete next[person.profileId];
+        }
+        return next;
+      });
+      feedback("error");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not update this event. Check your connection and try again."
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
   async function setRegistration(
     person: EventRegistrationPerson,
     status: "opened" | "registered" | "not_registered"
@@ -440,7 +515,10 @@ export function EventGoingCard({
           </Meta>
           {resolvedPeople.map((person) => {
             const status = person.status;
-            const busy = busyKey === `${person.profileId}:reg`;
+            const busy =
+              busyKey === `${person.profileId}:reg` ||
+              busyKey === `${person.profileId}:leave`;
+            const leaving = busyKey === `${person.profileId}:leave`;
             return (
               <View key={person.profileId} style={styles.block}>
                 {registrationPeople.length > 1 || person.label !== "You" ? (
@@ -449,19 +527,34 @@ export function EventGoingCard({
                 {status === "registered" ? (
                   <>
                     <Meta>
-                      Marked complete{person.label !== "You" ? ` for ${person.label}` : ""}.
-                      The organizer stays the source of truth for entry.
+                      Marked complete
+                      {person.label !== "You" ? ` for ${person.label}` : ""}.
+                      The organizer stays the source of truth for entry. Causey
+                      cannot cancel organizer entry or issue a refund — open{" "}
+                      {host} if you already paid and need to withdraw.
                     </Meta>
-                    <LinkButton
-                      label={`Open ${host} again`}
-                      onPress={() => void openOrganizerSite(person)}
+                    <SecondaryButton
+                      label={
+                        leaving
+                          ? "Saving…"
+                          : person.label !== "You"
+                            ? `Can't go for ${person.label}`
+                            : "Can't go"
+                      }
+                      onPress={() => void leave(person)}
+                      disabled={busyKey !== null}
                     />
                     <LinkButton
-                      label="Registration is still needed"
+                      label="Undo complete mark"
                       onPress={() =>
                         void setRegistration(person, "not_registered")
                       }
                     />
+                    <LinkButton
+                      label={`Open ${host} again`}
+                      onPress={() => void openOrganizerSite(person)}
+                    />
+                    {error ? <ErrorText>{error}</ErrorText> : null}
                   </>
                 ) : status === "opened" || (awaitingReturn && !allRegistered) ? (
                   <>

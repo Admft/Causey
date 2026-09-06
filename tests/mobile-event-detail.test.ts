@@ -42,6 +42,10 @@ describe("phone tournament details", () => {
     expect(going).toContain("Did you finish organizer registration?");
     expect(going).toContain("Yes, registration is complete");
     expect(going).toContain("Still need to register");
+    expect(going).toContain("Can't go");
+    expect(going).toContain("Undo complete mark");
+    expect(going).toContain("leave(person)");
+    expect(going).not.toContain("Registration is still needed");
     expect(going).toContain("Open organizer registration");
     expect(going).toContain("/api/mobile/event-attendance?competitionId=");
     expect(going).toContain("/api/mobile/rsvp");

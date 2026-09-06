@@ -28,6 +28,22 @@ describe("workflow audit follow-ups", () => {
     expect(family).toContain("register?for=");
     expect(panel).toContain("profileId");
     expect(panel).toContain("Causey RSVP is not");
+    expect(panel).toContain("Can't go");
+    expect(panel).toContain("Undo complete mark");
+    expect(panel).toContain("leaveOrganizerTrackedEvent");
+    expect(panel).not.toContain("Registration is still needed");
+    const eventPage = readFileSync(
+      resolve(process.cwd(), "app/event/[slug]/page.tsx"),
+      "utf8"
+    );
+    expect(eventPage).toContain("allDeclined");
+    expect(eventPage).toContain("You’re not going");
+    expect(
+      readFileSync(
+        resolve(process.cwd(), "lib/actions/external-registrations.ts"),
+        "utf8"
+      )
+    ).toContain("leaveOrganizerTrackedEvent");
   });
 
   it("uses Plan and Family naming consistently", () => {

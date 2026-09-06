@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  leaveOrganizerTrackedEvent,
   setExternalRegistrationStatus,
   type ExternalRegistrationStatus,
 } from "@/lib/actions/external-registrations";
+import { attemptAction } from "@/lib/attempt-action";
 
 type ExternalRegistrationPanelProps = {
   competitionId: string;
@@ -20,6 +22,11 @@ type ExternalRegistrationPanelProps = {
   profileId?: string;
   /** Shown when acting for someone other than "you". */
   forLabel?: string;
+  /**
+   * Profile to mark not-going when they leave after a complete mark.
+   * Defaults to the signed-in user when omitted.
+   */
+  rsvpProfileId?: string;
 };
 
 export function ExternalRegistrationPanel(
@@ -44,6 +51,7 @@ function ExternalRegistrationPanelState({
   profileId,
   /** Shown when acting for someone other than "you". */
   forLabel,
+  rsvpProfileId,
 }: ExternalRegistrationPanelProps) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
@@ -62,23 +70,43 @@ function ExternalRegistrationPanelState({
     setError(null);
     setStatus(next);
     try {
-      const result = await setExternalRegistrationStatus({
-        competitionId,
-        eventSlug,
-        status: next,
-        profileId,
-      });
+      const result = await attemptAction(() =>
+        setExternalRegistrationStatus({
+          competitionId,
+          eventSlug,
+          status: next,
+          profileId,
+        })
+      );
       if (!result.ok) {
         setStatus(previous);
         setError(result.error);
         return;
       }
       router.refresh();
-    } catch {
-      setStatus(previous);
-      setError(
-        "Could not update this registration. Check your connection and try again."
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function leave() {
+    if (pending) return;
+    setPending(true);
+    setError(null);
+    try {
+      const result = await attemptAction(() =>
+        leaveOrganizerTrackedEvent({
+          competitionId,
+          eventSlug,
+          profileId: rsvpProfileId ?? profileId,
+        })
       );
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setStatus("not_registered");
+      router.refresh();
     } finally {
       setPending(false);
     }
@@ -106,16 +134,38 @@ function ExternalRegistrationPanelState({
               You marked this complete, so Causey will keep the competition on
               the Plan{whose ? ` ${whose}` : ""}. Causey RSVP is not entry — the
               organizer remains the source of truth for entry and payment.
+              Causey cannot cancel organizer entry or issue a refund; open{" "}
+              {registrationHost} if you already paid and need to withdraw.
             </p>
           </>
         ) : (
           <p className="max-w-prose text-sm text-muted-strong">
             Marked complete{forLabel ? ` for ${forLabel}` : ""} — Causey keeps
             this on the Plan. The organizer stays the source of truth for entry
-            and payment.
+            and payment. Causey cannot cancel organizer entry or issue a
+            refund; open {registrationHost} if you already paid and need to
+            withdraw.
           </p>
         )}
-        <div className={`${embedded ? "mt-4" : "mt-3"} flex flex-wrap items-center gap-4`}>
+        <div className={`${embedded ? "mt-4" : "mt-3"} flex flex-wrap items-center gap-3`}>
+          {signedIn ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => void leave()}
+              className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground disabled:opacity-60"
+            >
+              {pending ? "Saving…" : forLabel ? `Can't go for ${forLabel}` : "Can't go"}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => respond("not_registered")}
+            className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
+          >
+            {pending ? "Saving…" : "Undo complete mark"}
+          </button>
           <a
             href={registrationHref}
             target="_blank"
@@ -127,14 +177,6 @@ function ExternalRegistrationPanelState({
           >
             Open {registrationHost} <span aria-hidden="true">↗</span>
           </a>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => respond("not_registered")}
-            className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
-          >
-            {pending ? "Saving…" : "Registration is still needed"}
-          </button>
         </div>
         {errorLine}
       </>

@@ -128,6 +128,7 @@ describe("a failed save says so", () => {
     "components/EntrantManager.tsx",
     "components/GroupManager.tsx",
     "components/NotificationInboxActions.tsx",
+    "components/ExternalRegistrationPanel.tsx",
   ])("%s cannot swallow a dropped connection", (path) => {
     const source = read(path);
     expect(source).toContain("attemptAction");
