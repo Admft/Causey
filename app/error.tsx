@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function ErrorPage({
   error,
   reset,
@@ -14,8 +16,11 @@ export default function ErrorPage({
       </h1>
       <p className="mt-3 max-w-prose text-md text-muted">
         The page hit an error while loading{error.digest ? ` (reference ${error.digest})` : ""}.
-        Retry once. If it keeps happening, share the reference above with the
-        person who manages your Causey access.
+        Retry once. If it keeps happening,{" "}
+        <Link href="/support" className="font-semibold text-brand-red hover:underline">
+          report a problem
+        </Link>
+        {error.digest ? " and include the reference above" : ""}.
       </p>
       <button type="button" onClick={reset} className="cta-enabled mt-6">
         Retry this page

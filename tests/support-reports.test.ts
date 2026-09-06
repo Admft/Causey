@@ -65,13 +65,26 @@ describe("support problem reports", () => {
     expect(form).toContain("Send problem report");
     expect(actions).toContain('"support"');
     expect(actions).toContain("submitSupportReport");
-    expect(layout).toContain("Report a problem");
     expect(layout).toContain("report a problem");
-    expect(read("components/AuthNav.tsx")).toContain("Report a problem");
+    expect(layout).toContain("Report a problem");
+    expect(layout).toContain('href="/support"');
+    expect(layout).not.toMatch(/href="\/support"[\s\S]*?>\s*Support\s*</);
+    expect(read("components/AuthNav.tsx")).not.toContain("/support");
+    expect(read("app/account/page.tsx")).toContain('href="/support"');
+    expect(read("components/LoginForm.tsx")).toContain('href="/support"');
+    expect(read("app/error.tsx")).toContain('href="/support"');
     expect(read("mobile/app/(tabs)/me.tsx")).toContain("Report a problem");
     expect(layout).not.toContain("SupportReportForm");
     expect(layout).not.toContain("fixed bottom-4");
     expect(layout).not.toContain("Intercom");
+  });
+
+  it("keeps sign-in help as separate jobs, not a middot row", () => {
+    const login = read("components/LoginForm.tsx");
+    expect(login).toContain('href="/forgot-password"');
+    expect(login).toContain("Create an account");
+    expect(login).toContain("Report a problem");
+    expect(login).not.toContain('{" · "}');
   });
 
   it("rate-limits support through the expanded consume_rate_limit allowlist", () => {

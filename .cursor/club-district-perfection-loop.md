@@ -30,10 +30,13 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Support problem reports: /support form + /admin/support replies — 2026-09-06
+- Phone event details: cover, US Chess rating, Going RSVP, organizer-registration confirm, Expo Go calendar fallback — 2026-09-06
 
 ## Last tick
 
+- 2026-09-06 — Report a problem is a labeled footer link on every website page; the header stays Sign in / Account.
+- 2026-09-06 — Report a problem left the header; it sits with Support in the footer, Account data, sign-in, the error page, and phone Me trust links.
+- 2026-09-06 — Phone tournament details match the website job: show the listing photo and US Chess rating, ask Going / Can't go, and after organizer registration ask whether they finished and confirm they are going. Add to calendar falls back to an .ics / Calendar template in Expo Go.
 - 2026-09-06 — Support is a problem-report form (optional screenshot) that emails the founding inbox and lets platform admins reply into Alerts plus email. Not a corner chatbot.
 - 2026-09-06 — Phone Search is a simple name + zip (+ distance) form. Website filters (when, featured, club/school going, source, grade, rating, fee, state, dates, type facets) sit behind Advanced search. Sort stays with the listings. The chess nationals pin is still under Search. `/api/competitions` now uses a phone Bearer token so club-going can actually match.
 - 2026-09-05 — District walkthrough (P3 PDF): People invitation status filters pending vs revoked with distinct colors; claim links refuse Accept when the signed-in mailbox is not the invited hint; signup can resend confirmation; alerts mark read when opened; `/orgs` splits district/school/club; district announcements default to staff-only and can pick schools plus staff vs students/parents; native password reveal hidden; event difficulty ratings can be cleared.

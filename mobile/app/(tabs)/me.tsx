@@ -25,6 +25,10 @@ function TrustLinks() {
   return (
     <View style={styles.links}>
       <LinkButton
+        label="Report a problem"
+        onPress={() => Linking.openURL(`${siteUrl}/support`)}
+      />
+      <LinkButton
         label="Privacy and student data"
         onPress={() => Linking.openURL(`${siteUrl}/privacy`)}
       />
@@ -62,10 +66,6 @@ export default function MeScreen() {
           label="Create a student account (13+) on the website"
           onPress={() => Linking.openURL(`${siteUrl}/signup?role=student`)}
         />
-        <LinkButton
-          label="Report a problem"
-          onPress={() => Linking.openURL(`${siteUrl}/support`)}
-        />
         <TrustLinks />
       </Screen>
     );
@@ -93,10 +93,6 @@ export default function MeScreen() {
       <LinkButton
         label="Saved listings"
         onPress={() => router.push("/saved")}
-      />
-      <LinkButton
-        label="Report a problem"
-        onPress={() => Linking.openURL(`${siteUrl}/support`)}
       />
 
       <TrustLinks />

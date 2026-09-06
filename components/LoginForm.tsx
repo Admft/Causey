@@ -99,13 +99,21 @@ export function LoginForm({
           autoComplete="email"
         />
       </label>
-      <PasswordField
-        label="Password"
-        required
-        value={password}
-        onChange={setPassword}
-        autoComplete="current-password"
-      />
+      <div className="flex flex-col gap-1">
+        <PasswordField
+          label="Password"
+          required
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+        />
+        <Link
+          href="/forgot-password"
+          className="self-start text-sm font-medium text-muted-strong hover:text-foreground"
+        >
+          Forgot password?
+        </Link>
+      </div>
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">
@@ -117,22 +125,25 @@ export function LoginForm({
         {pending ? "Signing in…" : "Sign in"}
       </button>
 
-      <p className="text-sm text-muted">
-        New here?{" "}
-        <Link
-          href={signupHref}
-          className="font-semibold text-brand-red hover:underline"
-        >
-          {createAccountLabel}
-        </Link>
-        {" · "}
-        <Link
-          href="/forgot-password"
-          className="font-medium text-muted-strong hover:text-foreground"
-        >
-          Forgot password?
-        </Link>
-      </p>
+      <div>
+        <p className="text-sm text-muted">
+          New here?{" "}
+          <Link
+            href={signupHref}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            {createAccountLabel}
+          </Link>
+        </p>
+        <p className="section-rule mt-4 pt-4 text-sm">
+          <Link
+            href="/support"
+            className="font-medium text-muted-strong hover:text-foreground"
+          >
+            Report a problem
+          </Link>
+        </p>
+      </div>
     </form>
   );
 }
