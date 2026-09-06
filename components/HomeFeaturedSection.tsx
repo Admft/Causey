@@ -27,7 +27,9 @@ export function HomeFeaturedSection({
       aria-labelledby="featured-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        {partnerPromo ? <PartnerPromoSlot promo={partnerPromo} /> : null}
+        {partnerPromo ? (
+          <PartnerPromoSlot promo={partnerPromo} layout="featured" />
+        ) : null}
         <div className="rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
             <div className="min-w-0 max-w-xl">

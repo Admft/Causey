@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  CHESS_PATHWAY_STEPS,
   defaultPathwaySource,
   partnerPromoForCategory,
   PARTNER_PROMOS,
@@ -38,18 +39,53 @@ describe("chess nationals placement", () => {
     const standing = read("lib/event-standing.ts");
 
     expect(searchClient).toContain("partnerPromoForCategory(category)");
-    expect(searchClient).toContain("PartnerPromoSlot");
-    expect(read("components/HomeFeaturedSection.tsx")).toContain("PartnerPromoSlot");
+    expect(searchClient).toContain('layout="search"');
+    expect(read("components/HomeFeaturedSection.tsx")).toContain(
+      'layout="featured"'
+    );
     expect(slot).toContain('href={promo.href}');
     expect(slot).toContain("{promo.headline}");
+    expect(slot).toContain("partner-promo--featured");
+    expect(slot).toContain("partner-promo--search");
+    expect(slot).toContain("CHESS_PATHWAY_STEPS");
+    expect(slot).toContain("partner-promo-face");
+    expect(slot).toContain("partner-promo-path-list");
+    expect(slot).toContain("partner-promo-path-node");
+    expect(slot).toContain("partner-promo-climb");
+    expect(slot).not.toContain("{promo.dek}");
+    expect(slot).not.toContain("partner-promo-dek");
+    expect(slot).not.toContain("partner-promo-sheen");
+    expect(slot).not.toContain("data-peak");
+    expect(slot).not.toContain("partner-promo-head-cluster");
+    expect(read("app/globals.css")).not.toContain("partner-promo-sheen");
+    expect(read("app/globals.css")).not.toContain("@keyframes partner-promo-sheen");
     expect(search).not.toContain("partner-promos");
     expect(search).not.toContain("PARTNER_PROMOS");
     expect(standing).not.toContain("partner-promos");
     expect(slot).not.toContain("isFeaturedStanding");
     expect(slot).not.toContain("Official US Chess");
     expect(slot).not.toContain("endorsed");
-    expect(slot).not.toContain("Local and weekend");
+    expect(slot).not.toContain("Denker");
     expect(slot).not.toContain("partner-promo-ladder");
+    expect(slot).not.toContain("CHESS_NATIONAL_SEATS");
+  });
+
+  it("walks local to state to nationals, not named invitationals", () => {
+    expect(CHESS_PATHWAY_STEPS.map((step) => step.name)).toEqual([
+      "Local",
+      "State",
+      "Nationals",
+    ]);
+    expect(CHESS_PATHWAY_STEPS.map((step) => step.line)).toEqual([
+      "Play rated sections near home.",
+      "Win the state championship.",
+      "Then a national invitational can open.",
+    ]);
+    const promo = partnerPromoForCategory("chess");
+    expect(promo?.dek).toMatch(/local/i);
+    expect(promo?.dek).toMatch(/state championship/i);
+    expect(promo?.dek).toMatch(/national invitational/i);
+    expect(promo?.dek).not.toMatch(/Denker|Barber|Rockefeller|Haring/);
   });
 
   it("ships the same pin on the phone chess search", () => {

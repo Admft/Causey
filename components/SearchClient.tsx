@@ -468,7 +468,9 @@ export function SearchClient({
               clubGoingLabel={clubGoingLabel}
             />
 
-            {partnerPromo ? <PartnerPromoSlot promo={partnerPromo} /> : null}
+            {partnerPromo ? (
+              <PartnerPromoSlot promo={partnerPromo} layout="search" />
+            ) : null}
 
             {status.kind === "loading" && (
               <div className={resultsGridClass(layout)} aria-label="Loading results">
