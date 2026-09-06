@@ -17,6 +17,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Phone “Yes, registration is complete” updates the screen from the tap so Expo Go is not stuck when the attendance reload 404s on production — 2026-09-06
+- [x] Chess nationals banners sheen on the red face (home, `/chess`, phone pin); same slow sweep as the district window; reduced motion off — 2026-09-06
 - [x] Sign-in help is split by job: Forgot password sits under the field, New here? Create an account follows Sign in, Report a problem is a quieter hairline below — 2026-09-06
 - [x] Phone event difficulty is two locked rows (1–5, then 6–10), not a wrapping 1–10 strip — 2026-09-06
 - [x] Phone tournament details: listing photo, US Chess rated/not rated plus difficulty, Going/Can't go, and “did you finish organizer registration?” after the organizer site; Expo Go Add to calendar opens an .ics / Calendar template because `expo-calendar` is stubbed there — 2026-09-06

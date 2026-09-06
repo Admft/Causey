@@ -359,12 +359,36 @@ textarea.field {
   box-shadow: var(--shadow-card);
 }
 .partner-promo-face {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.5rem;
+  overflow: hidden;
   background: var(--brand-red);
   color: #ffffff;
+}
+/* Same sweep as the district window sheen: a slow pass, then a long rest, so
+ * the red nationals banner still reads as the thing to tap when it is on
+ * screen. Clipped to the face so the homepage path panel stays still. */
+.partner-promo-face::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  z-index: 1;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.75) 42%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  animation: mode-sheen-sweep 6.5s var(--ease-brand) 900ms infinite;
 }
 .partner-promo--search .partner-promo-face {
   padding: 1.25rem 1.5rem;
@@ -1086,6 +1110,7 @@ textarea.field {
     transition: none;
   }
   .mode-sheen::before,
+  .partner-promo-face::before,
   .animate-mode-slide-from-left,
   .animate-mode-slide-from-right {
     animation: none;
