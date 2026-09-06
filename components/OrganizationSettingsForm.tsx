@@ -8,6 +8,7 @@ import {
   updateOrganizationSettings,
 } from "@/lib/actions/district";
 import type { Organization, RosterRow } from "@/lib/auth/orgs";
+import { attemptAction } from "@/lib/attempt-action";
 
 const TYPE_LABELS = {
   school: "School",
@@ -60,14 +61,16 @@ export function OrganizationSettingsForm({
     setError(null);
     setMessage(null);
     try {
-      const result = await updateOrganizationSettings({
-        orgId: org.id,
-        orgSlug: org.slug,
-        name,
-        state,
-        websiteUrl,
-        meetingNote,
-      });
+      const result = await attemptAction(() =>
+        updateOrganizationSettings({
+          orgId: org.id,
+          orgSlug: org.slug,
+          name,
+          state,
+          websiteUrl,
+          meetingNote,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -96,11 +99,13 @@ export function OrganizationSettingsForm({
     setError(null);
     setMessage(null);
     try {
-      const result = await transferOrganizationOwnership({
-        orgId: org.id,
-        orgSlug: org.slug,
-        nextOwnerProfileId: nextOwner,
-      });
+      const result = await attemptAction(() =>
+        transferOrganizationOwnership({
+          orgId: org.id,
+          orgSlug: org.slug,
+          nextOwnerProfileId: nextOwner,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

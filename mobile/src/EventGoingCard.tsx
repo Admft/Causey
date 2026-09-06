@@ -1,4 +1,3 @@
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -12,9 +11,12 @@ import { causeyFetch } from "./api";
 import { useAuth } from "./auth";
 import {
   resolveRegistrationStatus,
+  resolveRsvpStatus,
   type RegistrationMark,
+  type RsvpMark,
 } from "./event-registration-state";
 import { feedback } from "./haptics";
+import { openExternalUrl, safeRegUrl } from "./open-url";
 import { colors } from "./theme";
 import {
   Card,
@@ -70,16 +72,6 @@ function registrationHost(regUrl: string): string {
   }
 }
 
-function safeRegUrl(raw: string): string | null {
-  try {
-    const url = new URL(raw);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
 export function EventGoingCard({
   competitionId,
   eventSlug,
@@ -92,17 +84,22 @@ export function EventGoingCard({
   const router = useRouter();
   const { session } = useAuth();
   const [attendance, setAttendance] = useState<AttendancePayload | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [awaitingReturn, setAwaitingReturn] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [openedLocal, setOpenedLocal] = useState<string[]>([]);
   const [localStatus, setLocalStatus] = useState<
     Record<string, RegistrationMark>
   >({});
+  const [localRsvp, setLocalRsvp] = useState<Record<string, RsvpMark>>({});
 
   const load = useCallback(async () => {
     if (!session?.access_token) {
       setAttendance(null);
+      setLoadError(null);
+      setLoaded(true);
       return;
     }
     try {
@@ -111,13 +108,33 @@ export function EventGoingCard({
         { token: session.access_token }
       );
       const next = asAttendance(payload);
-      if (next) setAttendance(next);
-    } catch {
-      /* Keep the last successful payload; this card is extra to the listing. */
+      if (next) {
+        setAttendance(next);
+        setLoadError(null);
+      } else {
+        setLoadError("Causey could not read who can mark going.");
+      }
+    } catch (err) {
+      // A previous good payload still stands; a first failure needs to say so
+      // rather than silently drop the whole card.
+      setLoadError(
+        err instanceof Error
+          ? err.message
+          : "Could not check who can mark going."
+      );
+    } finally {
+      setLoaded(true);
     }
   }, [competitionId, session?.access_token]);
 
   useEffect(() => {
+    setLoaded(false);
+    setAttendance(null);
+    setLocalRsvp({});
+    setLocalStatus({});
+    setOpenedLocal([]);
+    setError(null);
+    setLoadError(null);
     void load();
   }, [load]);
 
@@ -133,8 +150,13 @@ export function EventGoingCard({
 
   async function rsvp(person: EventRsvpPerson, status: "going" | "not_going") {
     if (!session?.access_token || person.status === status) return;
+    const previous = localRsvp[person.profileId] ?? person.status;
     setBusyKey(`${person.profileId}:rsvp`);
     setError(null);
+    setLocalRsvp((current) => ({
+      ...current,
+      [person.profileId]: status,
+    }));
     try {
       await causeyFetch("/api/mobile/rsvp", {
         token: session.access_token,
@@ -149,9 +171,93 @@ export function EventGoingCard({
       feedback("success");
       await load();
     } catch (err) {
+      setLocalRsvp((current) => {
+        const next = { ...current };
+        if (previous === "going" || previous === "not_going") {
+          next[person.profileId] = previous;
+        } else {
+          delete next[person.profileId];
+        }
+        return next;
+      });
       feedback("error");
       setError(
         err instanceof Error ? err.message : "Could not save that RSVP."
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  async function leave(person: EventRegistrationPerson) {
+    if (!session?.access_token) return;
+    const previousReg = localStatus[person.profileId] ?? person.status;
+    const rsvpPerson = (attendance?.rsvp ?? []).find(
+      (row) => row.profileId === person.profileId
+    );
+    const previousRsvp = rsvpPerson
+      ? (localRsvp[person.profileId] ?? rsvpPerson.status)
+      : undefined;
+    setBusyKey(`${person.profileId}:leave`);
+    setError(null);
+    setLocalStatus((current) => ({
+      ...current,
+      [person.profileId]: "not_registered",
+    }));
+    setLocalRsvp((current) => ({
+      ...current,
+      [person.profileId]: "not_going",
+    }));
+    try {
+      await causeyFetch("/api/mobile/registration", {
+        token: session.access_token,
+        method: "POST",
+        body: {
+          competitionId,
+          profileId: person.profileId,
+          status: "not_registered",
+        },
+      });
+      await causeyFetch("/api/mobile/rsvp", {
+        token: session.access_token,
+        method: "POST",
+        body: {
+          competitionId,
+          profileId: person.profileId,
+          status: "not_going",
+          eventSlug,
+        },
+      });
+      feedback("success");
+      await load();
+    } catch (err) {
+      setLocalStatus((current) => {
+        const next = { ...current };
+        if (
+          previousReg === "opened" ||
+          previousReg === "registered" ||
+          previousReg === "not_registered"
+        ) {
+          next[person.profileId] = previousReg;
+        } else {
+          delete next[person.profileId];
+        }
+        return next;
+      });
+      setLocalRsvp((current) => {
+        const next = { ...current };
+        if (previousRsvp === "going" || previousRsvp === "not_going") {
+          next[person.profileId] = previousRsvp;
+        } else {
+          delete next[person.profileId];
+        }
+        return next;
+      });
+      feedback("error");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not update this event. Check your connection and try again."
       );
     } finally {
       setBusyKey(null);
@@ -251,22 +357,43 @@ export function EventGoingCard({
         /* Opening the organizer site still matters if the stamp fails. */
       });
     }
-    try {
-      await Linking.openURL(destination);
-      setAwaitingReturn(true);
-    } catch {
+    const message = await openExternalUrl(destination);
+    if (message) {
       setError("Could not open the organizer’s registration site.");
+      return;
     }
+    setAwaitingReturn(true);
   }
 
   const ended = attendance?.ended === true;
-  const rsvpPeople = attendance?.rsvp ?? [];
+  const serverRsvp = attendance?.rsvp ?? [];
+  const rsvpPeople: EventRsvpPerson[] = serverRsvp.map((person) => ({
+    ...person,
+    status: resolveRsvpStatus({
+      serverStatus: person.status,
+      localStatus: localRsvp[person.profileId],
+    }),
+  }));
   const registrationPeople = attendance?.registration ?? [];
   const host = regUrl ? registrationHost(regUrl) : null;
   const showRsvp = Boolean(session) && rsvpPeople.length > 0 && !ended;
   const showRegistration = Boolean(regUrl) && !ended;
 
   if (!session && !regUrl) return null;
+
+  if (session && !loaded) {
+    return (
+      <Card>
+        <Meta>Checking who can mark going…</Meta>
+        {regUrl && host ? (
+          <SecondaryButton
+            label={`Open organizer registration on ${host}`}
+            onPress={() => void openOrganizerSite()}
+          />
+        ) : null}
+      </Card>
+    );
+  }
 
   if (!session) {
     return (
@@ -298,19 +425,27 @@ export function EventGoingCard({
     );
   }
 
+  if (!attendance && loadError) {
+    return (
+      <Card>
+        <Text style={styles.heading} accessibilityRole="header">
+          Marking going is not available right now
+        </Text>
+        <ErrorText>{loadError}</ErrorText>
+        <PrimaryButton label="Try again" onPress={() => void load()} />
+        {regUrl && host ? (
+          <SecondaryButton
+            label={`Open organizer registration on ${host}`}
+            onPress={() => void openOrganizerSite()}
+          />
+        ) : null}
+      </Card>
+    );
+  }
+
   if (!showRsvp && !showRegistration) return null;
 
-  const peopleToAsk: EventRegistrationPerson[] = registrationPeople.length
-    ? registrationPeople
-    : rsvpPeople.some((person) => person.label !== "You")
-      ? []
-      : [
-          {
-            profileId: session.user.id,
-            label: "You",
-            status: null,
-          },
-        ];
+  const peopleToAsk: EventRegistrationPerson[] = registrationPeople;
   const resolvedPeople = peopleToAsk.map((person) => ({
     ...person,
     status: resolveRegistrationStatus({
@@ -380,7 +515,10 @@ export function EventGoingCard({
           </Meta>
           {resolvedPeople.map((person) => {
             const status = person.status;
-            const busy = busyKey === `${person.profileId}:reg`;
+            const busy =
+              busyKey === `${person.profileId}:reg` ||
+              busyKey === `${person.profileId}:leave`;
+            const leaving = busyKey === `${person.profileId}:leave`;
             return (
               <View key={person.profileId} style={styles.block}>
                 {registrationPeople.length > 1 || person.label !== "You" ? (
@@ -389,19 +527,34 @@ export function EventGoingCard({
                 {status === "registered" ? (
                   <>
                     <Meta>
-                      Marked complete{person.label !== "You" ? ` for ${person.label}` : ""}.
-                      The organizer stays the source of truth for entry.
+                      Marked complete
+                      {person.label !== "You" ? ` for ${person.label}` : ""}.
+                      The organizer stays the source of truth for entry. Causey
+                      cannot cancel organizer entry or issue a refund — open{" "}
+                      {host} if you already paid and need to withdraw.
                     </Meta>
-                    <LinkButton
-                      label={`Open ${host} again`}
-                      onPress={() => void openOrganizerSite(person)}
+                    <SecondaryButton
+                      label={
+                        leaving
+                          ? "Saving…"
+                          : person.label !== "You"
+                            ? `Can't go for ${person.label}`
+                            : "Can't go"
+                      }
+                      onPress={() => void leave(person)}
+                      disabled={busyKey !== null}
                     />
                     <LinkButton
-                      label="Registration is still needed"
+                      label="Undo complete mark"
                       onPress={() =>
                         void setRegistration(person, "not_registered")
                       }
                     />
+                    <LinkButton
+                      label={`Open ${host} again`}
+                      onPress={() => void openOrganizerSite(person)}
+                    />
+                    {error ? <ErrorText>{error}</ErrorText> : null}
                   </>
                 ) : status === "opened" || (awaitingReturn && !allRegistered) ? (
                   <>
@@ -454,16 +607,16 @@ export function EventGoingCard({
               </View>
             );
           })}
-          {registrationPeople.length === 0 &&
-          rsvpPeople.some((person) => person.label !== "You") ? (
+          {registrationPeople.length === 0 ? (
             <View style={styles.block}>
               <PrimaryButton
                 label="Open organizer registration"
                 onPress={() => void openOrganizerSite()}
               />
               <Meta>
-                Mark who is going, then confirm registration is complete after
-                you finish on {host}.
+                {rsvpPeople.some((person) => person.label !== "You")
+                  ? `Mark who is going, then confirm registration is complete after you finish on ${host}.`
+                  : `Entry stays on ${host}. Confirm registration here after you finish there.`}
               </Meta>
             </View>
           ) : null}

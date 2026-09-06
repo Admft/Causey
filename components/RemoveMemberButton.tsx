@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { removeMember } from "@/lib/actions/orgs";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function RemoveMemberButton({
   orgId,
@@ -24,7 +25,9 @@ export function RemoveMemberButton({
     setError(null);
     setPending(true);
     try {
-      const result = await removeMember(orgId, orgSlug, profileId);
+      const result = await attemptAction(() =>
+        removeMember(orgId, orgSlug, profileId)
+      );
       if (!result.ok) {
         setError(result.error);
         return;

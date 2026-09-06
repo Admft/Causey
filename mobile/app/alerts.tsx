@@ -1,4 +1,4 @@
-import { Redirect, Stack, useFocusEffect, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, RefreshControl, StyleSheet, Text } from "react-native";
 import { causeyFetch } from "../src/api";
@@ -6,10 +6,13 @@ import {
   formatAlertTime,
   inAppEventPath,
   isWebsiteOnlyHref,
+  websiteHrefToOpen,
 } from "../src/alerts";
 import { useAuth } from "../src/auth";
 import { feedback } from "../src/haptics";
-import { colors } from "../src/theme";
+import { openExternalUrl } from "../src/open-url";
+import { RequireSession } from "../src/RequireSession";
+import { colors, siteUrl } from "../src/theme";
 import {
   ErrorText,
   Lede,
@@ -36,18 +39,11 @@ type AlertsPayload = {
 };
 
 export default function AlertsScreen() {
-  const { ready, session, access } = useAuth();
-
-  if (!ready) return <Spinner />;
-  if (!session) return <Redirect href="/login" />;
-  if (access && !access.allowed) return <Redirect href="/blocked" />;
-  if (!access) return <Spinner />;
-
   return (
-    <>
+    <RequireSession>
       <Stack.Screen options={{ title: "Alerts" }} />
       <AlertsInbox />
-    </>
+    </RequireSession>
   );
 }
 
@@ -110,7 +106,19 @@ function AlertsInbox() {
         );
       }
       const eventPath = inAppEventPath(row.href);
-      if (eventPath) router.push(eventPath);
+      if (eventPath) {
+        router.push(eventPath);
+        return;
+      }
+      const websiteUrl = websiteHrefToOpen(row.href, siteUrl);
+      if (websiteUrl) {
+        const message = await openExternalUrl(websiteUrl);
+        if (message) setError(message);
+      } else if (isWebsiteOnlyHref(row.href)) {
+        // The row promised a website link, so a tap that opens nothing needs
+        // to say so rather than look like a dead button.
+        setError("That link is not one Causey can open. Sign in on the website.");
+      }
     } catch (err) {
       feedback("error");
       setError(
@@ -130,6 +138,18 @@ function AlertsInbox() {
         method: "POST",
         body: { all: true },
       });
+      setData((current) =>
+        current
+          ? {
+              notifications: current.notifications.map((item) =>
+                item.read_at
+                  ? item
+                  : { ...item, read_at: new Date().toISOString() }
+              ),
+              unread_count: 0,
+            }
+          : current
+      );
       feedback("success");
       await load();
     } catch (err) {
@@ -143,6 +163,16 @@ function AlertsInbox() {
   }
 
   if (!data && refreshing) return <Spinner />;
+
+  if (error && !data) {
+    return (
+      <Screen header>
+        <Title>Alerts</Title>
+        <ErrorText>{error}</ErrorText>
+        <PrimaryButton label="Try again" onPress={() => void load()} />
+      </Screen>
+    );
+  }
 
   const rows = data?.notifications ?? [];
   const unreadCount = data?.unread_count ?? 0;

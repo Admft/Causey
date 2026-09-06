@@ -2,6 +2,7 @@
 
 import { FormEvent, useState, useTransition } from "react";
 import { adminUpdateUserAccess } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 
 type AdminUserAccessRecord = {
   profile_id: string;
@@ -54,11 +55,13 @@ export function AdminUserAccessForm({
     setMessage(null);
     setError(null);
     startTransition(async () => {
-      const result = await adminUpdateUserAccess({
-        profileId: user.profile_id,
-        accountRole,
-        platformAdmin,
-      });
+      const result = await attemptAction(() =>
+        adminUpdateUserAccess({
+          profileId: user.profile_id,
+          accountRole,
+          platformAdmin,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

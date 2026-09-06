@@ -2,6 +2,7 @@
 
 import { FormEvent, useState, useTransition } from "react";
 import { adminUpsertOrgMembership } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 
 const ROLE_OPTIONS = [
   { value: "coach", label: "Coach" },
@@ -43,12 +44,9 @@ export function AdminOrgMembershipForm({
     setMessage(null);
     setError(null);
     startTransition(async () => {
-      const result = await adminUpsertOrgMembership({
-        profileId,
-        orgSlug,
-        role,
-        status,
-      });
+      const result = await attemptAction(() =>
+        adminUpsertOrgMembership({ profileId, orgSlug, role, status })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

@@ -1,8 +1,8 @@
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { useAuth } from "../../src/auth";
 import { DeleteAccountSection } from "../../src/DeleteAccountSection";
+import { openExternalUrl } from "../../src/open-url";
 import { colors, siteUrl } from "../../src/theme";
 import {
   Kicker,
@@ -12,6 +12,7 @@ import {
   PrimaryButton,
   Screen,
   SecondaryButton,
+  Spinner,
   Title,
 } from "../../src/ui";
 
@@ -26,15 +27,15 @@ function TrustLinks() {
     <View style={styles.links}>
       <LinkButton
         label="Report a problem"
-        onPress={() => Linking.openURL(`${siteUrl}/support`)}
+        onPress={() => void openExternalUrl(`${siteUrl}/support`)}
       />
       <LinkButton
         label="Privacy and student data"
-        onPress={() => Linking.openURL(`${siteUrl}/privacy`)}
+        onPress={() => void openExternalUrl(`${siteUrl}/privacy`)}
       />
       <LinkButton
         label="Terms of use"
-        onPress={() => Linking.openURL(`${siteUrl}/terms`)}
+        onPress={() => void openExternalUrl(`${siteUrl}/terms`)}
       />
     </View>
   );
@@ -44,7 +45,9 @@ export default function MeScreen() {
   const { ready, session, profile, signOut } = useAuth();
   const router = useRouter();
 
-  if (ready && !session) {
+  if (!ready) return <Spinner />;
+
+  if (!session) {
     return (
       <Screen>
         <Kicker>Account</Kicker>
@@ -64,7 +67,7 @@ export default function MeScreen() {
         />
         <LinkButton
           label="Create a student account (13+) on the website"
-          onPress={() => Linking.openURL(`${siteUrl}/signup?role=student`)}
+          onPress={() => void openExternalUrl(`${siteUrl}/signup?role=student`)}
         />
         <TrustLinks />
       </Screen>
@@ -98,7 +101,7 @@ export default function MeScreen() {
       <TrustLinks />
       <LinkButton
         label="Export my data on the website"
-        onPress={() => Linking.openURL(`${siteUrl}/account#data`)}
+        onPress={() => void openExternalUrl(`${siteUrl}/account#data`)}
       />
 
       <SecondaryButton label="Sign out" onPress={() => void signOut()} />

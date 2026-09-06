@@ -33,6 +33,7 @@ import {
   getDistrictSchoolReadinessStatus,
 } from "@/lib/district-readiness";
 import { formatDateRange, formatFeeCents, formatRecordedResult } from "@/lib/format";
+import { safeExternalUrl } from "@/lib/safe-url";
 import {
   SEARCH_TOURNAMENTS_LABEL,
   organizationKindLabel,
@@ -123,6 +124,8 @@ export default async function OrgPage({
     drafts: directDrafts,
     announcements,
   } = view;
+  // Typed by an organization admin, so it is untrusted in an href.
+  const orgWebsiteHref = safeExternalUrl(org.website_url);
 
   const [
     entrantRows,
@@ -538,13 +541,13 @@ export default async function OrgPage({
             ? " · part of a district"
             : ""}
         </p>
-        {org.website_url || org.meeting_note ? (
+        {orgWebsiteHref || org.meeting_note ? (
           <p className="mt-3 max-w-prose text-sm text-muted">
             {org.meeting_note ? org.meeting_note : null}
-            {org.meeting_note && org.website_url ? " · " : null}
-            {org.website_url ? (
+            {org.meeting_note && orgWebsiteHref ? " · " : null}
+            {orgWebsiteHref ? (
               <a
-                href={org.website_url}
+                href={orgWebsiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Open ${WEBSITE_LABEL[org.type] ?? "website"} (opens in a new tab)`}

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cancelTournament } from "@/lib/actions/tournaments";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function CancelTournamentButton({
   competitionId,
@@ -22,7 +23,9 @@ export function CancelTournamentButton({
     setError(null);
     setPending(true);
     try {
-      const result = await cancelTournament({ competitionId, eventSlug, orgSlug });
+      const result = await attemptAction(() =>
+        cancelTournament({ competitionId, eventSlug, orgSlug })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

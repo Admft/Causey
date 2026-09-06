@@ -8,6 +8,7 @@ import { LinkChildForm } from "@/components/LinkChildForm";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
+import { ProfileNotReady } from "@/components/ProfileNotReady";
 import { StudentAccountHandoff } from "@/components/StudentAccountHandoff";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
@@ -55,7 +56,10 @@ export default async function FamilyPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/family");
   const profile = await getCurrentProfile();
-  if (profile && profile.role !== "parent") redirect("/me");
+  // Without this, a failed profile read fell through to the parent desk and
+  // rendered Family chrome around nothing.
+  if (!profile) return <ProfileNotReady section="Family" />;
+  if (profile.role !== "parent") redirect("/me");
 
   const [
     children,

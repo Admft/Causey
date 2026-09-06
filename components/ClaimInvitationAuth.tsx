@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { signOutAndLeave } from "@/lib/auth/sign-out";
 import type { ReactNode } from "react";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import {
   claimSignupHref,
   invitationEmailHintMatches,
@@ -105,16 +104,14 @@ export function ClaimInvitationAuth({
 }
 
 function ClaimSignOutButton() {
-  const router = useRouter();
   return (
     <button
       type="button"
       className="cta-enabled"
-      onClick={async () => {
-        const supabase = createBrowserSupabaseClient();
-        await supabase.auth.signOut();
-        router.refresh();
-      }}
+      // Back to sign-in rather than a refresh in place: the point of this
+      // button is to arrive as the invited person, not to sit on the claim
+      // page signed out.
+      onClick={() => void signOutAndLeave("/login")}
     >
       Sign out to use the invited email
     </button>

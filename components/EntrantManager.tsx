@@ -14,6 +14,7 @@ import {
   markEntrantAttendance,
   recordEntrantResult,
 } from "@/lib/actions/district";
+import { attemptAction } from "@/lib/attempt-action";
 import { formatRecordedResult } from "@/lib/format";
 
 type Candidate = {
@@ -66,7 +67,9 @@ export function EntrantManager({
     setError(null);
     setMessage(null);
     startTransition(async () => {
-      const result = await inviteGroup(competitionId, eventSlug, group.id);
+      const result = await attemptAction(() =>
+        inviteGroup(competitionId, eventSlug, group.id)
+      );
       if (!result.ok) {
         setError(result.error);
       } else {
@@ -87,9 +90,8 @@ export function EntrantManager({
     setError(null);
     setMessage(null);
     startTransition(async () => {
-      const result = await inviteConnectedSchoolRosters(
-        competitionId,
-        eventSlug
+      const result = await attemptAction(() =>
+        inviteConnectedSchoolRosters(competitionId, eventSlug)
       );
       if (!result.ok) {
         setError(result.error);
@@ -112,7 +114,9 @@ export function EntrantManager({
     setError(null);
     setMessage(null);
     startTransition(async () => {
-      const result = await inviteEntrants(competitionId, eventSlug, [...selected]);
+      const result = await attemptAction(() =>
+        inviteEntrants(competitionId, eventSlug, [...selected])
+      );
       if (!result.ok) {
         setError(result.error);
       } else {
@@ -456,12 +460,14 @@ export function StaffRsvpButtons({
   function mark(nextStatus: "going" | "not_going") {
     setError(null);
     startTransition(async () => {
-      const result = await markEntrantStaffRsvp({
-        competitionId,
-        eventSlug,
-        profileId,
-        status: nextStatus,
-      });
+      const result = await attemptAction(() =>
+        markEntrantStaffRsvp({
+          competitionId,
+          eventSlug,
+          profileId,
+          status: nextStatus,
+        })
+      );
       if (!result.ok) setError(result.error);
       router.refresh();
     });
@@ -522,12 +528,14 @@ export function AttendanceButtons({
   function mark(nextStatus: "attended" | "did_not_attend") {
     setError(null);
     startTransition(async () => {
-      const result = await markEntrantAttendance({
-        competitionId,
-        eventSlug,
-        profileId,
-        status: nextStatus,
-      });
+      const result = await attemptAction(() =>
+        markEntrantAttendance({
+          competitionId,
+          eventSlug,
+          profileId,
+          status: nextStatus,
+        })
+      );
       if (!result.ok) setError(result.error);
       router.refresh();
     });
@@ -609,14 +617,16 @@ export function ResultForm({
       return;
     }
     startTransition(async () => {
-      const result = await recordEntrantResult({
-        competitionId,
-        eventSlug,
-        profileId,
-        sectionId: division || null,
-        placement: parsedPlace,
-        awardLabel: award.trim() ? award.trim() : null,
-      });
+      const result = await attemptAction(() =>
+        recordEntrantResult({
+          competitionId,
+          eventSlug,
+          profileId,
+          sectionId: division || null,
+          placement: parsedPlace,
+          awardLabel: award.trim() ? award.trim() : null,
+        })
+      );
       if (!result.ok) setError(result.error);
       router.refresh();
     });
@@ -628,14 +638,16 @@ export function ResultForm({
     setPlace("");
     setAward("");
     startTransition(async () => {
-      const result = await recordEntrantResult({
-        competitionId,
-        eventSlug,
-        profileId,
-        sectionId: null,
-        placement: null,
-        awardLabel: null,
-      });
+      const result = await attemptAction(() =>
+        recordEntrantResult({
+          competitionId,
+          eventSlug,
+          profileId,
+          sectionId: null,
+          placement: null,
+          awardLabel: null,
+        })
+      );
       if (!result.ok) setError(result.error);
       router.refresh();
     });

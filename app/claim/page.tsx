@@ -10,6 +10,11 @@ import {
 } from "@/lib/invitations/activation-code";
 import { getOrganizationInvitationPreviewByCode } from "@/lib/data/portal";
 
+// Reads the signed-in account, so this response is never shareable.
+// Declared rather than inferred from cookies(): the day someone moves the
+// session read out of this file, the caching contract should not move too.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Enter an activation code",
   description: "Join a district, school, club, or team on Causey.",

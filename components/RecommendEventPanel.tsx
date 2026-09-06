@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { sendRecommendation } from "@/lib/actions/recommendations";
+import { attemptAction } from "@/lib/attempt-action";
 import type { RecommendTarget } from "@/lib/data/portal";
 
 function formatNameList(names: string[]): string {
@@ -68,12 +69,14 @@ export function RecommendEventPanel({
     setError(null);
     setPending(true);
     try {
-      const result = await sendRecommendation({
-        competitionId,
-        eventSlug,
-        toProfileIds: [...selected],
-        note,
-      });
+      const result = await attemptAction(() =>
+        sendRecommendation({
+          competitionId,
+          eventSlug,
+          toProfileIds: [...selected],
+          note,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

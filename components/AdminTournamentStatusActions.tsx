@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminSetTournamentStatus } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 
 type TournamentStatus =
   | "draft"
@@ -30,11 +31,13 @@ export function AdminTournamentStatusActions({
     setPending(nextStatus);
     setError(null);
     try {
-      const result = await adminSetTournamentStatus({
-        competitionId,
-        eventSlug,
-        status: nextStatus,
-      });
+      const result = await attemptAction(() =>
+        adminSetTournamentStatus({
+          competitionId,
+          eventSlug,
+          status: nextStatus,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

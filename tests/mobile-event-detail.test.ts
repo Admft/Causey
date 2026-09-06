@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { organizerCoverUrl } from "../mobile/src/cover-url";
-import { resolveRegistrationStatus } from "../mobile/src/event-registration-state";
+import { applyEntrantDecision } from "../mobile/src/entrant-decision";
+import { resolveRegistrationStatus, resolveRsvpStatus } from "../mobile/src/event-registration-state";
 import { sectionConstraint } from "../mobile/src/section-constraint";
 
 const read = (path: string) =>
@@ -41,6 +42,10 @@ describe("phone tournament details", () => {
     expect(going).toContain("Did you finish organizer registration?");
     expect(going).toContain("Yes, registration is complete");
     expect(going).toContain("Still need to register");
+    expect(going).toContain("Can't go");
+    expect(going).toContain("Undo complete mark");
+    expect(going).toContain("leave(person)");
+    expect(going).not.toContain("Registration is still needed");
     expect(going).toContain("Open organizer registration");
     expect(going).toContain("/api/mobile/event-attendance?competitionId=");
     expect(going).toContain("/api/mobile/rsvp");
@@ -50,6 +55,8 @@ describe("phone tournament details", () => {
     expect(going).toContain("Going on Causey is for Family and Plan");
     expect(going).toContain("resolveRegistrationStatus");
     expect(going).toContain("setLocalStatus");
+    expect(going).toContain("Checking who can mark going");
+    expect(going).not.toContain("attendance === null && session");
   });
 
   it("falls back when Expo Go has no native calendar", () => {
@@ -148,5 +155,54 @@ describe("registration confirm status", () => {
         openedLocally: true,
       })
     ).toBe("opened");
+  });
+
+  it("lets a local Going win over a missing attendance reload", () => {
+    expect(
+      resolveRsvpStatus({
+        serverStatus: "unanswered",
+        localStatus: "going",
+      })
+    ).toBe("going");
+    expect(
+      resolveRsvpStatus({
+        serverStatus: "invited",
+        localStatus: "not_going",
+      })
+    ).toBe("not_going");
+  });
+});
+
+describe("plan and family taps", () => {
+  it("hides Going after a local tap even before the list reloads", () => {
+    const row = {
+      competition_id: "c1",
+      profile_id: "p1",
+      status: "invited",
+      needs_organizer_registration: false,
+      competition: {
+        slug: "spring-open",
+        name: "Spring Open",
+        city: null,
+        state: null,
+        start_date: "2026-10-01",
+        end_date: null,
+        reg_url: "https://organizer.example/enter",
+      },
+    };
+    expect(applyEntrantDecision(row, "going")).toMatchObject({
+      status: "going",
+      needs_organizer_registration: true,
+    });
+    expect(applyEntrantDecision(row, "not_going")).toMatchObject({
+      status: "not_going",
+      needs_organizer_registration: false,
+    });
+    expect(
+      applyEntrantDecision(
+        { ...row, status: "going", needs_organizer_registration: true },
+        "registered"
+      ).needs_organizer_registration
+    ).toBe(false);
   });
 });

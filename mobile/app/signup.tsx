@@ -1,8 +1,8 @@
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useAuth, type MobileSignupRole } from "../src/auth";
+import { openExternalUrl } from "../src/open-url";
 import { siteUrl } from "../src/theme";
 import {
   Card,
@@ -147,7 +147,7 @@ export default function SignupScreen() {
         />
         <LinkButton
           label="Create a student account (13+) on the website"
-          onPress={() => Linking.openURL(`${siteUrl}/signup?role=student`)}
+          onPress={() => void openExternalUrl(`${siteUrl}/signup?role=student`)}
         />
         <Card>
           <Meta>
@@ -161,11 +161,11 @@ export default function SignupScreen() {
           </Meta>
           <LinkButton
             label="Read the privacy notice"
-            onPress={() => Linking.openURL(`${siteUrl}/privacy`)}
+            onPress={() => void openExternalUrl(`${siteUrl}/privacy`)}
           />
           <LinkButton
             label="Read the terms of use"
-            onPress={() => Linking.openURL(`${siteUrl}/terms`)}
+            onPress={() => void openExternalUrl(`${siteUrl}/terms`)}
           />
         </Card>
         <LinkButton

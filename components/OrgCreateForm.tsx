@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createOrg } from "@/lib/actions/orgs";
+import { attemptAction } from "@/lib/attempt-action";
 import { COACH_SELF_SERVE_ORG_TYPES } from "@/lib/auth/orgs";
 
 const STATES = [
@@ -25,7 +26,7 @@ export function OrgCreateForm() {
     setError(null);
     setPending(true);
     try {
-      const result = await createOrg({ name, type, state });
+      const result = await attemptAction(() => createOrg({ name, type, state }));
       if (!result.ok) {
         setError(result.error);
         return;

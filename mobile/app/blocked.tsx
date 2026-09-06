@@ -1,7 +1,7 @@
-import * as Linking from "expo-linking";
 import { Redirect } from "expo-router";
 import { useAuth } from "../src/auth";
 import { DeleteAccountSection } from "../src/DeleteAccountSection";
+import { openExternalUrl } from "../src/open-url";
 import { siteUrl } from "../src/theme";
 import {
   Kicker,
@@ -24,7 +24,7 @@ export default function BlockedScreen() {
       <Lede>{access.message}</Lede>
       <LinkButton
         label="Open Causey on the web"
-        onPress={() => Linking.openURL(`${siteUrl}/family`)}
+        onPress={() => void openExternalUrl(`${siteUrl}/family`)}
       />
       <SecondaryButton label="Sign out" onPress={() => void signOut()} />
       <DeleteAccountSection />

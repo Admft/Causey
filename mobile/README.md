@@ -6,11 +6,11 @@ Weekend target: internal builds (TestFlight + Play internal). Apple/Google **app
 
 ## What this app is
 
-Native Search / Me plus one home per role: **Family** for a parent, **My tournaments** for a student, **My team** for a coach. Parents and coaches sign up, sign in, reset a password, and delete their account entirely in-app. Students 13 or older create a student account on the website (date of birth is collected there, never in the app), then sign in. Parents answer RSVPs for their students; a student answers their own; a coach opens a roster and takes day-of attendance. Search uses the same public API as the website for Chess, Speech & Debate, STEM, Arts, and Writing (chess is densest; others can be empty). Search opens on Chess with the website type images and a two-column result grid. Chess includes a Pathways tool (illustrative lookup, not an official US Chess ruling). Sort is Soonest or Popular, and an event can be added to the device calendar or shared. Organizer registration may open an external browser. Students under 13 are blocked at sign-in.
+Native Search / Me plus one home per role: **Family** for a parent, **My tournaments** for a student, **My team** for a coach. Parents and coaches sign up, sign in, reset a password, and delete their account entirely in-app. Students 13 or older create a student account on the website (date of birth is collected there, never in the app), then sign in. Parents answer RSVPs for their students; a student answers their own; a coach opens a roster, takes day-of attendance, and records places. Search uses the same public API as the website for Chess, Speech & Debate, STEM, Arts, and Writing (chess is densest; others can be empty). Search opens on Chess with the website type images and a two-column result grid. Chess includes a Pathways tool (illustrative lookup, not an official US Chess ruling). Sort is Soonest or Popular, and an event can be added to the device calendar, shared, saved, or rated for difficulty. Organizer registration may open an external browser. A student under 13 can sign in, but lands on a blocked screen and stays signed in there until they sign out or delete the account.
 
 Search and the event screen work **signed out** — the app opens on Search for a visitor, and sign-in lives on the Me tab. Account work (Family, My tournaments, My team) requires a session.
 
-Desk work stays on the website: invitations, CSV, groups, organization settings, results, and reports. Do not add a role to sign-up without giving that role a home tab — `tests/mobile-companion.test.ts` enforces this.
+Desk work stays on the website: invitations, CSV, groups, organization settings, and season or aggregate reports. Attendance and per-event results are in the app, because a coach does both standing up. Do not add a role to sign-up without giving that role a home tab — `tests/mobile-companion.test.ts` enforces this.
 
 ## Two machines, one git branch
 
@@ -39,8 +39,10 @@ npm start
 - Android emulator: `EXPO_PUBLIC_CAUSEY_API_URL=http://10.0.2.2:3000`
 - Physical phone on the same Wi-Fi: `EXPO_PUBLIC_CAUSEY_API_URL=http://YOUR_LAN_IP:3000` (Mac/PC firewall must allow port 3000)
 
-Parent and coach accounts can be created from the app's sign-up screen. Student
-accounts are created on the website by a parent or coach.
+Parent and coach accounts can be created from the app's sign-up screen. Students
+13 or older create their own account on the website (`/signup?role=student`),
+which is where date of birth is collected; a parent or coach can also create one
+for them. Either way they sign in on the app.
 
 ## Icons
 

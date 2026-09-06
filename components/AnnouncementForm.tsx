@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { publishOrganizationAnnouncement } from "@/lib/actions/district";
+import { attemptAction } from "@/lib/attempt-action";
 
 type AudienceMode = "org" | "all_schools" | "selected_schools";
 
@@ -59,16 +60,18 @@ export function AnnouncementForm({
     }
     setPending(true);
     try {
-      const result = await publishOrganizationAnnouncement({
-        orgId,
-        orgSlug,
-        title,
-        body,
-        audience: isDistrict && fanOut ? "connected_schools" : "org",
-        schoolIds: schoolIdsForSubmit,
-        notifyStaff: fanOut ? notifyStaff : true,
-        notifyStudents: fanOut ? notifyStudents : true,
-      });
+      const result = await attemptAction(() =>
+        publishOrganizationAnnouncement({
+          orgId,
+          orgSlug,
+          title,
+          body,
+          audience: isDistrict && fanOut ? "connected_schools" : "org",
+          schoolIds: schoolIdsForSubmit,
+          notifyStaff: fanOut ? notifyStaff : true,
+          notifyStudents: fanOut ? notifyStudents : true,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

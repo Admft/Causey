@@ -3,14 +3,25 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 /**
  * Last-good payload cache. The Family tab reads this first so the app opens
  * with real content instead of a spinner when the network is slow or gone.
+ *
+ * Every entry is scoped to the account that fetched it. A shared device is
+ * normal here — a parent and a student sign in on the same phone — so a
+ * roster or invitation list must never survive into another account's screen.
  */
 const PREFIX = "causey.cache.v1.";
 
 export type Cached<T> = { value: T; savedAt: number };
 
-export async function readCache<T>(key: string): Promise<Cached<T> | null> {
+function scopedKey(key: string, userId: string): string {
+  return `${PREFIX}${userId}.${key}`;
+}
+
+export async function readCache<T>(
+  key: string,
+  userId: string
+): Promise<Cached<T> | null> {
   try {
-    const raw = await AsyncStorage.getItem(PREFIX + key);
+    const raw = await AsyncStorage.getItem(scopedKey(key, userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Cached<T>;
     if (!parsed || typeof parsed.savedAt !== "number") return null;
@@ -20,10 +31,14 @@ export async function readCache<T>(key: string): Promise<Cached<T> | null> {
   }
 }
 
-export async function writeCache<T>(key: string, value: T): Promise<void> {
+export async function writeCache<T>(
+  key: string,
+  userId: string,
+  value: T
+): Promise<void> {
   try {
     await AsyncStorage.setItem(
-      PREFIX + key,
+      scopedKey(key, userId),
       JSON.stringify({ value, savedAt: Date.now() } satisfies Cached<T>)
     );
   } catch {
@@ -31,7 +46,7 @@ export async function writeCache<T>(key: string, value: T): Promise<void> {
   }
 }
 
-/** Called on sign-out so the next account never sees the previous family. */
+/** Called on sign-out and on account switch. Drops every account's entries. */
 export async function clearCache(): Promise<void> {
   try {
     const keys = await AsyncStorage.getAllKeys();

@@ -1,5 +1,5 @@
 import { Redirect, Stack, useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, StyleSheet, Text } from "react-native";
 import { causeyFetch, formatDateRange } from "../src/api";
 import { useAuth } from "../src/auth";
@@ -32,9 +32,17 @@ type SavedListing = {
 export default function SavedScreen() {
   const router = useRouter();
   const { session, access } = useAuth();
+  const userId = session?.user.id ?? null;
   const [saved, setSaved] = useState<SavedListing[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Bookmarks belong to one account. This screen also serves guests, so it
+  // cannot sit behind RequireSession and has to drop the list itself.
+  useEffect(() => {
+    setSaved(null);
+    setError(null);
+  }, [userId]);
 
   const load = useCallback(async () => {
     if (!session?.access_token) return;

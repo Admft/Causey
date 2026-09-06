@@ -2,6 +2,7 @@
 
 import { FormEvent, useState, useTransition } from "react";
 import { adminDeleteUser } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function AdminUserDeleteForm({
   profileId,
@@ -41,10 +42,9 @@ export function AdminUserDeleteForm({
     setMessage(null);
     setError(null);
     startTransition(async () => {
-      const result = await adminDeleteUser({
-        profileId,
-        confirmationEmail,
-      });
+      const result = await attemptAction(() =>
+        adminDeleteUser({ profileId, confirmationEmail })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

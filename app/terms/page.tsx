@@ -82,8 +82,10 @@ export default function TermsPage() {
             <li>
               The iOS and Android apps are the same service as the website.
               They are for ages 13 and up, not a kids app, and do not sell
-              subscriptions or tournament entry. Create an account on the
-              website. Organizer registration may open an external site.
+              subscriptions or tournament entry. Parents and coaches create an
+              account in the app. Students 13 or older create a student account
+              on the website, then sign in. Organizer registration may open an
+              external site.
             </li>
           </ul>
         </section>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { PathwayStatus } from "@/lib/schemas";
 import { PathwayList } from "@/components/PathwayList";
 import type { PathwayNode } from "@/lib/qualification";
+import { safeExternalUrl } from "@/lib/safe-url";
 
 type Related = { name: string; note?: string };
 
@@ -23,6 +24,8 @@ export function PathwayStatusPanel({
   sourceUrl: string | null;
 }) {
   const relatedList = related ?? [];
+  // Scraped or organizer-typed, so it is not safe to put in an href as-is.
+  const organizerHref = safeExternalUrl(sourceUrl);
 
   // No pathway and no curated graph: three quiet lines, not a big empty card.
   if (status === "none" && unlocks.length === 0) {
@@ -72,9 +75,9 @@ export function PathwayStatusPanel({
             {summary ??
               "We are not sure whether this event feeds a qualifier. Check the organizer site before relying on a pathway."}
           </p>
-          {sourceUrl ? (
+          {organizerHref ? (
             <a
-              href={sourceUrl}
+              href={organizerHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex text-sm font-semibold text-brand-red transition-colors hover:text-brand-red-hover"

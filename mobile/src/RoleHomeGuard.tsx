@@ -39,7 +39,12 @@ function useAccountHome(): Resolution {
   return { kind: "home", home: homeRouteForRole(profile.role) };
 }
 
-function AccountError({ message }: { message: string }) {
+/**
+ * Shown when the sign-in worked but `/api/mobile/me` did not. Every screen
+ * that waits on account details needs this escape hatch; a bare spinner would
+ * never resolve.
+ */
+export function AccountError({ message }: { message: string }) {
   const { refreshMe, signOut } = useAuth();
   return (
     <Screen>

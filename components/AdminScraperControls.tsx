@@ -10,6 +10,7 @@ import {
   type AdminRunnableScraperSource,
 } from "@/lib/admin-scrapers";
 import { adminRunScraper } from "@/lib/actions/admin-operations";
+import { attemptAction } from "@/lib/attempt-action";
 import type { AdminScrapeRunRow } from "@/lib/data/admin";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
@@ -112,7 +113,9 @@ export function AdminScraperControls({
     setError(null);
     setMessage(null);
     try {
-      const result = await adminRunScraper({ sources: selectedList });
+      const result = await attemptAction(() =>
+        adminRunScraper({ sources: selectedList })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

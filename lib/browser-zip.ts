@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from "@/lib/browser-fetch";
+
 function geolocationAllowedByPolicy(): boolean {
   if (typeof document === "undefined") return true;
   const doc = document as Document & {
@@ -54,14 +56,23 @@ export async function requestNearestZip(): Promise<
     };
   }
 
-  const response = await fetch("/api/geo/nearest-zip", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetchWithTimeout("/api/geo/nearest-zip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      }),
+    });
+  } catch {
+    // Geolocation already answered, so the person is waiting on us now.
+    return {
+      ok: false,
+      error: "Could not reach the zip lookup. Type a 5-digit zip instead.",
+    };
+  }
   const payload = (await response.json().catch(() => null)) as
     | { zip?: string; error?: string }
     | null;

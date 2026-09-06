@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
 import { CategoryGraphic } from "@/components/CategoryGraphic";
 import { requestNearestZip } from "@/lib/browser-zip";
 import {
@@ -36,7 +36,9 @@ export function HomeHeroSearch({
   const [radius, setRadius] = useState("50");
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  // The transition clears itself when the navigation lands; a manual flag had
+  // nothing to reset it, so the button stayed on "Searching…".
+  const [pending, startTransition] = useTransition();
   const [locating, setLocating] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
@@ -84,14 +86,15 @@ export function HomeHeroSearch({
       return;
     }
 
-    setPending(true);
-    // Only the params every directory understands make the trip.
-    router.push(
-      discoveryCategoryHref(category, {
-        zip: trimmed || null,
-        radius: trimmed ? radius : null,
-      })
-    );
+    startTransition(() => {
+      // Only the params every directory understands make the trip.
+      router.push(
+        discoveryCategoryHref(category, {
+          zip: trimmed || null,
+          radius: trimmed ? radius : null,
+        })
+      );
+    });
   }
 
   const zipTrimmed = zip.trim();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { attemptAction } from "@/lib/attempt-action";
 import { requestNearestZip } from "@/lib/browser-zip";
 
 export function ZipCaptureField({
@@ -27,7 +28,7 @@ export function ZipCaptureField({
     setLocateError(null);
     setLocating(true);
     try {
-      const result = await requestNearestZip();
+      const result = await attemptAction(() => requestNearestZip());
       if (!result.ok) {
         setLocateError(result.error);
         return;

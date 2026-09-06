@@ -3,6 +3,7 @@ import {
   requiredOrganizerFacetMessage,
   storedFacetsForOrganizer,
 } from "@/lib/category-discovery";
+import { safeExternalUrl } from "@/lib/safe-url";
 import {
   CompetitionCategorySchema,
   CompetitionFacetSchema,
@@ -63,6 +64,13 @@ const TournamentFieldsSchema = z
       .string()
       .trim()
       .url("Registration link must be a full URL.")
+      // A full URL is not the same as a safe one: `.url()` accepts
+      // `javascript:` and `data:`, and this value ends up in an href on the
+      // public listing.
+      .refine((value) => safeExternalUrl(value) !== null, {
+        message:
+          "Registration link has to be a public http:// or https:// address.",
+      })
       .nullable()
       .or(z.literal("").transform(() => null)),
     visibility: z.enum(["public", "private"]),

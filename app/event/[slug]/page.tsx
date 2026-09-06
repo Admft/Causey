@@ -14,6 +14,7 @@ import {
   formatFeeCents,
 } from "@/lib/format";
 import { organizerCoverUrl } from "@/lib/cover-url";
+import { externalUrlHost, safeExternalUrl } from "@/lib/safe-url";
 import type { PathwayStatus } from "@/lib/schemas";
 import { eventStanding, isFeaturedStanding } from "@/lib/event-standing";
 import { FeaturedAwardMark } from "@/components/FeaturedAwardMark";
@@ -120,9 +121,11 @@ export default async function EventPage({ params }: Params) {
     new Map(seriesList.map((s) => [s.id, s]))
   );
 
-  const regHost = competition.reg_url
-    ? new URL(competition.reg_url).hostname.replace(/^www\./, "")
-    : null;
+  // Listing URLs are scraped or organizer-typed. An unusable one is treated
+  // as no registration link at all, which this page already knows how to say.
+  // The bare `new URL()` this replaces also threw on an unparseable value.
+  const registrationUrl = safeExternalUrl(competition.reg_url);
+  const regHost = externalUrlHost(competition.reg_url);
   const feeLabel =
     competition.entry_fee_cents === null || competition.entry_fee_cents === undefined
       ? "Fee not listed"
@@ -290,6 +293,9 @@ export default async function EventPage({ params }: Params) {
   const hasAnsweredRsvp = rsvpTargets.some(
     (t) => t.status === "going" || t.status === "not_going"
   );
+  const allDeclined =
+    rsvpTargets.length > 0 &&
+    rsvpTargets.every((t) => t.status === "not_going");
   const registrationComplete =
     registrationTargets.length > 0 &&
     registrationTargets.every((t) => t.status === "registered");
@@ -310,9 +316,9 @@ export default async function EventPage({ params }: Params) {
   const primaryAction: "ended" | "rsvp" | "register" | "invite_only" | "no_reg_link" =
     ended
       ? "ended"
-      : needsRsvp
+      : needsRsvp || allDeclined
         ? "rsvp"
-        : competition.reg_url
+        : registrationUrl
           ? "register"
           : competition.audience === "invite_only"
             ? "invite_only"
@@ -556,6 +562,12 @@ export default async function EventPage({ params }: Params) {
                     ? rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
                       ? "Your coach needs an RSVP"
                       : "An RSVP needs your response"
+                    : allDeclined
+                      ? rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
+                        ? "You’re not going"
+                        : rsvpTargets.length === 1
+                          ? `${rsvpTargets[0].label} is not going`
+                          : "No one from this account is going"
                     : rsvpTargets.length === 1 && rsvpTargets[0].label === "You"
                       ? "Are you going?"
                       : rsvpTargets.length === 1
@@ -564,10 +576,14 @@ export default async function EventPage({ params }: Params) {
                 </h2>
                 <p className="mt-2 max-w-prose text-sm text-muted">
                   {needsCoachRsvp
-                    ? competition.reg_url
+                    ? registrationUrl
                       ? "Answer so your organization knows who is coming, then finish organizer registration if the event requires it."
                       : "Answer so your organization knows who is coming. Entry is through your club invite, not open registration."
-                    : competition.reg_url
+                    : allDeclined
+                      ? registrationUrl && regHost
+                        ? `Causey will keep this off the Plan. If you already registered or paid on ${regHost}, withdraw there — Causey cannot cancel organizer entry.`
+                        : "Causey will keep this off the Plan. Tap Going if that changes."
+                    : registrationUrl
                       ? "Going on Causey is for Family and Plan. Save is only a bookmark for this account. Entry and payment still happen on the organizer’s site — mark that complete after you finish there."
                       : "Going on Causey is for Family and Plan. Save is only a bookmark for this account. This listing has no organizer registration link."}
                 </p>
@@ -594,10 +610,21 @@ export default async function EventPage({ params }: Params) {
                     </div>
                   ))}
                 </div>
+                {allDeclined && registrationUrl && regHost ? (
+                  <a
+                    href={`/event/${competition.slug}/register`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex text-sm font-semibold text-brand-red hover:underline"
+                    aria-label={`Open ${regHost} to withdraw (opens in a new tab)`}
+                  >
+                    Open {regHost} to withdraw <span aria-hidden="true">↗</span>
+                  </a>
+                ) : null}
               </>
             ) : null}
 
-            {primaryAction === "register" && competition.reg_url && regHost ? (
+            {primaryAction === "register" && registrationUrl && regHost ? (
               <>
                 <h2
                   id="event-next-step"
@@ -637,6 +664,7 @@ export default async function EventPage({ params }: Params) {
                         forLabel={
                           target.label !== "You" ? target.label : undefined
                         }
+                        rsvpProfileId={target.profileId ?? user?.id}
                         embedded
                       />
                     </div>

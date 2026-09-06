@@ -7,6 +7,7 @@ import { AdminUserAccessForm } from "@/components/AdminUserAccessForm";
 import { AdminUserDeleteForm } from "@/components/AdminUserDeleteForm";
 import { PageBackButton, PageNextButton } from "@/components/PageBackLink";
 import type { AdminUserAccessFilter } from "@/lib/data/admin";
+import { attemptAction } from "@/lib/attempt-action";
 
 type AdminUserRow = {
   profile_id: string;
@@ -67,11 +68,13 @@ export function AdminUserDirectory({
   function search(nextPage: number, nextQuery = appliedQuery) {
     setError(null);
     startTransition(async () => {
-      const result = await adminSearchUsers({
-        query: nextQuery,
-        page: nextPage,
-        access,
-      });
+      const result = await attemptAction(() =>
+        adminSearchUsers({
+          query: nextQuery,
+          page: nextPage,
+          access,
+        })
+      );
       if (!result.ok) {
         setUsers([]);
         setTotal(0);

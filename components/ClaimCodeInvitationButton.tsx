@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { claimOrganizationInvitationByCode } from "@/lib/actions/district";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function ClaimCodeInvitationButton({ code }: { code: string }) {
   const router = useRouter();
@@ -13,7 +14,9 @@ export function ClaimCodeInvitationButton({ code }: { code: string }) {
     setPending(true);
     setError(null);
     try {
-      const result = await claimOrganizationInvitationByCode(code);
+      const result = await attemptAction(() =>
+        claimOrganizationInvitationByCode(code)
+      );
       if (!result.ok) {
         setError(result.error);
         return;

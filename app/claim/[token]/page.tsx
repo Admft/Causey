@@ -6,6 +6,11 @@ import { ClaimInvitationButton } from "@/components/ClaimInvitationButton";
 import { getSessionUser } from "@/lib/auth/session";
 import { getOrganizationInvitationPreview } from "@/lib/data/portal";
 
+// Reads the signed-in account, so this response is never shareable.
+// Declared rather than inferred from cookies(): the day someone moves the
+// session read out of this file, the caching contract should not move too.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Claim organization invitation",
   description: "Join a district, school, club, or team on Causey.",

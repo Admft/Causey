@@ -6,6 +6,7 @@ import { GuardianLinkRequestForm } from "@/components/GuardianLinkRequestForm";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
 import { MissingZipCard } from "@/components/MissingZipCard";
 import { PortalListRow, PortalMission } from "@/components/PortalPrimitives";
+import { ProfileNotReady } from "@/components/ProfileNotReady";
 import { RsvpButtons } from "@/components/RsvpButtons";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import type { AccountRole } from "@/lib/auth/types";
@@ -114,20 +115,7 @@ export default async function MePage() {
   if (!user) redirect("/login");
 
   const profile = await getCurrentProfile();
-  if (!profile) {
-    return (
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <h1 className="font-display text-display-lg font-bold tracking-tight text-foreground">
-          Profile not ready
-        </h1>
-        <p className="mt-3 text-sm text-muted">
-          You&rsquo;re signed in, but Causey could not finish loading your
-          profile. Sign out and back in once. If this continues, ask the person
-          who manages your Causey access for help.
-        </p>
-      </div>
-    );
-  }
+  if (!profile) return <ProfileNotReady section="Your plan" />;
 
   const supabase = await createServerSupabaseClient();
   const [

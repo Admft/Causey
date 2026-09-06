@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { adminBulkVerifyDistrictSchools } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 
 export function AdminDistrictSchoolBulkVerify({
   districtId,
@@ -45,11 +46,13 @@ export function AdminDistrictSchoolBulkVerify({
     setMessage(null);
     setError(null);
     startTransition(async () => {
-      const result = await adminBulkVerifyDistrictSchools({
-        districtId,
-        districtSlug,
-        schoolIds: selected,
-      });
+      const result = await attemptAction(() =>
+        adminBulkVerifyDistrictSchools({
+          districtId,
+          districtSlug,
+          schoolIds: selected,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

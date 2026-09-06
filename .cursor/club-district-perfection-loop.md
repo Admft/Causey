@@ -30,11 +30,15 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Chess nationals banners: restore the slow sheen on the red face (home + `/chess` + phone pin) — 2026-09-06
+- Leave a tournament after organizer registration is marked complete — 2026-09-06
 
 ## Last tick
 
-- 2026-09-06 — Chess nationals banners (home split card, `/chess` pin, phone Search pin) sheen again: the same slow sweep + rest as the district window, clipped to the red face so the homepage Local/State/Nationals path stays still. Reduced motion kills it.
+- 2026-09-06 — Marked complete had no way out: the only control was "Registration is still needed," which does not mean Can't go and does not say Causey cannot cancel organizer entry. The complete state now offers Can't go (RSVP + drop the complete mark so Plan lets go) and Undo complete mark, and after a decline the page says so with a withdraw link on the organizer site.
+- 2026-09-06 — Website audited against the phone's findings. The cross-account cache leak does not exist here (no browser storage, no `unstable_cache`, no `revalidate`, per-request Supabase clients), but the untrusted-URL class does and reaches further: zod `.url()` accepts `javascript:`, and the event page's pathway panel put a scraped `reg_url` straight into a public `href`. One guard now covers every external link and both write paths. Dead ends closed: a 15s fetch deadline for search and pathways, a dropped connection can no longer look like a successful save, "Profile not ready" has a retry and a sign-out, `/family` guards a null profile, and the root and family error boundaries exist. Sign-out is a document replacement so a school computer's back button cannot reach the last account.
+- 2026-09-06 — Phone shared-device privacy and dead ends: the offline cache is scoped per account and cleared when the signed-in user changes (a coach's cached roster could render for the next person on the same phone); every screen that waits on `/api/mobile/me` now offers retry or sign out instead of a spinner; a 200 with no listing, a deep link with no id, and a failed attendance read all end somewhere a person can act; organizer links from scraped listings go through one http(s) guard.
+- 2026-09-06 — Phone App Store review pack: no invented “You” RSVP, coach screens redirect when unsigned, website-only alerts open Safari, nationals pin disclaimer, privacy/terms/support match in-app signup and deletion, iPhone-only, privacy nutrition types in the manifest.
+- 2026-09-06 — Phone tournament Going / Can't go updates from the tap, same as Yes on organizer registration, when the attendance reload is missing
 - 2026-09-06 — Report a problem is a labeled footer link on every website page; the header stays Sign in / Account.
 - 2026-09-06 — Report a problem left the header; it sits with Support in the footer, Account data, sign-in, the error page, and phone Me trust links.
 - 2026-09-06 — Phone tournament details match the website job: show the listing photo and US Chess rating, ask Going / Can't go, and after organizer registration ask whether they finished and confirm they are going. Add to calendar falls back to an .ics / Calendar template in Expo Go.

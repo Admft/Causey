@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminTournamentStatusActions } from "@/components/AdminTournamentStatusActions";
 import { adminBulkSetTournamentStatus } from "@/lib/actions/admin";
+import { attemptAction } from "@/lib/attempt-action";
 import {
   adminDeleteAllTournaments,
   adminDeleteTournaments,
@@ -175,10 +176,12 @@ export function AdminTournamentBulkList({
     setError(null);
     setMessage(null);
     try {
-      const result = await adminBulkSetTournamentStatus({
-        competitionIds: ids,
-        status: "published",
-      });
+      const result = await attemptAction(() =>
+        adminBulkSetTournamentStatus({
+          competitionIds: ids,
+          status: "published",
+        })
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -216,7 +219,9 @@ export function AdminTournamentBulkList({
     setError(null);
     setMessage(null);
     try {
-      const result = await adminDeleteTournaments({ competitionIds: ids });
+      const result = await attemptAction(() =>
+        adminDeleteTournaments({ competitionIds: ids })
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -241,9 +246,9 @@ export function AdminTournamentBulkList({
     setError(null);
     setMessage(null);
     try {
-      const result = await adminDeleteAllTournaments({
-        confirmation: deleteAllConfirmation,
-      });
+      const result = await attemptAction(() =>
+        adminDeleteAllTournaments({ confirmation: deleteAllConfirmation })
+      );
       if (!result.ok) {
         setError(result.error);
         return;

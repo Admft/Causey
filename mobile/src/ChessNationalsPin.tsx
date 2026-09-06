@@ -78,10 +78,11 @@ export function ChessNationalsPin({ onPress }: { onPress: () => void }) {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${CHESS_NATIONALS.headline}. ${CHESS_NATIONALS.ctaLabel}`}
+      accessibilityLabel={`${CHESS_NATIONALS.headline}. ${CHESS_NATIONALS.honesty} ${CHESS_NATIONALS.ctaLabel}`}
       style={({ pressed }) => [styles.pin, pressed && styles.pressed]}
     >
       <Text style={styles.headline}>{CHESS_NATIONALS.headline}</Text>
+      <Text style={styles.honesty}>{CHESS_NATIONALS.honesty}</Text>
       <Text style={styles.cta}>
         {CHESS_NATIONALS.ctaLabel}
         <Text> →</Text>
@@ -113,6 +114,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "800",
     letterSpacing: -0.3,
+  },
+  honesty: {
+    marginTop: 8,
+    color: "rgba(255, 255, 255, 0.92)",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
   },
   cta: {
     marginTop: 10,

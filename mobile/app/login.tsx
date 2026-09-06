@@ -1,8 +1,8 @@
-import * as Linking from "expo-linking";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useAuth } from "../src/auth";
+import { openExternalUrl } from "../src/open-url";
 import { siteUrl } from "../src/theme";
 import {
   ErrorText,
@@ -23,8 +23,10 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   if (session && access?.allowed === false) return <Redirect href="/blocked" />;
-  // "/" resolves the role's own home once the profile lands.
-  if (session && access?.allowed) return <Redirect href="/" />;
+  // "/" resolves the role's own home once the profile lands, and shows the
+  // retry screen if it never does. Leaving the form up while account details
+  // are still in flight invites a second sign-in on top of a live session.
+  if (session) return <Redirect href="/" />;
 
   async function onSubmit() {
     setBusy(true);
@@ -91,7 +93,7 @@ export default function LoginScreen() {
         />
         <LinkButton
           label="Create a student account (13+) on the website"
-          onPress={() => Linking.openURL(`${siteUrl}/signup?role=student`)}
+          onPress={() => void openExternalUrl(`${siteUrl}/signup?role=student`)}
         />
         <LinkButton
           label="Forgot password?"

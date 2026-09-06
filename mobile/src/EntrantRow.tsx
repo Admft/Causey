@@ -1,6 +1,6 @@
-import * as Linking from "expo-linking";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { formatDateRange } from "./api";
+import { openExternalUrl, safeRegUrl } from "./open-url";
 import { colors } from "./theme";
 import { Meta } from "./ui";
 
@@ -39,7 +39,7 @@ export function EntrantRow({
 }) {
   const event = row.competition;
   if (!event) return null;
-  const regUrl = event.reg_url;
+  const regUrl = event.reg_url ? safeRegUrl(event.reg_url) : null;
 
   return (
     <View style={styles.event}>
@@ -75,7 +75,11 @@ export function EntrantRow({
       {row.needs_organizer_registration && regUrl ? (
         <View style={styles.row}>
           <Pressable
-            onPress={() => Linking.openURL(regUrl)}
+            onPress={() => {
+              void openExternalUrl(regUrl).then((message) => {
+                if (message) Alert.alert("Could not open link", message);
+              });
+            }}
             accessibilityRole="button"
             accessibilityLabel={`Open organizer registration for ${event.name}`}
             style={styles.linkHit}
