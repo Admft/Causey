@@ -88,7 +88,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Causey is an early build. Chess search is usable; speech and
                 debate, STEM, arts, and writing use only a few official sources.
                 Fees, venues, dates, and coverage can be missing or wrong.
-                Confirm public details on the organizer&rsquo;s site.
+                Confirm public details on the organizer&rsquo;s site. If
+                something is broken,{" "}
+                <Link
+                  href="/support"
+                  className="font-semibold text-muted-strong transition-colors hover:text-brand-red"
+                >
+                  report a problem
+                </Link>
+                .
               </p>
             </div>
             <div className="flex flex-col gap-2 text-xs">
@@ -119,16 +127,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 Schools and districts
               </Link>
+              <Link
+                href="/support"
+                className="font-semibold text-muted-strong transition-colors hover:text-brand-red"
+              >
+                Report a problem
+              </Link>
               <nav
                 aria-label="Legal"
                 className="flex flex-col gap-2"
               >
-                <Link
-                  href="/support"
-                  className="font-medium text-muted-strong transition-colors hover:text-brand-red"
-                >
-                  Support
-                </Link>
                 <Link
                   href="/privacy"
                   className="font-medium text-muted-strong transition-colors hover:text-brand-red"

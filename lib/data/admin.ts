@@ -11,6 +11,7 @@ import {
   type SourceHealth,
 } from "@/lib/ingestion-sources";
 import { escapePostgrestLikePattern } from "@/lib/data/supabase";
+import { countSupportReportsByStatus } from "@/lib/data/support";
 import {
   isTournamentPublishReady,
   type TournamentReadinessInput,
@@ -159,6 +160,7 @@ export const ADMIN_OPS_SLICES = [
   "organizations",
   "accounts",
   "ingestion",
+  "support",
 ] as const;
 
 export type AdminOpsSlice = (typeof ADMIN_OPS_SLICES)[number];
@@ -191,6 +193,11 @@ export type AdminOpsStats = {
     issueCount: AdminCount;
     runsUnavailable: boolean;
   };
+  support: {
+    open: AdminCount;
+    replied: AdminCount;
+    closed: AdminCount;
+  };
 };
 
 const UNAVAILABLE_LISTINGS: AdminOpsStats["listings"] = {
@@ -222,6 +229,12 @@ const UNAVAILABLE_INGESTION: AdminOpsStats["ingestion"] = {
   lastRowsUpserted: null,
   issueCount: null,
   runsUnavailable: true,
+};
+
+const UNAVAILABLE_SUPPORT: AdminOpsStats["support"] = {
+  open: null,
+  replied: null,
+  closed: null,
 };
 
 export function formatIngestionLastRun(
@@ -359,6 +372,7 @@ export async function getAdminOpsStats(
   const includeOrganizations = slices.includes("organizations");
   const includeAccounts = slices.includes("accounts");
   const includeIngestion = slices.includes("ingestion");
+  const includeSupport = slices.includes("support");
 
   const listing = (status: AdminTournamentRow["status"]) =>
     exactCount(
@@ -377,7 +391,7 @@ export async function getAdminOpsStats(
         .eq("verification_status", verificationStatus)
     );
 
-  const [listingBundle, draftRows, orgBundle, accountBundle, scrapeRuns] =
+  const [listingBundle, draftRows, orgBundle, accountBundle, scrapeRuns, supportCounts] =
     await Promise.all([
       includeListings
         ? Promise.all([
@@ -434,6 +448,7 @@ export async function getAdminOpsStats(
             .order("started_at", { ascending: false })
             .limit(250)
         : Promise.resolve(null),
+      includeSupport ? countSupportReportsByStatus() : Promise.resolve(null),
     ]);
 
   let readyToPublish: AdminCount = null;
@@ -512,6 +527,7 @@ export async function getAdminOpsStats(
     organizations,
     accounts,
     ingestion,
+    support: supportCounts ?? UNAVAILABLE_SUPPORT,
   };
 }
 

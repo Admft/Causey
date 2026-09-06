@@ -17,6 +17,8 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Report a problem is in the header (signed in and out), footer honesty copy, and phone Me — 2026-09-06
+- [x] Support problem reports: `/support` form (anyone, optional screenshot) emails the founding team; platform admins reply from `/admin/support` into Alerts plus email — 2026-09-06
 - [x] Phone Search is name + zip (+ distance) with an Advanced search disclosure for the website filters (when, featured, club/school going, source, grade, rating, fee, state, dates, facets). Sort sits with results. `/api/competitions` honors the phone Bearer token. — 2026-09-06
 - [x] Phone Search keeps type-tile marks and drops the duplicate selected-category image above the heading — 2026-09-06
 - [x] Chess search pin is red-only (headline + CTA); homepage keeps the split card with the Local/State/Nationals path — 2026-09-06

@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageBackLink } from "@/components/PageBackLink";
+import { SupportReportForm } from "@/components/SupportReportForm";
+import { SupportReportThread } from "@/components/SupportReportThread";
+import { getSessionUser } from "@/lib/auth/session";
+import { getMySupportReports } from "@/lib/data/support";
 
 export const metadata: Metadata = {
   title: "Support",
-  description: "How to reach Causey about an account, listing, or the iOS and Android apps.",
+  description:
+    "Report a problem on Causey, or reach the founding team about an account, listing, or the phone app.",
 };
 
-export default function SupportPage() {
+export default async function SupportPage() {
+  const user = await getSessionUser();
+  const reports = user ? await getMySupportReports() : { reports: [], error: null };
+
   return (
     <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
       <PageBackLink />
@@ -16,34 +24,60 @@ export default function SupportPage() {
         Support
       </h1>
       <p className="mt-4 max-w-2xl text-md text-muted">
-        Causey is an early build. Use this page if you cannot sign in, need an
-        account deleted, or need to report a listing or comment.
+        Causey is an early build. Use this page if something is broken, you
+        cannot sign in, need an account deleted, or need to report a listing or
+        comment.
       </p>
 
       <div className="mt-10 space-y-10">
-        <section aria-labelledby="contact">
+        <section aria-labelledby="report">
           <h2
-            id="contact"
+            id="report"
             className="font-display text-display-sm font-bold tracking-tight text-foreground"
           >
-            Contact
+            Report a problem
           </h2>
           <p className="mt-4 text-base text-muted">
-            Reach the founding team through{" "}
-            <a
-              href="https://causey.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Contact Causey through causey.dev in a new tab"
-              className="font-semibold text-brand-red hover:underline"
-            >
-              causey.dev <span aria-hidden="true">↗</span>
-            </a>
-            . Include the account email and whether you are using the website
-            or the iOS/Android app. Do not send passwords or sensitive student
-            records.
+            This is not a live chat. Describe what went wrong and add a
+            screenshot if it helps. The founding team gets the report by email.
+            If you have a Causey account, replies also show in{" "}
+            <Link href="/me/notifications" className="font-semibold text-brand-red hover:underline">
+              Alerts
+            </Link>
+            . Do not send passwords or student records.
           </p>
+          <div className="mt-6">
+            <SupportReportForm initialEmail={user?.email ?? ""} />
+          </div>
         </section>
+
+        {user ? (
+          <section aria-labelledby="reports">
+            <h2
+              id="reports"
+              className="font-display text-display-sm font-bold tracking-tight text-foreground"
+            >
+              Your reports
+            </h2>
+            {reports.error ? (
+              <p className="mt-4 text-base text-muted">{reports.error}</p>
+            ) : reports.reports.length === 0 ? (
+              <p className="mt-4 text-base text-muted">
+                Reports you send while signed in appear here with any replies.
+              </p>
+            ) : (
+              <div className="mt-4">
+                {reports.reports.map((report) => (
+                  <SupportReportThread
+                    key={report.id}
+                    report={report}
+                    viewer="reporter"
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        ) : null}
 
         <section aria-labelledby="account">
           <h2

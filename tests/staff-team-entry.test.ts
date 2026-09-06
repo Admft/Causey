@@ -68,7 +68,7 @@ describe("staff team-entry for going / not going", () => {
   it("notifies the student and linked parents after staff entry", () => {
     const notification = effectiveFunction("create_in_app_notification");
     const action = source("lib/actions/entrants.ts");
-    expect(notification.file).toBe("0076_staff_team_entry.sql");
+    expect(notification.file).toBe("0081_support_reports.sql");
     expect(notification.sql).toContain("response_source = 'staff'");
     expect(notification.sql).toContain("staff-rsvp:");
     expect(notification.sql).toContain("p_href = '/family'");

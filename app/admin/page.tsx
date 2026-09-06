@@ -32,6 +32,7 @@ export default async function AdminOverviewPage() {
       "organizations",
       "accounts",
       "ingestion",
+      "support",
     ]),
     getAdminAuditLog(8),
     getAdminModerationQueue(),
@@ -39,6 +40,7 @@ export default async function AdminOverviewPage() {
   ]);
 
   const pending = stats.listings.pendingReview;
+  const openReports = stats.support.open;
   const queuePreview = moderation.error
     ? []
     : moderation.queue.slice(0, 3);
@@ -69,16 +71,30 @@ export default async function AdminOverviewPage() {
               label: "Browse pending records",
             },
           }
-        : {
-            title: "Review queue is clear",
-            description:
-              "When coaches submit public tournaments, they land here first. Use the quieter links below for drafts, orgs, and records.",
-            action: { href: "/admin/moderation", label: "Open moderation" },
-            secondary: {
-              href: "/admin/tournaments?status=draft",
-              label: "Review drafts",
-            },
-          };
+        : openReports && openReports > 0
+          ? {
+              title:
+                openReports === 1
+                  ? "1 problem report is waiting"
+                  : `${openReports} problem reports are waiting`,
+              description:
+                "People sent these from Support. Reply in Causey to email them and write an Alert when they have an account.",
+              action: { href: "/admin/support", label: "Open problem reports" },
+              secondary: {
+                href: "/admin/moderation",
+                label: "Open moderation",
+              },
+            }
+          : {
+              title: "Review queue is clear",
+              description:
+                "When coaches submit public tournaments, they land here first. Use the quieter links below for drafts, orgs, and records.",
+              action: { href: "/admin/moderation", label: "Open moderation" },
+              secondary: {
+                href: "/admin/tournaments?status=draft",
+                label: "Review drafts",
+              },
+            };
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -153,6 +169,48 @@ export default async function AdminOverviewPage() {
                       {
                         label: "Published",
                         value: stats.listings.publishedOrganizer,
+                        tone: "ok",
+                      },
+                    ]}
+                  />
+                ),
+              },
+              {
+                title: "Support",
+                items: [
+                  {
+                    label: "Open reports",
+                    value: stats.support.open,
+                    href: "/admin/support",
+                  },
+                  {
+                    label: "Replied",
+                    value: stats.support.replied,
+                    href: "/admin/support",
+                  },
+                  {
+                    label: "Closed",
+                    value: stats.support.closed,
+                    href: "/admin/support",
+                  },
+                ],
+                chart: (
+                  <AdminMixChart
+                    title="Problem reports"
+                    segments={[
+                      {
+                        label: "Open",
+                        value: stats.support.open,
+                        tone: "attention",
+                      },
+                      {
+                        label: "Replied",
+                        value: stats.support.replied,
+                        tone: "progress",
+                      },
+                      {
+                        label: "Closed",
+                        value: stats.support.closed,
                         tone: "ok",
                       },
                     ]}

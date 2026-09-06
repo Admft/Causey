@@ -17,7 +17,8 @@ export type RateLimitBucket =
   | "csv_import"
   | "comment"
   | "geo"
-  | "household";
+  | "household"
+  | "support";
 
 const LIMITS: Record<RateLimitBucket, { max: number; windowSeconds: number }> = {
   search: { max: 180, windowSeconds: 60 },
@@ -28,6 +29,7 @@ const LIMITS: Record<RateLimitBucket, { max: number; windowSeconds: number }> = 
   comment: { max: 10, windowSeconds: 60 },
   geo: { max: 20, windowSeconds: 60 },
   household: { max: 6, windowSeconds: 60 },
+  support: { max: 3, windowSeconds: 600 },
 };
 
 /** Search/geo stay usable if the limiter RPC is missing or mis-keyed. */
