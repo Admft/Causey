@@ -1,4 +1,3 @@
-import * as Linking from "expo-linking";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Share, StyleSheet, Text, View } from "react-native";
@@ -6,7 +5,11 @@ import { causeyFetch, formatDateRange, formatFeeCents } from "../../src/api";
 import { addTournamentToCalendar } from "../../src/calendar";
 import { categoryLabel } from "../../src/categories";
 import { ClubGoingCard } from "../../src/ClubGoingCard";
+import { EventCover } from "../../src/EventCover";
+import { EventDifficultyRating } from "../../src/EventDifficultyRating";
+import { EventGoingCard } from "../../src/EventGoingCard";
 import { EventPathways } from "../../src/EventPathways";
+import { EventSections, type EventSection } from "../../src/EventSections";
 import { feedback } from "../../src/haptics";
 import { SaveEventButton } from "../../src/SaveEventButton";
 import { siteUrl } from "../../src/theme";
@@ -22,6 +25,8 @@ import {
   Title,
 } from "../../src/ui";
 
+type RatingSummary = { avg_score: number; rating_count: number };
+
 type Competition = {
   id: string;
   slug: string;
@@ -32,12 +37,15 @@ type Competition = {
   address: string | null;
   city: string | null;
   state: string | null;
+  zip: string | null;
   start_date: string;
   end_date: string | null;
   reg_deadline: string | null;
   reg_url: string | null;
   entry_fee_cents: number | null;
   rated: boolean;
+  image_url?: string | null;
+  sections?: EventSection[];
   pathway_status?: string | null;
   pathway_summary?: string | null;
 };
@@ -51,15 +59,26 @@ function calendarLocation(event: Competition): string | null {
   const parts = [
     event.venue_name,
     event.address,
-    [event.city, event.state].filter(Boolean).join(", "),
+    [event.city, event.state, event.zip].filter(Boolean).join(", "),
   ].filter(Boolean);
   return parts.length ? parts.join(", ") : null;
+}
+
+function asRating(value: unknown): RatingSummary | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as { avg_score?: unknown; rating_count?: unknown };
+  if (typeof row.avg_score !== "number" || typeof row.rating_count !== "number") {
+    return null;
+  }
+  if (!row.rating_count) return null;
+  return { avg_score: row.avg_score, rating_count: row.rating_count };
 }
 
 export default function EventScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [event, setEvent] = useState<Competition | null>(null);
   const [unlocks, setUnlocks] = useState<unknown[]>([]);
+  const [rating, setRating] = useState<RatingSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addingToCalendar, setAddingToCalendar] = useState(false);
 
@@ -70,9 +89,11 @@ export default function EventScreen() {
       const data = (await causeyFetch(`/api/competitions/${slug}`)) as {
         competition: Competition;
         unlocks?: unknown[];
+        rating?: unknown;
       };
       setEvent(data.competition);
       setUnlocks(Array.isArray(data.unlocks) ? data.unlocks : []);
+      setRating(asRating(data.rating));
     } catch (err) {
       setError(
         err instanceof Error
@@ -95,6 +116,7 @@ export default function EventScreen() {
       endDate: event.end_date,
       location: calendarLocation(event),
       notes: `${siteUrl}/event/${event.slug}`,
+      slug: event.slug,
     });
     setAddingToCalendar(false);
     if (!outcome.message) return;
@@ -132,10 +154,13 @@ export default function EventScreen() {
   if (!event) return <Spinner />;
 
   const place = placeLine(event);
+  const isChess = event.category === "chess";
+  const ratingLabel = event.rated ? "US Chess rated" : "Not rated";
 
   return (
     <Screen header>
       <Kicker>{categoryLabel(event.category)}</Kicker>
+      <EventCover imageUrl={event.image_url} name={event.name} />
       <Title>{event.name}</Title>
       <Meta>{formatDateRange(event.start_date, event.end_date)}</Meta>
       {place ? <Meta>{place}</Meta> : null}
@@ -148,30 +173,39 @@ export default function EventScreen() {
           Registration closes {formatDateRange(event.reg_deadline, null)}
         </Meta>
       ) : null}
-      {event.rated && event.category === "chess" ? (
-        <Meta>US Chess rated</Meta>
+      {isChess ? <Meta>Rating · {ratingLabel}</Meta> : null}
+      {rating ? (
+        <Meta>
+          Difficulty {rating.avg_score} / 10 ({rating.rating_count}{" "}
+          {rating.rating_count === 1 ? "rating" : "ratings"})
+        </Meta>
       ) : null}
 
-      <PrimaryButton
-        label="Add to calendar"
-        onPress={onAddToCalendar}
-        busy={addingToCalendar}
+      <EventGoingCard
+        competitionId={event.id}
+        eventSlug={event.slug}
+        regUrl={event.reg_url}
+      />
+
+      <SecondaryButton
+        label={addingToCalendar ? "Adding to calendar…" : "Add to calendar"}
+        onPress={() => void onAddToCalendar()}
+        disabled={addingToCalendar}
       />
       <SecondaryButton label="Share tournament" onPress={onShare} />
       <SaveEventButton competitionId={event.id} initiallySaved={false} />
-      {event.reg_url ? (
-        <SecondaryButton
-          label="Open organizer registration"
-          onPress={() => Linking.openURL(event.reg_url as string)}
-        />
-      ) : null}
 
       <ClubGoingCard competitionId={event.id} />
+      <EventSections
+        sections={Array.isArray(event.sections) ? event.sections : []}
+        isChess={isChess}
+      />
       <EventPathways
         unlocks={unlocks}
         pathwayStatus={event.pathway_status}
         pathwaySummary={event.pathway_summary}
       />
+      <EventDifficultyRating competitionId={event.id} initialScore={null} />
 
       <Card>
         <View>

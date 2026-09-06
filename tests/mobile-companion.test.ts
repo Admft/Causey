@@ -130,6 +130,12 @@ describe("mobile companion sources", () => {
     expect(read("app/api/mobile/family/route.ts")).toContain("getMobileAuth");
     expect(read("app/api/mobile/rsvp/route.ts")).toContain("performSetRsvp");
     expect(read("app/api/mobile/rsvp/route.ts")).toContain("auth.access.allowed");
+    expect(read("app/api/mobile/event-attendance/route.ts")).toContain(
+      "getMobileAuth"
+    );
+    expect(read("app/api/mobile/registration/route.ts")).toContain(
+      "performMarkRegistrationOpened"
+    );
     expect(read("lib/auth/mobile-request.ts")).toContain("accessTokenFromRequest");
     expect(read("lib/supabase/access-token.ts")).toContain("Bearer");
     expect(read("lib/auth/mobile-request.ts")).not.toContain("date_of_birth");
@@ -154,6 +160,8 @@ describe("mobile companion sources", () => {
     expect(read("app/privacy/page.tsx")).toContain("not currently collect push tokens");
     expect(read("app/terms/page.tsx")).toContain("not a kids app");
     expect(read("app/layout.tsx")).toContain('href="/support"');
+    expect(read("app/layout.tsx")).toContain("Report a problem");
+    expect(read("mobile/app/(tabs)/me.tsx")).toContain("Report a problem");
   });
 });
 
@@ -268,6 +276,8 @@ describe("App Store readiness", () => {
     expect(read("mobile/src/calendar.ts")).toContain(
       "requestCalendarPermissions"
     );
+    expect(read("mobile/src/calendar.ts")).toContain("isExpoGoRuntime");
+    expect(read("mobile/src/calendar.ts")).toContain("googleCalendarTemplateUrl");
     expect(read("mobile/src/haptics.ts")).toContain("notificationAsync");
     expect(read("mobile/app/(tabs)/family.tsx")).toContain('feedback("success")');
     expect(read("mobile/app/(tabs)/family.tsx")).toContain("readCache");

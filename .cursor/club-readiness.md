@@ -23,6 +23,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 ## Need for a professional club (priority)
 
+- [x] Phone event details show the listing photo, US Chess rated/not rated, Going/Can't go, and “did you finish organizer registration?” after the organizer site; calendar falls back outside Expo Go — 2026-09-06
 - [x] Support problem reports from `/support` with optional screenshot; founding-team email and Alerts replies — 2026-09-06
 - [x] Phone Search is simple name/zip with Advanced search covering the website filters — 2026-09-06
 - [x] Phone lists clubs/teams (and any school/district memberships) the signed-in account belongs to (`GET /api/mobile/orgs`); coaches open roster; no create/settings/CSV — 2026-09-05
