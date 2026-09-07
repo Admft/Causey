@@ -214,10 +214,12 @@ with a similar title. Series matching and pathway enrichment run only for
   registration link, regional dates, fee, or grade band. Office of Science
   `robots.txt` allows both pages, and its Web Policies identify site materials
   as public domain while requesting source acknowledgment and prohibiting
-  implied endorsement. Causey uses no DOE or National Science Bowl logo.
-  Ordinary public HTML for Key Dates and About returned HTTP 200 on
-  2026-09-02, so the adapter is enabled in aggregate discovery, admin dispatch,
-  and GitHub workflow runs. Regional qualifying bowls are not indexed.
+  implied endorsement. Listing covers may reuse a public-domain Office of
+  Science photo; Causey does not use the DOE seal or National Science Bowl
+  wordmark as a source logo. Ordinary public HTML for Key Dates, About, and
+  the NSB home page returned HTTP 200 on 2026-09-02 / 2026-09-06, so the
+  adapter is enabled in aggregate discovery, admin dispatch, and GitHub
+  workflow runs. Regional qualifying bowls are not indexed.
 - **Texas Science & Engineering Fair (`txsef_scrape`, STEM /
   `science_fair`):** Texas A&M's official public homepage must publish an exact
   year-specific state-fair date range and College Station venue, while its

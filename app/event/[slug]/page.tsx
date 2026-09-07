@@ -141,7 +141,7 @@ export default async function EventPage({ params }: Params) {
     series: competition.series,
     details: competition.details,
   });
-  const featuredStanding = isChess && isFeaturedStanding(standing);
+  const featuredStanding = isFeaturedStanding(standing);
   const typeLabel = [
     competitionTypeLabel({
       category: competition.category,
@@ -161,7 +161,9 @@ export default async function EventPage({ params }: Params) {
     isChess
       ? (competition.series?.name ??
         (standing.id !== "local" ? standing.label : null))
-      : null,
+      : standing.id !== "local"
+        ? standing.label
+        : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -407,7 +409,7 @@ export default async function EventPage({ params }: Params) {
               {competition.name}
             </h1>
           </div>
-          {isChess ? (
+          {standing.id !== "local" ? (
             <p className="mt-3 max-w-prose text-sm text-muted">
               {standing.hint}
             </p>

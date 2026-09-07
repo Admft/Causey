@@ -341,6 +341,12 @@ describe("generalized links and return paths", () => {
     expect(eventPage).not.toContain("←");
   });
 
+  it("marks official STEM nationals as featured, not chess-only", () => {
+    expect(eventPage).toContain("const featuredStanding = isFeaturedStanding(standing)");
+    expect(eventPage).not.toContain("isChess && isFeaturedStanding");
+    expect(eventPage).toContain("standing.id !== \"local\"");
+  });
+
   it("generic surfaces stop hardcoding /chess as the search destination", () => {
     for (const file of [
       "app/not-found.tsx",

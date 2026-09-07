@@ -77,6 +77,28 @@ export async function downloadCoverBytes(
   return null;
 }
 
+export async function uploadCoverBytes(
+  client: SupabaseClient,
+  buf: Buffer,
+  mime: "image/jpeg" | "image/png" | "image/webp",
+  source: string,
+  competitionId: string
+): Promise<string | null> {
+  if (buf.length === 0 || buf.length > MAX_COVER_BYTES) return null;
+  const ext = MIME_TO_EXT[mime];
+  if (!ext) return null;
+  const path = scrapedCoverPath(source, competitionId, ext);
+  const { error } = await client.storage.from(COVER_BUCKET).upload(path, buf, {
+    contentType: mime,
+    upsert: true,
+  });
+  if (error) {
+    console.warn(`cover rehost failed for ${competitionId}: ${error.message}`);
+    return null;
+  }
+  return client.storage.from(COVER_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
 export async function rehostScrapedCover(
   client: SupabaseClient,
   imageUrl: string,
@@ -85,18 +107,13 @@ export async function rehostScrapedCover(
 ): Promise<string | null> {
   const downloaded = await downloadCoverBytes(imageUrl);
   if (!downloaded) return null;
-  const ext = MIME_TO_EXT[downloaded.mime];
-  if (!ext) return null;
-  const path = scrapedCoverPath(source, competitionId, ext);
-  const { error } = await client.storage.from(COVER_BUCKET).upload(path, downloaded.buf, {
-    contentType: downloaded.mime,
-    upsert: true,
-  });
-  if (error) {
-    console.warn(`cover rehost failed for ${competitionId}: ${error.message}`);
-    return null;
-  }
-  return client.storage.from(COVER_BUCKET).getPublicUrl(path).data.publicUrl;
+  return uploadCoverBytes(
+    client,
+    downloaded.buf,
+    downloaded.mime,
+    source,
+    competitionId
+  );
 }
 
 /**

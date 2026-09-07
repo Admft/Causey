@@ -7,6 +7,7 @@ import {
   type SearchFilters,
   type Section,
 } from "@/lib/schemas";
+import { standingSortRank } from "@/lib/event-standing";
 import { haversineMiles } from "@/lib/geo";
 import {
   competitionNameRank,
@@ -60,6 +61,11 @@ export function sortCompetitionResults(
       // On an equal boosted score, keep real interest as the tie-breaker.
       const realInterestDelta = b.interest_count - a.interest_count;
       if (realInterestDelta !== 0) return realInterestDelta;
+
+      // Do not invent save counts. When interest is tied, official national
+      // listings rank above local ones in the same distance band.
+      const standingDelta = standingSortRank(a) - standingSortRank(b);
+      if (standingDelta !== 0) return standingDelta;
     }
 
     if (a.distance_miles !== null && b.distance_miles !== null) {

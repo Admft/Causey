@@ -1,11 +1,19 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { assertSourceAutomationAllowed } from "../lib/ingestion-sources";
 import { getServiceRoleClient } from "../lib/supabase/client";
 import { createZipGeo } from "./geo";
 import { normalizeCategorySourceEvent } from "./normalize-category-source";
 import { openSection } from "./parse-sections";
-import { parseDoeScienceBowlHtml } from "./parse-doe-science-bowl";
+import {
+  ABOUT_URL,
+  KEY_DATES_URL,
+  NSB_HOME_URL,
+  parseDoeScienceBowlHtml,
+} from "./parse-doe-science-bowl";
 import type { StagedCompetition } from "./persist";
+import { sniffCoverMime, uploadCoverBytes } from "./rehost-cover";
 import {
   capRows,
   loadListingHtml,
@@ -16,13 +24,25 @@ import {
 } from "./scrape-hub-utils";
 
 const SOURCE = "doe_science_bowl_scrape" as const;
-const KEY_DATES_URL = "https://science.osti.gov/wdts/nsb/Key-Dates";
-const ABOUT_URL = "https://science.osti.gov/wdts/nsb/About";
 const STAGING_FILE = "doe-science-bowl-drafts.json";
+const COVER_FILE = join(
+  process.cwd(),
+  "public/listing-covers/national-science-bowl.jpg"
+);
+
+async function officialCoverUrl(
+  client: ReturnType<typeof getServiceRoleClient>
+): Promise<string | null> {
+  if (!client || !existsSync(COVER_FILE)) return null;
+  const buf = readFileSync(COVER_FILE);
+  const mime = sniffCoverMime(buf, "image/jpeg");
+  if (!mime) return null;
+  return uploadCoverBytes(client, buf, mime, SOURCE, "official-cover");
+}
 
 async function main() {
   console.log(
-    `Scraper: ${KEY_DATES_URL}, ${ABOUT_URL} → source='${SOURCE}' (DOE National Science Bowl)`
+    `Scraper: ${KEY_DATES_URL}, ${ABOUT_URL}, ${NSB_HOME_URL} → source='${SOURCE}' (DOE National Science Bowl)`
   );
   if (process.env.SCRAPE_UPSERT_ONLY === "1") {
     await runUpsertOnly(STAGING_FILE, SOURCE);
@@ -33,7 +53,11 @@ async function main() {
   const keyDatesHtml = await loadListingHtml({ url: KEY_DATES_URL });
   if (!process.env.SCRAPE_HTML_FILE) await sleep(350);
   const aboutHtml = await loadListingHtml({ url: ABOUT_URL });
-  const raw = capRows(parseDoeScienceBowlHtml(keyDatesHtml, aboutHtml));
+  if (!process.env.SCRAPE_HTML_FILE) await sleep(350);
+  const homeHtml = await loadListingHtml({ url: NSB_HOME_URL });
+  const raw = capRows(
+    parseDoeScienceBowlHtml(`${keyDatesHtml}\n${homeHtml}`, aboutHtml)
+  );
   if (raw.length === 0) {
     throw new Error(
       "DOE National Science Bowl returned no complete national event dates with an official Washington, DC location statement."
@@ -42,6 +66,7 @@ async function main() {
 
   const client = getServiceRoleClient();
   const geo = createZipGeo(client);
+  const coverUrl = await officialCoverUrl(client);
   const drafts: StagedCompetition[] = [];
   for (const event of raw) {
     const resolved = client ? await geo.resolveLocation(event) : null;
@@ -55,6 +80,7 @@ async function main() {
     if (!competition) continue;
     drafts.push({
       ...competition,
+      image_url: coverUrl,
       external_key: event.externalKey,
       sections: [openSection("Middle and high school teams")],
     });
@@ -66,7 +92,7 @@ async function main() {
   }
 
   await upsertOrExit(drafts, SOURCE, STAGING_FILE, {
-    listings: [KEY_DATES_URL, ABOUT_URL],
+    listings: [KEY_DATES_URL, ABOUT_URL, NSB_HOME_URL],
     parsed: raw.length,
     category: "stem",
     access_basis:

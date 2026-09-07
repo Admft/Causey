@@ -172,11 +172,14 @@ export class SupabaseDataSource implements DataSource {
 
     // Fast path: no geo sort needed — page in SQL using the requested rank.
     // Skip when JS filters need the full set (sections, name, featured).
+    // STEM popular sort also stays in JS so official national listings can
+    // rank above local rows when save counts are still zero.
     const canPageInSql =
       !hasSectionFilters(filters) &&
       !filters.q &&
       !filters.featured &&
-      !filters.club_going;
+      !filters.club_going &&
+      !(filters.category === "stem" && (filters.sort ?? "popular") === "popular");
     const shouldBoostMemberOrgs =
       canPageInSql &&
       preferredOrgIds.size > 0 &&

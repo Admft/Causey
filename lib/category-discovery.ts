@@ -168,7 +168,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         name: "U.S. Department of Energy National Science Bowl",
         href: "https://science.osti.gov/wdts/nsb/Key-Dates",
         status: "Active for published national-event dates",
-        note: "Official Office of Science national dates in Washington, D.C. Regional qualifying bowls, registration portals, and fees are not indexed. Causey uses no DOE or National Science Bowl logo.",
+        note: "Official Office of Science national dates in Washington, D.C. Regional qualifying bowls, registration portals, and fees are not indexed. Listing photos may use public-domain Office of Science material; Causey does not use the DOE seal or National Science Bowl wordmark as a source logo.",
       },
       {
         name: "Texas Science & Engineering Fair",

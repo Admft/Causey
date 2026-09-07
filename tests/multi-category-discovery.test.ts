@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -251,6 +251,42 @@ describe("official multi-category source adapters", () => {
     expect(competition?.details.location_source_url).toBe(
       "https://science.osti.gov/wdts/nsb/About"
     );
+    expect(competition?.details.catalog_standing).toBe("national");
+  });
+
+  it("parses NSB home-page National Finals and future years without a dates table", () => {
+    const html = fixture("doe-science-bowl-home-snippet.html");
+    const events = parseDoeScienceBowlHtml(html, html);
+    expect(events).toHaveLength(4);
+    expect(events.map((event) => event.externalKey)).toEqual([
+      "national-2027",
+      "national-2028",
+      "national-2029",
+      "national-2030",
+    ]);
+    expect(events[3]).toMatchObject({
+      startDate: "2030-04-25",
+      endDate: "2030-04-29",
+      city: "Washington",
+      state: "DC",
+    });
+  });
+
+  it("ships a public-domain NSB listing photo and ranks STEM popular in JS", () => {
+    expect(
+      existsSync(
+        resolve(process.cwd(), "public/listing-covers/national-science-bowl.jpg")
+      )
+    ).toBe(true);
+    const scrape = readFileSync(
+      resolve(process.cwd(), "ingestion/scrape-doe-science-bowl.ts"),
+      "utf8"
+    );
+    expect(scrape).toContain("official-cover");
+    expect(scrape).toContain("NSB_HOME_URL");
+    expect(
+      readFileSync(resolve(process.cwd(), "lib/data/supabase.ts"), "utf8")
+    ).toContain('filters.category === "stem"');
   });
 
   it("parses AFSA only when the official cycle and deadline agree", () => {

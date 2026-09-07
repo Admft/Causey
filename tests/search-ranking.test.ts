@@ -83,4 +83,27 @@ describe("search ranking", () => {
 
     expect(results.map((item) => item.id)).toEqual(["soon", "popular-later"]);
   });
+
+  it("ranks official national listings above local ones when interest is tied", () => {
+    const results = [
+      result("local-hackathon", {
+        name: "Weekend Hackathon",
+        source: "hack_club_hackathons_scrape",
+        start_date: "2027-03-01",
+      }),
+      result("science-bowl", {
+        name: "2027 National Science Bowl National Event",
+        source: "doe_science_bowl_scrape",
+        start_date: "2027-04-29",
+        details: { catalog_standing: "national" },
+      }),
+    ];
+
+    sortCompetitionResults(results, { timing: "upcoming", sort: "popular" } as SearchFilters);
+
+    expect(results.map((item) => item.id)).toEqual([
+      "science-bowl",
+      "local-hackathon",
+    ]);
+  });
 });

@@ -125,6 +125,8 @@ function fromCatalogHint(
         label: "Youth / junior",
         hint: "FIDE youth or junior calendar event. Check age and rating rules on the organizer site.",
       };
+    case "national":
+      return FROM_SERIES_LEVEL.national;
     case "national_or_major":
       return {
         id: "major_open",
@@ -159,6 +161,14 @@ export function eventStanding(input: {
 }): EventStanding {
   if (input.series) {
     return FROM_SERIES_LEVEL[input.series.level];
+  }
+
+  if (input.source === "doe_science_bowl_scrape") {
+    return {
+      id: "national",
+      label: "National",
+      hint: "U.S. Department of Energy National Science Bowl finals. Middle and high school teams qualify through a regional Science Bowl.",
+    };
   }
 
   const fromCatalog = fromCatalogHint(input.details);
@@ -198,4 +208,23 @@ export function eventStanding(input: {
   }
 
   return LOCAL;
+}
+
+const STANDING_SORT_RANK: Record<EventStandingId, number> = {
+  international: 0,
+  national: 1,
+  major_open: 2,
+  state: 3,
+  regional: 4,
+  local: 5,
+};
+
+/** Lower ranks first. Used when user interest is tied so official events surface. */
+export function standingSortRank(input: {
+  name: string;
+  source: string;
+  series: Pick<Series, "level" | "name"> | null;
+  details?: Record<string, unknown> | null;
+}): number {
+  return STANDING_SORT_RANK[eventStanding(input).id];
 }
