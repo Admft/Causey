@@ -45,6 +45,7 @@ describe("P1 scale hardening", () => {
 
   it("keeps STEM metadata honest and does not treat missing reg_url as a club invite", () => {
     expect(stemPage).toContain("Purple Comet");
+    expect(stemPage).toContain("Congressional App Challenge");
     expect(stemPage).not.toContain("VEX robotics");
     expect(eventPage).toContain("No registration link listed");
     expect(eventPage).not.toContain("Entry is by club invitation");
