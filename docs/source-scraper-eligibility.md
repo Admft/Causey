@@ -26,7 +26,7 @@ That is why chess is thick and Debate / STEM / Arts / Writing are thin: Tabroom,
 
 - Chess: TLA, CCA, OnlineReg, Chess-Results, FIDE, TCA
 - Debate: UIL invitationals with explicit speech/debate offerings (Texas only)
-- STEM: Purple Comet; DOE National Science Bowl **national** dates; TXSEF **state** fair; Congressional App Challenge **national submission window** (one row, not per district)
+- STEM: Purple Comet; DOE National Science Bowl **national** dates; TXSEF **state** fair; Congressional App Challenge **national submission window** (one row, not per district); Hack Club Hackathons **virtual + US** listings
 - Arts: TAEA VASE; UIL theatre state meets; UIL state open-class marching band
 - Writing: AFSA (ended cycle); Bennington (year-specific or no row)
 
@@ -55,19 +55,25 @@ Matches [source-permission-outreach.md](source-permission-outreach.md).
 
 **P1:** NSDA/Tabroom, Scholastic Art & Writing, MATHCOUNTS, FIRST  
 **P2:** SpeechWire, MAA AMC, REC/VEX Events (ordinary 200s or official listings API — not RobotEvents), Society for Science Find-a-Fair  
-**P3:** YoungArts, NSDA.org membership calendars
+**P3:** YoungArts, NSDA.org membership calendars  
+**Terms-fail (2026-09-06):** Science Olympiad, Poetry Out Loud, EdTA, Music for All, WGI; USACO still Cloudflare / no next window
 
 ## Terms pass (2026-09-06)
 
-Reviewed the five “next eligible” candidates. One adapter was built (Congressional App Challenge). The others stay link-only or outreach.
+Reviewed the seven “no letter needed — terms review” candidates. Two adapters
+were built (Congressional App Challenge, Hack Club Hackathons). The rest stay
+link-only or outreach.
 
 | Source | robots | Terms / access | Dates | Verdict |
 | --- | --- | --- | --- | --- |
-| **Hack Club Hackathons** `hackathons.hackclub.com` | No `robots.txt` (404) | Documented JSON API; must credit “Hack Club Hackathons” with a link. Do not take logos. Frontend repo is MIT; that licenses code, not a substitute for the API credit rule. | Upcoming JSON returned HTTP 200 with year-specific start/end. Mixed US / virtual / international. | **Eligible later**, not this pass. Attribution required. Restrict any future adapter to virtual events plus US in-person rows that resolve a ZIP. Do not rehost signed cover URLs. |
+| **Hack Club Hackathons** `hackathons.hackclub.com` | Subdomain `robots.txt` is absent (HTTP 404); `hackclub.com` allows `/`. | Documented JSON API; must credit “Hack Club Hackathons” with a link. Do not take logos. Frontend repo is MIT; that licenses code, not a substitute for the API credit rule. | Upcoming JSON returned HTTP 200 with year-specific start/end. Mixed US / virtual / international. | **Built.** Virtual events plus US in-person/hybrid rows that resolve a city and state. International in-person rows, unpublished rows, logos, and banners are dropped. |
 | **Congressional App Challenge** | Allows `/` except `/wp-admin/` | No site-wide automation or commercial-use prohibition found (privacy + SMS terms only). Ordinary HTML 200. | Participating-districts page publishes `May 1`–`October 26, 2026`. Rules HTML confirms middle/high school eligibility and an October 26 submit deadline under 2026 dates. Students homepage still showed 2025 copy and is **not** used. | **Built.** One national submission window. Do **not** emit a row per congressional district. No member names, no PDFs, no registration-portal fetch. |
 | **Science Olympiad invitationals** `soinc.org/play/invitationals` | Allows `/play/invitationals` | Site Terms: personal, **non-commercial** use only; may not reproduce or store Science Olympiad Content on another website without written permission. | National invitational list has exact dates, but that does not override the license. | **Do not scrape.** Written permission required. Do not spawn 50 state-site scrapers. |
-| **USACO** | Content-signal robots.txt present | Ordinary homepage hit a Cloudflare challenge (same class of block as VEX). Contest-integrity rules about submission scripts are separate and still forbid automating the grading UI. | 2025–26 recap is not a complete next-season window. | **Do not scrape.** Wait for ordinary HTTP 200 **and** year-specific upcoming windows. Courtesy letter if terms stay silent. |
+| **USACO** | Content-signal robots.txt present | Ordinary homepage still hits a Cloudflare challenge (same class of block as VEX). Contest-integrity rules about submission scripts are separate and still forbid automating the grading UI. | 2025–26 recap is not a complete next-season window. | **Do not scrape.** Wait for ordinary HTTP 200 **and** year-specific upcoming windows. Courtesy letter if terms stay silent. |
 | **Poetry Out Loud** key-dates | Allows `/key-dates/` | Site is governed by [Mid Atlantic Arts Terms](https://www.midatlanticarts.org/homepage/terms-of-use/): non-profit / educational / **non-commercial** use only; no commercial purpose; no republishing without permission. | 2027 national finals dates are published. | **Do not scrape.** Written permission required. No 50-state coordinator fan-out. |
+| **EdTA** `schooltheatre.org` | Review the live `robots.txt` before any future adapter. | [Terms of Use](https://www.schooltheatre.org/terms-of-use/): personal **non-commercial** transitory use; may not copy or mirror the site onto another server. | National theatre feed exists, but the license fails. | **Do not scrape.** Written permission required. National feed only if they say yes; no chapter fan-out. |
+| **Music for All** | Review the live `robots.txt` before any future adapter. | [Terms of Use](https://www.musicforall.org/terms-of-use/): automated scripts, robots, and data-mining forbidden; non-commercial; republishing needs written permission. | National-ish music calendar, but automation is banned. | **Do not scrape.** Written permission required. |
+| **WGI** | **Disallow:** `/events/`, `/event/`, `/show/`, `/season/`. | Legal: even **facts** require written consent before use. | Event calendar paths are robots-blocked. | **Do not scrape.** Do not fetch disallowed calendar paths. Written consent would still be required for factual reuse. |
 
 DOE National Science Bowl **regionals** (`science.osti.gov/.../High-School-Regionals`): same Office of Science public-domain basis as the live national adapter, but the page currently publishes registration-open timing and state → location **links**, not ~115 dated events. Do not fan out to university hosts. Keep as a reference directory unless DOE itself prints exact regional dates.
 
@@ -82,6 +88,6 @@ DOE National Science Bowl **regionals** (`science.osti.gov/.../High-School-Regio
 ## Corrected build order
 
 1. Send the P1 letters (Tabroom, Scholastic, MATHCOUNTS, FIRST).
-2. Do not code Tabroom, SpeechWire, Debate Land, RobotEvents, FIRST API, Devpost, MLH, CTFtime, Codeforces, Scholastic, MATHCOUNTS, Find-a-Fair, Science Olympiad, Poetry Out Loud, or USACO.
-3. One DOE-style adapter at a time after robots + terms + `permissionReviewedOn`. Next candidate after Congressional App Challenge: Hack Club Hackathons JSON, with the restrictions above.
+2. Do not code Tabroom, SpeechWire, Debate Land, RobotEvents, FIRST API, Devpost, MLH, CTFtime, Codeforces, Scholastic, MATHCOUNTS, Find-a-Fair, Science Olympiad, Poetry Out Loud, USACO, EdTA, Music for All, or WGI.
+3. One DOE-style adapter at a time after robots + terms + `permissionReviewedOn`. Congressional App Challenge and Hack Club Hackathons are live under that rule.
 4. Keep the 50-state / CTE / NAfME / EdTA chapter layer as a directory until there is one written policy for affiliate scraping.

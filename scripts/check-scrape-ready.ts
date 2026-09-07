@@ -151,11 +151,13 @@ async function main() {
         "purple_comet_scrape",
         "uil_music_marching_scrape",
         "txsef_scrape",
+        "congressional_app_challenge_scrape",
+        "hack_club_hackathons_scrape",
       ]);
-    if (!r.error && r.count !== 11) {
+    if (!r.error && r.count !== 13) {
       return {
         error: {
-          message: `found ${r.count ?? 0}/11 category sources — apply migrations through 0055`,
+          message: `found ${r.count ?? 0}/13 category sources — apply migrations through 0085`,
         },
         count: r.count,
       };
@@ -167,6 +169,13 @@ async function main() {
       .from("ingestion_sources")
       .select("id, category")
       .eq("id", "congressional_app_challenge_scrape")
+      .limit(1)
+  );
+  await probe("Hack Club Hackathons source (0085)", async () =>
+    client
+      .from("ingestion_sources")
+      .select("id, category")
+      .eq("id", "hack_club_hackathons_scrape")
       .limit(1)
   );
   await probe("Tabroom automation pause (0051)", async () => {

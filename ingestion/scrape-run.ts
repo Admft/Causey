@@ -22,6 +22,7 @@ export type ScrapeRunSource =
   | "uil_music_marching_scrape"
   | "txsef_scrape"
   | "congressional_app_challenge_scrape"
+  | "hack_club_hackathons_scrape"
   | "all";
 
 export type ScrapeRunStats = {

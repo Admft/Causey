@@ -55,6 +55,10 @@ export const CATEGORY_SOURCE_CONFIG = {
     category: "stem",
     organizer: "Congressional App Challenge",
   },
+  hack_club_hackathons_scrape: {
+    category: "stem",
+    organizer: "Hack Club Hackathons listing",
+  },
 } as const;
 
 export type CategoryScrapeSource = keyof typeof CATEGORY_SOURCE_CONFIG;

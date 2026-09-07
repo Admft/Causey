@@ -62,6 +62,11 @@ export const ADMIN_SCRAPER_OPTIONS = [
     category: "stem",
   },
   {
+    value: "hack_club_hackathons_scrape",
+    label: "Hack Club Hackathons",
+    category: "stem",
+  },
+  {
     value: "taea_vase_scrape",
     label: "TAEA VASE visual arts",
     category: "arts",

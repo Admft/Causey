@@ -35,6 +35,10 @@ describe("source scraper eligibility", () => {
     expect(eligibility).toContain("Do not spawn 50 state-site scrapers");
     expect(outreach).toContain("hackathons.hackclub.com/data");
     expect(eligibility).toContain("hackathons.hackclub.com");
+    expect(eligibility).toContain("**Built.** Virtual events plus US");
+    expect(eligibility).toContain("schooltheatre.org");
+    expect(eligibility).toContain("musicforall.org");
+    expect(eligibility).toContain("Disallow:** `/events/`");
     expect(eligibility).not.toContain("Coming soon");
   });
 });

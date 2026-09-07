@@ -75,6 +75,7 @@ export const CompetitionSourceSchema = z.enum([
   "uil_music_marching_scrape",
   "txsef_scrape",
   "congressional_app_challenge_scrape",
+  "hack_club_hackathons_scrape",
 ]);
 
 export const TournamentSectionDraftSchema = z.object({

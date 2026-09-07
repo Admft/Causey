@@ -54,7 +54,8 @@ export type IngestionSource = {
     | "purple_comet_scrape"
     | "uil_music_marching_scrape"
     | "txsef_scrape"
-    | "congressional_app_challenge_scrape";
+    | "congressional_app_challenge_scrape"
+    | "hack_club_hackathons_scrape";
   category: Exclude<CompetitionCategory, "other">;
   name: string;
   href: string;
@@ -204,6 +205,17 @@ const INGESTION_SOURCE_PRESENTATION: Omit<
     logoUrl: "/sources/state-affiliates.svg",
     blurb:
       "Official national student app-submission window. Causey indexes one year-specific cycle, not a row per congressional district.",
+    status: "live",
+    category: "stem",
+  },
+  {
+    id: "hack_club_hackathons_scrape",
+    competitionSource: "hack_club_hackathons_scrape",
+    name: "Hack Club Hackathons",
+    href: "https://hackathons.hackclub.com/",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Documented high-school hackathon JSON directory. Causey indexes virtual events and US in-person rows and credits Hack Club Hackathons. Logos are not stored.",
     status: "live",
     category: "stem",
   },
@@ -424,6 +436,11 @@ const SOURCE_GOVERNANCE: Record<string, SourceGovernance> = {
   congressional_app_challenge_scrape: enabledGovernance(
     "First-party public HTML allowed by robots.txt except /wp-admin/; reviewed 2026-09-06 with no applicable automation or commercial-use prohibition. One national submission window only; participating-district tables, PDFs, and registration portals are excluded.",
     { min: 1, max: 1 },
+    { permissionReviewedOn: REVIEWED_2026_09_06 }
+  ),
+  hack_club_hackathons_scrape: enabledGovernance(
+    "Documented public JSON API. API docs require crediting Hack Club Hackathons with a link. Subdomain robots.txt is absent; hackclub.com allows /. Virtual events plus US in-person/hybrid rows only. Logos and banners are excluded.",
+    { min: 1, max: 80 },
     { permissionReviewedOn: REVIEWED_2026_09_06 }
   ),
 };

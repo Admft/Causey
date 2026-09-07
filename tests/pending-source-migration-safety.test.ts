@@ -138,6 +138,21 @@ const cumulativeMigrations = [
       "congressional_app_challenge_scrape",
     ],
   },
+  {
+    file: "0085_hack_club_hackathons_source.sql",
+    competitionSources: [
+      ...categoryBaseSources,
+      "doe_science_bowl_scrape",
+      "afsa_essay_scrape",
+      "uil_theatre_scrape",
+      "uil_speech_debate_scrape",
+      "purple_comet_scrape",
+      "uil_music_marching_scrape",
+      "txsef_scrape",
+      "congressional_app_challenge_scrape",
+      "hack_club_hackathons_scrape",
+    ],
+  },
 ] as const;
 
 const categorySourceRows = [
@@ -164,10 +179,16 @@ const categorySourceRows = [
     "live",
     "stem",
   ],
+  [
+    "0085_hack_club_hackathons_source.sql",
+    "hack_club_hackathons_scrape",
+    "live",
+    "stem",
+  ],
 ] as const;
 
 describe("pending source migration batch safety", () => {
-  it("keeps every source constraint cumulative through 0083", () => {
+  it("keeps every source constraint cumulative through 0085", () => {
     for (const snapshot of cumulativeMigrations) {
       const sql = migration(snapshot.file);
       expect(
@@ -228,7 +249,7 @@ describe("pending source migration batch safety", () => {
 
   it("keeps source-constraint migrations safely repeatable", () => {
     for (const snapshot of cumulativeMigrations.filter((entry) =>
-      /^(?:00(?:4[8-9]|5[0-5])_|0083_)/.test(entry.file)
+      /^(?:00(?:4[8-9]|5[0-5])_|008[35]_)/.test(entry.file)
     )) {
       const sql = migration(snapshot.file).replace(/\s+/g, " ");
       for (const constraint of [
@@ -322,7 +343,7 @@ describe("pending source migration batch safety", () => {
       "utf8"
     );
     for (const source of categorySources) expect(preflight).toContain(source);
-    expect(preflight).toContain("through 0055");
+    expect(preflight).toContain("through 0085");
   });
 
   it("passes only chess ids into series and pathway processing", () => {

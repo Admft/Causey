@@ -160,7 +160,7 @@ describe("admin tournament operations migration", () => {
   const dispatchSourceSql = readFileSync(
     resolve(
       process.cwd(),
-      "supabase/migrations/0084_congressional_app_challenge_dispatch.sql"
+      "supabase/migrations/0086_hack_club_hackathons_dispatch.sql"
     ),
     "utf8"
   );

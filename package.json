@@ -39,6 +39,7 @@
     "scrape:uil-music-marching": "tsx ingestion/scrape-uil-music-marching.ts",
     "scrape:txsef": "tsx ingestion/scrape-txsef.ts",
     "scrape:congressional-app-challenge": "tsx ingestion/scrape-congressional-app-challenge.ts",
+    "scrape:hack-club-hackathons": "tsx ingestion/scrape-hack-club-hackathons.ts",
     "scrape:discovery": "tsx ingestion/scrape-discovery.ts",
     "review:discovery-stage": "tsx scripts/review-staged-discovery.ts",
     "verify:discovery-live": "tsx scripts/verify-discovery-live.ts",

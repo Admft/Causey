@@ -107,6 +107,7 @@ const SOURCES_BY_CATEGORY: Record<
     { value: "purple_comet_scrape", label: "Purple Comet! Math Meet" },
     { value: "txsef_scrape", label: "Texas Science & Engineering Fair" },
     { value: "congressional_app_challenge_scrape", label: "Congressional App Challenge" },
+    { value: "hack_club_hackathons_scrape", label: "Hack Club Hackathons" },
     ...ORGANIZER_SOURCES,
   ],
   arts: [

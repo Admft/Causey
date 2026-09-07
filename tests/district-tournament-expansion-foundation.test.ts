@@ -239,11 +239,15 @@ describe("district tournament expansion foundation", () => {
     expect(workflow).toContain(
       "congressional_app_challenge_scrape) npm run scrape:congressional-app-challenge"
     );
+    expect(workflow).toContain(
+      "hack_club_hackathons_scrape) npm run scrape:hack-club-hackathons"
+    );
     expect(workflow).toContain("IFS=',' read -ra SELECTED_SOURCES");
     expect(workflow).toContain("PURGE_DRY_RUN=1 npm run purge:stale");
 
     const discovery = repositoryFile("ingestion/scrape-discovery.ts");
     expect(discovery).toContain("ingestion/scrape-doe-science-bowl.ts");
+    expect(discovery).toContain("ingestion/scrape-hack-club-hackathons.ts");
     expect(discovery).not.toContain("ingestion/scrape-vex-events.ts");
   });
 });
