@@ -588,7 +588,7 @@ export default async function EventPage({ params }: Params) {
                   {needsCoachRsvp
                     ? registrationUrl
                       ? "Answer so your organization knows who is coming, then finish organizer registration if the event requires it."
-                      : "Answer so your organization knows who is coming. Entry is through your club invite, not open registration."
+                      : "Answer so your organization knows who is coming. Entry is through your invite, not open registration."
                     : unansweredChild
                       ? "Invite them so they can accept on Plan. After they mark Going, Family asks you to confirm organizer registration. You can also answer for them here."
                     : allDeclined

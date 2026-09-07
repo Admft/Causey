@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Duplicate-email signup says the account already exists and offers Sign in — 2026-09-06
+- District first-session next-step honesty (stage-aware Reports secondary + school-honest Account/Family chrome) — 2026-09-07
 
 ## Last tick
 
+- 2026-09-07 — District overview no longer pins “View aggregate reporting” during school setup; Reports appears only after schools are ready, while provisioning/verification waits offer competitions. Account Organizations sends district rows to Schools (not a dead Roster), and Family/Account/Leave/event invite copy stays school-or-club honest.
 - 2026-09-06 — Duplicate-email signup now says “An account for that email already exists” with a Sign in button, instead of a hedged error or a fake confirmation email.
 - 2026-09-06 — Signing up again with an email that already has an account (including a temp-mail address used yesterday) showed “we sent a confirmation” and sent nothing. Website and phone now send that person to Sign in.
 - 2026-09-06 — Clearing Going on the phone tournament screen left Family showing the old answer because Family stays mounted under the event stack and did not hear the write. The event save now updates Family/Plan immediately and refetches.

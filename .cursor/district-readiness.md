@@ -57,6 +57,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Phone lists school and district memberships (with Club/Team kept distinct) via `GET /api/mobile/orgs`; district offices have no roster to open — 2026-09-05
 - [x] Phone event details show the listing photo, US Chess rating, Going/Can't go, and organizer-registration confirm after the external site; Expo Go calendar uses an .ics fallback — 2026-09-06
 - [x] Family can mark a linked student Going on a public listing without a school/club invite (`0080`); organizer-site entry is still Mark complete, not an import — 2026-09-05
+- [x] District first-session next-step honesty: stage-aware command-center secondary (no empty Reports mid-setup), Account district Schools link, school-or-club Family/Account/Leave/event invite chrome — 2026-09-07
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -147,12 +148,15 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 16. **P0 · Parent could not tell if an unaffiliated student was going · M · shipped 2026-09-05**  
    Surface: event page Going/Can't go for linked children on published public listings; Family shows Going and unfinished organizer registration. Save stays a parent-account bookmark. Causey still does not import RSVPs from the organizer site (`0080`). Apply `0080` in each environment.
 
-17. **P1 · Maine district walkthrough (P3) · M · shipping this tick**  
+17. **P1 · Maine district walkthrough (P3) · M · shipped 2026-09-05**  
    Surface: People invitation status filters pending vs revoked with distinct colors; claim pages hide Accept on mailbox mismatch; signup resends confirmation and names school-inbox filtering; alerts mark read when opened; `/orgs` sections district/school/club; district announcements default staff-only and pick schools (plus staff vs students); native password reveal hidden; event difficulty can be cleared. Email delivery itself remains ops.
+
+18. **P1 · District first-session next-step honesty · S–M · shipped 2026-09-07**  
+   Surface: district overview secondary is stage-aware (`getDistrictReadinessSecondary`); Account Organizations uses Schools for district rows; Family/Account/Leave/event invite chrome says school or club instead of club-only leftovers.
 
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0080` in each environment (`0074`–`0080` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
+Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
 
 ### Out-of-scope refusals this pass
 

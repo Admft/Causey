@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   getDistrictReadinessAction,
+  getDistrictReadinessSecondary,
   getDistrictReadinessSummary,
   getDistrictSchoolReadinessStatus,
   type DistrictPilotReadiness,
@@ -98,6 +99,45 @@ describe("district pilot readiness priority", () => {
     expect(next.stage).toBe("run_competitions");
     expect(next.href).toBe("/orgs/sample-district/competitions");
     expect(next.label).toBe("Open competitions");
+  });
+
+  it("keeps Reports off the mission until schools are ready to compete", () => {
+    expect(
+      getDistrictReadinessSecondary(
+        getDistrictReadinessAction(readiness()),
+        "sample-district"
+      )
+    ).toBeNull();
+    expect(
+      getDistrictReadinessSecondary(
+        getDistrictReadinessAction(
+          readiness({
+            activeDelegatedAdmins: 0,
+            pendingAdminInvites: 0,
+            ownershipTransferred: false,
+          })
+        ),
+        "sample-district"
+      )
+    ).toBeNull();
+    expect(
+      getDistrictReadinessSecondary(
+        getDistrictReadinessAction(readiness({ activeStudents: 0 })),
+        "sample-district"
+      )
+    ).toEqual({
+      href: "/orgs/sample-district/competitions",
+      label: "Open competitions",
+    });
+    expect(
+      getDistrictReadinessSecondary(
+        getDistrictReadinessAction(readiness(baseSchool)),
+        "sample-district"
+      )
+    ).toEqual({
+      href: "/orgs/sample-district/reports",
+      label: "View aggregate reporting",
+    });
   });
 
   it("summarizes two districts independently with their next actions", () => {

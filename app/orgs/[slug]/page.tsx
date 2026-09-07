@@ -30,6 +30,7 @@ import {
 } from "@/lib/data/portal";
 import {
   getDistrictReadinessAction,
+  getDistrictReadinessSecondary,
   getDistrictSchoolReadinessStatus,
 } from "@/lib/district-readiness";
 import { formatDateRange, formatFeeCents, formatRecordedResult } from "@/lib/format";
@@ -490,6 +491,13 @@ export default async function OrgPage({
   const districtAction = districtReadiness
     ? getDistrictReadinessAction(districtReadiness)
     : null;
+  const districtSecondary =
+    districtAction && districtReadiness
+      ? getDistrictReadinessSecondary(
+          districtAction,
+          districtReadiness.districtSlug
+        )
+      : null;
   const readySchoolCount =
     districtReadiness?.schools.filter(
       (school) =>
@@ -624,10 +632,14 @@ export default async function OrgPage({
                   href: districtAction.href,
                   label: districtAction.label,
                 }}
-                secondary={{
-                  href: `/orgs/${org.slug}/reports`,
-                  label: "View aggregate reporting",
-                }}
+                secondary={
+                  districtSecondary
+                    ? {
+                        href: districtSecondary.href,
+                        label: districtSecondary.label,
+                      }
+                    : undefined
+                }
               />
             </div>
 

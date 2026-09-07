@@ -221,7 +221,7 @@ export default async function FamilyPage() {
   } else {
     missionTitle = "Your family is caught up";
     missionDescription =
-      "No invitations or unfinished organizer registrations need you right now. Search a public listing and mark Going for a student to track them here — they do not need to be in a club first. Causey does not see organizer-site RSVPs until you mark registration complete.";
+      "No invitations or unfinished organizer registrations need you right now. Search a public listing and mark Going for a student to track them here — they do not need to be in a school or club first. Causey does not see organizer-site RSVPs until you mark registration complete.";
     missionAction = {
       href: profile?.preferred_competition_category
         ? preferredDiscoveryHref(profile.preferred_competition_category)
@@ -574,9 +574,9 @@ export default async function FamilyPage() {
                       Search listings
                     </Link>{" "}
                     and mark Going for {child.display_name} on the event page.
-                    They do not need to be in a club first. Save is a bookmark
-                    for your account; Causey does not import RSVPs from the
-                    organizer&rsquo;s site.
+                    They do not need to be in a school or club first. Save is a
+                    bookmark for your account; Causey does not import RSVPs from
+                    the organizer&rsquo;s site.
                   </p>
                 ) : !child.upcoming.length ? null : answered.length ? (
                   <div className="mt-4">
