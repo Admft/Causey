@@ -187,7 +187,7 @@ These are the emails that actually increase reach. Causey already treats them as
 
 ## Confirm before building (not blocked yet; ask if terms are unclear)
 
-These were on the competition-sources list. Do not treat them as “free to scrape.” Do a robots + terms pass first; send a courtesy letter if terms are silent, commercial-use is fuzzy, or the org is large enough that surprise indexing would be a bad start. Science Olympiad and Poetry Out Loud failed that pass on 2026-09-06 (non-commercial / no republish). The Congressional App Challenge passed and is live as one national window.
+These were on the competition-sources list. Do not treat them as “free to scrape.” Do a robots + terms pass first; send a courtesy letter if terms are silent, commercial-use is fuzzy, or the org is large enough that surprise indexing would be a bad start. Science Olympiad, Poetry Out Loud, EdTA, Music for All, and WGI failed that pass on 2026-09-06. Congressional App Challenge and Hack Club Hackathons passed and are live.
 
 | Org | URL | What a yes would unlock | Ask / confirm |
 | --- | --- | --- | --- |
@@ -198,7 +198,9 @@ These were on the competition-sources list. Do not treat them as “free to scra
 | USA Computing Olympiad (USACO) | [usaco.org](https://usaco.org) | Online contest windows | **Not ready 2026-09-06:** ordinary homepage returned a Cloudflare challenge; 2025–26 recap is not a complete next-season window. Dates and official URL only; no problems or logins. |
 | Envirothon | [envirothon.org](https://envirothon.org) | State → national environmental science | National (and published state) dates |
 | Poetry Out Loud | [poetryoutloud.org](https://www.poetryoutloud.org/) | Recitation pathway, state → national | **Blocked 2026-09-06:** poetryoutloud.org is governed by Mid Atlantic Arts Terms (non-commercial; no republishing). Written permission required. National finals dates only if they say yes; no state-coordinator fan-out. |
-| Hack Club Hackathons | [hackathons.hackclub.com/data/](https://hackathons.hackclub.com/data/) | High-school hackathon JSON feed | Documented API; credit “Hack Club Hackathons” with a link. No logos. Eligible later (virtual + US in-person with ZIP). Not built 2026-09-06. |
+| Educational Theatre Association (EdTA) | [schooltheatre.org](https://www.schooltheatre.org/) | National theatre calendar | **Blocked 2026-09-06:** personal non-commercial transitory use; no mirroring. Written permission required. National feed only if they say yes. |
+| Music for All | [musicforall.org](https://www.musicforall.org/) | National music calendar | **Blocked 2026-09-06:** automated scripts, robots, and data-mining forbidden; non-commercial republishing needs written permission. |
+| WGI | [wgi.org](https://wgi.org/) | National indoor percussion / winds / guard calendar | **Blocked 2026-09-06:** `robots.txt` disallows `/events/`, `/event/`, `/show/`, `/season/`; legal terms require written consent even for facts. |
 | Bow Seat Ocean Awareness Contest | bowseat.org (confirm current URL) | One annual multi-media / writing cycle | Year-specific deadline, like AFSA |
 | State speech associations (e.g. CHSSA) | Varies | State qualification layer (chess “state affiliate” analogue) | One national policy first: **link directory** vs per-state scrape. Do not send 50 emails until that policy exists. |
 
@@ -213,6 +215,7 @@ If a confirm-before-building source has a clear public-domain or “no automatio
 | US Chess TLA, CCA, OnlineReg, Chess-Results, FIDE, Texas Chess Association | Already ingested. Production-use review for chess remains ops, not a new letter campaign. |
 | DOE National Science Bowl | Live. Public-domain Office of Science pages; national dates only. |
 | Congressional App Challenge | Live 2026-09-06. One national submission window from public HTML; participating-district table is not ingested. |
+| Hack Club Hackathons | Live 2026-09-06. Documented JSON API at [hackathons.hackclub.com/data/](https://hackathons.hackclub.com/data/); credit required; virtual + US listings; no logos. |
 | Purple Comet! Math Meet | Live. |
 | Texas Science & Engineering Fair | Live (Texas state fair only). |
 | UIL speech/debate, theatre, marching band | Live (Texas, stated coverage only). |
@@ -278,7 +281,10 @@ Customize the bracketed source. For FIRST, ask for a **listing license** whose c
 | USACO | Confirm | | | Cloudflare; no complete next window | |
 | Envirothon | Confirm | | | | |
 | Poetry Out Loud | Confirm | | | Blocked: Mid Atlantic Arts non-commercial terms | written permission |
-| Hack Club Hackathons | Confirm | | | API credit required; eligible later | new adapter after ZIP/US scope |
+| Educational Theatre Association | Confirm | | | Blocked: personal non-commercial; no mirroring | written permission |
+| Music for All | Confirm | | | Blocked: no automated scripts / robots / data-mining | written permission |
+| WGI | Confirm | | | Blocked: robots Disallow /events/; facts need consent | written permission |
 | Congressional App Challenge | Confirm | 2026-09-06 | Public HTML, no automation ban found | Indexed | `congressional_app_challenge_scrape` |
+| Hack Club Hackathons | Confirm | 2026-09-06 | Documented API; credit + no logos | Indexed (virtual + US) | `hack_club_hackathons_scrape` |
 | Bow Seat | Confirm | | | | |
 | State speech affiliates | Later | | | | policy first, then per state |

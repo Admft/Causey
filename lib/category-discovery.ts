@@ -123,9 +123,9 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window, DOE National Science Bowl national dates, the Texas state science fair, and the Congressional App Challenge national submission window.",
+      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window, DOE National Science Bowl national dates, the Texas state science fair, the Congressional App Challenge national submission window, and Hack Club Hackathons virtual and US listings.",
     emptyDescription:
-      "Published STEM coverage is currently limited to Purple Comet, DOE National Science Bowl national dates, the Texas state science fair, and the Congressional App Challenge national submission window. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
+      "Published STEM coverage currently includes Purple Comet, DOE National Science Bowl national dates, the Texas state science fair, the Congressional App Challenge national submission window, and Hack Club Hackathons virtual and US listings. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
     searchPlaceholder: "Try mathematics, biology, robotics, or a competition name",
     facetLabel: "Discipline",
     facets: [
@@ -182,6 +182,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         status: "Active for the published 2026 national submission window",
         note: "Official House-coordinated student app challenge. Causey indexes one national May–October submission window for middle and high school students in participating districts. It does not list each district as a separate event, fetch registration portals, or copy the member table.",
       },
+      {
+        name: "Hack Club Hackathons",
+        href: "https://hackathons.hackclub.com/",
+        status: "Active for upcoming virtual and US listings",
+        note: "Documented JSON directory of high-school hackathons. Causey credits Hack Club Hackathons, indexes virtual events plus US in-person rows, and does not store logos or international in-person listings.",
+      },
     ],
     referenceSources: [
       {
@@ -228,12 +234,6 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         href: "https://usaco.org",
         status: "Reference only",
         note: "Ordinary homepage requests currently hit a Cloudflare challenge, and the public recap is not a complete next-season window. Dates and official URL only if access and terms later allow; never problems or logins.",
-      },
-      {
-        name: "Hack Club Hackathons",
-        href: "https://hackathons.hackclub.com/data/",
-        status: "Eligible later, not indexed yet",
-        note: "Documented public JSON API; credit “Hack Club Hackathons” with a link and do not take logos. Any future adapter would keep virtual events plus US in-person rows that resolve a ZIP.",
       },
     ],
   },
@@ -284,6 +284,24 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         name: "YoungArts",
         href: "https://youngarts.org/",
         note: "Link only. Its terms prohibit automated indexing.",
+      },
+      {
+        name: "Educational Theatre Association",
+        href: "https://www.schooltheatre.org/",
+        status: "Not indexed",
+        note: "schooltheatre.org Terms limit use to personal non-commercial transitory viewing and forbid mirroring the site. National theatre feed stays link-only until they grant a listing license.",
+      },
+      {
+        name: "Music for All",
+        href: "https://www.musicforall.org/",
+        status: "Not indexed",
+        note: "Terms forbid automated scripts, robots, and data-mining, and limit use to non-commercial. No calendar scrape until they grant written permission.",
+      },
+      {
+        name: "WGI",
+        href: "https://wgi.org/",
+        status: "Not indexed",
+        note: "robots.txt disallows /events/, /event/, /show/, and /season/. Legal terms also require written consent before using even factual event data.",
       },
     ],
   },

@@ -12,6 +12,7 @@ const SCRIPTS = [
   "ingestion/scrape-uil-music-marching.ts",
   "ingestion/scrape-txsef.ts",
   "ingestion/scrape-congressional-app-challenge.ts",
+  "ingestion/scrape-hack-club-hackathons.ts",
 ] as const;
 
 function run(script: string): Promise<void> {

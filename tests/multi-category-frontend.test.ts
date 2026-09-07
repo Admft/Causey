@@ -293,6 +293,9 @@ describe("coverage and empty states stay honest", () => {
     expect(stem.activeSources.map((source) => source.name)).toContain(
       "Congressional App Challenge"
     );
+    expect(stem.activeSources.map((source) => source.name)).toContain(
+      "Hack Club Hackathons"
+    );
     expect(stem.referenceSources.map((source) => source.name)).not.toContain(
       "U.S. Department of Energy National Science Bowl"
     );
@@ -302,7 +305,7 @@ describe("coverage and empty states stay honest", () => {
     expect(stem.referenceSources.map((source) => source.name)).toContain(
       "Science Olympiad invitationals"
     );
-    expect(stem.referenceSources.map((source) => source.name)).toContain(
+    expect(stem.referenceSources.map((source) => source.name)).not.toContain(
       "Hack Club Hackathons"
     );
     const writing = DISCOVERY_CATEGORIES.find(

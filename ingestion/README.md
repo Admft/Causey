@@ -37,15 +37,17 @@ Run these in the Supabase SQL editor if not already applied:
 15. **`0055_txsef_source.sql`** — Texas Science and Engineering Fair source id
 16. **`0083_congressional_app_challenge_source.sql`** — Congressional App Challenge national window source id
 17. **`0084_congressional_app_challenge_dispatch.sql`** — include that source in platform-admin scraper dispatch audit
-18. **`0056_profile_competition_category.sql`** — nullable account discovery shortcut; no chess default
-19. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
-20. **`0059_competition_facet_updates.sql`** — organizer edits persist `details.facets` without replacing other details
+18. **`0085_hack_club_hackathons_source.sql`** — Hack Club Hackathons JSON directory source id
+19. **`0086_hack_club_hackathons_dispatch.sql`** — include that source in platform-admin scraper dispatch audit
+20. **`0056_profile_competition_category.sql`** — nullable account discovery shortcut; no chess default
+21. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
+22. **`0059_competition_facet_updates.sql`** — organizer edits persist `details.facets` without replacing other details
 
 ## Provenance
 
 | Column / table | Meaning |
 | --- | --- |
-| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, `bennington_writers_scrape`, `doe_science_bowl_scrape`, `afsa_essay_scrape`, `uil_theatre_scrape`, `uil_speech_debate_scrape`, `purple_comet_scrape`, `uil_music_marching_scrape`, `txsef_scrape`, and `congressional_app_challenge_scrape` |
+| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, `bennington_writers_scrape`, `doe_science_bowl_scrape`, `afsa_essay_scrape`, `uil_theatre_scrape`, `uil_speech_debate_scrape`, `purple_comet_scrape`, `uil_music_marching_scrape`, `txsef_scrape`, `congressional_app_challenge_scrape`, and `hack_club_hackathons_scrape` |
 | `competitions.source_url` | Exact upstream page scraped |
 | `competitions.fingerprint` | Normalized name\|date\|state\|zip for cross-source matching |
 | `competitions.canonical_id` | Set on archived duplicates → points at the surviving row |
@@ -75,6 +77,7 @@ npm run scrape:purple-comet     # Official Purple Comet online math contest wind
 npm run scrape:uil-music-marching # Official UIL state open-class marching band dates
 npm run scrape:txsef            # Official Texas state science-fair dates
 npm run scrape:congressional-app-challenge # Official Congressional App Challenge national window
+npm run scrape:hack-club-hackathons # Official Hack Club Hackathons JSON directory (virtual + US)
 npm run scrape:discovery        # Runnable non-chess adapters in sequence
 npm run scrape:all              # All six chess sources in sequence
 
@@ -238,6 +241,17 @@ with a similar title. Series matching and pathway enrichment run only for
   published stale prior-year copy. `robots.txt` allows these HTML paths while
   disallowing `/wp-admin/`. Reviewed 2026-09-06: published site terms contain
   no automation or commercial-use prohibition.
+- **Hack Club Hackathons (`hack_club_hackathons_scrape`, STEM /
+  `computer_science`):** the documented public JSON API at
+  `hackathons.hackclub.com/api/events/upcoming/` must return year-specific
+  start dates. Causey credits “Hack Club Hackathons” with a link to
+  `hackathons.hackclub.com`, indexes virtual events plus US in-person/hybrid
+  rows that resolve a city and state (ZIP via GeoNames), and drops
+  international in-person listings, unpublished rows, logos, and banners. The
+  API docs require that credit; the frontend MIT license is not treated as a
+  data license. Subdomain `robots.txt` is absent (HTTP 404);
+  `hackclub.com/robots.txt` allows `/`. Ordinary JSON returned HTTP 200 on
+  2026-09-06.
 - **AFSA National High School Essay Contest (`afsa_essay_scrape`, Writing /
   `essay`):** the official contest page must publish the cycle, grade 9–12
   eligibility, and open/closed status, while the separate official Writer's
@@ -297,7 +311,10 @@ Restricted or reference-only sources are not scraped: Tabroom and SpeechWire
 prohibit automation; Scholastic and YoungArts also restrict automated use;
 Science Olympiad Terms limit use to personal non-commercial viewing and forbid
 republishing; Poetry Out Loud is governed by Mid Atlantic Arts non-commercial
-terms; Society for Science's fair finder needs
+terms; EdTA schooltheatre.org limits use to personal non-commercial transitory
+viewing and forbids mirroring; Music for All forbids automated scripts and
+data-mining; WGI `robots.txt` disallows `/events/` and requires written consent
+for factual event data; Society for Science's fair finder needs
 permission; FIRST requires an appropriate listing license; AoPS and NewPages
 are secondary links; Scienteer and zFairs are tenant software rather than
 national directories; RobotEvents is not the official 2026–27 VEX pathway.
@@ -307,9 +324,8 @@ to reproduce, retransmit, or republish site materials. MAA AMC publishes exact
 access during review, so Causey does not assume for-profit public reuse is
 permitted. USACO remains reference-only while ordinary homepage requests hit a
 Cloudflare challenge and the public recap is not a complete next-season window.
-Hack Club Hackathons has a documented JSON API (credit required, no logos) and
-is eligible later, not in this adapter. MathWorks M3 remains reference-only
-until its first-party page publishes a complete 2027 challenge window.
+MathWorks M3 remains reference-only until its first-party page publishes a
+complete 2027 challenge window.
 
 Outreach checklist (who to ask, what a written yes must cover):
 `docs/source-permission-outreach.md`. Printable PDF:
