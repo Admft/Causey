@@ -2,6 +2,7 @@ import { lookup as dnsLookup } from "node:dns/promises";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
+import { Agent, fetch as undiciFetch } from "undici";
 
 /**
  * Shared HTML fetch for scrapers. Organizer sites often hang forever —
@@ -27,6 +28,43 @@ type LookupFn = (
   hostname: string,
   options: { all: true; verbatim: true }
 ) => Promise<LookupResult[]>;
+
+const timedAgents = new Map<number, Agent>();
+
+function agentForTimeout(timeoutMs: number): Agent {
+  const existing = timedAgents.get(timeoutMs);
+  if (existing) return existing;
+  const agent = new Agent({
+    connectTimeout: timeoutMs,
+    headersTimeout: timeoutMs,
+    bodyTimeout: timeoutMs,
+  });
+  timedAgents.set(timeoutMs, agent);
+  return agent;
+}
+
+/** Use undici so connect timeout matches the request budget (Node's default is 10s). */
+function fetchWithConnectTimeout(timeoutMs: number): FetchLike {
+  const dispatcher = agentForTimeout(timeoutMs);
+  return ((input: Parameters<FetchLike>[0], init?: Parameters<FetchLike>[1]) =>
+    undiciFetch(input as never, {
+      ...(init as object),
+      dispatcher,
+    })) as unknown as FetchLike;
+}
+
+export function isConnectTimeoutError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const withCause = error as {
+    code?: string;
+    message?: string;
+    cause?: { code?: string; message?: string };
+  };
+  const code = withCause.cause?.code ?? withCause.code;
+  if (code === "UND_ERR_CONNECT_TIMEOUT") return true;
+  const message = error instanceof Error ? error.message : String(error);
+  return /Connect Timeout Error/i.test(message);
+}
 
 export type FetchRetryOptions = {
   timeoutMs?: number;
@@ -197,10 +235,10 @@ export async function fetchResponseWithRetry(
   init: RequestInit = {},
   opts: FetchRetryOptions = {}
 ): Promise<Response> {
-  const fetchImpl = opts.fetchImpl ?? fetch;
+  const timeoutMs = opts.timeoutMs ?? FETCH_TIMEOUT_MS;
+  const fetchImpl = opts.fetchImpl ?? fetchWithConnectTimeout(timeoutMs);
   const sleepImpl = opts.sleepImpl ?? sleep;
   const randomImpl = opts.randomImpl ?? Math.random;
-  const timeoutMs = opts.timeoutMs ?? FETCH_TIMEOUT_MS;
   const maxAttempts = Math.max(1, opts.maxAttempts ?? FETCH_MAX_ATTEMPTS);
   let lastError: unknown;
 
@@ -218,6 +256,10 @@ export async function fetchResponseWithRetry(
     } catch (error) {
       lastError = error;
       if (attempt === maxAttempts) throw error;
+      const detail = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `Fetch attempt ${attempt}/${maxAttempts} failed (${detail}); retrying ${url}`
+      );
     }
     await sleepImpl(retryDelayMs(attempt, response, randomImpl));
   }
@@ -339,7 +381,11 @@ export async function fetchHtml(
     });
   } catch (err) {
     const name = err instanceof Error ? err.name : "";
-    if (name === "TimeoutError" || name === "AbortError") {
+    if (
+      name === "TimeoutError" ||
+      name === "AbortError" ||
+      isConnectTimeoutError(err)
+    ) {
       throw new Error(`Fetch timed out after ${timeoutMs}ms: ${url}`);
     }
     throw err;

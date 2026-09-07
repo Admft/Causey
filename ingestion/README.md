@@ -82,7 +82,7 @@ npm run scrape:txsef            # Official Texas state science-fair dates
 npm run scrape:congressional-app-challenge # Official Congressional App Challenge national window
 npm run scrape:hack-club-hackathons # Official Hack Club Hackathons JSON directory (virtual + US)
 npm run scrape:discovery        # Runnable non-chess adapters in sequence
-npm run scrape:all              # All six chess sources in sequence
+npm run scrape:all              # Chess sources; persist whatever staged if one host dies
 
 SCRAPE_UPSERT_ONLY=1 npm run scrape:tla   # re-upsert staged JSON
 SCRAPE_HTML_FILE=… SCRAPE_SKIP_DETAIL=1 npm run scrape:tla
@@ -354,10 +354,11 @@ page should produce no fabricated fixture or event.
 - Schedule: Monday and Thursday at 11:00 UTC. GitHub loads schedules from the
   default branch (`main`), while the released workflow explicitly checks out
   `dev` before running ingestion.
-- Runs `npm run scrape:all && npm run scrape:discovery`; the discovery runner
-  skips Tabroom pending written NSDA permission and skips VEX while ordinary
-  public requests return HTTP 403. DOE National Science Bowl runs with the
-  other permitted STEM adapters.
+- Runs chess `scrape:all` then `scrape:discovery`. Discovery still runs if a
+  chess host (usually FIDE) times out after other sources persist. The job
+  stays failed when any source fails. Discovery skips Tabroom pending written
+  NSDA permission and skips VEX while ordinary public requests return HTTP 403.
+  DOE National Science Bowl runs with the other permitted STEM adapters.
 - Manual: Actions → **Ingest tournaments** on `dev` → choose one permitted
   source or all
 - Tabroom is intentionally absent from Actions/admin/source-filter choices
