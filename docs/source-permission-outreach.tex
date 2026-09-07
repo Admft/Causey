@@ -171,8 +171,8 @@ These are the emails that actually increase reach. Causey already treats them as
 \begin{tabularx}{\textwidth}{@{}L{2.55cm} Y@{}}
 \orgrow{Site}{\url{https://www.firstinspires.org/}}
 \orgrow{Why}{Robotics at every school age band; regional $\rightarrow$ championship. STEM has no single umbrella; this is one of the largest independent circuits.}
-\orgrow{Blocker}{Official API needs a \textbf{token and use appropriate to the product}. Do not scrape logged-in event tools.}
-\orgrow{Ask}{API credentials (or a public event feed) for \textbf{event listings only}, for display in a student discovery app, with their required attribution. Confirm commercial/public display is in scope.}
+\orgrow{Blocker}{FIRST's FRC Events API is free and open to anyone, but the data may not be used for commercial purposes and requires a link back to their API page. A free token does not waive that. The Blue Alliance is FIRST-derived and likely inherits the same constraint. Do not build robotics ingestion on FIRST until this is sorted in writing.}
+\orgrow{Ask}{A listing license (or a feed whose commercial display is in scope) for \textbf{event listings only}, for display in a student discovery app, with their required attribution. Do not take a token and ship.}
 \orgrow{Do not ask for}{Team PII, scoring, or bypassing FIRST account rules.}
 \orgrow{Status}{Not contacted}
 \end{tabularx}
@@ -358,7 +358,7 @@ Thank you,\\
 Causey
 \end{displayquote}
 
-Customize the bracketed source. For FIRST, say \textbf{API token for event listings}, not HTML scrape. For VEX, say \textbf{ordinary access or an official listings API}, not a Cloudflare workaround.
+Customize the bracketed source. For FIRST, ask for a \textbf{listing license} whose commercial display is in scope, not ``we got a token so we can ship.'' For VEX, say \textbf{ordinary access or an official listings API}, not a Cloudflare workaround.
 
 \section*{After a yes}
 
@@ -389,7 +389,7 @@ Customize the bracketed source. For FIRST, say \textbf{API token for event listi
 NSDA / Tabroom & P1 & & & & \texttt{TABROOM} env gate \\[0.85em]
 Scholastic (Alliance) & P1 & & & & new adapter after yes \\[0.85em]
 MATHCOUNTS & P1 & & & & new adapter after yes \\[0.85em]
-FIRST & P1 & & & & API token + adapter \\[0.85em]
+FIRST & P1 & & & & listing license, then API token + adapter \\[0.85em]
 SpeechWire & P2 & & & & new adapter after yes \\[0.85em]
 MAA AMC & P2 & & & & new adapter after yes \\[0.85em]
 VEX / REC & P2 & & & & 200s or API; \texttt{vex\_events\_scrape} \\[0.85em]

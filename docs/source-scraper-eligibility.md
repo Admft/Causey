@@ -39,11 +39,11 @@ That is why chess is thick and Debate / STEM / Arts / Writing are thin: Tabroom,
 | SpeechWire calendar + results | Do not build | Terms prohibit automated indexing. Never fetch SpeechWire as a side effect of UIL. |
 | Devpost | Do not build | Terms forbid scrape/crawl/spider. Hidden listing XHR is the Tabroom pattern. |
 | RobotEvents v2 | Do not build as a VEX substitute | Not the official 2026–27 pathway. Official directory `events.vex.com` still returns HTTP 403; no bypass. |
-| FRC / FTC Events APIs | Do not ingest | FIRST ToU: Events Data may not be used for commercial purposes, including in a product you sell. Ask FIRST (P1 outreach). |
+| FRC / FTC Events APIs | Do not ingest | FIRST’s FRC Events API is free and open to anyone, but “the data from this API may not be used for commercial purposes” and requires a link back to their API page. A token is not a license. Do not build robotics ingestion on FIRST until a written commercial listing license exists (P1 outreach). |
 | MLH season page | Do not scrape | Terms: personal non-commercial view; commercial use of the site forbidden. No public event-list API. Third-party scrapers report 403s. Mostly college. |
 | CTFtime API | Do not build | API is for data analysis and mobile apps only; no CTFtime clones. A public calendar is closer to a clone. Not K–12 district. |
 | Codeforces `contest.list` | Do not build | Terms restrict commercializing website material. Open/college contests, not school district. |
-| The Blue Alliance v3 | Do not build yet | TBA invites community apps with attribution. That is not a waiver of FIRST’s Events Data commercial ban. Confirm with TBA **and** keep FIRST on P1 outreach. |
+| The Blue Alliance v3 | Do not build | TBA is FIRST-derived event data. Community-app attribution is not a waiver of FIRST’s Events Data commercial ban. Confirm with TBA **and** keep FIRST on P1 outreach. Do not use TBA as a FIRST workaround. |
 
 Joy of Tournaments: treat like Tabroom/SpeechWire until a terms + robots pass says otherwise.
 

@@ -23,6 +23,9 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 ## Need for a professional club (priority)
 
+- [x] FIRST robotics stays unindexed until a written commercial listing license; Hack Club Hackathons remains the credited JSON feed — 2026-09-07
+- [x] National Science Bowl listings link the official DOE regional-competitions page — 2026-09-07
+- [x] National Science Bowl is Science on STEM search, not Mathematics — 2026-09-07
 - [x] Duplicate-email signup says the account already exists and offers Sign in (not a confirmation that never arrives) — 2026-09-06
 - [x] Phone Going / Can't go / Clear no longer lose the tap to a stale list reload — 2026-09-06
 - [x] Parent invite → student Plan accept → parent Family confirm works on the phone the same way as the website; Going / Can't go can be unmarked (`0082`) — 2026-09-06

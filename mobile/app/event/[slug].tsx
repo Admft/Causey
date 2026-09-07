@@ -50,6 +50,7 @@ type Competition = {
   sections?: EventSection[];
   pathway_status?: string | null;
   pathway_summary?: string | null;
+  source?: string | null;
 };
 
 function placeLine(event: Competition): string {
@@ -208,6 +209,7 @@ export default function EventScreen() {
         competitionId={event.id}
         eventSlug={event.slug}
         regUrl={event.reg_url}
+        source={event.source}
       />
       <BringRosterCard
         competitionId={event.id}

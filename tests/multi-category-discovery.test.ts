@@ -13,6 +13,7 @@ import {
   parseBenningtonWritersHtml,
 } from "@/ingestion/parse-bennington-writers";
 import { parseDoeScienceBowlHtml } from "@/ingestion/parse-doe-science-bowl";
+import { DOE_SCIENCE_BOWL_REGIONAL_URL } from "@/lib/doe-science-bowl";
 import { parseAfsaEssayHtml } from "@/ingestion/parse-afsa-essay";
 import { parseUilTheatreHtml } from "@/ingestion/parse-uil-theatre";
 import { parseUilSpeechDebateHtml } from "@/ingestion/parse-uil-speech-debate";
@@ -219,17 +220,17 @@ describe("official multi-category source adapters", () => {
       name: "2027 National Science Bowl National Event",
       startDate: "2027-04-29",
       endDate: "2027-05-03",
-      registrationUrl: null,
+      registrationUrl: DOE_SCIENCE_BOWL_REGIONAL_URL,
       city: "Washington",
       state: "DC",
-      facets: ["science", "mathematics"],
+      facets: ["science"],
     });
     expect(parseDoeScienceBowlHtml(html, "<main>Location pending</main>")).toEqual(
       []
     );
   });
 
-  it("keeps DOE registration empty and publishes only with resolved geography", () => {
+  it("links DOE listings to the official regional competitions page", () => {
     const html = fixture("doe-science-bowl-public-snippet.html");
     const [raw] = parseDoeScienceBowlHtml(html, html);
     const competition = normalizeCategorySourceEvent(raw, {
@@ -243,7 +244,7 @@ describe("official multi-category source adapters", () => {
       category: "stem",
       source: "doe_science_bowl_scrape",
       status: "published",
-      reg_url: null,
+      reg_url: DOE_SCIENCE_BOWL_REGIONAL_URL,
       city: "Washington",
       state: "DC",
     });
@@ -526,6 +527,7 @@ describe("category facet isolation", () => {
     expect(hit(scienceFair, "science_fair")).not.toBeNull();
     expect(hit(scienceBowl, "science")).not.toBeNull();
     expect(hit(scienceBowl, "science_bowl")).not.toBeNull();
+    expect(hit(scienceBowl, "mathematics")).toBeNull();
     expect(hit(scienceFair, "biology")).toBeNull();
     expect(formatCompetitionFacetLabel("stem", ["science_fair"])).toBe("Science");
     expect(formatCompetitionFacetLabel("stem", ["science_bowl", "mathematics"])).toBe(
@@ -626,6 +628,23 @@ describe("category facet isolation", () => {
     );
     expect(migration).toContain("'science_fair', 'science_bowl'");
     expect(migration).toContain("then 'science'");
+  });
+
+  it("strips mathematics from DOE Science Bowl listings in migration 0088", () => {
+    const migration = fixture(
+      "../../supabase/migrations/0088_science_bowl_science_only.sql"
+    );
+    expect(migration).toContain("doe_science_bowl_scrape");
+    expect(migration).toContain("'mathematics'");
+    expect(migration).toContain('["science"]');
+  });
+
+  it("sets DOE Science Bowl organizer links in migration 0089", () => {
+    const migration = fixture(
+      "../../supabase/migrations/0089_science_bowl_regional_reg_url.sql"
+    );
+    expect(migration).toContain("doe_science_bowl_scrape");
+    expect(migration).toContain(DOE_SCIENCE_BOWL_REGIONAL_URL);
   });
 
   it("scopes non-chess fingerprints without changing chess identity", () => {

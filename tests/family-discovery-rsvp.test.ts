@@ -142,7 +142,7 @@ describe("family discovery RSVP", () => {
       'target.label === "You" && rsvpTargets.length === 1'
     );
     expect(source("app/family/page.tsx")).toContain(
-      "They do not need to be in a club first"
+      "They do not need to be in a school or club first"
     );
     expect(source("app/family/page.tsx")).not.toContain(
       "No upcoming tournament invites."

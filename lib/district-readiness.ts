@@ -53,6 +53,37 @@ export type DistrictReadinessSummary = {
   nextAction: DistrictReadinessAction;
 };
 
+export type DistrictReadinessSecondary = {
+  href: string;
+  label: string;
+};
+
+/**
+ * Stage-aware secondary next to the command-center primary CTA.
+ * Early setup keeps one dominant action — do not send unfinished districts
+ * to empty aggregate Reports.
+ */
+export function getDistrictReadinessSecondary(
+  action: DistrictReadinessAction,
+  districtSlug: string
+): DistrictReadinessSecondary | null {
+  switch (action.stage) {
+    case "run_competitions":
+      return {
+        href: `/orgs/${districtSlug}/reports`,
+        label: "View aggregate reporting",
+      };
+    case "await_platform_verification":
+    case "provision_students":
+      return {
+        href: `/orgs/${districtSlug}/competitions`,
+        label: "Open competitions",
+      };
+    default:
+      return null;
+  }
+}
+
 function schoolSetupStatus(
   school: DistrictSchoolReadiness,
   districtSlug: string

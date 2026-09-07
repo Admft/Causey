@@ -308,6 +308,16 @@ describe("coverage and empty states stay honest", () => {
     expect(stem.referenceSources.map((source) => source.name)).not.toContain(
       "Hack Club Hackathons"
     );
+    const first = stem.referenceSources.find((source) => source.name === "FIRST");
+    expect(first?.href).toBe("https://www.firstinspires.org/");
+    expect(first?.note).toMatch(/commercial purposes/i);
+    expect(first?.note).toMatch(/Blue Alliance/);
+    const hackClub = stem.activeSources.find(
+      (source) => source.name === "Hack Club Hackathons"
+    );
+    expect(hackClub?.href).toBe("https://hackathons.hackclub.com/");
+    expect(hackClub?.note).toMatch(/credit/i);
+    expect(hackClub?.note).toMatch(/JSON API/);
     const writing = DISCOVERY_CATEGORIES.find(
       (category) => category.id === "writing"
     )!;
@@ -345,6 +355,8 @@ describe("generalized links and return paths", () => {
     expect(eventPage).toContain("const featuredStanding = isFeaturedStanding(standing)");
     expect(eventPage).not.toContain("isChess && isFeaturedStanding");
     expect(eventPage).toContain("standing.id !== \"local\"");
+    expect(eventPage).toContain("Find a regional Science Bowl");
+    expect(eventPage).toContain("Open DOE regional competitions");
   });
 
   it("generic surfaces stop hardcoding /chess as the search destination", () => {

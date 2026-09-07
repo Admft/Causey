@@ -118,10 +118,12 @@ export function EventGoingCard({
   competitionId,
   eventSlug,
   regUrl,
+  source,
 }: {
   competitionId: string;
   eventSlug: string;
   regUrl: string | null;
+  source?: string | null;
 }) {
   const router = useRouter();
   const { session } = useAuth();
@@ -555,6 +557,7 @@ export function EventGoingCard({
   }));
   const registrationPeople = attendance?.registration ?? [];
   const host = regUrl ? registrationHost(regUrl) : null;
+  const scienceBowlQualifying = source === "doe_science_bowl_scrape";
   const showRsvp = Boolean(session) && rsvpPeople.length > 0 && !ended;
   const someoneGoing = rsvpPeople.some((person) => person.status === "going");
   const showRegistration =
@@ -719,11 +722,14 @@ export function EventGoingCard({
               ? "Did you finish organizer registration?"
               : allRegistered
                 ? "Organizer registration is marked complete"
-                : "Register on the organizer’s site"}
+                : scienceBowlQualifying
+                  ? "Find a regional Science Bowl"
+                  : "Register on the organizer’s site"}
           </Text>
           <Meta>
-            Entry and payment happen on {host}, not on Causey. Open that site,
-            then confirm here so Plan stays accurate.
+            {scienceBowlQualifying
+              ? "Teams reach nationals through a regional. The official DOE page lists high school and middle school regionals and how coaches register. Causey does not list each regional."
+              : `Entry and payment happen on ${host}, not on Causey. Open that site, then confirm here so Plan stays accurate.`}
           </Meta>
           {resolvedPeople.map((person) => {
             const status = person.status;
@@ -798,9 +804,13 @@ export function EventGoingCard({
                   <>
                     <PrimaryButton
                       label={
-                        person.label !== "You"
-                          ? `Open organizer registration for ${person.label}`
-                          : "Open organizer registration"
+                        scienceBowlQualifying
+                          ? person.label !== "You"
+                            ? `Open DOE regionals for ${person.label}`
+                            : "Open DOE regional competitions"
+                          : person.label !== "You"
+                            ? `Open organizer registration for ${person.label}`
+                            : "Open organizer registration"
                       }
                       onPress={() => void openOrganizerSite(person)}
                       busy={busy}

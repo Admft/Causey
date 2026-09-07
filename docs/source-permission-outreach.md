@@ -115,7 +115,7 @@ These are the emails that actually increase reach. Causey already treats them as
 | --- | --- |
 | **Site** | [firstinspires.org](https://www.firstinspires.org/) |
 | **Why** | Robotics at every school age band; regional → championship. STEM has no single umbrella; this is one of the largest independent circuits. |
-| **Blocker** | FIRST Terms of Use: Events Data may not be used for commercial purposes, including including it in a product or service you sell. A free API token does not waive that. The Blue Alliance and Orange Alliance do not grant a commercial-use waiver of FIRST’s ban. |
+| **Blocker** | FIRST’s FRC Events API is free and open to anyone, but the data may not be used for commercial purposes and requires a link back to their API page. A free token does not waive that. The Blue Alliance is FIRST-derived and likely inherits the same constraint. Do not build robotics ingestion on FIRST until this is sorted in writing. |
 | **Ask** | A listing license (or a feed whose commercial display is in scope) for **event listings only**, for display in a student discovery app, with their required attribution. Do not take a token and ship. |
 | **Do not ask for** | Team PII, scoring, or bypassing FIRST account rules. |
 | **Status** | Not contacted |

@@ -27,6 +27,8 @@ type ExternalRegistrationPanelProps = {
    * Defaults to the signed-in user when omitted.
    */
   rsvpProfileId?: string;
+  /** Overrides the default “Register on organizer site” button. */
+  ctaLabel?: string;
 };
 
 export function ExternalRegistrationPanel(
@@ -52,6 +54,7 @@ function ExternalRegistrationPanelState({
   /** Shown when acting for someone other than "you". */
   forLabel,
   rsvpProfileId,
+  ctaLabel,
 }: ExternalRegistrationPanelProps) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
@@ -270,17 +273,22 @@ function ExternalRegistrationPanelState({
         target="_blank"
         rel="noopener noreferrer"
         className="cta-enabled inline-flex"
-        aria-label={`Register on ${registrationHost}${
-          forLabel ? ` for ${forLabel}` : ""
-        }; opens in a new tab`}
+        aria-label={`${
+          ctaLabel ??
+          (status === "not_registered"
+            ? "Finish organizer registration"
+            : "Register on organizer site")
+        }${forLabel ? ` for ${forLabel}` : ""}; opens in a new tab`}
       >
-        {status === "not_registered"
-          ? forLabel
-            ? `Finish organizer registration for ${forLabel}`
-            : "Finish organizer registration"
-          : forLabel
-            ? `Register ${forLabel} on organizer site`
-            : "Register on organizer site"}{" "}
+        {ctaLabel
+          ? ctaLabel
+          : status === "not_registered"
+            ? forLabel
+              ? `Finish organizer registration for ${forLabel}`
+              : "Finish organizer registration"
+            : forLabel
+              ? `Register ${forLabel} on organizer site`
+              : "Register on organizer site"}{" "}
         <span aria-hidden="true">↗</span>
       </a>
       <p className="mt-2 max-w-prose text-2xs text-muted">

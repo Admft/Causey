@@ -27,6 +27,7 @@ import { canCreateOrg, isOrgAdmin } from "@/lib/org-permissions";
 import {
   SEARCH_TOURNAMENTS_LABEL,
   accountOrganizationsEmptyCta,
+  studentOrgChromeFromTypes,
   workspaceOpenCta,
 } from "@/lib/portal-copy";
 
@@ -114,6 +115,9 @@ export default async function AccountPage() {
     canCreate: canCreateOrg(profile),
     hasDistrictAccess,
   });
+  const studentOrgChrome = studentOrgChromeFromTypes(
+    myOrgs.map((row) => row.org.type)
+  );
   const showFamily = profile.role === "student" || profile.role === "parent";
   const emailConfirmed = Boolean(user.email_confirmed_at);
   const pendingEmail =
@@ -235,7 +239,8 @@ export default async function AccountPage() {
       {profile.role === "parent" ? (
         <>
           <p className="mt-2 max-w-prose text-sm text-muted">
-            Linked students share clubs and RSVP help after they accept.{" "}
+            Linked students share schools or clubs and RSVP help after they
+            accept.{" "}
             <Link
               href="/family"
               className="font-semibold text-brand-red hover:underline"
@@ -287,8 +292,8 @@ export default async function AccountPage() {
       ) : (
         <>
           <p className="mt-2 max-w-prose text-sm text-muted">
-            Nothing is shared until you accept. After that, parents can help
-            with clubs and RSVPs.
+            Nothing is shared until you accept. After that, parents can{" "}
+            {studentOrgChrome.parentVisibility}.
           </p>
           {!parentLinks.length ? (
             <PortalEmptyState
@@ -347,19 +352,23 @@ export default async function AccountPage() {
         <PortalEmptyState
           title={
             profile.role === "student"
-              ? "Not on a club yet"
+              ? studentOrgChrome.notYetMembership.replace(/\.$/, "")
               : hasDistrictAccess
                 ? "No organizations yet"
-                : "No clubs yet"
+                : hasSchoolAccess && !hasClubAccess
+                  ? "No schools yet"
+                  : "No clubs yet"
           }
           description={
             profile.role === "student"
-              ? "Ask your coach for a join link, then open My clubs to finish joining."
+              ? `Ask your coach for a join link, then open ${studentOrgChrome.heading.toLowerCase()} to finish joining.`
               : hasDistrictAccess
                 ? "District and school workspaces you administer appear here."
                 : canCreateOrg(profile)
                   ? "Create a club or team workspace, or wait for a staff invitation claim link."
-                  : "Clubs appear here after you join or claim a staff invitation."
+                  : hasSchoolAccess && !hasClubAccess
+                    ? "Schools appear here after you join or claim a staff invitation."
+                    : "Clubs appear here after you join or claim a staff invitation."
           }
           action={organizationsEmpty}
         />
@@ -397,7 +406,14 @@ export default async function AccountPage() {
                     >
                       Overview
                     </Link>
-                    {row.isCoach ? (
+                    {row.isCoach && row.org.type === "district" ? (
+                      <Link
+                        href={`/orgs/${row.org.slug}/settings#schools`}
+                        className="text-muted-strong hover:text-brand-red"
+                      >
+                        Schools
+                      </Link>
+                    ) : row.isCoach ? (
                       <Link
                         href={`/orgs/${row.org.slug}/roster`}
                         className="text-muted-strong hover:text-brand-red"

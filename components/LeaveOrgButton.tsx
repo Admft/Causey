@@ -51,8 +51,8 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
           </span>
         ) : (
           <span className="basis-full text-xs text-muted">
-            You’ll return to My organizations. Join another club from there, or
-            open Plan.
+            You’ll return to My organizations. Join another school or club from
+            there, or open Plan.
           </span>
         )}
       </span>
