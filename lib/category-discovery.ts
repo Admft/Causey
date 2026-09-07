@@ -123,9 +123,9 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window, DOE National Science Bowl national dates, and the Texas state science fair.",
+      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window, DOE National Science Bowl national dates, the Texas state science fair, and the Congressional App Challenge national submission window.",
     emptyDescription:
-      "Published STEM coverage is currently limited to Purple Comet, DOE National Science Bowl national dates, and the Texas state science fair. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
+      "Published STEM coverage is currently limited to Purple Comet, DOE National Science Bowl national dates, the Texas state science fair, and the Congressional App Challenge national submission window. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
     searchPlaceholder: "Try mathematics, biology, robotics, or a competition name",
     facetLabel: "Discipline",
     facets: [
@@ -176,6 +176,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         status: "Active for the published 2027 state-fair dates",
         note: "Official Texas A&M dates and venue for grades 6–12 students who qualify through a Texas regional fair. Registration portals, fees, deadlines, and feeder-event dates are not indexed.",
       },
+      {
+        name: "Congressional App Challenge",
+        href: "https://www.congressionalappchallenge.us/students/participating-districts/",
+        status: "Active for the published 2026 national submission window",
+        note: "Official House-coordinated student app challenge. Causey indexes one national May–October submission window for middle and high school students in participating districts. It does not list each district as a separate event, fetch registration portals, or copy the member table.",
+      },
     ],
     referenceSources: [
       {
@@ -210,6 +216,24 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         href: "https://m3challenge.siam.org/the-challenge/",
         status: "Reference only: 2027 dates not yet official",
         note: "The first-party page describes an online high-school competition but does not yet publish a complete 2027 challenge window.",
+      },
+      {
+        name: "Science Olympiad invitationals",
+        href: "https://www.soinc.org/play/invitationals",
+        status: "Not indexed",
+        note: "soinc.org Terms limit use to personal non-commercial viewing and forbid republishing site content without written permission. No invitational or state-site scrape until they say yes.",
+      },
+      {
+        name: "USA Computing Olympiad",
+        href: "https://usaco.org",
+        status: "Reference only",
+        note: "Ordinary homepage requests currently hit a Cloudflare challenge, and the public recap is not a complete next-season window. Dates and official URL only if access and terms later allow; never problems or logins.",
+      },
+      {
+        name: "Hack Club Hackathons",
+        href: "https://hackathons.hackclub.com/data/",
+        status: "Eligible later, not indexed yet",
+        note: "Documented public JSON API; credit “Hack Club Hackathons” with a link and do not take logos. Any future adapter would keep virtual events plus US in-person rows that resolve a ZIP.",
       },
     ],
   },
@@ -305,6 +329,12 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         name: "NewPages",
         href: "https://www.newpages.com/writers-resources/young-writers-guide/",
         note: "Secondary reference directory only; Causey does not ingest it as an official source.",
+      },
+      {
+        name: "Poetry Out Loud",
+        href: "https://www.poetryoutloud.org/key-dates/",
+        status: "Not indexed",
+        note: "poetryoutloud.org is governed by Mid Atlantic Arts Terms: non-commercial use only, no republishing without permission. National dates stay link-only until they grant a listing license; no state-coordinator fan-out.",
       },
     ],
   },

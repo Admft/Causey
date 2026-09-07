@@ -236,6 +236,9 @@ describe("district tournament expansion foundation", () => {
     expect(workflow).not.toContain("- vex_events_scrape");
     expect(workflow).toContain("- doe_science_bowl_scrape");
     expect(workflow).toContain("doe_science_bowl_scrape) npm run scrape:doe-science-bowl");
+    expect(workflow).toContain(
+      "congressional_app_challenge_scrape) npm run scrape:congressional-app-challenge"
+    );
     expect(workflow).toContain("IFS=',' read -ra SELECTED_SOURCES");
     expect(workflow).toContain("PURGE_DRY_RUN=1 npm run purge:stale");
 

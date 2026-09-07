@@ -106,6 +106,7 @@ const SOURCES_BY_CATEGORY: Record<
     { value: "doe_science_bowl_scrape", label: "DOE National Science Bowl" },
     { value: "purple_comet_scrape", label: "Purple Comet! Math Meet" },
     { value: "txsef_scrape", label: "Texas Science & Engineering Fair" },
+    { value: "congressional_app_challenge_scrape", label: "Congressional App Challenge" },
     ...ORGANIZER_SOURCES,
   ],
   arts: [

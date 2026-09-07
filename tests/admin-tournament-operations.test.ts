@@ -160,7 +160,7 @@ describe("admin tournament operations migration", () => {
   const dispatchSourceSql = readFileSync(
     resolve(
       process.cwd(),
-      "supabase/migrations/0072_doe_science_bowl_dispatch.sql"
+      "supabase/migrations/0084_congressional_app_challenge_dispatch.sql"
     ),
     "utf8"
   );

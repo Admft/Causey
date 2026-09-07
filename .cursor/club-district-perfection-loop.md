@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Phone Going / Can't go / Clear no longer loses the tap to a stale list reload — 2026-09-06
+- Coach signup with an already-registered email goes to Sign in, not a confirmation that never arrives — 2026-09-06
 
 ## Last tick
 
+- 2026-09-06 — Signing up again with an email that already has an account (including a temp-mail address used yesterday) showed “we sent a confirmation” and sent nothing. Website and phone now send that person to Sign in.
 - 2026-09-06 — Clearing Going on the phone tournament screen left Family showing the old answer because Family stays mounted under the event stack and did not hear the write. The event save now updates Family/Plan immediately and refetches.
 - 2026-09-06 — Phone Going / Can't go / Clear looked like they refreshed and then did nothing: an older Family/Plan/event GET could overwrite the tap, tapping Going again cleared it, and Clear left the row in the list as if it still needed an RSVP. The latest write wins; Clear removes a family-discovery row; only Clear answer unmarks.
 - 2026-09-06 — A parent could not unmark Going / Can't go, and the phone skipped the website handshake (invite → student accepts on Plan → parent confirms organizer registration on Family). Clear answer now deletes family-discovery rows or resets a coach invite. Invite is the primary control for a linked student on a public listing; Going remains for kids who are not on Causey.

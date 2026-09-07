@@ -48,6 +48,11 @@ const REVIEW_SOURCES: readonly ReviewSource[] = [
     category: "stem",
     file: "txsef-drafts.json",
   },
+  {
+    source: "congressional_app_challenge_scrape",
+    category: "stem",
+    file: "congressional-app-challenge-drafts.json",
+  },
 ] as const;
 
 export type StageReviewSummary = {

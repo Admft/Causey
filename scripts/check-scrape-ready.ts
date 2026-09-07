@@ -162,6 +162,13 @@ async function main() {
     }
     return r;
   });
+  await probe("Congressional App Challenge source (0083)", async () =>
+    client
+      .from("ingestion_sources")
+      .select("id, category")
+      .eq("id", "congressional_app_challenge_scrape")
+      .limit(1)
+  );
   await probe("Tabroom automation pause (0051)", async () => {
     const r = await client
       .from("ingestion_sources")

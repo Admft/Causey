@@ -124,6 +124,20 @@ const cumulativeMigrations = [
       "txsef_scrape",
     ],
   },
+  {
+    file: "0083_congressional_app_challenge_source.sql",
+    competitionSources: [
+      ...categoryBaseSources,
+      "doe_science_bowl_scrape",
+      "afsa_essay_scrape",
+      "uil_theatre_scrape",
+      "uil_speech_debate_scrape",
+      "purple_comet_scrape",
+      "uil_music_marching_scrape",
+      "txsef_scrape",
+      "congressional_app_challenge_scrape",
+    ],
+  },
 ] as const;
 
 const categorySourceRows = [
@@ -144,10 +158,16 @@ const categorySourceRows = [
     "arts",
   ],
   ["0055_txsef_source.sql", "txsef_scrape", "live", "stem"],
+  [
+    "0083_congressional_app_challenge_source.sql",
+    "congressional_app_challenge_scrape",
+    "live",
+    "stem",
+  ],
 ] as const;
 
 describe("pending source migration batch safety", () => {
-  it("keeps every source constraint cumulative through 0055", () => {
+  it("keeps every source constraint cumulative through 0083", () => {
     for (const snapshot of cumulativeMigrations) {
       const sql = migration(snapshot.file);
       expect(
@@ -208,7 +228,7 @@ describe("pending source migration batch safety", () => {
 
   it("keeps source-constraint migrations safely repeatable", () => {
     for (const snapshot of cumulativeMigrations.filter((entry) =>
-      /^00(?:4[8-9]|5[0-5])_/.test(entry.file)
+      /^(?:00(?:4[8-9]|5[0-5])_|0083_)/.test(entry.file)
     )) {
       const sql = migration(snapshot.file).replace(/\s+/g, " ");
       for (const constraint of [

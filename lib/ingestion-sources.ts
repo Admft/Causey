@@ -53,7 +53,8 @@ export type IngestionSource = {
     | "uil_speech_debate_scrape"
     | "purple_comet_scrape"
     | "uil_music_marching_scrape"
-    | "txsef_scrape";
+    | "txsef_scrape"
+    | "congressional_app_challenge_scrape";
   category: Exclude<CompetitionCategory, "other">;
   name: string;
   href: string;
@@ -196,6 +197,17 @@ const INGESTION_SOURCE_PRESENTATION: Omit<
     category: "stem",
   },
   {
+    id: "congressional_app_challenge_scrape",
+    competitionSource: "congressional_app_challenge_scrape",
+    name: "Congressional App Challenge",
+    href: "https://www.congressionalappchallenge.us/students/participating-districts/",
+    logoUrl: "/sources/state-affiliates.svg",
+    blurb:
+      "Official national student app-submission window. Causey indexes one year-specific cycle, not a row per congressional district.",
+    status: "live",
+    category: "stem",
+  },
+  {
     id: "taea_vase_scrape",
     competitionSource: "taea_vase_scrape",
     name: "TAEA VASE",
@@ -273,6 +285,7 @@ const FACTUAL_LISTING_FIELDS = [
 const OWNER = "Causey data operations";
 const REVIEWED_2026_08_13 = "2026-08-13";
 const REVIEWED_2026_09_02 = "2026-09-02";
+const REVIEWED_2026_09_06 = "2026-09-06";
 
 function enabledGovernance(
   permissionBasis: string,
@@ -407,6 +420,11 @@ const SOURCE_GOVERNANCE: Record<string, SourceGovernance> = {
       permissionReviewedOn: REVIEWED_2026_08_13,
       crawlDelayMs: 10_000,
     }
+  ),
+  congressional_app_challenge_scrape: enabledGovernance(
+    "First-party public HTML allowed by robots.txt except /wp-admin/; reviewed 2026-09-06 with no applicable automation or commercial-use prohibition. One national submission window only; participating-district tables, PDFs, and registration portals are excluded.",
+    { min: 1, max: 1 },
+    { permissionReviewedOn: REVIEWED_2026_09_06 }
   ),
 };
 

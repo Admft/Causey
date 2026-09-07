@@ -1,7 +1,7 @@
 # Scheduled and manual tournament ingestion for runnable chess and category sources.
 #
 # Prerequisites:
-#   1. Run Supabase migrations through 0055_txsef_source.sql.
+#   1. Run Supabase migrations through 0084_congressional_app_challenge_dispatch.sql.
 #   2. Repo secrets (Settings → Secrets → Actions):
 #        NEXT_PUBLIC_SUPABASE_URL
 #        SUPABASE_SERVICE_ROLE_KEY
@@ -41,6 +41,7 @@ on:
           - doe_science_bowl_scrape
           - uil_music_marching_scrape
           - txsef_scrape
+          - congressional_app_challenge_scrape
       sources:
         description: Optional comma-separated governed subset (admin dispatch)
         required: false
@@ -112,6 +113,7 @@ jobs:
               doe_science_bowl_scrape) npm run scrape:doe-science-bowl ;;
               uil_music_marching_scrape) npm run scrape:uil-music-marching ;;
               txsef_scrape) npm run scrape:txsef ;;
+              congressional_app_challenge_scrape) npm run scrape:congressional-app-challenge ;;
               *) echo "::error::Unknown or blocked scraper source: $1"; exit 1 ;;
             esac
           }
