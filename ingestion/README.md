@@ -35,15 +35,17 @@ Run these in the Supabase SQL editor if not already applied:
 13. **`0053_purple_comet_source.sql`** — Purple Comet! Math Meet source id
 14. **`0054_uil_music_marching_source.sql`** — UIL state open-class marching band source id
 15. **`0055_txsef_source.sql`** — Texas Science and Engineering Fair source id
-16. **`0056_profile_competition_category.sql`** — nullable account discovery shortcut; no chess default
-17. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
-18. **`0059_competition_facet_updates.sql`** — organizer edits persist `details.facets` without replacing other details
+16. **`0083_congressional_app_challenge_source.sql`** — Congressional App Challenge national window source id
+17. **`0084_congressional_app_challenge_dispatch.sql`** — include that source in platform-admin scraper dispatch audit
+18. **`0056_profile_competition_category.sql`** — nullable account discovery shortcut; no chess default
+19. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
+20. **`0059_competition_facet_updates.sql`** — organizer edits persist `details.facets` without replacing other details
 
 ## Provenance
 
 | Column / table | Meaning |
 | --- | --- |
-| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, `bennington_writers_scrape`, `doe_science_bowl_scrape`, `afsa_essay_scrape`, `uil_theatre_scrape`, `uil_speech_debate_scrape`, `purple_comet_scrape`, `uil_music_marching_scrape`, and `txsef_scrape` |
+| `competitions.source` | Pipeline id, including chess feeds plus `tabroom_scrape`, `vex_events_scrape`, `taea_vase_scrape`, `bennington_writers_scrape`, `doe_science_bowl_scrape`, `afsa_essay_scrape`, `uil_theatre_scrape`, `uil_speech_debate_scrape`, `purple_comet_scrape`, `uil_music_marching_scrape`, `txsef_scrape`, and `congressional_app_challenge_scrape` |
 | `competitions.source_url` | Exact upstream page scraped |
 | `competitions.fingerprint` | Normalized name\|date\|state\|zip for cross-source matching |
 | `competitions.canonical_id` | Set on archived duplicates → points at the surviving row |
@@ -72,6 +74,7 @@ npm run scrape:uil-speech-debate # Official UIL invitationals with explicit spee
 npm run scrape:purple-comet     # Official Purple Comet online math contest window
 npm run scrape:uil-music-marching # Official UIL state open-class marching band dates
 npm run scrape:txsef            # Official Texas state science-fair dates
+npm run scrape:congressional-app-challenge # Official Congressional App Challenge national window
 npm run scrape:discovery        # Runnable non-chess adapters in sequence
 npm run scrape:all              # All six chess sources in sequence
 
@@ -223,6 +226,18 @@ with a similar title. Series matching and pathway enrichment run only for
   policy permits attributed links, and these pages publish no automation or
   commercial-use prohibition. Only factual metadata and source links are
   retained.
+- **Congressional App Challenge (`congressional_app_challenge_scrape`, STEM /
+  `computer_science`):** the official participating-districts HTML page must
+  publish an exact year-specific national window (`runs from Month D to Month
+  D, YYYY`), while the official rules HTML must confirm middle or high school
+  eligibility and the same submit deadline under that year's dates. Causey
+  stores one national submission window with
+  `details.date_semantics = "submission_deadline"`. It does not emit a row per
+  congressional district, copy member names, fetch PDFs, or open the student
+  registration portal. The students homepage is ignored because it has
+  published stale prior-year copy. `robots.txt` allows these HTML paths while
+  disallowing `/wp-admin/`. Reviewed 2026-09-06: published site terms contain
+  no automation or commercial-use prohibition.
 - **AFSA National High School Essay Contest (`afsa_essay_scrape`, Writing /
   `essay`):** the official contest page must publish the cycle, grade 9–12
   eligibility, and open/closed status, while the separate official Writer's
@@ -275,21 +290,32 @@ with a similar title. Series matching and pathway enrichment run only for
   format, eligibility summaries, and source links.
 
 Parser fixtures named `*-public-snippet.html` are minimal excerpts derived from
-public pages fetched on 2026-08-12 or 2026-08-13, not complete source snapshots. Never use
-them with stale retraction.
+public pages fetched on 2026-08-12, 2026-08-13, or 2026-09-06, not complete
+source snapshots. Never use them with stale retraction.
 
 Restricted or reference-only sources are not scraped: Tabroom and SpeechWire
 prohibit automation; Scholastic and YoungArts also restrict automated use;
-Society for Science's fair finder needs
-permission; FIRST requires an appropriate token/permission; AoPS and NewPages
+Science Olympiad Terms limit use to personal non-commercial viewing and forbid
+republishing; Poetry Out Loud is governed by Mid Atlantic Arts non-commercial
+terms; Society for Science's fair finder needs
+permission; FIRST requires an appropriate listing license; AoPS and NewPages
 are secondary links; Scienteer and zFairs are tenant software rather than
 national directories; RobotEvents is not the official 2026–27 VEX pathway.
 MATHCOUNTS remains link-only because its terms require prior written consent
 to reproduce, retransmit, or republish site materials. MAA AMC publishes exact
 2026–27 dates, but its site-wide Terms of Use returned HTTP 403 to ordinary
 access during review, so Causey does not assume for-profit public reuse is
-permitted. MathWorks M3 remains reference-only until its first-party page
-publishes a complete 2027 challenge window.
+permitted. USACO remains reference-only while ordinary homepage requests hit a
+Cloudflare challenge and the public recap is not a complete next-season window.
+Hack Club Hackathons has a documented JSON API (credit required, no logos) and
+is eligible later, not in this adapter. MathWorks M3 remains reference-only
+until its first-party page publishes a complete 2027 challenge window.
+
+Outreach checklist (who to ask, what a written yes must cover):
+`docs/source-permission-outreach.md`. Printable PDF:
+`docs/source-permission-outreach.pdf`. Eligibility gate (what is not an
+ingest backlog, including “free API” registry verdicts):
+`docs/source-scraper-eligibility.md`.
 
 Politeness: use the shared retrying user agent, run sources sequentially, keep
 the twice-weekly cadence, and use `SCRAPE_MAX_EVENTS` for local checks. Do not

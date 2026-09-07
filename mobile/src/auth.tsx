@@ -169,6 +169,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
       if (signUpError) return { ok: false, error: signUpError.message };
+      // Already-registered emails return a fake user with no identities and
+      // send no confirmation mail.
+      if (
+        !data.session &&
+        Array.isArray(data.user?.identities) &&
+        data.user.identities.length === 0
+      ) {
+        return {
+          ok: false,
+          error: "An account may already use this email. Try signing in.",
+        };
+      }
       return { ok: true, needsEmailConfirmation: !data.session };
     },
     []

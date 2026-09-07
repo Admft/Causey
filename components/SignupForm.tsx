@@ -9,6 +9,7 @@ import {
   parseDateOnly,
 } from "@/lib/auth/age-band";
 import { homePathForRole } from "@/lib/auth/home-path";
+import { isExistingAccountSignup } from "@/lib/auth/signup-result";
 import { ROLE_OPTIONS, type AccountRole, type AgeBand } from "@/lib/auth/types";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { assertSignupAllowed } from "@/lib/actions/signup-guard";
@@ -179,7 +180,13 @@ export function SignupForm({
       if (signError) throw signError;
 
       // Email confirmation required — no session until they click the link.
+      // An already-registered address looks the same except identities is empty
+      // and no mail is sent.
       if (!data.session) {
+        if (isExistingAccountSignup(data.user)) {
+          setError("An account may already use this email. Try signing in.");
+          return;
+        }
         setNeedsConfirm(true);
         return;
       }

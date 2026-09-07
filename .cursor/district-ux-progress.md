@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Source eligibility memo plus one DOE-style STEM adapter: Congressional App Challenge as a single national May–October 2026 submission window (not 374 district rows). Registry “free APIs” (Tabroom JSON, RobotEvents, FIRST, Devpost, MLH, CTFtime, Codeforces, TBA) stay blocked. Science Olympiad and Poetry Out Loud failed the terms pass — 2026-09-06
 - [x] Phone tournament Clear/Going now updates the Family tab while it is still mounted under the event screen — 2026-09-06
 - [x] Phone Going / Can't go / Clear no longer snap back after a stale Family/Plan/event reload; Clear removes the family-discovery row instead of leaving it as an unanswered invite — 2026-09-06
 - [x] Parent Invite → student accepts on Plan → parent confirms organizer registration on Family now exists on the phone as well as the website. Going / Can't go can be unmarked (Clear answer; `0082`) — 2026-09-06

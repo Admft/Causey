@@ -57,6 +57,11 @@ export const ADMIN_SCRAPER_OPTIONS = [
     category: "stem",
   },
   {
+    value: "congressional_app_challenge_scrape",
+    label: "Congressional App Challenge",
+    category: "stem",
+  },
+  {
     value: "taea_vase_scrape",
     label: "TAEA VASE visual arts",
     category: "arts",

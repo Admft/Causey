@@ -59,6 +59,7 @@ export const SOURCE_PRIORITY: Record<string, number> = {
   purple_comet_scrape: 30,
   uil_music_marching_scrape: 30,
   txsef_scrape: 30,
+  congressional_app_challenge_scrape: 30,
   organizer: 20,
   manual: 10,
 };

@@ -60,7 +60,8 @@ function asScrapeRunSource(source: Competition["source"]): ScrapeRunSource {
     source === "uil_speech_debate_scrape" ||
     source === "purple_comet_scrape" ||
     source === "uil_music_marching_scrape" ||
-    source === "txsef_scrape"
+    source === "txsef_scrape" ||
+    source === "congressional_app_challenge_scrape"
   ) {
     return source;
   }

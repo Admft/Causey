@@ -51,6 +51,10 @@ export const CATEGORY_SOURCE_CONFIG = {
     category: "stem",
     organizer: "Texas A&M Engineering",
   },
+  congressional_app_challenge_scrape: {
+    category: "stem",
+    organizer: "Congressional App Challenge",
+  },
 } as const;
 
 export type CategoryScrapeSource = keyof typeof CATEGORY_SOURCE_CONFIG;
