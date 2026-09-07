@@ -159,9 +159,8 @@ const FACETS_BY_CATEGORY: Partial<Record<DiscoveryCategoryId, FacetCatalog>> = {
     label: "Discipline",
     options: [
       { value: "robotics", label: "Robotics" },
-      { value: "science_fair", label: "Science fair" },
+      { value: "science", label: "Science" },
       { value: "mathematics", label: "Mathematics" },
-      { value: "science_bowl", label: "Science bowl" },
       { value: "biology", label: "Biology" },
       { value: "chemistry", label: "Chemistry" },
       { value: "physics", label: "Physics" },

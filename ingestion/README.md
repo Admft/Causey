@@ -42,6 +42,7 @@ Run these in the Supabase SQL editor if not already applied:
 20. **`0056_profile_competition_category.sql`** — nullable account discovery shortcut; no chess default
 21. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
 22. **`0059_competition_facet_updates.sql`** — organizer edits persist `details.facets` without replacing other details
+23. **`0087_combine_stem_science_facets.sql`** — STEM science-fair and science-bowl tags become one Science discipline
 
 ## Provenance
 
@@ -208,7 +209,7 @@ with a similar title. Series matching and pathway enrichment run only for
   genres come from the official award page. The adapter leaves data unchanged
   when the page gives month/day deadlines without a year.
 - **DOE National Science Bowl (`doe_science_bowl_scrape`, STEM /
-  `science_bowl` + `mathematics`):** official national-event dates from the
+  `science` + `mathematics`):** official national-event dates from the
   Office of Science Key Dates page. The adapter requires the separate official
   program page to confirm Washington, D.C.; it does not infer a venue,
   registration link, regional dates, fee, or grade band. Office of Science
@@ -221,7 +222,7 @@ with a similar title. Series matching and pathway enrichment run only for
   adapter is enabled in aggregate discovery, admin dispatch, and GitHub
   workflow runs. Regional qualifying bowls are not indexed.
 - **Texas Science & Engineering Fair (`txsef_scrape`, STEM /
-  `science_fair`):** Texas A&M's official public homepage must publish an exact
+  `science`):** Texas A&M's official public homepage must publish an exact
   year-specific state-fair date range and College Station venue, while its
   general-information page must identify grades 6–12 and statewide finalist
   scope. Causey records only the state event and a regional-qualification

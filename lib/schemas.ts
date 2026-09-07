@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  canonicalDisciplineFacet,
   facetBelongsToCategory,
   PUBLIC_DISCOVERY_CATEGORY_IDS,
 } from "@/lib/category-discovery";
@@ -130,6 +131,7 @@ export const CompetitionFacetSchema = z.enum([
   "speech",
   "world_schools",
   "robotics",
+  "science",
   "science_fair",
   "mathematics",
   "science_bowl",
@@ -433,7 +435,11 @@ export const SearchFiltersSchema = z.object({
   grade_band: z.enum(["k3", "k6", "k8", "hs"]).optional(),
   rating_band: z.enum(["unrated", "u800", "u1200", "u1600", "open"]).optional(),
   /** Category-specific normalized value stored in competitions.details.facets. */
-  facet: CompetitionFacetSchema.optional(),
+  facet: CompetitionFacetSchema
+    .optional()
+    .transform((value) =>
+      value ? canonicalDisciplineFacet(value) : value
+    ),
   max_fee_cents: z.coerce.number().int().nonnegative().optional(),
   date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

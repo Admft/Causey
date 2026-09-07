@@ -70,7 +70,7 @@ export function parseTxsefHtml(
       city: "College Station",
       state: "TX",
       zip: null,
-      facets: ["science_fair"],
+      facets: ["science"],
       eventType: "State science and engineering fair",
       availability:
         "official state fair dates published; regional qualification required",

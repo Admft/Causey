@@ -20,7 +20,7 @@ import { normalizeCategorySourceEvent } from "@/ingestion/normalize-category-sou
 import { eventFingerprint } from "@/ingestion/fingerprint";
 import { buildCompetitionResult } from "@/lib/data/search";
 import { SearchFiltersSchema, type Competition } from "@/lib/schemas";
-import { discoveryCategory } from "@/lib/category-discovery";
+import { discoveryCategory, formatCompetitionFacetLabel } from "@/lib/category-discovery";
 import {
   competitionSourceOptionsForCategory,
   isCompetitionSourceFilter,
@@ -222,7 +222,7 @@ describe("official multi-category source adapters", () => {
       registrationUrl: null,
       city: "Washington",
       state: "DC",
-      facets: ["science_bowl", "mathematics"],
+      facets: ["science", "mathematics"],
     });
     expect(parseDoeScienceBowlHtml(html, "<main>Location pending</main>")).toEqual(
       []
@@ -484,7 +484,7 @@ describe("category facet isolation", () => {
     ).toBe(false);
   });
 
-  it("matches mathematics to team-math children and never infers biology from a science fair", () => {
+  it("matches mathematics to team-math children and Science to fair or bowl tags", () => {
     const mathMeet: Competition = {
       ...competition,
       details: {
@@ -497,6 +497,13 @@ describe("category facet isolation", () => {
       details: {
         ...competition.details,
         facets: ["science_fair"],
+      },
+    };
+    const scienceBowl: Competition = {
+      ...competition,
+      details: {
+        ...competition.details,
+        facets: ["science_bowl"],
       },
     };
     const hit = (row: Competition, facet: string) =>
@@ -515,8 +522,15 @@ describe("category facet isolation", () => {
     expect(hit(mathMeet, "mathematics")).not.toBeNull();
     expect(hit(mathMeet, "math_team")).not.toBeNull();
     expect(hit(mathMeet, "biology")).toBeNull();
+    expect(hit(scienceFair, "science")).not.toBeNull();
     expect(hit(scienceFair, "science_fair")).not.toBeNull();
+    expect(hit(scienceBowl, "science")).not.toBeNull();
+    expect(hit(scienceBowl, "science_bowl")).not.toBeNull();
     expect(hit(scienceFair, "biology")).toBeNull();
+    expect(formatCompetitionFacetLabel("stem", ["science_fair"])).toBe("Science");
+    expect(formatCompetitionFacetLabel("stem", ["science_bowl", "mathematics"])).toBe(
+      "Science · Mathematics"
+    );
     expect(
       SearchFiltersSchema.safeParse({
         category: "stem",
@@ -604,6 +618,14 @@ describe("category facet isolation", () => {
     expect(migration).toContain("update_competition_with_sections");
     expect(migration).toContain("p_values->'facets'");
     expect(migration).toContain("jsonb_set(");
+  });
+
+  it("rewrites science-fair and science-bowl tags to Science in migration 0087", () => {
+    const migration = fixture(
+      "../../supabase/migrations/0087_combine_stem_science_facets.sql"
+    );
+    expect(migration).toContain("'science_fair', 'science_bowl'");
+    expect(migration).toContain("then 'science'");
   });
 
   it("scopes non-chess fingerprints without changing chess identity", () => {

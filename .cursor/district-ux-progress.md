@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] STEM Science chip combines science fair and science bowl so one filter shows National Science Bowl and TXSEF — 2026-09-06
 - [x] Duplicate-email signup shows “An account for that email already exists” and a Sign in button on the website and phone — 2026-09-06
 - [x] DOE National Science Bowl 2027–2030 national finals are published listings with the official public-domain cover, National standing, and STEM popular-sort priority when save counts are tied — 2026-09-06
 - [x] Terms-review pass on seven “no letter needed” candidates: Congressional App Challenge (one national window) and Hack Club Hackathons (documented JSON; virtual + US) are indexed. Science Olympiad, Poetry Out Loud, EdTA, Music for All, WGI, and USACO stay blocked or Cloudflare/no-dates — 2026-09-06

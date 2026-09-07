@@ -38,7 +38,7 @@ function nationalEvent(
     city: "Washington",
     state: "DC",
     zip: null,
-    facets: ["science_bowl", "mathematics"],
+    facets: ["science", "mathematics"],
     eventType: "National Science Bowl national event",
     availability: "official date published; regional qualification required",
     entryFeeCents: null,

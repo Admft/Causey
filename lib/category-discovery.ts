@@ -123,16 +123,15 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
     href: "/stem",
     heading: "Student STEM competitions.",
     description:
-      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science fair, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window, DOE National Science Bowl national dates, the Texas state science fair, the Congressional App Challenge national submission window, and Hack Club Hackathons virtual and US listings.",
+      "Search the official public listings Causey has indexed so far. Filter by discipline — mathematics, biology, science, and others — without assuming every tag has published rows yet. Current coverage includes the Purple Comet team mathematics window, DOE National Science Bowl national dates, the Texas state science fair, the Congressional App Challenge national submission window, and Hack Club Hackathons virtual and US listings.",
     emptyDescription:
       "Published STEM coverage currently includes Purple Comet, DOE National Science Bowl national dates, the Texas state science fair, the Congressional App Challenge national submission window, and Hack Club Hackathons virtual and US listings. Biology and other discipline filters may be empty until a source publishes that tag. Try clearing filters or switching Timing to All.",
     searchPlaceholder: "Try mathematics, biology, robotics, or a competition name",
     facetLabel: "Discipline",
     facets: [
       { value: "robotics", label: "Robotics", group: "discipline" },
-      { value: "science_fair", label: "Science fair", group: "discipline" },
+      { value: "science", label: "Science", group: "discipline" },
       { value: "mathematics", label: "Mathematics", group: "discipline" },
-      { value: "science_bowl", label: "Science bowl", group: "discipline" },
       { value: "biology", label: "Biology", group: "discipline" },
       { value: "chemistry", label: "Chemistry", group: "discipline" },
       { value: "physics", label: "Physics", group: "discipline" },
@@ -419,6 +418,13 @@ export function preferredDiscoveryHref(
   return category ? discoveryCategoryHref(category, params) : "/";
 }
 
+/** Science fair and science bowl share one STEM Science chip. */
+const SCIENCE_FACET_ALIASES = new Set(["science", "science_fair", "science_bowl"]);
+
+export function canonicalDisciplineFacet(facet: string): string {
+  return SCIENCE_FACET_ALIASES.has(facet) ? "science" : facet;
+}
+
 export function facetValuesForCategory(
   category: CompetitionCategory
 ): readonly string[] {
@@ -458,7 +464,9 @@ export function facetBelongsToCategory(
   facet: string
 ): boolean {
   if (!category) return false;
-  return facetValuesForCategory(category).includes(facet);
+  return facetValuesForCategory(category).includes(
+    canonicalDisciplineFacet(facet)
+  );
 }
 
 export function facetSelectionMatches(
@@ -467,8 +475,12 @@ export function facetSelectionMatches(
   stored: readonly string[] | undefined
 ): boolean {
   if (!selected) return true;
-  if (!facetBelongsToCategory(category, selected)) return false;
+  const canonicalSelected = canonicalDisciplineFacet(selected);
+  if (!facetBelongsToCategory(category, canonicalSelected)) return false;
   const values = stored ?? [];
+  if (canonicalSelected === "science") {
+    return values.some((value) => SCIENCE_FACET_ALIASES.has(value));
+  }
   const children = childFacetsFor(category, selected).map((facet) => facet.value);
   if (children.length === 0) return values.includes(selected);
   return values.includes(selected) || children.some((child) => values.includes(child));
@@ -484,11 +496,15 @@ export function formatCompetitionFacetLabel(
     definition.facets.map((facet) => [facet.value, facet])
   );
   const ordered = [
-    ...stored.filter((value) => !byValue.get(value)?.parent),
-    ...stored.filter((value) => byValue.get(value)?.parent),
+    ...stored.filter((value) => !byValue.get(canonicalDisciplineFacet(value))?.parent),
+    ...stored.filter((value) => byValue.get(canonicalDisciplineFacet(value))?.parent),
   ];
   const labels = ordered
-    .map((value) => byValue.get(value)?.label)
+    .map(
+      (value) =>
+        byValue.get(canonicalDisciplineFacet(value))?.label ??
+        byValue.get(value)?.label
+    )
     .filter((label): label is string => Boolean(label));
   return labels.length ? [...new Set(labels)].join(" · ") : null;
 }
@@ -501,7 +517,7 @@ export function storedFacetsForOrganizer(
   if (!primaryFacet || !facetBelongsToCategory(category, primaryFacet)) {
     return [];
   }
-  const facets = [primaryFacet];
+  const facets = [canonicalDisciplineFacet(primaryFacet)];
   if (
     mathTypeFacet &&
     facetBelongsToCategory(category, mathTypeFacet) &&
@@ -518,7 +534,7 @@ export function organizerPrimaryFacet(
   category: CompetitionCategory,
   stored: readonly string[] | undefined
 ): string {
-  const values = stored ?? [];
+  const values = (stored ?? []).map((value) => canonicalDisciplineFacet(value));
   const primary = primaryFacetsForCategory(category).find((facet) =>
     values.includes(facet.value)
   );
