@@ -38,7 +38,7 @@ export function CompetitionHostPreview({
     .join(" · ");
   const eyebrowLabel = [
     typeLabel,
-    isChess && standing.id !== "local" ? standing.label : null,
+    standing.id !== "local" ? standing.label : null,
   ]
     .filter(Boolean)
     .join(" · ");

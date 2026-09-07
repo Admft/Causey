@@ -86,4 +86,16 @@ describe("eventStanding", () => {
     expect(s.id).toBe("local");
     expect(isFeaturedStanding(s)).toBe(false);
   });
+
+  it("treats DOE National Science Bowl as a featured national listing", () => {
+    const s = eventStanding({
+      name: "2027 National Science Bowl National Event",
+      source: "doe_science_bowl_scrape",
+      series: null,
+      details: { catalog_standing: "national" },
+    });
+    expect(s.id).toBe("national");
+    expect(s.label).toBe("National");
+    expect(isFeaturedStanding(s)).toBe(true);
+  });
 });

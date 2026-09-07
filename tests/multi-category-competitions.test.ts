@@ -171,9 +171,8 @@ describe("multi-category competition contract", () => {
     expect(primaryFacetsForCategory("stem").map((facet) => facet.value)).toEqual(
       [
         "robotics",
-        "science_fair",
+        "science",
         "mathematics",
-        "science_bowl",
         "biology",
         "chemistry",
         "physics",

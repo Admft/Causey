@@ -9,7 +9,11 @@ import {
   parseDateOnly,
 } from "@/lib/auth/age-band";
 import { homePathForRole } from "@/lib/auth/home-path";
-import { isExistingAccountSignup } from "@/lib/auth/signup-result";
+import {
+  EXISTING_ACCOUNT_HEADING,
+  isAlreadyRegisteredAuthError,
+  isExistingAccountSignup,
+} from "@/lib/auth/signup-result";
 import { ROLE_OPTIONS, type AccountRole, type AgeBand } from "@/lib/auth/types";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { assertSignupAllowed } from "@/lib/actions/signup-guard";
@@ -105,6 +109,7 @@ export function SignupForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [resendState, setResendState] = useState<
     "idle" | "pending" | "sent" | "error"
   >("idle");
@@ -124,6 +129,7 @@ export function SignupForm({
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setAlreadyRegistered(false);
     setPending(true);
 
     try {
@@ -184,7 +190,7 @@ export function SignupForm({
       // and no mail is sent.
       if (!data.session) {
         if (isExistingAccountSignup(data.user)) {
-          setError("An account may already use this email. Try signing in.");
+          setAlreadyRegistered(true);
           return;
         }
         setNeedsConfirm(true);
@@ -197,11 +203,8 @@ export function SignupForm({
       const message = err instanceof Error ? err.message : "";
       if (SAFE_SIGNUP_ERRORS.has(message)) {
         setError(message);
-      } else if (
-        message.toLowerCase().includes("already registered") ||
-        message.toLowerCase().includes("already been registered")
-      ) {
-        setError("An account may already use this email. Try signing in.");
+      } else if (isAlreadyRegisteredAuthError(message)) {
+        setAlreadyRegistered(true);
       } else {
         console.error("Sign-up failed:", err);
         setError("Could not create the account. Check your connection and try again.");
@@ -209,6 +212,46 @@ export function SignupForm({
     } finally {
       setPending(false);
     }
+  }
+
+  if (alreadyRegistered) {
+    return (
+      <div
+        className="rounded-xl border border-brand-red/25 bg-accent-soft p-6"
+        role="status"
+      >
+        <h2 className="font-display text-display-sm font-bold text-foreground">
+          {EXISTING_ACCOUNT_HEADING}
+        </h2>
+        <p className="mt-3 text-sm text-muted">
+          Sign in with{" "}
+          <strong className="text-foreground">{email.trim()}</strong>. Each
+          email can only have one account.
+        </p>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <Link href={loginHref} className="cta-enabled inline-flex">
+            Sign in
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setAlreadyRegistered(false);
+              setPassword("");
+              setConfirmPassword("");
+            }}
+            className="text-sm font-semibold text-brand-red hover:underline"
+          >
+            Use a different email
+          </button>
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-muted-strong hover:text-foreground"
+          >
+            Forgot password?
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   if (needsConfirm) {

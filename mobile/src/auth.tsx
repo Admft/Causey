@@ -168,7 +168,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         },
       });
-      if (signUpError) return { ok: false, error: signUpError.message };
+      if (signUpError) {
+        const message = signUpError.message.toLowerCase();
+        if (
+          message.includes("already registered") ||
+          message.includes("already been registered")
+        ) {
+          return {
+            ok: false,
+            error: "An account for that email already exists. Sign in.",
+          };
+        }
+        return { ok: false, error: signUpError.message };
+      }
       // Already-registered emails return a fake user with no identities and
       // send no confirmation mail.
       if (
@@ -178,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ) {
         return {
           ok: false,
-          error: "An account may already use this email. Try signing in.",
+          error: "An account for that email already exists. Sign in.",
         };
       }
       return { ok: true, needsEmailConfirmation: !data.session };

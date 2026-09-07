@@ -136,6 +136,9 @@ export function normalizeCategorySourceEvent(
       source_availability: raw.availability,
       source_external_key: raw.externalKey,
       source_fetched_at: new Date().toISOString(),
+      ...(options.source === "doe_science_bowl_scrape"
+        ? { catalog_standing: "national" }
+        : {}),
       ...(raw.locationSourceUrl
         ? { location_source_url: raw.locationSourceUrl }
         : {}),

@@ -26,7 +26,7 @@ describe("TXSEF official source adapter", () => {
       state: "TX",
       zip: null,
       registrationUrl: null,
-      facets: ["science_fair"],
+      facets: ["science"],
       entryFeeCents: null,
     });
     expect(parseTxsefHtml(html, "<main>Eligibility pending</main>")).toEqual([]);
@@ -61,7 +61,7 @@ describe("TXSEF official source adapter", () => {
       pathway_status: "none",
     });
     expect(competition?.details).toMatchObject({
-      facets: ["science_fair"],
+      facets: ["science"],
       geo_precision: "city",
       source_availability:
         "official state fair dates published; regional qualification required",
