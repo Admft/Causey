@@ -32,6 +32,14 @@ describe("source scraper eligibility", () => {
       expect(eligibility).toContain(blocked);
     }
     expect(outreach).toContain("Do not take a token and ship");
+    expect(outreach).toContain(
+      "the data may not be used for commercial purposes"
+    );
+    expect(eligibility).toContain(
+      "the data from this API may not be used for commercial purposes"
+    );
+    expect(eligibility).toContain("Do not build robotics ingestion on FIRST");
+    expect(eligibility).toContain("Do not use TBA as a FIRST workaround");
     expect(eligibility).toContain("Do not spawn 50 state-site scrapers");
     expect(outreach).toContain("hackathons.hackclub.com/data");
     expect(eligibility).toContain("hackathons.hackclub.com");

@@ -43,6 +43,8 @@ Run these in the Supabase SQL editor if not already applied:
 21. **`0057_district_audience_requires_hierarchy.sql`** — fail-closed district-audience hierarchy enforcement
 22. **`0059_competition_facet_updates.sql`** — organizer edits persist `details.facets` without replacing other details
 23. **`0087_combine_stem_science_facets.sql`** — STEM science-fair and science-bowl tags become one Science discipline
+24. **`0088_science_bowl_science_only.sql`** — drop mathematics tags from DOE National Science Bowl listings
+25. **`0089_science_bowl_regional_reg_url.sql`** — DOE listings link the official regional-competitions page
 
 ## Provenance
 
@@ -209,10 +211,13 @@ with a similar title. Series matching and pathway enrichment run only for
   genres come from the official award page. The adapter leaves data unchanged
   when the page gives month/day deadlines without a year.
 - **DOE National Science Bowl (`doe_science_bowl_scrape`, STEM /
-  `science` + `mathematics`):** official national-event dates from the
+  `science`):** official national-event dates from the
   Office of Science Key Dates page. The adapter requires the separate official
   program page to confirm Washington, D.C.; it does not infer a venue,
-  registration link, regional dates, fee, or grade band. Office of Science
+  fee, or grade band. Listings link the official Regional Competitions page
+  (`science.osti.gov/wdts/nsb/Regional-Competitions`) so coaches can find a
+  qualifying bowl; Causey does not index each regional or fetch the ORAU
+  coach portal. Office of Science
   `robots.txt` allows both pages, and its Web Policies identify site materials
   as public domain while requesting source acknowledgment and prohibiting
   implied endorsement. Listing covers may reuse a public-domain Office of
@@ -318,7 +323,8 @@ terms; EdTA schooltheatre.org limits use to personal non-commercial transitory
 viewing and forbids mirroring; Music for All forbids automated scripts and
 data-mining; WGI `robots.txt` disallows `/events/` and requires written consent
 for factual event data; Society for Science's fair finder needs
-permission; FIRST requires an appropriate listing license; AoPS and NewPages
+permission; FIRST’s FRC Events API is free but forbids commercial use of the
+data (a token is not a license; The Blue Alliance is not a workaround); AoPS and NewPages
 are secondary links; Scienteer and zFairs are tenant software rather than
 national directories; RobotEvents is not the official 2026–27 VEX pathway.
 MATHCOUNTS remains link-only because its terms require prior written consent

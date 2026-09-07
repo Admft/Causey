@@ -19,6 +19,9 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 
 ## Need for a district that wants school tournaments (priority)
 
+- [x] FIRST robotics stays unindexed until a written commercial listing license; Hack Club Hackathons remains the credited JSON feed — 2026-09-07
+- [x] National Science Bowl listings link the official DOE regional-competitions page — 2026-09-07
+- [x] National Science Bowl is Science on STEM search, not Mathematics — 2026-09-07
 - [x] Phone Going / Can't go / Clear no longer snap back after a stale reload — 2026-09-06
 - [x] Family invite handshake (parent Invite → student Plan → parent Mark complete) and Clear answer for Going / Can't go on phone and website (`0082`) — 2026-09-06
 - [x] Phone Bring your roster is coach-only and does not 404 at parents; event Going matches website invite vs family discovery — 2026-09-06

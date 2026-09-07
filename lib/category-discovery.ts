@@ -167,7 +167,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         name: "U.S. Department of Energy National Science Bowl",
         href: "https://science.osti.gov/wdts/nsb/Key-Dates",
         status: "Active for published national-event dates",
-        note: "Official Office of Science national dates in Washington, D.C. Regional qualifying bowls, registration portals, and fees are not indexed. Listing photos may use public-domain Office of Science material; Causey does not use the DOE seal or National Science Bowl wordmark as a source logo.",
+        note: "Official Office of Science national dates in Washington, D.C. Listings link the official regional-competitions page so coaches can find a qualifying bowl; individual regionals, the coach portal, and fees are not indexed. Listing photos may use public-domain Office of Science material; Causey does not use the DOE seal or National Science Bowl wordmark as a source logo.",
       },
       {
         name: "Texas Science & Engineering Fair",
@@ -185,7 +185,7 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
         name: "Hack Club Hackathons",
         href: "https://hackathons.hackclub.com/",
         status: "Active for upcoming virtual and US listings",
-        note: "Documented JSON directory of high-school hackathons. Causey credits Hack Club Hackathons, indexes virtual events plus US in-person rows, and does not store logos or international in-person listings.",
+        note: "Documented JSON API of upcoming high-school hackathons (name, website, dates, city/state, virtual flag). The published condition is to credit “Hack Club Hackathons” with a link back. Causey indexes virtual events plus US in-person rows and does not store logos or international in-person listings.",
       },
     ],
     referenceSources: [
@@ -198,7 +198,8 @@ export const DISCOVERY_CATEGORIES: readonly CategoryDiscoveryDefinition[] = [
       {
         name: "FIRST",
         href: "https://www.firstinspires.org/",
-        note: "Link only. API access requires a token and permission appropriate to the intended use.",
+        status: "Not indexed: commercial-use ban on Events Data",
+        note: "FIRST’s FRC Events API is free and open to anyone, but the data may not be used for commercial purposes and requires a link back to their API page. The Blue Alliance is FIRST-derived and likely inherits the same constraint. Causey will not ingest FIRST robotics until that is sorted in writing.",
       },
       {
         name: "Society for Science fair finder",

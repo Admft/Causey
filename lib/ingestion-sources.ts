@@ -215,7 +215,7 @@ const INGESTION_SOURCE_PRESENTATION: Omit<
     href: "https://hackathons.hackclub.com/",
     logoUrl: "/sources/state-affiliates.svg",
     blurb:
-      "Documented high-school hackathon JSON directory. Causey indexes virtual events and US in-person rows and credits Hack Club Hackathons. Logos are not stored.",
+      "Documented high-school hackathon JSON directory. Causey indexes virtual events and US in-person rows and credits Hack Club Hackathons with a link. Logos are not stored.",
     status: "live",
     category: "stem",
   },

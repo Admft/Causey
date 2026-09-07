@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { DOE_SCIENCE_BOWL_REGIONAL_URL } from "../lib/doe-science-bowl";
 import {
   parseNamedDateRange,
   type RawCategoryEvent,
@@ -27,7 +28,7 @@ function nationalEvent(
     externalKey: `national-${year}`,
     name: `${year} National Science Bowl National Event`,
     detailUrl,
-    registrationUrl: null,
+    registrationUrl: DOE_SCIENCE_BOWL_REGIONAL_URL,
     locationSourceUrl,
     startDate: dates.start,
     endDate: dates.end,
@@ -38,7 +39,7 @@ function nationalEvent(
     city: "Washington",
     state: "DC",
     zip: null,
-    facets: ["science", "mathematics"],
+    facets: ["science"],
     eventType: "National Science Bowl national event",
     availability: "official date published; regional qualification required",
     entryFeeCents: null,

@@ -34,6 +34,7 @@ import {
   discoveryCategory,
   formatCompetitionFacetLabel,
 } from "@/lib/category-discovery";
+import { isDoeScienceBowlSource } from "@/lib/doe-science-bowl";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { OrgAttendancePanel } from "@/components/OrgAttendancePanel";
 import { RecommendEventPanel } from "@/components/RecommendEventPanel";
@@ -127,6 +128,7 @@ export default async function EventPage({ params }: Params) {
   // The bare `new URL()` this replaces also threw on an unparseable value.
   const registrationUrl = safeExternalUrl(competition.reg_url);
   const regHost = externalUrlHost(competition.reg_url);
+  const scienceBowlQualifying = isDoeScienceBowlSource(competition.source);
   const feeLabel =
     competition.entry_fee_cents === null || competition.entry_fee_cents === undefined
       ? "Fee not listed"
@@ -658,13 +660,15 @@ export default async function EventPage({ params }: Params) {
                     ? "Organizer registration is marked complete"
                     : hasAnsweredRsvp
                       ? "Finish organizer registration"
-                      : "Register on the organizer’s site"}
+                      : scienceBowlQualifying
+                        ? "Find a regional Science Bowl"
+                        : "Register on the organizer’s site"}
                 </h2>
                 {!registrationComplete ? (
                   <p className="mt-2 max-w-prose text-sm text-muted">
-                    Entry and payment happen on {regHost}, not on Causey. When
-                    you finish, come back and mark it complete so your Plan
-                    stays accurate.
+                    {scienceBowlQualifying
+                      ? "Teams reach this national event through a regional Science Bowl. The official DOE page lists high school and middle school regionals and how coaches register. Causey does not list each regional."
+                      : `Entry and payment happen on ${regHost}, not on Causey. When you finish, come back and mark it complete so your Plan stays accurate.`}
                   </p>
                 ) : null}
                 <div className="mt-4 flex flex-col gap-6">
@@ -689,6 +693,11 @@ export default async function EventPage({ params }: Params) {
                           target.label !== "You" ? target.label : undefined
                         }
                         rsvpProfileId={target.profileId ?? user?.id}
+                        ctaLabel={
+                          scienceBowlQualifying
+                            ? "Open DOE regional competitions"
+                            : undefined
+                        }
                         embedded
                       />
                     </div>
