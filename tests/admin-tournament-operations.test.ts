@@ -257,7 +257,10 @@ describe("manual ingestion workflow", () => {
 
   it("supports the all-sources dispatch", () => {
     expect(workflow).toContain("- all");
-    expect(workflow).toContain("all) npm run scrape:all");
+    expect(workflow).toContain("all)");
+    expect(workflow).toContain("npm run scrape:all");
+    expect(workflow).toContain("npm run scrape:discovery");
+    expect(workflow).toContain("chess_status");
   });
 
   it("queues overlapping ingestion requests instead of racing them", () => {

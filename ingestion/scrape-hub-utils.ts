@@ -36,10 +36,15 @@ export function loadFixtureHtml(relOrAbs: string): string {
 export async function loadListingHtml(opts: {
   fixtureEnv?: string;
   url: string;
+  timeoutMs?: number;
+  maxAttempts?: number;
 }): Promise<string> {
   const fixture = process.env.SCRAPE_HTML_FILE ?? opts.fixtureEnv;
   if (fixture) return loadFixtureHtml(fixture);
-  return fetchHtml(opts.url);
+  return fetchHtml(opts.url, {
+    timeoutMs: opts.timeoutMs,
+    maxAttempts: opts.maxAttempts,
+  });
 }
 
 function asScrapeRunSource(source: Competition["source"]): ScrapeRunSource {

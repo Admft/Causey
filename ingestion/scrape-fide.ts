@@ -4,6 +4,10 @@
  * US tiles usually have city + state but no ZIP. Resolve via GeoNames
  * city→zip + Supabase `zips` (geo_precision: city). International stay draft.
  *
+ * Live tiles come from calendar_server.php. The listing shell is only
+ * fetched for SCRAPE_HTML_FILE fixtures — calendar.php itself is a slow
+ * connect from GitHub runners and is not parsed on live runs.
+ *
  *   npm run scrape:fide
  *   SCRAPE_HTML_FILE=ingestion/fixtures/fide-calendar-tiles.html npm run scrape:fide
  *   SCRAPE_UPSERT_ONLY=1 npm run scrape:fide
@@ -31,6 +35,13 @@ import { fetchHtml } from "./fetch-html";
 
 const STAGING_FILE = "fide-drafts.json";
 const MAX_PAGES = Number(process.env.SCRAPE_MAX_PAGES ?? "40");
+const FIDE_FETCH_TIMEOUT_MS = Number(
+  process.env.SCRAPE_FIDE_FETCH_TIMEOUT_MS ?? 45_000
+);
+const FIDE_FETCH_ATTEMPTS = Math.max(
+  1,
+  Number(process.env.SCRAPE_FIDE_FETCH_MAX_ATTEMPTS ?? 6)
+);
 
 async function main() {
   console.log(`Scraper: ${FIDE_LISTING_URL} → source='${FIDE_SCRAPER_ID}'`);
@@ -40,9 +51,13 @@ async function main() {
     return;
   }
 
-  const listingShell = await loadListingHtml({ url: FIDE_LISTING_URL });
   let raw;
   if (process.env.SCRAPE_HTML_FILE) {
+    const listingShell = await loadListingHtml({
+      url: FIDE_LISTING_URL,
+      timeoutMs: FIDE_FETCH_TIMEOUT_MS,
+      maxAttempts: FIDE_FETCH_ATTEMPTS,
+    });
     raw = parseFideCalendarHtml(listingShell);
   } else {
     const byKey = new Map<
@@ -54,6 +69,8 @@ async function main() {
       const html = await fetchHtml(
         "https://calendar.fide.com/calendar_server.php",
         {
+          timeoutMs: FIDE_FETCH_TIMEOUT_MS,
+          maxAttempts: FIDE_FETCH_ATTEMPTS,
           method: "POST",
           body: new URLSearchParams({
             show: "tiles",

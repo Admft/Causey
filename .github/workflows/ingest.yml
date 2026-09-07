@@ -7,7 +7,7 @@
 #        SUPABASE_SERVICE_ROLE_KEY
 #      Must match the Causey Supabase project (same values as local .env).
 #   3. Optional: OPENAI_API_KEY for pathway enrichment (gpt-4.1-mini)
-#   4. Manual dry-run locally: npm run scrape:all && npm run scrape:discovery
+#   4. Manual dry-run locally: npm run scrape:all; npm run scrape:discovery
 #
 # GitHub loads schedules from the default branch. The scheduled workflow is
 # released on main but explicitly checks out dev, while manual runs remain
@@ -98,7 +98,17 @@ jobs:
         run: |
           run_source() {
             case "$1" in
-              all) npm run scrape:all && npm run scrape:discovery ;;
+              all)
+                set +e
+                npm run scrape:all
+                chess_status=$?
+                npm run scrape:discovery
+                discovery_status=$?
+                set -e
+                if [ "$chess_status" -ne 0 ] || [ "$discovery_status" -ne 0 ]; then
+                  exit 1
+                fi
+                ;;
               tla_scrape) npm run scrape:tla ;;
               cca_scrape) npm run scrape:cca ;;
               onlinereg_scrape) npm run scrape:onlinereg ;;
