@@ -290,11 +290,20 @@ describe("coverage and empty states stay honest", () => {
     expect(stem.activeSources.map((source) => source.name)).toContain(
       "U.S. Department of Energy National Science Bowl"
     );
+    expect(stem.activeSources.map((source) => source.name)).toContain(
+      "Congressional App Challenge"
+    );
     expect(stem.referenceSources.map((source) => source.name)).not.toContain(
       "U.S. Department of Energy National Science Bowl"
     );
     expect(stem.referenceSources.map((source) => source.name)).toContain(
       "VEX Events"
+    );
+    expect(stem.referenceSources.map((source) => source.name)).toContain(
+      "Science Olympiad invitationals"
+    );
+    expect(stem.referenceSources.map((source) => source.name)).toContain(
+      "Hack Club Hackathons"
     );
     const writing = DISCOVERY_CATEGORIES.find(
       (category) => category.id === "writing"
@@ -302,6 +311,9 @@ describe("coverage and empty states stay honest", () => {
     expect(writing.emptyDescription).toContain("Timing to All");
     expect(writing.activeSources.map((source) => source.name)).toContain(
       "AFSA National High School Essay Contest"
+    );
+    expect(writing.referenceSources.map((source) => source.name)).toContain(
+      "Poetry Out Loud"
     );
   });
 
