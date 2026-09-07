@@ -23,7 +23,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 
 ## Need for a professional club (priority)
 
-- [x] Coach signup with an email that already has an account goes to Sign in instead of a confirmation screen that never sends mail — 2026-09-06
+- [x] Duplicate-email signup says the account already exists and offers Sign in (not a confirmation that never arrives) — 2026-09-06
 - [x] Phone Going / Can't go / Clear no longer lose the tap to a stale list reload — 2026-09-06
 - [x] Parent invite → student Plan accept → parent Family confirm works on the phone the same way as the website; Going / Can't go can be unmarked (`0082`) — 2026-09-06
 - [x] Phone Bring your roster is coach-only and falls back to the website when `/api/mobile/org-attendance` is not on that server; event Going distinguishes a club invite RSVP from public-listing family Going — 2026-09-06

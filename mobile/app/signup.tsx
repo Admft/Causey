@@ -43,6 +43,7 @@ export default function SignupScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
   const canSubmit = Boolean(
     displayName.trim() && email.trim() && password.length >= 8
@@ -54,6 +55,10 @@ export default function SignupScreen() {
     const result = await signUp({ role, displayName, email, password, zip });
     setBusy(false);
     if (!result.ok) {
+      if (result.error.startsWith("An account for that email already exists")) {
+        setAlreadyRegistered(true);
+        return;
+      }
       setError(result.error);
       return;
     }
@@ -62,6 +67,29 @@ export default function SignupScreen() {
       return;
     }
     router.replace("/");
+  }
+
+  if (alreadyRegistered) {
+    return (
+      <Screen header>
+        <Kicker>Account</Kicker>
+        <Title>An account for that email already exists</Title>
+        <Lede>
+          Sign in with {email.trim()}. Each email can only have one account.
+        </Lede>
+        <PrimaryButton
+          label="Sign in"
+          onPress={() => router.replace("/login")}
+        />
+        <LinkButton
+          label="Use a different email"
+          onPress={() => {
+            setAlreadyRegistered(false);
+            setPassword("");
+          }}
+        />
+      </Screen>
+    );
   }
 
   if (confirmSent) {
