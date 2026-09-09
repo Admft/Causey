@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] District office follow-through: Activity rows deep-link to Open school / People / settings / host-filtered Competitions; Reports school names and Needs RSVP / Upcoming counts open the school workspace or Competitions `?host=` filter — 2026-09-09
 - [x] District first-session next-step honesty: command-center secondary is stage-aware (no empty Reports during setup; competitions while provisioning/verification waits; Reports only after schools are ready); Account Organizations links district rows to Schools instead of a dead Roster; Family/Account/Leave/event invite chrome stays school-or-club honest — 2026-09-07
 - [x] FIRST FRC Events API recorded as a commercial-use block (token is not a license; Blue Alliance is not a workaround); Hack Club Hackathons stays the credited STEM JSON feed — 2026-09-07
 - [x] National Science Bowl listings link the official DOE regional-competitions page for how coaches register — 2026-09-07

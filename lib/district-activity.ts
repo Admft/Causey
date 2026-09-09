@@ -20,6 +20,101 @@ const ACTION_LABELS: Record<string, string> = {
   "competition.status_changed": "Competition status changed",
 };
 
+export type DistrictActivityFollowThrough = {
+  href: string;
+  label: string;
+};
+
+export type DistrictActivityFollowThroughContext = {
+  districtSlug: string;
+  districtOrgId: string;
+  /** Org id → workspace slug for the district and every connected school. */
+  slugByOrgId: ReadonlyMap<string, string>;
+};
+
+/**
+ * One next action from an Activity row into the scoped workspace.
+ * Uses only ids already on the row — never invents competition or student links.
+ */
+export function districtActivityFollowThrough(
+  row: DistrictAdminActivityRow,
+  ctx: DistrictActivityFollowThroughContext
+): DistrictActivityFollowThrough | null {
+  const scopeSlug = ctx.slugByOrgId.get(row.scope_org_id);
+  if (!scopeSlug) return null;
+
+  const isSchool = row.scope_org_type === "school";
+  const openWorkspace: DistrictActivityFollowThrough = {
+    href: `/orgs/${scopeSlug}`,
+    label: isSchool ? "Open school" : "Open district overview",
+  };
+
+  if (row.action.startsWith("competition.")) {
+    return {
+      href: `/orgs/${ctx.districtSlug}/competitions?host=${encodeURIComponent(
+        row.scope_org_id
+      )}`,
+      label: "Review competitions",
+    };
+  }
+
+  if (row.action.startsWith("organization.invitation_")) {
+    return {
+      href: `/orgs/${scopeSlug}/people`,
+      label: "Open People",
+    };
+  }
+
+  if (row.action === "organization.settings_changed") {
+    const summary = row.summary ?? {};
+    if (summary.owner_changed) {
+      return {
+        href: `/orgs/${scopeSlug}/settings#ownership`,
+        label: "Open ownership settings",
+      };
+    }
+    if (summary.verification_from || summary.verification_to) {
+      return {
+        href: `/orgs/${scopeSlug}/settings#verification`,
+        label: "Open verification settings",
+      };
+    }
+    return {
+      href: `/orgs/${scopeSlug}/settings`,
+      label: "Open settings",
+    };
+  }
+
+  if (row.action === "organization.announcement_published") {
+    return openWorkspace;
+  }
+
+  if (row.action === "organization.created") {
+    return openWorkspace;
+  }
+
+  return openWorkspace;
+}
+
+/** Competitions inventory filtered to one host (district or school). */
+export function districtHostCompetitionsHref(
+  districtSlug: string,
+  hostOrgId: string
+): string {
+  return `/orgs/${districtSlug}/competitions?host=${encodeURIComponent(
+    hostOrgId
+  )}`;
+}
+
+/** School workspace overview when the slug is known; otherwise null. */
+export function districtReportSchoolHref(
+  schoolId: string,
+  slugByOrgId: ReadonlyMap<string, string>
+): string | null {
+  const slug = slugByOrgId.get(schoolId);
+  return slug ? `/orgs/${slug}` : null;
+}
+
 export function districtActivityActionLabel(action: string): string {
   return ACTION_LABELS[action] ?? "Administrative update";
 }

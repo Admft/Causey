@@ -157,9 +157,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 18. **P1 · District first-session next-step honesty · S–M · shipped 2026-09-07**  
    Surface: district overview secondary is stage-aware (`getDistrictReadinessSecondary`); Account Organizations uses Schools for district rows; Family/Account/Leave/event invite chrome says school or club instead of club-only leftovers.
 
+19. **P1 · District office follow-through from Activity + Reports · M · shipped 2026-09-09**  
+   Surface: Activity rows link to Open school / People / settings / Competitions `?host=`; Reports school names and Needs RSVP / Upcoming counts open the school workspace or host-filtered competitions. No student browsing; no migration.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
+Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules. Optional: coach `/me` mission school/district nouns.
 
 ### Out-of-scope refusals this pass
 
