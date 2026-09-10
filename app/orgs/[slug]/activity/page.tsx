@@ -8,10 +8,14 @@ import {
 } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDistrictAdminActivity } from "@/lib/data/district";
-import { getOrgBySlugForViewer } from "@/lib/data/portal";
+import {
+  getChildSchoolsForDistrict,
+  getOrgBySlugForViewer,
+} from "@/lib/data/portal";
 import {
   districtActivityActionLabel,
   districtActivityDetail,
+  districtActivityFollowThrough,
   formatDistrictActivityWhen,
 } from "@/lib/district-activity";
 
@@ -40,9 +44,16 @@ export default async function DistrictActivityPage({
     redirect(`/orgs/${slug}`);
   }
 
-  const activityResult = await getDistrictAdminActivity(view.org.id);
+  const [activityResult, childSchools] = await Promise.all([
+    getDistrictAdminActivity(view.org.id),
+    getChildSchoolsForDistrict(view.org.id),
+  ]);
   const rows = activityResult.ok ? activityResult.data : [];
   const loadFailed = activityResult.ok === false;
+  const slugByOrgId = new Map<string, string>([
+    [view.org.id, view.org.slug],
+    ...childSchools.map((school) => [school.id, school.slug] as const),
+  ]);
 
   return (
     <>
@@ -102,6 +113,11 @@ export default async function DistrictActivityPage({
                   row.scope_org_type === "district"
                     ? "District"
                     : "School";
+                const followThrough = districtActivityFollowThrough(row, {
+                  districtSlug: view.org.slug,
+                  districtOrgId: view.org.id,
+                  slugByOrgId,
+                });
                 return (
                   <li key={row.id} className="py-3">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -120,6 +136,16 @@ export default async function DistrictActivityPage({
                     </p>
                     {detail ? (
                       <p className="mt-1 text-sm text-muted">{detail}</p>
+                    ) : null}
+                    {followThrough ? (
+                      <p className="mt-2">
+                        <Link
+                          href={followThrough.href}
+                          className="text-sm font-semibold text-brand-red hover:underline"
+                        >
+                          {followThrough.label}
+                        </Link>
+                      </p>
                     ) : null}
                   </li>
                 );

@@ -30,12 +30,14 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- `/districts` drop Price and support from the unfinished list — 2026-09-09
+- `/clubs` workspace-first public pitch — 2026-09-10
 
 ## Last tick
 
+- 2026-09-10 — `/clubs` leads with a sample workspace, season ledger, and season file; districts keep a matching office window.
 - 2026-09-09 — `/districts` closing CTA sits copy + Book on one row so the white card is not an empty lane.
 - 2026-09-09 — `/districts` no longer lists Price and support as an unfinished item; privacy, email volume, and independent clubs remain.
+- 2026-09-09 — District Activity rows and Reports school/Needs-RSVP cells link into the scoped school workspace, People, settings, or Competitions `?host=` filter so coordinators act without re-hunting. No schema change; fail-closed loads unchanged.
 - 2026-09-07 — District overview no longer pins “View aggregate reporting” during school setup; Reports appears only after schools are ready, while provisioning/verification waits offer competitions. Account Organizations sends district rows to Schools (not a dead Roster), and Family/Account/Leave/event invite copy stays school-or-club honest.
 - 2026-09-07 — FIRST’s free FRC Events API is recorded as a commercial-use ban (plus required API-page attribution). The Blue Alliance is not a workaround. Hack Club Hackathons remains the live credited JSON directory.
 - 2026-09-07 — National Science Bowl event pages link the official DOE regional-competitions page so coaches can find a qualifying bowl and register. Causey still does not list each regional.

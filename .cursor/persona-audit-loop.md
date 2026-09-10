@@ -47,9 +47,10 @@ Walk the product as a **first-time** visitor in each role. Note friction, dead e
 - If blocked on schema (hierarchy, role split), prefer the next visual/portal batch that unblocks trust without inventing fake district features — or implement the real schema work if that *is* the highest-impact open item.
 
 ## Active batch
-_(none — ready for next audit tick)_
+- District office follow-through from Activity + Reports (deep links) — 2026-09-09
 
 ## Last tick
+- 2026-09-09 — **District office follow-through**: Activity and Reports stop as dead-end lists; each actionable row links into the scoped school, People, settings, or host-filtered Competitions without student-level browsing.
 - 2026-09-05 — **Chess nationals pin glow + density (user-directed, outside audit cadence)**: `.partner-promo` rebuilt cross-browser (no color-mix/range-media in critical paint) with gradient face, ambient aura, looping sheen, and a labeled pathway ladder rail filling the panel on `/` featured and `/chess` results.
 - 2026-09-01 — **Family/school chrome honesty**: `studentOrgChromeFromTypes` + `membershipHistoryEyebrow`; Family drops “tell the club” / “Not in any club yet”; Plan/Orgs derive school vs club chrome from memberships; school history eyebrow is “School record”.
 - 2026-08-31 — **District Schools settings readiness**: `#schools` uses the same pilot readiness model as the command center (invite/claim/ownership/provision/ready + fail-closed retry), not verification-only labels.
