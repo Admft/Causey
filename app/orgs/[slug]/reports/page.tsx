@@ -11,7 +11,14 @@ import {
   getDistrictParticipationReport,
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
-import { getOrgBySlugForViewer } from "@/lib/data/portal";
+import {
+  getChildSchoolsForDistrict,
+  getOrgBySlugForViewer,
+} from "@/lib/data/portal";
+import {
+  districtHostCompetitionsHref,
+  districtReportSchoolHref,
+} from "@/lib/district-activity";
 import { COMPETITION_TYPES } from "@/lib/competition-types";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
 import {
@@ -49,14 +56,18 @@ export default async function OrganizationReportsPage({
   const categoryParse = CompetitionCategorySchema.safeParse(filters.category);
   const reportCategory = categoryParse.success ? categoryParse.data : null;
 
-  const [districtReportResult, attendanceResult] = await Promise.all([
-    view.isDistrictAdmin
-      ? getDistrictParticipationReport(view.org.id, reportCategory)
-      : Promise.resolve(null),
-    view.org.type === "district"
-      ? Promise.resolve({ ok: true as const, data: [] })
-      : getOrgSeasonAttendance(view.org.id),
-  ]);
+  const [districtReportResult, attendanceResult, childSchools] =
+    await Promise.all([
+      view.isDistrictAdmin
+        ? getDistrictParticipationReport(view.org.id, reportCategory)
+        : Promise.resolve(null),
+      view.org.type === "district"
+        ? Promise.resolve({ ok: true as const, data: [] })
+        : getOrgSeasonAttendance(view.org.id),
+      view.isDistrictAdmin
+        ? getChildSchoolsForDistrict(view.org.id)
+        : Promise.resolve([]),
+    ]);
   const districtReport =
     districtReportResult?.ok === true ? districtReportResult.data : null;
   const districtRollup = districtReport?.schools ?? [];
@@ -67,6 +78,13 @@ export default async function OrganizationReportsPage({
   const attendance =
     attendanceResult.ok === true ? attendanceResult.data : [];
   const orgKind = organizationKindLabel(view.org.type);
+  const slugByOrgId = new Map<string, string>(
+    childSchools.map((school) => [school.id, school.slug] as const)
+  );
+  const districtCompetitionsHref = districtHostCompetitionsHref(
+    view.org.slug,
+    view.org.id
+  );
   const hasDistrictHostedActivity = districtHosted
     ? districtHosted.upcoming_tournaments +
         districtHosted.invitations_pending +
@@ -194,18 +212,28 @@ export default async function OrganizationReportsPage({
                     {
                       label: "Upcoming",
                       value: districtHosted?.upcoming_tournaments ?? 0,
+                      href:
+                        (districtHosted?.upcoming_tournaments ?? 0) > 0
+                          ? districtCompetitionsHref
+                          : null,
                     },
                     {
                       label: "Needs RSVP",
                       value: districtHosted?.invitations_pending ?? 0,
+                      href:
+                        (districtHosted?.invitations_pending ?? 0) > 0
+                          ? districtCompetitionsHref
+                          : null,
                     },
                     {
                       label: "Going",
                       value: districtHosted?.going_count ?? 0,
+                      href: null,
                     },
                     {
                       label: "Attended",
                       value: districtHosted?.attended_this_season ?? 0,
+                      href: null,
                     },
                   ].map((stat) => (
                     <div key={stat.label}>
@@ -213,7 +241,20 @@ export default async function OrganizationReportsPage({
                         {stat.label}
                       </dt>
                       <dd className="mt-1 font-display text-xl font-bold text-foreground">
-                        {stat.value}
+                        {stat.href ? (
+                          <Link
+                            href={stat.href}
+                            className="text-brand-red hover:underline"
+                          >
+                            {stat.value}
+                            <span className="sr-only">
+                              {" "}
+                              — open district competitions
+                            </span>
+                          </Link>
+                        ) : (
+                          stat.value
+                        )}
                       </dd>
                     </div>
                   ))}
@@ -255,19 +296,73 @@ export default async function OrganizationReportsPage({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
-                      {districtRollup.map((school) => (
+                      {districtRollup.map((school) => {
+                        const schoolHref = districtReportSchoolHref(
+                          school.school_id,
+                          slugByOrgId
+                        );
+                        const rsvpHref =
+                          school.invitations_pending > 0
+                            ? districtHostCompetitionsHref(
+                                view.org.slug,
+                                school.school_id
+                              )
+                            : null;
+                        const upcomingHref =
+                          school.upcoming_tournaments > 0
+                            ? districtHostCompetitionsHref(
+                                view.org.slug,
+                                school.school_id
+                              )
+                            : null;
+                        return (
                         <tr key={school.school_id}>
                           <th scope="row" className="px-4 py-3 font-semibold text-foreground">
-                            {school.school_name}
+                            {schoolHref ? (
+                              <Link
+                                href={schoolHref}
+                                className="text-brand-red hover:underline"
+                              >
+                                {school.school_name}
+                              </Link>
+                            ) : (
+                              school.school_name
+                            )}
                           </th>
                           <td className="px-4 py-3 text-muted-strong">
                             {school.active_students}
                           </td>
                           <td className="px-4 py-3 text-muted-strong">
-                            {school.upcoming_tournaments}
+                            {upcomingHref ? (
+                              <Link
+                                href={upcomingHref}
+                                className="font-semibold text-brand-red hover:underline"
+                              >
+                                {school.upcoming_tournaments}
+                                <span className="sr-only">
+                                  {" "}
+                                  — open competitions for {school.school_name}
+                                </span>
+                              </Link>
+                            ) : (
+                              school.upcoming_tournaments
+                            )}
                           </td>
                           <td className="px-4 py-3 text-muted-strong">
-                            {school.invitations_pending}
+                            {rsvpHref ? (
+                              <Link
+                                href={rsvpHref}
+                                className="font-semibold text-brand-red hover:underline"
+                              >
+                                {school.invitations_pending}
+                                <span className="sr-only">
+                                  {" "}
+                                  — review RSVPs for {school.school_name}
+                                </span>
+                              </Link>
+                            ) : (
+                              school.invitations_pending
+                            )}
                           </td>
                           <td className="px-4 py-3 text-muted-strong">
                             {school.going_count}
@@ -276,7 +371,8 @@ export default async function OrganizationReportsPage({
                             {school.attended_this_season}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </section>
@@ -320,16 +416,47 @@ export default async function OrganizationReportsPage({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-line">
-                        {hostedBySchool.map((school) => (
+                        {hostedBySchool.map((school) => {
+                          const schoolHref = districtReportSchoolHref(
+                            school.school_id,
+                            slugByOrgId
+                          );
+                          const rsvpHref =
+                            school.invitations_pending > 0
+                              ? districtCompetitionsHref
+                              : null;
+                          return (
                           <tr key={school.school_id}>
                             <th
                               scope="row"
                               className="px-4 py-3 font-semibold text-foreground"
                             >
-                              {school.school_name}
+                              {schoolHref ? (
+                                <Link
+                                  href={schoolHref}
+                                  className="text-brand-red hover:underline"
+                                >
+                                  {school.school_name}
+                                </Link>
+                              ) : (
+                                school.school_name
+                              )}
                             </th>
                             <td className="px-4 py-3 text-muted-strong">
-                              {school.invitations_pending}
+                              {rsvpHref ? (
+                                <Link
+                                  href={rsvpHref}
+                                  className="font-semibold text-brand-red hover:underline"
+                                >
+                                  {school.invitations_pending}
+                                  <span className="sr-only">
+                                    {" "}
+                                    — review district-hosted RSVPs
+                                  </span>
+                                </Link>
+                              ) : (
+                                school.invitations_pending
+                              )}
                             </td>
                             <td className="px-4 py-3 text-muted-strong">
                               {school.going_count}
@@ -338,7 +465,8 @@ export default async function OrganizationReportsPage({
                               {school.attended_this_season}
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
