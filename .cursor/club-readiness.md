@@ -46,6 +46,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Phone homepage is search-first: type tiles, optional zip, club/district as text links — 2026-08-26
 - [x] Homepage hero fills the remaining viewport and a cue scrolls to what Causey indexes — 2026-08-26
 - [x] Event manage workspace: pulse + People/Listing + cover re-upload on edit — 2026-08-26
+- [x] Public `/clubs` pitch rebuilt on the quiet-ledger direction: workspace frame as hero, ruled sample ledger, two-seats club/district table, season-file artifact; scope honesty lists kept — 2026-09-10
 - [x] Public `/clubs` and `/districts` pitches include a compact “All competition types” back control to the homepage chooser — 2026-08-26
 - [x] Event travel control says “Bring your roster,” uses one org chooser, and excludes rosterless district offices — 2026-08-26
 - [x] Public club pitch at `/clubs` (peer to `/districts`): season path, honest out-of-scope, Start a club → coach signup → `/orgs/new` — 2026-08-24 / create path 2026-09-02

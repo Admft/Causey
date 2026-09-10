@@ -145,6 +145,14 @@ Copy these CSS variables into the product app unchanged.
   --org-gold-strong: #75500d;     /* provenance label text */
   --org-gold-soft: #fff6dd;       /* compact provenance label background */
 
+  /* Brand yellow (LAST-RESORT extra color — after red, blue, and org-gold.
+     Two jobs only: "in pilot / in progress" status chips, and one hero
+     marker-swipe highlight per page. Never a category color, never a fill,
+     never adjacent to org-gold provenance.) */
+  --brand-yellow: #f2b705;        /* highlighter mark */
+  --brand-yellow-strong: #7a5b06; /* yellow chip text on light */
+  --brand-yellow-soft: #fdf1c8;   /* yellow chip background */
+
   /* Fields */
   --field: #ffffff;
 }

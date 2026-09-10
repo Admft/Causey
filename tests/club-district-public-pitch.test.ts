@@ -13,21 +13,34 @@ const proxy = read("proxy.ts");
 
 describe("club and district public pitches", () => {
   it("gives clubs a peer surface to /districts with Club/Team language", () => {
-    expect(clubsPage).toContain("A club season, from roster to results.");
-    expect(clubsPage).toContain("Start a club");
+    expect(clubsPage).toContain("Run the season,");
+    expect(clubsPage).toContain("not the spreadsheet.");
+    expect(clubsPage).toContain("START_A_CLUB_LABEL");
+    expect(read("lib/portal-copy.ts")).toContain(
+      'START_A_CLUB_LABEL = "Start a club"'
+    );
     expect(clubsPage).toContain("START_CLUB_SIGNUP_HREF");
     expect(clubsPage).not.toContain("Create a club account");
     expect(clubsPage).toContain("PageBackLink");
     expect(districtsPage).toContain("PageBackLink");
     expect(read("components/PageBackLink.tsx")).toContain('className="page-back"');
     expect(read("app/globals.css")).toContain(".page-back {");
+    expect(clubsPage).toContain("ClubWorkspaceShowcase");
+    expect(read("components/ClubWorkspaceShowcase.tsx")).toContain(
+      "Illustrative preview"
+    );
+    expect(read("components/ClubWorkspaceShowcase.tsx")).toContain(
+      "wireframe, not real data"
+    );
+    expect(clubsPage).toContain("One season, one ledger");
+    expect(clubsPage).toContain("Same season, two seats");
+    expect(clubsPage).toContain('id="season-file"');
     expect(clubsPage).toContain("Club/Team-only");
     expect(clubsPage).not.toContain("School/District");
     expect(clubsPage).not.toContain("Book a district");
     expect(clubsPage).toContain("Needs for a professional club");
     expect(clubsPage).toContain("Not building unless you ask");
     expect(clubsPage).toContain("lg:grid-cols-2");
-    expect(clubsPage).toContain("lg:grid-rows-subgrid");
     expect(clubsPage).toContain("Announcements");
     expect(clubsPage).toContain("Website and meeting note");
     expect(clubsPage).toContain("Recurring practice nights");
@@ -79,7 +92,8 @@ describe("club and district public pitches", () => {
     expect(clubsPage).not.toContain("Coming soon");
     expect(clubsPage).not.toContain("Beta");
 
-    expect(districtsPage).toContain("Price and support");
+    expect(districtsPage).not.toContain("Price and support");
+    expect(districtsPage).not.toContain("settle price and support");
     expect(districtsPage).toContain("Privacy, retention, and security");
     expect(districtsPage).toContain("Email at school volume");
     expect(districtsPage).toContain("Independent clubs");

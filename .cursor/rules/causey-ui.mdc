@@ -49,3 +49,4 @@ Causey is a scholastic competition product for club coaches, district program of
 ## Full briefs
 - `CAUSEY-DESIGN-SYSTEM.txt`
 - `anti-vibecode-rules.txt`
+- Restyle / rewrite a section: `.cursor/skills/section-transform/SKILL.md` (lock → brief → dials → polish). Never generate a competing `DESIGN.md`.
