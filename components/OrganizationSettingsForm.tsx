@@ -250,7 +250,7 @@ export function OrganizationSettingsForm({
               type="button"
               onClick={transfer}
               disabled={!nextOwner || pending !== null}
-              className="mt-3 rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red disabled:opacity-60"
+              className="action-button mt-3"
             >
               {pending === "owner" ? "Transferring…" : "Transfer ownership"}
             </button>

@@ -41,14 +41,14 @@ export function UnlinkChildButton({
           type="button"
           onClick={onUnlink}
           disabled={pending}
-          className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+          className="action-button action-button--reversal"
         >
           {pending ? "Unlinking…" : `Yes, unlink ${childName}`}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="text-muted-strong hover:text-foreground"
+          className="action-button"
         >
           Cancel
         </button>
@@ -67,7 +67,7 @@ export function UnlinkChildButton({
         setError(null);
         setConfirming(true);
       }}
-      className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+      className="action-button action-button--reversal"
     >
       Unlink
     </button>

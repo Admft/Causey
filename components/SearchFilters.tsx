@@ -172,7 +172,7 @@ export function SearchFilters({
           <button
             type="button"
             onClick={() => onChange(EMPTY_FILTERS)}
-            className="shrink-0 text-xs font-medium text-muted-strong transition-colors hover:text-brand-red"
+            className="action-button action-button--reversal shrink-0"
           >
             Clear filters
           </button>
@@ -476,7 +476,7 @@ export function ActiveFilterChips({
       <button
         type="button"
         onClick={() => onChange(EMPTY_FILTERS)}
-        className="text-xs font-medium text-muted-strong transition-colors hover:text-brand-red"
+        className="action-button action-button--reversal"
       >
         Clear all
       </button>

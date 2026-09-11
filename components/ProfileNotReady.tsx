@@ -42,7 +42,7 @@ export function ProfileNotReady({ section }: { section: string }) {
         </button>
         <button
           type="button"
-          className="text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+          className="action-button"
           disabled={leaving}
           onClick={() => {
             setLeaving(true);
@@ -53,7 +53,7 @@ export function ProfileNotReady({ section }: { section: string }) {
         </button>
         <Link
           href="/support"
-          className="text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red"
+          className="action-button"
         >
           Report a problem
         </Link>

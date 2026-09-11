@@ -156,7 +156,7 @@ function ExternalRegistrationPanelState({
               type="button"
               disabled={pending}
               onClick={() => void leave()}
-              className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground disabled:opacity-60"
+              className="action-button"
             >
               {pending ? "Saving…" : forLabel ? `Can't go for ${forLabel}` : "Can't go"}
             </button>
@@ -165,7 +165,7 @@ function ExternalRegistrationPanelState({
             type="button"
             disabled={pending}
             onClick={() => respond("not_registered")}
-            className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
+            className="action-button action-button--reversal"
           >
             {pending ? "Saving…" : "Undo complete mark"}
           </button>
@@ -173,7 +173,7 @@ function ExternalRegistrationPanelState({
             href={registrationHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-semibold text-brand-red hover:underline"
+            className="action-button"
             aria-label={`Open ${registrationHost} in a new tab${
               forLabel ? ` for ${forLabel}` : ""
             }`}
@@ -235,7 +235,7 @@ function ExternalRegistrationPanelState({
             type="button"
             disabled={pending}
             onClick={() => respond("not_registered")}
-            className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground disabled:opacity-60"
+            className="action-button"
           >
             Still need to register
           </button>
@@ -243,7 +243,7 @@ function ExternalRegistrationPanelState({
             href={registrationHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-muted-strong hover:text-brand-red"
+            className="action-button"
             aria-label={`Open ${registrationHost} in a new tab${
               forLabel ? ` for ${forLabel}` : ""
             }`}
@@ -306,20 +306,18 @@ function ExternalRegistrationPanelState({
             </Link>{" "}
             if you want Causey to remember this competition.
           </>
-        ) : status === "not_registered" ? (
-          <>
-            {" "}
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => respond("registered")}
-              className="font-semibold text-brand-red hover:underline disabled:opacity-60"
-            >
-              Already finished? Mark registration complete
-            </button>
-          </>
         ) : null}
       </p>
+      {signedIn && status === "not_registered" ? (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => respond("registered")}
+          className="action-button mt-3"
+        >
+          Already finished? Mark registration complete
+        </button>
+      ) : null}
       {errorLine}
     </>
   );

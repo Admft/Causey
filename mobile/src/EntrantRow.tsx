@@ -4,7 +4,7 @@ import { formatDateRange } from "./api";
 import type { EntrantRowData } from "./entrant-row-data";
 import { openExternalUrl, safeRegUrl } from "./open-url";
 import { colors } from "./theme";
-import { AnswerButton, Meta } from "./ui";
+import { ActionButton, AnswerButton, Meta } from "./ui";
 
 export type { EntrantRowData };
 
@@ -89,16 +89,14 @@ export function EntrantRow({
             onPress={onNotGoing}
           />
           {answered && onClear ? (
-            <Pressable
+            <ActionButton
+              label="Clear answer"
               onPress={onClear}
               disabled={busy}
-              accessibilityRole="button"
               accessibilityLabel={`Clear RSVP for ${event.name}`}
-              accessibilityState={{ disabled: busy }}
-              style={[styles.linkHit, busy && styles.inactive]}
-            >
-              <Text style={styles.link}>Clear answer</Text>
-            </Pressable>
+              inline
+              tone="reversal"
+            />
           ) : null}
         </View>
       ) : null}
@@ -116,16 +114,13 @@ export function EntrantRow({
           >
             <Text style={styles.link}>Open organizer registration</Text>
           </Pressable>
-          <Pressable
+          <ActionButton
+            label="Mark complete"
             onPress={onRegistered}
             disabled={busy}
-            accessibilityRole="button"
             accessibilityLabel={`Mark ${event.name} registration complete`}
-            accessibilityState={{ disabled: busy }}
-            style={[styles.linkHit, busy && styles.inactive]}
-          >
-            <Text style={styles.link}>Mark complete</Text>
-          </Pressable>
+            inline
+          />
         </View>
       ) : null}
     </View>
@@ -150,5 +145,4 @@ const styles = StyleSheet.create({
   },
   linkHit: { minHeight: 44, justifyContent: "center" },
   link: { color: colors.brandRed, fontWeight: "700" },
-  inactive: { opacity: 0.45 },
 });

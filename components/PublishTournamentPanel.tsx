@@ -118,7 +118,7 @@ export function PublishTournamentPanel({
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={pending}
-                  className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
+                  className="action-button"
                 >
                   Cancel
                 </button>

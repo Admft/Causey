@@ -256,6 +256,48 @@ export function LinkButton({
   );
 }
 
+export function ActionButton({
+  label,
+  onPress,
+  disabled = false,
+  inline = false,
+  tone = "neutral",
+  accessibilityLabel = label,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  inline?: boolean;
+  tone?: "neutral" | "reversal";
+  accessibilityLabel?: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled }}
+      style={({ pressed }) => [
+        styles.action,
+        inline && styles.actionInline,
+        tone === "reversal" && styles.actionReversal,
+        disabled && styles.inactive,
+        pressed && !disabled && styles.pressed,
+      ]}
+    >
+      <Text
+        style={[
+          styles.actionText,
+          tone === "reversal" && styles.actionReversalText,
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 /**
  * One answer in a Going / Can't go pair. Only the answer someone actually gave
  * is tinted, so an unanswered row never reads as a decision, and the phone
@@ -473,8 +515,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
     minHeight: TAP_TARGET,
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    borderColor: colors.fieldBorder,
+    backgroundColor: colors.surfaceSoft,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -489,6 +531,25 @@ const styles = StyleSheet.create({
   },
   linkCenter: { alignItems: "center" },
   link: { color: colors.brandRed, fontWeight: "700", fontSize: 15 },
+  action: {
+    marginTop: 12,
+    minHeight: TAP_TARGET,
+    borderWidth: 1,
+    borderColor: colors.fieldBorder,
+    backgroundColor: colors.surfaceSoft,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionInline: { marginTop: 0 },
+  actionReversal: {
+    borderColor: colors.brandRed,
+    backgroundColor: colors.accentSoft,
+  },
+  actionText: { color: colors.foreground, fontWeight: "700", fontSize: 15 },
+  actionReversalText: { color: colors.brandRed },
   chipRow: {
     marginTop: 8,
     flexDirection: "row",
@@ -512,9 +573,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
-    borderRadius: 10,
+    borderColor: colors.fieldBorder,
+    backgroundColor: colors.surfaceSoft,
+    borderRadius: 12,
     paddingHorizontal: 16,
   },
   answerSelected: {

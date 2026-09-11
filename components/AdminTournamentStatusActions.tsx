@@ -57,7 +57,7 @@ export function AdminTournamentStatusActions({
             type="button"
             disabled={pending !== null}
             onClick={() => changeStatus("published")}
-            className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+            className="action-button"
           >
             {pending === "published" ? "Publishing…" : "Publish"}
           </button>
@@ -67,7 +67,7 @@ export function AdminTournamentStatusActions({
             type="button"
             disabled={pending !== null}
             onClick={() => changeStatus("published")}
-            className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+            className="action-button"
           >
             {pending === "published" ? "Restoring…" : "Restore"}
           </button>
@@ -77,7 +77,7 @@ export function AdminTournamentStatusActions({
             type="button"
             disabled={pending !== null}
             onClick={() => changeStatus("draft")}
-            className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+            className="action-button"
           >
             {pending === "draft" ? "Moving…" : "Move to draft"}
           </button>
@@ -85,7 +85,7 @@ export function AdminTournamentStatusActions({
         {status === "pending_review" ? (
           <Link
             href="/admin/moderation"
-            className="font-semibold text-brand-red hover:underline"
+            className="action-button"
           >
             Review
           </Link>
@@ -99,7 +99,7 @@ export function AdminTournamentStatusActions({
                 type="button"
                 disabled={pending !== null}
                 onClick={() => changeStatus("archived")}
-                className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+                className="action-button action-button--reversal"
               >
                 {pending === "archived" ? "Archiving…" : "Confirm archive"}
               </button>
@@ -107,7 +107,7 @@ export function AdminTournamentStatusActions({
                 type="button"
                 disabled={pending !== null}
                 onClick={() => setConfirmingArchive(false)}
-                className="text-muted-strong hover:text-foreground"
+                className="action-button"
               >
                 Keep
               </button>
@@ -116,7 +116,7 @@ export function AdminTournamentStatusActions({
             <button
               type="button"
               onClick={() => setConfirmingArchive(true)}
-              className="text-muted-strong hover:text-brand-red"
+                className="action-button action-button--reversal"
             >
               Archive
             </button>

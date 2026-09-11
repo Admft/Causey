@@ -176,7 +176,7 @@ export function GroupManager({
                         setEditingId(isEditing ? null : group.id)
                       }
                       disabled={isPending}
-                      className="min-h-10 text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                      className="action-button"
                       aria-expanded={isEditing}
                     >
                       {isEditing ? "Done" : "Edit students"}
@@ -185,7 +185,7 @@ export function GroupManager({
                       type="button"
                       onClick={() => onDelete(group)}
                       disabled={isPending}
-                      className="min-h-10 text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+                      className="action-button action-button--reversal"
                     >
                       {isPending && pendingAction === `delete-${group.id}`
                         ? "Deleting…"
@@ -262,7 +262,7 @@ export function GroupManager({
                   setShowCreate(false);
                   setNewName("");
                 }}
-                className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                className="action-button"
               >
                 Cancel
               </button>
@@ -273,7 +273,7 @@ export function GroupManager({
         <button
           type="button"
           onClick={() => setShowCreate(true)}
-          className="self-start text-sm font-semibold text-brand-red hover:underline"
+          className="action-button self-start"
         >
           Add another group
         </button>

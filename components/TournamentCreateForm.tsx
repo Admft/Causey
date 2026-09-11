@@ -818,7 +818,7 @@ export function TournamentCreateForm({
               type="button"
               onClick={discardDraft}
               disabled={pending || uploading}
-              className="text-sm font-semibold text-muted transition-colors hover:text-brand-red disabled:opacity-60"
+              className="action-button action-button--reversal"
             >
               Discard draft
             </button>
@@ -826,7 +826,7 @@ export function TournamentCreateForm({
               type="button"
               onClick={saveDraftAndLeave}
               disabled={pending || uploading}
-              className="text-sm font-semibold text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+              className="action-button"
             >
               Save draft and leave
             </button>
@@ -1036,7 +1036,7 @@ export function TournamentCreateForm({
                   Add a real competition photo, venue image, or event artwork.
                 </div>
               )}
-              <label className="inline-flex w-fit cursor-pointer items-center rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red">
+              <label className="action-button w-fit">
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -1247,7 +1247,7 @@ export function TournamentCreateForm({
                     ])
                   }
                   disabled={sections.length >= 20}
-                  className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                  className="action-button"
                 >
                   Add {category === "chess" ? "section" : "division"}
                 </button>
@@ -1272,7 +1272,7 @@ export function TournamentCreateForm({
                               )
                             )
                           }
-                          className="text-xs font-semibold text-muted hover:text-brand-red"
+                          className="action-button action-button--reversal"
                         >
                           Remove
                         </button>

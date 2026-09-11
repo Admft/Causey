@@ -53,7 +53,7 @@ export function HouseholdRequestActions({
               type="button"
               disabled={pending}
               onClick={() => respond(false)}
-              className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+              className="action-button action-button--reversal"
             >
               {pending ? "Unlinking…" : confirmUnlinkLabel}
             </button>
@@ -61,7 +61,7 @@ export function HouseholdRequestActions({
               type="button"
               disabled={pending}
               onClick={() => setConfirmingUnlink(false)}
-              className="text-sm text-muted-strong hover:text-foreground disabled:opacity-60"
+              className="action-button"
             >
               Cancel
             </button>
@@ -74,7 +74,7 @@ export function HouseholdRequestActions({
               setError(null);
               setConfirmingUnlink(true);
             }}
-            className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+            className="action-button action-button--reversal"
           >
             {unlinkLabel}
           </button>
@@ -88,7 +88,7 @@ export function HouseholdRequestActions({
             type="button"
             disabled={pending}
             onClick={() => respond(false)}
-            className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+            className="action-button action-button--reversal"
           >
             {pending ? "Canceling…" : "Cancel request"}
           </button>
@@ -99,7 +99,7 @@ export function HouseholdRequestActions({
             type="button"
             disabled={pending}
             onClick={() => respond(true)}
-            className="rounded-md border border-brand-red/25 bg-accent-soft px-3 py-1.5 text-sm font-semibold text-brand-red disabled:opacity-60"
+            className="action-button action-button--selected"
           >
             Accept
           </button>
@@ -107,7 +107,7 @@ export function HouseholdRequestActions({
             type="button"
             disabled={pending}
             onClick={() => respond(false)}
-            className="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-muted-strong transition-colors hover:text-foreground disabled:opacity-60"
+            className="action-button"
           >
             Decline
           </button>

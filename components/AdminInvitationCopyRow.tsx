@@ -48,7 +48,7 @@ export function AdminInvitationCopyRow({
         <button
           type="button"
           onClick={copy}
-          className="rounded-md border border-line bg-white px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+          className="action-button"
         >
           Copy {label.toLowerCase()}
         </button>

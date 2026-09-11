@@ -97,7 +97,7 @@ export function OrgAttendancePanel({
                   type="button"
                   disabled={pendingOrgId !== null}
                   onClick={() => toggle(entry)}
-                  className="shrink-0 text-sm font-medium text-muted-strong transition-colors hover:text-brand-red disabled:opacity-60"
+                  className="action-button action-button--reversal shrink-0"
                 >
                   {pendingOrgId === entry.org.id ? "Removing…" : "Remove"}
                 </button>
@@ -152,7 +152,7 @@ export function OrgAttendancePanel({
             type="button"
             disabled={pendingOrgId !== null}
             onClick={() => toggle(selectedOrg)}
-            className="mt-3 rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red disabled:opacity-60"
+            className="action-button mt-3"
           >
             {pendingOrgId === selectedOrg.org.id
               ? "Marking as going…"

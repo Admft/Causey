@@ -227,7 +227,7 @@ export function AdminScraperControls({
                   </h3>
                   <button
                     type="button"
-                    className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                    className="action-button"
                     disabled={pending || values.length === 0}
                     onClick={() => toggleCategory(values)}
                   >

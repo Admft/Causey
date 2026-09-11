@@ -34,14 +34,14 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
           type="button"
           onClick={onLeave}
           disabled={pending}
-          className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+          className="action-button action-button--reversal"
         >
           {pending ? "Leaving…" : `Yes, leave ${orgName}`}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="text-muted-strong hover:text-foreground"
+          className="action-button"
         >
           Cancel
         </button>
@@ -63,7 +63,7 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+      className="action-button action-button--reversal"
     >
       Leave organization
     </button>

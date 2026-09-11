@@ -63,7 +63,7 @@ export function JoinCodePanel({
         <button
           type="button"
           onClick={copyLink}
-          className="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-brand-red/30"
+          className="action-button"
         >
           {copied ? "Link copied" : "Copy join link"}
         </button>
@@ -73,14 +73,14 @@ export function JoinCodePanel({
               type="button"
               onClick={rotate}
               disabled={pending}
-              className="font-semibold text-brand-red hover:underline disabled:opacity-60"
+              className="action-button action-button--reversal"
             >
               {pending ? "Rotating…" : "Yes, get a new code"}
             </button>
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="text-muted-strong hover:text-foreground"
+              className="action-button"
             >
               Cancel
             </button>
@@ -89,7 +89,7 @@ export function JoinCodePanel({
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground"
+            className="action-button"
           >
             Get a new code
           </button>

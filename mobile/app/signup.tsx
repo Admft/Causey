@@ -5,6 +5,7 @@ import { useAuth, type MobileSignupRole } from "../src/auth";
 import { openExternalUrl } from "../src/open-url";
 import { siteUrl } from "../src/theme";
 import {
+  ActionButton,
   Card,
   ChoiceRow,
   ErrorText,
@@ -81,7 +82,7 @@ export default function SignupScreen() {
           label="Sign in"
           onPress={() => router.replace("/login")}
         />
-        <LinkButton
+        <ActionButton
           label="Use a different email"
           onPress={() => {
             setAlreadyRegistered(false);

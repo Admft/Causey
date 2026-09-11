@@ -18,6 +18,7 @@ import {
 import { notifyDeskChanged } from "./desk-sync";
 import { colors } from "./theme";
 import {
+  ActionButton,
   AnswerButton,
   Card,
   ErrorText,
@@ -704,9 +705,11 @@ export function EventGoingCard({
                 <Meta>Or answer for them if they are not on Causey.</Meta>
               ) : null}
               {answered ? (
-                <LinkButton
+                <ActionButton
                   label="Clear answer"
                   onPress={() => void clearAnswer(person)}
+                  disabled={busyKey !== null}
+                  tone="reversal"
                 />
               ) : null}
             </View>
@@ -762,11 +765,13 @@ export function EventGoingCard({
                       onPress={() => void leave(person)}
                       disabled={busyKey !== null}
                     />
-                    <LinkButton
+                    <ActionButton
                       label="Undo complete mark"
                       onPress={() =>
                         void setRegistration(person, "not_registered")
                       }
+                      disabled={busyKey !== null}
+                      tone="reversal"
                     />
                     <LinkButton
                       label={`Open ${host} again`}
@@ -817,11 +822,12 @@ export function EventGoingCard({
                       disabled={busyKey !== null && !busy}
                     />
                     {status === "not_registered" ? (
-                      <LinkButton
+                      <ActionButton
                         label="Already finished? Mark registration complete"
                         onPress={() =>
                           void setRegistration(person, "registered")
                         }
+                        disabled={busyKey !== null}
                       />
                     ) : null}
                   </>

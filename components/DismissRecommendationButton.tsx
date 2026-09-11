@@ -32,7 +32,7 @@ export function DismissRecommendationButton({ id }: { id: string }) {
         type="button"
         disabled={pending}
         onClick={onDismiss}
-        className="text-sm font-medium text-muted-strong transition-colors hover:text-foreground disabled:opacity-60"
+        className="action-button"
       >
         {pending ? "Dismissing…" : "Dismiss"}
       </button>

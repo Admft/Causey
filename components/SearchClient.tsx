@@ -609,7 +609,7 @@ export function SearchClient({
                         type="button"
                         onClick={loadMore}
                         disabled={loadingMore}
-                        className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/40 hover:text-brand-red disabled:cursor-wait disabled:opacity-60"
+                        className="action-button"
                       >
                         {loadingMore
                           ? "Loading…"
