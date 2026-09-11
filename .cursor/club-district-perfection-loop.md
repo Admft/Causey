@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- `/clubs` workspace-first public pitch — 2026-09-10
+- Coach Plan (`/me`) school/district mission nouns — 2026-09-11
 
 ## Last tick
 
+- 2026-09-11 — Coach Plan mission no longer says “club” when memberships are school or district; `staffPlanMissionFromTypes` matches `/orgs` chrome.
 - 2026-09-10 — `/clubs` leads with a sample workspace, season ledger, and season file; districts keep a matching office window.
 - 2026-09-09 — `/districts` closing CTA sits copy + Book on one row so the white card is not an empty lane.
 - 2026-09-09 — `/districts` no longer lists Price and support as an unfinished item; privacy, email volume, and independent clubs remain.

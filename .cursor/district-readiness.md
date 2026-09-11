@@ -61,6 +61,7 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Phone event details show the listing photo, US Chess rating, Going/Can't go, and organizer-registration confirm after the external site; Expo Go calendar uses an .ics fallback — 2026-09-06
 - [x] Family can mark a linked student Going on a public listing without a school/club invite (`0080`); organizer-site entry is still Mark complete, not an import — 2026-09-05
 - [x] District first-session next-step honesty: stage-aware command-center secondary (no empty Reports mid-setup), Account district Schools link, school-or-club Family/Account/Leave/event invite chrome — 2026-09-07
+- [x] Coach Plan (`/me`) mission uses school/district nouns from memberships — 2026-09-11
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -160,9 +161,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 19. **P1 · District office follow-through from Activity + Reports · M · shipped 2026-09-09**  
    Surface: Activity rows link to Open school / People / settings / Competitions `?host=`; Reports school names and Needs RSVP / Upcoming counts open the school workspace or host-filtered competitions. No student browsing; no migration.
 
+20. **P1 · Coach Plan mission still club-first · S · shipped 2026-09-11**  
+   Surface: `/me` for coach accounts now loads memberships and uses `staffPlanMissionFromTypes` so district/school staff see matching nouns and CTAs (Open Districts & schools / Open my schools); empty self-serve stays clubs.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules. Optional: coach `/me` mission school/district nouns.
+Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
 
 ### Out-of-scope refusals this pass
 

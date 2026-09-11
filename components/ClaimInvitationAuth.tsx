@@ -86,14 +86,11 @@ export function ClaimInvitationAuth({
           : `Create a ${roleLabel.toLowerCase()} account or sign in.`}{" "}
         You will return here automatically without losing the invitation.
       </p>
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="mt-5 flex flex-wrap items-center gap-3">
         <Link href={loginHref} className="cta-enabled">
           Sign in to accept
         </Link>
-        <Link
-          href={signupHref}
-          className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red"
-        >
+        <Link href={signupHref} className="action-button whitespace-nowrap">
           {invitation.member_role === "student"
             ? "Create a student account"
             : "Create staff account"}
