@@ -83,7 +83,7 @@ export function AdminDistrictSchoolBulkVerify({
                 : schools.map((school) => school.id)
             )
           }
-          className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+          className="action-button"
         >
           {selected.length === schools.length ? "Clear selection" : "Select all"}
         </button>

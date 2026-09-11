@@ -99,7 +99,7 @@ export function GuardianLinkRequestForm() {
         <button
           type="button"
           onClick={copyParentSignupLink}
-          className="mt-3 rounded-md border border-line bg-white px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+          className="action-button mt-3"
         >
           Copy parent signup link
         </button>

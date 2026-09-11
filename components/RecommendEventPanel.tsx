@@ -181,7 +181,7 @@ export function RecommendEventPanel({
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="text-sm font-medium text-muted-strong hover:text-foreground"
+              className="action-button"
             >
               Cancel
             </button>

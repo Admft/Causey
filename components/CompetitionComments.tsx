@@ -149,7 +149,7 @@ export function CompetitionComments({
               {viewerId && viewerId === comment.userId ? (
                 <button
                   type="button"
-                  className="mt-2 text-xs font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
+                  className="action-button action-button--reversal mt-2"
                   disabled={removingId === comment.id}
                   onClick={() => onRemove(comment.id)}
                 >
@@ -158,7 +158,7 @@ export function CompetitionComments({
               ) : viewerId && !comment.hiddenAt ? (
                 <button
                   type="button"
-                  className="mt-2 text-xs font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
+                  className="action-button mt-2"
                   disabled={reportingId === comment.id}
                   onClick={() => onReport(comment.id)}
                 >

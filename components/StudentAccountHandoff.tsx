@@ -61,7 +61,7 @@ export function StudentAccountHandoff() {
       <button
         type="button"
         onClick={copySignupLink}
-        className="mt-5 rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+        className="action-button mt-5"
       >
         Copy student signup link
       </button>

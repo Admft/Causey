@@ -239,7 +239,7 @@ export function SignupForm({
               setPassword("");
               setConfirmPassword("");
             }}
-            className="text-sm font-semibold text-brand-red hover:underline"
+            className="action-button"
           >
             Use a different email
           </button>
@@ -304,7 +304,7 @@ export function SignupForm({
                 setResendState("error");
               }
             }}
-            className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+            className="action-button"
           >
             {resendState === "pending"
               ? "Sending…"
@@ -320,13 +320,13 @@ export function SignupForm({
               setPassword("");
               setConfirmPassword("");
             }}
-            className="text-sm font-semibold text-brand-red hover:underline"
+            className="action-button"
           >
             Use a different email
           </button>
           <Link
             href={loginHref}
-            className="text-sm font-medium text-muted-strong hover:text-foreground"
+            className="action-button"
           >
             Already confirmed? Sign in
           </Link>

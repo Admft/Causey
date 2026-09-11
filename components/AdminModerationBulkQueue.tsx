@@ -184,7 +184,7 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
                   type="button"
                   disabled={pending !== null}
                   onClick={() => review("reject")}
-                  className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/35 hover:text-brand-red disabled:opacity-60"
+                  className="action-button action-button--reversal"
                 >
                   {pending === "reject" ? "Rejecting…" : "Reject selected"}
                 </button>
@@ -192,7 +192,7 @@ export function AdminModerationBulkQueue({ queue }: { queue: QueueRow[] }) {
                   type="button"
                   disabled={pending !== null}
                   onClick={() => setSelected(new Set())}
-                  className="text-sm font-semibold text-muted-strong hover:text-foreground disabled:opacity-60"
+                  className="action-button"
                 >
                   Clear
                 </button>

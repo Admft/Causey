@@ -114,7 +114,7 @@ export function MarkAllNotificationsReadButton({
             router.refresh();
           });
         }}
-        className="text-xs font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
+        className="action-button"
       >
         {pending ? "Saving…" : "Mark all read"}
       </button>

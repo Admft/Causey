@@ -239,7 +239,7 @@ export function EntrantManager({
               <button
                 type="button"
                 onClick={() => setShowIndividualPicks(true)}
-                className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                className="action-button"
                 aria-expanded={false}
               >
                 {inviteAllConnected
@@ -258,7 +258,7 @@ export function EntrantManager({
                       setShowIndividualPicks(false);
                       setSelected(new Set());
                     }}
-                    className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+                    className="action-button"
                     aria-expanded={true}
                   >
                     Hide list
@@ -411,14 +411,14 @@ export function RemoveEntrantButton({
           type="button"
           onClick={onRemove}
           disabled={isPending}
-          className="min-h-10 font-semibold text-brand-red hover:underline disabled:opacity-60"
+          className="action-button action-button--reversal"
         >
           {isPending ? "Removing…" : `Remove ${displayName}`}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="min-h-10 text-muted-strong hover:text-foreground"
+          className="action-button"
         >
           Cancel
         </button>
@@ -434,7 +434,7 @@ export function RemoveEntrantButton({
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="min-h-10 text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+      className="action-button action-button--reversal"
     >
       Remove
     </button>
@@ -482,8 +482,8 @@ export function StaffRsvpButtons({
           disabled={isPending}
           className={
             status === "going"
-              ? "min-h-10 rounded-md border border-brand-red/25 bg-accent-soft px-3 py-1.5 text-sm font-semibold text-brand-red"
-              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
+              ? "action-button action-button--selected"
+              : "action-button"
           }
         >
           {isPending && status !== "going" ? "Saving…" : "Mark going"}
@@ -494,8 +494,8 @@ export function StaffRsvpButtons({
           disabled={isPending}
           className={
             status === "not_going"
-              ? "min-h-10 rounded-md border border-line bg-surface-soft px-3 py-1.5 text-sm font-semibold text-foreground"
-              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
+              ? "action-button action-button--selected"
+              : "action-button"
           }
         >
           {isPending && status !== "not_going" ? "Saving…" : "Can’t go"}
@@ -550,8 +550,8 @@ export function AttendanceButtons({
           disabled={isPending}
           className={
             status === "attended"
-              ? "min-h-10 rounded-md border border-brand-red/25 bg-accent-soft px-3 py-1.5 text-sm font-semibold text-brand-red"
-              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
+              ? "action-button action-button--selected"
+              : "action-button"
           }
         >
           Attended
@@ -562,8 +562,8 @@ export function AttendanceButtons({
           disabled={isPending}
           className={
             status === "did_not_attend"
-              ? "min-h-10 rounded-md border border-line bg-surface-soft px-3 py-1.5 text-sm font-semibold text-foreground"
-              : "min-h-10 px-1 text-sm font-semibold text-muted-strong hover:text-brand-red"
+              ? "action-button action-button--selected"
+              : "action-button"
           }
         >
           Did not attend
@@ -716,7 +716,7 @@ export function ResultForm({
             type="button"
             onClick={clearResult}
             disabled={isPending}
-            className="min-h-10 text-sm font-medium text-muted-strong hover:text-brand-red disabled:opacity-60"
+            className="action-button action-button--reversal"
           >
             Clear
           </button>

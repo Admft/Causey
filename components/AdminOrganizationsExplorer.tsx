@@ -453,7 +453,7 @@ export function AdminOrganizationsExplorer({
                 )
               }
               aria-expanded={provisionKind === "school"}
-              className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-brand-red/35 hover:text-brand-red"
+              className="action-button"
             >
               {provisionKind === "school" ? "Close form" : "Provision school"}
             </button>
@@ -535,7 +535,7 @@ export function AdminOrganizationsExplorer({
               setTypeFilter("all");
               router.replace("/admin/organizations");
             }}
-            className="mt-4 rounded-md border border-line px-4 py-2 text-sm font-semibold text-muted-strong transition-colors hover:border-brand-red/40 hover:text-brand-red"
+            className="action-button mt-4"
           >
             Clear filters
           </button>

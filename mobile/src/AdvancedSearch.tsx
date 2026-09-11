@@ -16,9 +16,9 @@ import {
 } from "./search-filters";
 import { colors } from "./theme";
 import {
+  ActionButton,
   ChipRow,
   Field,
-  LinkButton,
   SelectField,
 } from "./ui";
 
@@ -206,9 +206,10 @@ export function AdvancedSearch({
       </View>
 
       {openCount ? (
-        <LinkButton
+        <ActionButton
           label="Clear filters"
           onPress={() => onChange({ ...EMPTY_ADVANCED })}
+          tone="reversal"
         />
       ) : null}
     </View>

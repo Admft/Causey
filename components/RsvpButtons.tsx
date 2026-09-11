@@ -132,8 +132,8 @@ function RsvpButtonState({
 
   function buttonClass(active: boolean) {
     return active
-      ? "rounded-md border border-brand-red/25 bg-accent-soft px-3 py-1.5 text-sm font-semibold text-brand-red"
-      : "rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-muted-strong transition-colors hover:border-brand-red/30 hover:text-foreground";
+      ? "action-button action-button--selected"
+      : "action-button";
   }
 
   return (
@@ -162,7 +162,7 @@ function RsvpButtonState({
             type="button"
             disabled={pending}
             onClick={() => void clearAnswer()}
-            className="text-sm font-medium text-muted-strong hover:text-foreground disabled:opacity-60"
+            className="action-button action-button--reversal"
           >
             {pending ? "Saving…" : "Clear answer"}
           </button>

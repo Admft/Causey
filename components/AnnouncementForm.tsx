@@ -184,7 +184,7 @@ export function AnnouncementForm({
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
-                    className="text-xs font-semibold text-brand-red hover:underline"
+                    className="action-button"
                     onClick={() =>
                       setSelectedSchoolIds(connectedSchools.map((school) => school.id))
                     }
@@ -193,7 +193,7 @@ export function AnnouncementForm({
                   </button>
                   <button
                     type="button"
-                    className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+                    className="action-button"
                     onClick={() => setSelectedSchoolIds([])}
                   >
                     Clear

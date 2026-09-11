@@ -75,21 +75,21 @@ export function ModerationReviewForm({
           <button
             type="button"
             onClick={() => router.refresh()}
-            className="text-brand-red hover:underline"
+            className="action-button"
           >
             Review next competition
           </button>
           {decision === "approve" ? (
             <Link
               href={`/event/${eventSlug}`}
-              className="text-muted-strong hover:text-foreground"
+              className="action-button"
             >
               Open published listing
             </Link>
           ) : (
             <Link
               href={`/admin/tournaments/${competitionId}/edit`}
-              className="text-muted-strong hover:text-foreground"
+              className="action-button"
             >
               Open rejected record
             </Link>
@@ -132,7 +132,7 @@ export function ModerationReviewForm({
           type="button"
           onClick={() => review("reject")}
           disabled={pending !== null}
-          className="rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/35 hover:text-brand-red disabled:opacity-60"
+          className="action-button action-button--reversal"
         >
           {pending === "reject" ? "Rejecting…" : "Reject public listing"}
         </button>

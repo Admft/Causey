@@ -6,6 +6,7 @@ import { feedback } from "./haptics";
 import { openExternalUrl } from "./open-url";
 import { colors, siteUrl } from "./theme";
 import {
+  ActionButton,
   Card,
   ErrorText,
   LinkButton,
@@ -230,11 +231,14 @@ export function BringRosterCard({
                   {TYPE_LABEL[entry.org.type]} calendar
                 </Text>
               </View>
-              <LinkButton
+              <ActionButton
                 label={
                   pendingOrgId === entry.org.id ? "Removing…" : "Remove"
                 }
                 onPress={() => void toggle(entry)}
+                disabled={pendingOrgId !== null}
+                inline
+                tone="reversal"
               />
             </View>
           ))}

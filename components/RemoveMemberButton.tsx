@@ -45,14 +45,14 @@ export function RemoveMemberButton({
           type="button"
           onClick={onRemove}
           disabled={pending}
-          className="min-h-10 font-semibold text-brand-red hover:underline disabled:opacity-60"
+          className="action-button action-button--reversal"
         >
           {pending ? "Removing…" : `Remove ${displayName}`}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
-          className="min-h-10 text-muted-strong hover:text-foreground"
+          className="action-button"
         >
           Cancel
         </button>
@@ -69,7 +69,7 @@ export function RemoveMemberButton({
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="min-h-10 text-sm font-medium text-muted-strong transition-colors hover:text-brand-red"
+      className="action-button action-button--reversal"
     >
       Remove
     </button>

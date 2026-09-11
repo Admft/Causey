@@ -22,6 +22,7 @@ import {
 import { RoleHomeGuard } from "../../src/RoleHomeGuard";
 import { colors } from "../../src/theme";
 import {
+  ActionButton,
   Card,
   ErrorText,
   Kicker,
@@ -338,15 +339,13 @@ function PlanDesk() {
                     {rec.note ? ` — “${rec.note}”` : ""}
                   </Meta>
                 </Pressable>
-                <Pressable
+                <ActionButton
+                  label="Dismiss"
                   onPress={() => void dismissRecommendation(rec.id)}
                   disabled={busy}
-                  accessibilityRole="button"
                   accessibilityLabel={`Dismiss ${event.name}`}
-                  style={styles.nameHit}
-                >
-                  <Text style={styles.dismiss}>Dismiss</Text>
-                </Pressable>
+                  tone="reversal"
+                />
               </View>
             );
           })}
@@ -401,5 +400,4 @@ const styles = StyleSheet.create({
   },
   nameHit: { minHeight: 44, justifyContent: "center" },
   eventName: { fontSize: 16, fontWeight: "700", color: colors.foreground },
-  dismiss: { color: colors.brandRed, fontWeight: "700" },
 });

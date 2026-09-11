@@ -292,7 +292,7 @@ export function AdminTournamentBulkList({
                 setError(null);
                 setMessage(null);
               }}
-              className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+              className="action-button"
             >
               Select {readyDraftIds.length} ready draft
               {readyDraftIds.length === 1 ? "" : "s"}
@@ -307,7 +307,7 @@ export function AdminTournamentBulkList({
                 setError(null);
                 setMessage(null);
               }}
-              className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+              className="action-button"
             >
               Select {completeArchivedIds.length} complete archived
             </button>
@@ -325,7 +325,7 @@ export function AdminTournamentBulkList({
                   : `ready draft${readyDraftIds.length === 1 ? "" : "s"}`
               )
             }
-            className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+            className="action-button"
           >
             {pendingAction === "publish"
               ? "Publishing…"
@@ -342,7 +342,7 @@ export function AdminTournamentBulkList({
                 `complete archived listing${completeArchivedIds.length === 1 ? "" : "s"}`
               )
             }
-            className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+            className="action-button"
           >
             {pendingAction === "publish"
               ? "Restoring…"
@@ -388,7 +388,7 @@ export function AdminTournamentBulkList({
                       `${selectedCount} selected tournament${selectedCount === 1 ? "" : "s"}`
                     )
                   }
-                  className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                  className="action-button action-button--reversal"
                 >
                   {pendingAction === "delete"
                     ? "Deleting…"
@@ -400,7 +400,7 @@ export function AdminTournamentBulkList({
                   type="button"
                   disabled={pending}
                   onClick={() => setSelected(new Set())}
-                  className="text-sm font-semibold text-muted-strong hover:text-foreground disabled:opacity-60"
+                  className="action-button"
                 >
                   Clear selection
                 </button>
@@ -530,7 +530,7 @@ export function AdminTournamentBulkList({
                 type="button"
                 disabled={pending}
                 onClick={() => deleteIds([tournament.id], `"${tournament.name}"`)}
-                className="text-sm font-medium text-muted-strong hover:text-brand-red disabled:opacity-60"
+                className="action-button action-button--reversal"
               >
                 {deletingIds.has(tournament.id) ? "Deleting…" : "Delete"}
               </button>
@@ -560,7 +560,7 @@ export function AdminTournamentBulkList({
               setError(null);
               setMessage(null);
             }}
-            className="mt-3 text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+            className="action-button action-button--reversal mt-3"
           >
             Delete all {totalTournamentCount} tournaments
           </button>
@@ -586,7 +586,7 @@ export function AdminTournamentBulkList({
                   deleteAllConfirmation !== "DELETE ALL TOURNAMENTS"
                 }
                 onClick={deleteEveryTournament}
-                className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                className="action-button action-button--reversal"
               >
                 {pendingAction === "delete-all"
                   ? "Deleting every tournament…"
@@ -599,7 +599,7 @@ export function AdminTournamentBulkList({
                   setConfirmingDeleteAll(false);
                   setDeleteAllConfirmation("");
                 }}
-                className="text-sm font-semibold text-muted-strong hover:text-foreground disabled:opacity-60"
+                className="action-button"
               >
                 Keep tournaments
               </button>

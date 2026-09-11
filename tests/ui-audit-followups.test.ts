@@ -40,4 +40,35 @@ describe("UI audit follow-ups", () => {
     expect(reports).toContain('scope="row"');
     expect(people).toContain("CSV roster file");
   });
+
+  it("keeps state-changing text inside visible button treatments", () => {
+    const globals = source("app/globals.css");
+    const registration = source("components/ExternalRegistrationPanel.tsx");
+    const rsvp = source("components/RsvpButtons.tsx");
+    const mobileUi = source("mobile/src/ui.tsx");
+    const mobileGoing = source("mobile/src/EventGoingCard.tsx");
+    const mobileSignup = source("mobile/app/signup.tsx");
+
+    expect(globals).toContain(".action-button {");
+    expect(globals).toContain("border: 1px solid var(--field-border)");
+    expect(registration).toContain(
+      'className="action-button action-button--reversal"'
+    );
+    expect(rsvp).toContain('className="action-button action-button--reversal"');
+    expect(mobileUi).toContain("export function ActionButton");
+    expect(mobileUi).toContain("borderColor: colors.fieldBorder");
+    expect(mobileUi).toContain("backgroundColor: colors.surfaceSoft");
+    expect(mobileUi).toContain(
+      "link: { color: colors.brandRed, fontWeight: \"700\", fontSize: 15 }"
+    );
+    expect(mobileGoing).toMatch(
+      /<ActionButton\s+label="Undo complete mark"/
+    );
+    expect(mobileSignup).toMatch(
+      /<ActionButton\s+label="Use a different email"/
+    );
+    expect(mobileSignup).toMatch(
+      /<LinkButton\s+label="Read the privacy notice"/
+    );
+  });
 });

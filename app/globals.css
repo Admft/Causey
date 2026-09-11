@@ -293,6 +293,57 @@ textarea.field {
   color: var(--brand-red);
 }
 
+/* Compact actions for dense product chrome. Unlike an inline text link, every
+ * state-changing action keeps a visible control boundary at rest. */
+.action-button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-soft);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 200ms var(--ease-brand), background-color 200ms var(--ease-brand),
+    color 200ms var(--ease-brand), transform 200ms var(--ease-brand);
+}
+.action-button:hover {
+  border-color: color-mix(in srgb, var(--brand-red) 40%, transparent);
+  background: var(--surface);
+  color: var(--brand-red);
+}
+.action-button:active {
+  transform: translateY(1px);
+}
+.action-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand-red) 35%, transparent);
+  outline-offset: 2px;
+}
+.action-button:disabled,
+.action-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.action-button--selected,
+.action-button--reversal {
+  border-color: color-mix(in srgb, var(--brand-red) 25%, transparent);
+  background: var(--accent-soft);
+  color: var(--brand-red);
+}
+.action-button--selected:hover,
+.action-button--reversal:hover {
+  border-color: color-mix(in srgb, var(--brand-red) 45%, transparent);
+  background: var(--accent-soft);
+  color: var(--brand-red-hover);
+}
+
 /* Chess (and later partner) pin above results — labeled placement, not ranking.
  * Home: split card (red promise, white §8.11 path). Search: red face only. */
 .partner-promo {
@@ -1110,6 +1161,7 @@ textarea.field {
 @media (prefers-reduced-motion: reduce) {
   .cta-enabled,
   .cta-outline,
+  .action-button,
   .partner-promo,
   .partner-promo-cta,
   .page-back,
@@ -1125,6 +1177,7 @@ textarea.field {
   }
   .cta-enabled:hover,
   .cta-enabled:active,
+  .action-button:active,
   .card-lift:hover,
   .card-lift:focus-visible,
   .partner-promo:hover,

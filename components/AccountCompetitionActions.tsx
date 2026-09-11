@@ -220,7 +220,7 @@ function DifficultyRatingControl({
           type="button"
           disabled={pending}
           onClick={() => rate(null)}
-          className="self-start text-xs font-semibold text-muted-strong hover:text-brand-red disabled:opacity-60"
+          className="action-button action-button--reversal self-start"
         >
           Remove rating
         </button>

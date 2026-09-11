@@ -114,7 +114,7 @@ export function AdminOrganizationReviewActions({
             type="button"
             onClick={backToPending}
             disabled={isPending}
-            className="text-xs font-semibold text-muted-strong underline-offset-2 hover:text-brand-red hover:underline disabled:opacity-60"
+            className="action-button"
           >
             Back to pending
           </button>

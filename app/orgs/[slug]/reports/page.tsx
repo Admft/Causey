@@ -151,7 +151,7 @@ export default async function OrganizationReportsPage({
             </label>
             <button
               type="submit"
-              className="rounded-xl border border-line bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-brand-red/30 hover:text-brand-red"
+              className="action-button"
             >
               Show
             </button>

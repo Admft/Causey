@@ -390,7 +390,7 @@ export function AuthNav() {
     <button
       type="button"
       onClick={signOut}
-      className="shrink-0 whitespace-nowrap text-sm font-medium text-muted transition-colors hover:text-foreground"
+      className="action-button shrink-0 whitespace-nowrap"
     >
       Sign out
     </button>
@@ -399,7 +399,7 @@ export function AuthNav() {
     <button
       type="button"
       onClick={signOut}
-      className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-muted transition-colors hover:bg-surface-soft hover:text-foreground"
+      className="action-button w-full"
     >
       Sign out
     </button>

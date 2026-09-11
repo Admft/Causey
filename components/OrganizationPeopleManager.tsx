@@ -418,7 +418,7 @@ export function OrganizationPeopleManager({
                 <button
                   type="button"
                   onClick={copyClaimPath}
-                  className="text-sm font-semibold text-brand-red hover:underline"
+                  className="action-button"
                 >
                   {copied ? "Copied" : "Copy link"}
                 </button>
@@ -431,7 +431,7 @@ export function OrganizationPeopleManager({
                   <button
                     type="button"
                     onClick={copyActivationCode}
-                    className="text-sm font-semibold text-brand-red hover:underline"
+                    className="action-button"
                   >
                     Copy code
                   </button>
@@ -450,14 +450,14 @@ export function OrganizationPeopleManager({
                 <button
                   type="button"
                   onClick={copyBulkClaims}
-                  className="text-sm font-semibold text-brand-red hover:underline"
+                  className="action-button"
                 >
                   {copied ? "Copied list" : "Copy all claim links"}
                 </button>
                 <button
                   type="button"
                   onClick={downloadBulkClaims}
-                  className="text-sm font-semibold text-brand-red hover:underline"
+                  className="action-button"
                 >
                   Download CSV
                 </button>
@@ -626,7 +626,7 @@ export function OrganizationPeopleManager({
                                   type="button"
                                   disabled={pending !== null}
                                   onClick={() => reissue(invitation)}
-                                  className="text-sm font-semibold text-brand-red hover:underline disabled:opacity-60"
+                                  className="action-button"
                                 >
                                   {pending === invitation.id
                                     ? "Reissuing…"
