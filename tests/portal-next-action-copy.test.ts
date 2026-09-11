@@ -128,7 +128,8 @@ describe("portal next-action vocabulary", () => {
     expect(accountPage).toContain("No parent links yet");
     expect(notificationsPage).toContain("workspaceOpenCta");
     expect(mePage).toContain('label: "Open my organizations"');
-    expect(mePage).toContain('label: "Open my clubs"');
+    expect(mePage).toContain("staffPlanMissionFromTypes");
+    expect(mePage).not.toContain('label: "Open my clubs"');
     expect(mePage).not.toContain('label: "Manage organizations"');
   });
 

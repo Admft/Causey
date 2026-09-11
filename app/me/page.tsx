@@ -20,7 +20,10 @@ import {
 } from "@/lib/data/portal";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
-import { studentOrgChromeFromTypes } from "@/lib/portal-copy";
+import {
+  staffPlanMissionFromTypes,
+  studentOrgChromeFromTypes,
+} from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +79,7 @@ function addTournamentPlan(
 }
 
 const ROLE_NEXT_ACTION: Record<
-  AccountRole,
+  Exclude<AccountRole, "coach">,
   {
     title: string;
     description: string;
@@ -100,13 +103,6 @@ const ROLE_NEXT_ACTION: Record<
       "Your parent desk shows each linked student’s invitations and RSVP status.",
     href: "/family",
     label: "Open family desk",
-  },
-  coach: {
-    title: "Run your next club task",
-    description:
-      "Open your club workspace to manage rosters, invitations, and competitions.",
-    href: "/orgs",
-    label: "Open my clubs",
   },
 };
 
@@ -150,7 +146,9 @@ export default async function MePage() {
       ? getParentLinks(profile.id)
       : Promise.resolve([]),
     getMyEntrantRows(profile.id),
-    profile.role === "student" ? getMyOrgs(profile.id) : Promise.resolve([]),
+    profile.role === "student" || profile.role === "coach"
+      ? getMyOrgs(profile.id)
+      : Promise.resolve([]),
     getMyRecommendations(profile.id),
   ]);
   // Only a request the student still has to answer is a task. A request the
@@ -255,7 +253,10 @@ export default async function MePage() {
         : "You marked registration complete";
 
   const isStudent = profile.role === "student";
-  const nextAction = ROLE_NEXT_ACTION[profile.role];
+  const nextAction =
+    profile.role === "coach"
+      ? staffPlanMissionFromTypes(myOrgs.map(({ org }) => org.type))
+      : ROLE_NEXT_ACTION[profile.role];
   const orgChrome = studentOrgChromeFromTypes(myOrgs.map(({ org }) => org.type));
   // Generic discovery links follow the account's saved directory shortcut;
   // without one they land on the homepage chooser instead of chess.

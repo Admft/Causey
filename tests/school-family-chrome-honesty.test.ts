@@ -70,9 +70,11 @@ describe("school and family chrome honesty", () => {
     const me = source("app/me/page.tsx");
     const orgs = source("app/orgs/page.tsx");
     expect(me).toContain("studentOrgChromeFromTypes");
+    expect(me).toContain("staffPlanMissionFromTypes");
     expect(me).not.toContain("Club RSVP tells");
     expect(me).toContain('label: "Open my organizations"');
     expect(me).not.toContain('label: "Join a club"');
+    expect(me).not.toContain('label: "Open my clubs"');
     expect(orgs).toContain("studentOrgChromeFromTypes");
     expect(orgs).toContain("staffOrgListChromeFromTypes");
     expect(orgs).not.toContain("You left that club.");

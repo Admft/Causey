@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Coach Plan (`/me`) mission derives school/district/organization nouns from memberships (`staffPlanMissionFromTypes`); empty self-serve stays clubs — 2026-09-11
 - [x] `/clubs` rebuilt from the three-direction PDF: quiet-ledger hero ("Run the season, not the spreadsheet.") with a static illustrative workspace frame (`ClubWorkspaceShowcase`, wireframe rows like the district window), ruled sample-ledger section, "Same season, two seats" club/district table, season-file artifact band anchored from the hero CTA, and the scope lists kept as open ruled rows instead of the nested-card stack — 2026-09-10
 - [x] Buyer-page balance pass: `/clubs` and `/districts` heroes vertically center the workspace window against the copy (no air under the demo), clubs hero sub drops the routing sentence the two-seats table now carries, and the districts not-finished card gains a real fourth row ("Beyond chess") so its rows stop stretching — 2026-09-10
 - [x] `/clubs` hero restructured to districts geometry: back link + logo span a full-width top row, and the workspace window keys to the headline block (top edge at the eyebrow, running past the CTAs) instead of centering against the whole column — 2026-09-10

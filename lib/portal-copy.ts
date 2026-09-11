@@ -327,6 +327,72 @@ export type StaffOrgListChrome = {
   anotherCta: string;
 };
 
+export type StaffPlanMission = {
+  title: string;
+  description: string;
+  href: string;
+  label: string;
+  secondary?: { href: string; label: string };
+};
+
+/**
+ * Coach Plan (/me) mission from membership types.
+ * District and school staff must not see club-only nouns; empty self-serve stays clubs.
+ */
+export function staffPlanMissionFromTypes(
+  types: Iterable<string>
+): StaffPlanMission {
+  const kinds = new Set(
+    [...types]
+      .map((t) => organizationKindLabel(t))
+      .filter(
+        (k) =>
+          k === "school" || k === "club" || k === "team" || k === "district"
+      )
+  );
+  const hasDistrict = kinds.has("district");
+  const hasSchool = kinds.has("school");
+  const hasClubOrTeam = kinds.has("club") || kinds.has("team");
+
+  if (hasDistrict) {
+    return {
+      title: "Run your next district task",
+      description:
+        "Open your district workspace to manage schools, competitions, and reports.",
+      href: "/orgs",
+      label: "Open Districts & schools",
+    };
+  }
+
+  if (hasSchool && hasClubOrTeam) {
+    return {
+      title: "Run your next organization task",
+      description:
+        "Open your workspace to manage rosters, invitations, and competitions.",
+      href: "/orgs",
+      label: OPEN_MY_ORGANIZATIONS_LABEL,
+    };
+  }
+
+  if (hasSchool) {
+    return {
+      title: "Run your next school task",
+      description:
+        "Open your school workspace to manage rosters, invitations, and competitions.",
+      href: "/orgs",
+      label: "Open my schools",
+    };
+  }
+
+  return {
+    title: "Run your next club task",
+    description:
+      "Open your club workspace to manage rosters, invitations, and competitions.",
+    href: "/orgs",
+    label: OPEN_MY_CLUBS_LABEL,
+  };
+}
+
 /** Coach /orgs list chrome from membership types. Empty self-serve is clubs. */
 export function staffOrgListChromeFromTypes(
   types: Iterable<string>
