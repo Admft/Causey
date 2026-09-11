@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { AdminDistrictDeleteForm } from "@/components/AdminDistrictDeleteForm";
 import { AdminDistrictProvisionForm } from "@/components/AdminDistrictProvisionForm";
 import { AdminDistrictSchoolBulkVerify } from "@/components/AdminDistrictSchoolBulkVerify";
 import { AdminOrganizationReviewActions } from "@/components/AdminOrganizationReviewActions";
@@ -149,12 +150,16 @@ function OrganizationPanel({
   org,
   schools,
   readinessResult,
+  canDeleteDistrict = false,
+  onDistrictDeleted,
 }: {
   org: AdminOrganizationRow;
   schools: AdminOrganizationRow[];
   readinessResult:
     | DistrictReadResult<DistrictPilotReadiness>
     | undefined;
+  canDeleteDistrict?: boolean;
+  onDistrictDeleted?: (districtId: string) => void;
 }) {
   const review = org.organization_verification_reviews[0] ?? null;
   const pendingSchools = schools.filter(
@@ -272,6 +277,16 @@ function OrganizationPanel({
         />
       ) : null}
 
+      {isDistrict && canDeleteDistrict ? (
+        <AdminDistrictDeleteForm
+          districtId={org.id}
+          districtSlug={org.slug}
+          districtName={org.name}
+          schoolCount={schools.length}
+          onDeleted={() => onDistrictDeleted?.(org.id)}
+        />
+      ) : null}
+
       <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-line pt-4 text-xs">
         <Link
           href={`/orgs/${org.slug}`}
@@ -291,7 +306,7 @@ function OrganizationPanel({
 }
 
 export function AdminOrganizationsExplorer({
-  organizations,
+  organizations: initialOrganizations,
   districtReadinessById,
   initialStatus = "all",
   canProvisionDistrict = false,
@@ -299,10 +314,11 @@ export function AdminOrganizationsExplorer({
   organizations: AdminOrganizationRow[];
   districtReadinessById: DistrictReadinessById;
   initialStatus?: StatusFilter;
-  /** District creation is reserved for founder super admins. */
+  /** District create/delete is reserved for founder super admins. */
   canProvisionDistrict?: boolean;
 }) {
   const router = useRouter();
+  const [organizations, setOrganizations] = useState(initialOrganizations);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -620,6 +636,18 @@ export function AdminOrganizationsExplorer({
                     org={org}
                     schools={schools}
                     readinessResult={readinessResult}
+                    canDeleteDistrict={canProvisionDistrict}
+                    onDistrictDeleted={(districtId) => {
+                      setOrganizations((rows) =>
+                        rows.filter(
+                          (row) =>
+                            row.id !== districtId &&
+                            row.parent_org_id !== districtId
+                        )
+                      );
+                      setExpandedId(null);
+                      router.refresh();
+                    }}
                   />
                 ) : null}
               </li>
