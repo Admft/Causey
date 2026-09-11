@@ -23,7 +23,7 @@ export function getProductEmailConfig(): {
     process.env.CAUSEY_PUBLIC_URL ?? DEFAULT_PUBLIC_URL
   ).replace(/\/+$/, "");
   const sendingDomain =
-    process.env.RESEND_EMAIL_DOMAIN ?? "mail.causey.dev";
+    process.env.RESEND_EMAIL_DOMAIN ?? "causey.dev";
   const from =
     process.env.CAUSEY_EMAIL_FROM ?? `Causey <updates@${sendingDomain}>`;
 

@@ -4,7 +4,7 @@ This runbook is for Causey-assisted district pilots, including two districts
 running concurrently. Chess is still the broadest active competition surface,
 but the public directories now also cover speech and debate, STEM, arts, and
 writing with smaller permitted source sets. Product email is delivered through
-the verified `mail.causey.dev` Resend integration.
+the verified `causey.dev` Resend domain (cornell team, Causey Sign up key).
 
 ## 1. Prepare the pilot environment
 
@@ -63,11 +63,13 @@ the verified `mail.causey.dev` Resend integration.
 
 5. Configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `CRON_SECRET`, and
-   `DATA_SOURCE=supabase`.
+   `DATA_SOURCE=supabase`. Store `RESEND_API_KEY` as a Vercel Sensitive
+   env var (Production and Preview), not a readable project variable. Use
+   the cornell Resend "Causey Sign up" key.
 6. Configure Supabase Auth custom SMTP before inviting a real cohort. This
    covers signup, confirmation, and password reset. The Resend product-email
    integration separately sends claims, reminders, and app notifications.
-7. Confirm `mail.causey.dev` is verified in Resend and run the protected
+7. Confirm `causey.dev` is verified in Resend and run the protected
    `/api/cron/product-email` route once before onboarding participants.
    On Hobby the Vercel cron runs once a day (~14:00 UTC); invite/reminder
    mail can wait until that run unless you trigger the route by hand.
