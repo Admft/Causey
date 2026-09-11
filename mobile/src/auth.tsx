@@ -142,6 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: email.trim(),
       password,
     });
+    if (signError?.message.toLowerCase().includes("invalid login credentials")) {
+      return "Email or password is incorrect. Reset your password or create an account if you’re new to Causey.";
+    }
     return signError?.message ?? null;
   }, []);
 

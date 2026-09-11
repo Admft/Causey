@@ -7,6 +7,7 @@ const read = (path: string) =>
 
 const signupForm = read("components/SignupForm.tsx");
 const loginForm = read("components/LoginForm.tsx");
+const mobileAuth = read("mobile/src/auth.tsx");
 const passwordField = read("components/PasswordField.tsx");
 
 describe("password confirmation and visibility", () => {
@@ -40,5 +41,14 @@ describe("password confirmation and visibility", () => {
     expect(read("components/AccountSecurityForm.tsx")).toContain(
       "isPasswordAcceptable"
     );
+  });
+
+  it("keeps failed sign-in private while offering the right next steps", () => {
+    const safeMessage =
+      "Email or password is incorrect. Reset your password or create an account if you’re new to Causey.";
+    expect(loginForm).toContain(safeMessage);
+    expect(mobileAuth).toContain(safeMessage);
+    expect(loginForm).toContain('href="/forgot-password"');
+    expect(loginForm).toContain("signupHref");
   });
 });

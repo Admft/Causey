@@ -74,7 +74,9 @@ export function LoginForm({
       if (message === "Account sign-in is unavailable in this build.") {
         setError(message);
       } else if (message.toLowerCase().includes("invalid login credentials")) {
-        setError("Email or password is incorrect.");
+        setError(
+          "Email or password is incorrect. Reset your password or create an account if you’re new to Causey."
+        );
       } else if (message.toLowerCase().includes("email not confirmed")) {
         setError("Confirm your email before signing in.");
       } else {
