@@ -129,6 +129,8 @@ Print FAIL list first (or NONE). Then the exact patch. Re-audit until zero fails
 
 Adjusted one-off variants (cinematic, dial-tuner, ban-list, QA, lock) live in [adjusted-prompts.md](adjusted-prompts.md). Prefer the three ultimates; use those five only when you need a single mechanic.
 
+One-chat-at-a-time tickets (page, prompts, models, paste openers): [../../section-transform-chat-plan.md](../../section-transform-chat-plan.md).
+
 ## Ship rules
 
 - One section per pass. Do not "while you're here" the rest of the page.

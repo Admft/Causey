@@ -57,6 +57,12 @@ describe("abuse controls and public-path cost", () => {
     expect(nextConfig).not.toMatch(
       /img-src 'self' data: blob: https:\/\/\*\.supabase\.co"/
     );
+    expect(nextConfig).toContain("https://va.vercel-scripts.com");
+    expect(nextConfig).toContain("https://vitals.vercel-insights.com");
+    expect(read("app/layout.tsx")).toContain(
+      'from "@vercel/analytics/next"'
+    );
+    expect(read("app/layout.tsx")).toContain("<Analytics />");
     const proxy = read("proxy.ts");
     expect(proxy).toContain("isAnonymousPublicGet");
     expect(proxy).toContain('cookie.name.includes("-auth-token")');

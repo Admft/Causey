@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         product handles; it does not claim that Causey has completed a district
         privacy review or signed a district data agreement.
       </p>
-      <p className="mt-3 text-xs text-muted">Effective August 8, 2026</p>
+      <p className="mt-3 text-xs text-muted">Effective September 10, 2026</p>
 
       <div className="mt-10 space-y-10">
         <section aria-labelledby="collect">
@@ -57,6 +57,12 @@ export default function PrivacyPage() {
             <li>
               Basic technical records needed to secure, operate, and
               troubleshoot the service.
+            </li>
+            <li>
+              On the website, cookieless page views and approximate visitor
+              counts through Vercel Web Analytics. Paths and referrers can
+              be recorded; advertising identifiers are not. This does not
+              run in the iOS or Android apps.
             </li>
             <li>
               On the iOS and Android apps, the same account data as the
@@ -109,11 +115,12 @@ export default function PrivacyPage() {
             Service providers and event organizers
           </h2>
           <p className="mt-4 text-base text-muted">
-            Causey uses Vercel for hosting, Supabase for authentication and
-            database storage, Resend for email delivery, Sentry for error
-            reporting when it is configured, OpenAI for optional pathway
-            enrichment, and GitHub Actions for build and ingest jobs. They
-            process data only to provide those services. Tournament registration
+            Causey uses Vercel for hosting and cookieless website page-view
+            analytics, Supabase for authentication and database storage, Resend
+            for email delivery, Sentry for error reporting when it is
+            configured, OpenAI for optional pathway enrichment, and GitHub Actions
+            for build and ingest jobs. They process data only to provide those
+            services. Tournament registration
             happens on an organizer&rsquo;s website; information submitted there
             is governed by that organizer&rsquo;s privacy practices, not this
             notice. Problem reports and optional screenshots are stored and
