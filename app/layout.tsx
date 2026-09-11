@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import { AddToHomeScreen } from "@/components/AddToHomeScreen";
@@ -163,6 +164,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
