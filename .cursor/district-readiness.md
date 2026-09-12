@@ -164,6 +164,9 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 20. **P1 · Coach Plan mission still club-first · S · shipped 2026-09-11**  
    Surface: `/me` for coach accounts now loads memberships and uses `staffPlanMissionFromTypes` so district/school staff see matching nouns and CTAs (Open Districts & schools / Open my schools); empty self-serve stays clubs.
 
+21. **P1 · Claimed staff account still brands as coach · S · shipped 2026-09-11**  
+   Surface: Account uses `staffAccountPersonaLabel` (School staff / District staff) instead of Coach / Organizer when memberships are institutional; `/orgs` shows `ORG_ROLE_LABELS`, hides Start a club for school/district-only staff, and titles Your organizations. Under the hood the account role remains `coach`.
+
 ### Recommended next shippable win
 
 Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.

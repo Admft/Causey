@@ -282,7 +282,8 @@ export async function adminUpdateUserAccess(input: {
     if (error.message.includes("cannot_change_own_access")) {
       return {
         ok: false,
-        error: "Use another platform administrator to change your own access.",
+        error:
+          "Use another platform administrator to change your own platform access.",
       };
     }
     if (error.message.includes("cannot_remove_last_platform_admin")) {
@@ -294,7 +295,8 @@ export async function adminUpdateUserAccess(input: {
     if (error.message.includes("cannot_modify_super_admin")) {
       return {
         ok: false,
-        error: "Protected founder accounts cannot be changed here.",
+        error:
+          "Protected founder accounts keep platform administration; only account experience can change.",
       };
     }
     if (error.message.includes("super_admin_required")) {
@@ -365,6 +367,12 @@ export async function adminDeleteUser(input: {
     p_profile_id: parsed.data.profileId,
   });
   if (error) {
+    console.error("Admin delete_platform_user failed:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
     if (error.message.includes("super_admin_required")) {
       return { ok: false, error: "Founder super-admin access required." };
     }
@@ -380,7 +388,10 @@ export async function adminDeleteUser(input: {
     if (error.message.includes("profile_not_found")) {
       return { ok: false, error: "That account no longer exists." };
     }
-    return { ok: false, error: "Could not delete this account." };
+    return {
+      ok: false,
+      error: actionErrorMessage(error, "Could not delete this account."),
+    };
   }
 
   revalidatePath("/admin/users");

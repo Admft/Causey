@@ -304,6 +304,7 @@ export function accountOrganizationsEmptyCta(options: {
   role: AccountRole;
   canCreate: boolean;
   hasDistrictAccess?: boolean;
+  hasSchoolAccess?: boolean;
 }): { href: string; label: string } {
   if (options.role === "student") {
     return { href: "/orgs", label: OPEN_MY_ORGANIZATIONS_LABEL };
@@ -311,10 +312,86 @@ export function accountOrganizationsEmptyCta(options: {
   if (options.hasDistrictAccess) {
     return { href: "/orgs", label: "Open Districts & schools" };
   }
+  if (options.hasSchoolAccess) {
+    return { href: "/orgs", label: "Open my schools" };
+  }
   if (options.canCreate) {
     return { href: "/orgs/new", label: CREATE_CLUB_LABEL };
   }
   return { href: "/orgs", label: OPEN_MY_CLUBS_LABEL };
+}
+
+/**
+ * Locked account-type label for coach personas.
+ * Claimed school/district invitations create a coach account under the hood;
+ * surface that as staff so Account does not read as a club-coach login.
+ */
+export function staffAccountPersonaLabel(options: {
+  role: AccountRole | string | null | undefined;
+  memberRoles?: Iterable<string | null | undefined>;
+  orgTypes?: Iterable<string>;
+}): string {
+  if (options.role === "student") return "Student";
+  if (options.role === "parent") return "Parent";
+  if (options.role !== "coach") return "Account";
+
+  const roles = new Set(
+    [...(options.memberRoles ?? [])].filter(
+      (role): role is string => Boolean(role)
+    )
+  );
+  const kinds = new Set(
+    [...(options.orgTypes ?? [])]
+      .map((type) => organizationKindLabel(type))
+      .filter(
+        (kind) =>
+          kind === "school" ||
+          kind === "club" ||
+          kind === "team" ||
+          kind === "district"
+      )
+  );
+  const hasClubOrTeam = kinds.has("club") || kinds.has("team");
+  const hasSchool = kinds.has("school");
+  const hasDistrict = kinds.has("district");
+
+  if (roles.has("district_admin") || hasDistrict) {
+    return hasClubOrTeam ? "Staff" : "District staff";
+  }
+  if (
+    roles.has("school_admin") ||
+    roles.has("admin") ||
+    (hasSchool && !hasClubOrTeam)
+  ) {
+    return "School staff";
+  }
+  if (hasSchool) {
+    return "Staff";
+  }
+  return "Coach / Organizer";
+}
+
+/**
+ * Club/team create is self-serve for empty or club workspaces.
+ * School/district-only staff should not see a Start a club CTA that makes the
+ * account feel like a coach login.
+ */
+export function offersClubSelfServe(orgTypes: Iterable<string>): boolean {
+  const kinds = new Set(
+    [...orgTypes]
+      .map((type) => organizationKindLabel(type))
+      .filter(
+        (kind) =>
+          kind === "school" ||
+          kind === "club" ||
+          kind === "team" ||
+          kind === "district"
+      )
+  );
+  const hasInstitutional = kinds.has("school") || kinds.has("district");
+  const hasClubOrTeam = kinds.has("club") || kinds.has("team");
+  if (!hasInstitutional) return true;
+  return hasClubOrTeam;
 }
 
 export type StaffOrgListChrome = {
