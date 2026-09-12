@@ -200,7 +200,7 @@ export function HomeHeroSearch({
             ) : (
               <button
                 type="button"
-                className="action-button mt-1"
+                className="mt-1 text-2xs font-semibold text-brand-blue hover:text-brand-blue-strong hover:underline disabled:opacity-60"
                 disabled={pending || locating}
                 onClick={async () => {
                   setZipError(null);

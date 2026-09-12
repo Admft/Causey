@@ -120,6 +120,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Two-district isolation gate: child-school creation is now an exact-district, atomic RPC (school + initial administrator membership); static regression proof covers membership authority, readiness/rollup/private CSV scope, mixed-district bulk verification rejection, and platform queue grouping; pilot runbook now requires migrations through `0046` and a bidirectional two-district live smoke — 2026-08-12
 
 ## Frontend polish shipped
+- [x] “Use my location” stays plain blue helper text under zip (no action-button bubble); recovery/admin secondary actions keep the bounded treatment — 2026-09-11
 - [x] Staff email-confirmation recovery actions now share the same bounded compact-control treatment, including the already-confirmed sign-in path — 2026-09-11
 - [x] Signup, reset, and account password change reject weak passwords and show a strength meter under the new-password field (8+ mixed case and a number, or a long passphrase) — 2026-09-05
 - [x] Mobile Add to Home Screen: Android uses the native install prompt when Chromium fires it; iPhone/iPad (and Chrome-on-iOS) get a Safari Share walkthrough; in-app browsers are sent to a real browser. Footer CTA plus signed-in More menu; hidden once the icon is already on the Home Screen — 2026-09-04

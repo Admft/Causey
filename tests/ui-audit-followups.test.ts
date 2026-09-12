@@ -45,16 +45,25 @@ describe("UI audit follow-ups", () => {
     const globals = source("app/globals.css");
     const registration = source("components/ExternalRegistrationPanel.tsx");
     const rsvp = source("components/RsvpButtons.tsx");
+    const heroSearch = source("components/HomeHeroSearch.tsx");
+    const zipCapture = source("components/ZipCaptureField.tsx");
     const mobileUi = source("mobile/src/ui.tsx");
     const mobileGoing = source("mobile/src/EventGoingCard.tsx");
     const mobileSignup = source("mobile/app/signup.tsx");
 
     expect(globals).toContain(".action-button {");
     expect(globals).toContain("border: 1px solid var(--field-border)");
+    expect(globals).not.toContain(".action-button--helper");
     expect(registration).toContain(
       'className="action-button action-button--reversal"'
     );
     expect(rsvp).toContain('className="action-button action-button--reversal"');
+    expect(heroSearch).toContain(
+      'className="mt-1 text-2xs font-semibold text-brand-blue hover:text-brand-blue-strong hover:underline disabled:opacity-60"'
+    );
+    expect(zipCapture).toContain(
+      'className="text-xs font-semibold text-brand-blue hover:text-brand-blue-strong hover:underline disabled:opacity-60"'
+    );
     expect(mobileUi).toContain("export function ActionButton");
     expect(mobileUi).toContain("borderColor: colors.fieldBorder");
     expect(mobileUi).toContain("backgroundColor: colors.surfaceSoft");
