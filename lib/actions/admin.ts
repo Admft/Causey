@@ -22,8 +22,11 @@ import {
   updateTournamentRecord,
 } from "@/lib/data/tournament-mutations";
 import {
+  getAdminOrgMembers,
   getAdminUsers,
+  parseAdminOrgMemberRole,
   parseAdminUserAccess,
+  type AdminOrgMemberRow,
   type AdminUserDirectoryRow,
 } from "@/lib/data/admin";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
@@ -191,6 +194,13 @@ const AdminUserSearchSchema = z.object({
   access: z.enum(["all", "admins"]).optional(),
 });
 
+const AdminOrgMemberSearchSchema = z.object({
+  orgId: z.string().uuid(),
+  query: z.string().trim().max(200),
+  page: z.number().int().min(1).max(10_000),
+  role: z.enum(["all", "admin", "coach", "student"]).optional(),
+});
+
 const AdminOrganizationVerificationSchema = z
   .object({
     orgId: z.string().uuid(),
@@ -250,6 +260,47 @@ export async function adminSearchUsers(input: {
   return {
     ok: true,
     users: result.users,
+    total: result.total,
+    page: parsed.data.page,
+  };
+}
+
+export async function adminSearchOrgMembers(input: {
+  orgId: string;
+  query: string;
+  page: number;
+  role?: string;
+}): Promise<
+  ActionResult<{
+    members: AdminOrgMemberRow[];
+    total: number;
+    page: number;
+  }>
+> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Platform administrator access required.",
+    };
+  }
+  const parsed = AdminOrgMemberSearchSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Check the member search." };
+  }
+
+  const pageSize = 25;
+  const result = await getAdminOrgMembers({
+    orgId: parsed.data.orgId,
+    query: parsed.data.query,
+    limit: pageSize,
+    offset: (parsed.data.page - 1) * pageSize,
+    role: parseAdminOrgMemberRole(parsed.data.role),
+  });
+  if (result.error) return { ok: false, error: result.error };
+  return {
+    ok: true,
+    members: result.members,
     total: result.total,
     page: parsed.data.page,
   };

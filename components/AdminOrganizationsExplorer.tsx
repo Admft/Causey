@@ -6,9 +6,13 @@ import { useMemo, useState } from "react";
 import { AdminDistrictDeleteForm } from "@/components/AdminDistrictDeleteForm";
 import { AdminDistrictProvisionForm } from "@/components/AdminDistrictProvisionForm";
 import { AdminDistrictSchoolBulkVerify } from "@/components/AdminDistrictSchoolBulkVerify";
+import { AdminOrgMembersPanel } from "@/components/AdminOrgMembersPanel";
 import { AdminOrganizationReviewActions } from "@/components/AdminOrganizationReviewActions";
 import { AdminSchoolProvisionForm } from "@/components/AdminSchoolProvisionForm";
-import type { AdminOrganizationRow } from "@/lib/data/admin";
+import type {
+  AdminOrganizationRow,
+  AdminProfileContact,
+} from "@/lib/data/admin";
 import {
   getDistrictReadinessSummary,
   type DistrictPilotReadiness,
@@ -63,6 +67,14 @@ function formatDate(value: string | null) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function contactLabel(contact: AdminProfileContact | null): string {
+  if (!contact) return "—";
+  const name = contact.display_name.trim();
+  const email = contact.email.trim();
+  if (name && email) return `${name} (${email})`;
+  return name || email || "—";
 }
 
 function schoolTypeLine(org: AdminOrganizationRow): string {
@@ -186,6 +198,11 @@ function OrganizationPanel({
             ? formatDate(org.verified_at)
             : "—"}
         </Fact>
+        <Fact label="Created by">{contactLabel(org.createdBy)}</Fact>
+        {org.owner_profile_id &&
+        org.owner_profile_id !== org.created_by ? (
+          <Fact label="Owner">{contactLabel(org.owner)}</Fact>
+        ) : null}
         {org.parent ? <Fact label="Part of">{org.parent.name}</Fact> : null}
         {org.type === "school" ? (
           <Fact label="School administrator">
@@ -200,6 +217,8 @@ function OrganizationPanel({
           <Fact label="Last reviewed">{formatDate(review.reviewed_at)}</Fact>
         ) : null}
       </dl>
+
+      <AdminOrgMembersPanel orgId={org.id} memberCount={org.member_count} />
 
       {isDistrict ? (
         readiness ? (
@@ -607,6 +626,11 @@ export function AdminOrganizationsExplorer({
                     {adminLine ? (
                       <span className="mt-1 block truncate text-xs font-semibold text-muted-strong">
                         {adminLine}
+                      </span>
+                    ) : null}
+                    {org.createdBy ? (
+                      <span className="mt-1 block truncate text-xs text-muted">
+                        Created by {contactLabel(org.createdBy)}
                       </span>
                     ) : null}
                   </span>

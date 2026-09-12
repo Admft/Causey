@@ -30,10 +30,12 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Founder account experience editable on `/admin/users` — 2026-09-11
+- District People invite defaults to office admin — 2026-09-11
 
 ## Last tick
 
+- 2026-09-12 — Admin `/organizations` expand panel shows Created by (and Owner when different) plus a paginated name/email member search (`0094` `search_org_members`) so a large school does not dump the whole roster.
+- 2026-09-11 — District People no longer defaults to Coach (hollow office after claim): District administrator is the default, school-admin setup keeps School administrator while an invite is pending, role help names office vs competition-only access, district Competitions empty copy drops “invite your roster,” and claim signup name help uses the org name for staff.
 - 2026-09-11 — Protected founder accounts on `/admin/users` are no longer fully read-only: account experience (student/parent/coach) can change for founders and for your own row; platform administration stays locked. Migration `0092`.
 - 2026-09-11 — After a staff claim link, Account no longer says Coach / Organizer for school/district memberships; `/orgs` shows School administrator / District administrator role labels, drops Start a club for institutional-only staff, and titles Your organizations. Account role stays `coach` under the hood.
 - 2026-09-11 — Coach Plan mission no longer says “club” when memberships are school or district; `staffPlanMissionFromTypes` matches `/orgs` chrome.

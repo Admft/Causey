@@ -26,6 +26,12 @@ export type SchoolAdminStaffing =
       label: string;
     };
 
+export type AdminProfileContact = {
+  profile_id: string;
+  email: string;
+  display_name: string;
+};
+
 export type AdminOrganizationRow = {
   id: string;
   name: string;
@@ -33,6 +39,8 @@ export type AdminOrganizationRow = {
   type: "school" | "district" | "club" | "team";
   state: string | null;
   parent_org_id: string | null;
+  created_by: string | null;
+  owner_profile_id: string | null;
   verification_status: "pending" | "verified" | "rejected";
   verified_at: string | null;
   created_at: string;
@@ -42,6 +50,8 @@ export type AdminOrganizationRow = {
     slug: string;
     verification_status: "pending" | "verified" | "rejected";
   } | null;
+  createdBy: AdminProfileContact | null;
+  owner: AdminProfileContact | null;
   organization_verification_reviews: {
     note: string | null;
     reviewed_at: string;
@@ -50,6 +60,36 @@ export type AdminOrganizationRow = {
   tournament_count: number;
   schoolAdminStaffing: SchoolAdminStaffing | null;
 };
+
+export type AdminOrgMemberRow = {
+  profile_id: string;
+  email: string;
+  display_name: string;
+  account_role: "student" | "parent" | "coach";
+  membership_role: "student" | "coach" | "admin";
+  membership_status: "active" | "invited" | "removed";
+  joined_at: string;
+  total_count: number;
+};
+
+export const ADMIN_ORG_MEMBER_ROLES = [
+  "all",
+  "admin",
+  "coach",
+  "student",
+] as const;
+export type AdminOrgMemberRoleFilter =
+  (typeof ADMIN_ORG_MEMBER_ROLES)[number];
+
+export function parseAdminOrgMemberRole(
+  raw?: string | null
+): AdminOrgMemberRoleFilter {
+  return ADMIN_ORG_MEMBER_ROLES.includes(
+    raw as AdminOrgMemberRoleFilter
+  )
+    ? (raw as AdminOrgMemberRoleFilter)
+    : "all";
+}
 
 export type AdminUserDirectoryRow = {
   profile_id: string;
@@ -568,6 +608,33 @@ function schoolAdminStaffingFromCounts(
   };
 }
 
+async function getAdminProfileContacts(
+  profileIds: string[]
+): Promise<Map<string, AdminProfileContact>> {
+  const contacts = new Map<string, AdminProfileContact>();
+  const unique = [...new Set(profileIds.filter(Boolean))];
+  if (!unique.length) return contacts;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_admin_profile_contacts", {
+    p_profile_ids: unique,
+  });
+  if (error) {
+    if (!isMissingAdminRpc(error, "get_admin_profile_contacts")) {
+      console.error("get_admin_profile_contacts failed", error);
+    }
+    return contacts;
+  }
+  for (const row of data ?? []) {
+    contacts.set(row.profile_id, {
+      profile_id: row.profile_id,
+      email: row.email ?? "",
+      display_name: row.display_name ?? "",
+    });
+  }
+  return contacts;
+}
+
 export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
   const supabase = await createServerSupabaseClient();
   // Keep the org list query embed-light: a bad PostgREST relationship hint
@@ -578,7 +645,7 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
       supabase
         .from("organizations")
         .select(
-          "id, name, slug, type, state, parent_org_id, verification_status, verified_at, created_at, parent:organizations!parent_org_id(id, name, slug, verification_status)"
+          "id, name, slug, type, state, parent_org_id, created_by, owner_profile_id, verification_status, verified_at, created_at, parent:organizations!parent_org_id(id, name, slug, verification_status)"
         )
         .order("type")
         .order("name"),
@@ -641,6 +708,13 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
     }
   }
 
+  const contactIds: string[] = [];
+  for (const row of organizations.data ?? []) {
+    if (row.created_by) contactIds.push(row.created_by);
+    if (row.owner_profile_id) contactIds.push(row.owner_profile_id);
+  }
+  const contacts = await getAdminProfileContacts(contactIds);
+
   return (organizations.data ?? []).map((row) => {
     const isConnectedSchool =
       row.type === "school" && Boolean(row.parent_org_id);
@@ -663,12 +737,72 @@ export async function getAdminOrganizations(): Promise<AdminOrganizationRow[]> {
     return {
       ...row,
       parent: Array.isArray(row.parent) ? (row.parent[0] ?? null) : row.parent,
+      createdBy: row.created_by
+        ? (contacts.get(row.created_by) ?? null)
+        : null,
+      owner: row.owner_profile_id
+        ? (contacts.get(row.owner_profile_id) ?? null)
+        : null,
       organization_verification_reviews: reviewsByOrgId.get(row.id) ?? [],
       member_count: memberCounts.get(row.id) ?? 0,
       tournament_count: tournamentCounts.get(row.id) ?? 0,
       schoolAdminStaffing,
     };
   }) as unknown as AdminOrganizationRow[];
+}
+
+export async function getAdminOrgMembers({
+  orgId,
+  query = "",
+  limit = 25,
+  offset = 0,
+  role = "all",
+}: {
+  orgId: string;
+  query?: string;
+  limit?: number;
+  offset?: number;
+  role?: AdminOrgMemberRoleFilter;
+}): Promise<{
+  members: AdminOrgMemberRow[];
+  total: number;
+  error: string | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("search_org_members", {
+    p_org_id: orgId,
+    p_query: query,
+    p_limit: limit,
+    p_offset: offset,
+    p_role: role,
+  });
+  if (error) {
+    console.error("search_org_members failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    if (isMissingAdminRpc(error, "search_org_members")) {
+      return {
+        members: [],
+        total: 0,
+        error: "Member search is unavailable on this deployment.",
+      };
+    }
+    return {
+      members: [],
+      total: 0,
+      error: "Member search could not be loaded. Check the connection and try again.",
+    };
+  }
+  const members = ((data ?? []) as AdminOrgMemberRow[]).map((member) => ({
+    ...member,
+    total_count: Number(member.total_count ?? 0),
+  }));
+  return {
+    members,
+    total: Number(members[0]?.total_count ?? 0),
+    error: null,
+  };
 }
 
 function mapAdminDirectoryUsers(
