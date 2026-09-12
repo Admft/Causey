@@ -30,10 +30,12 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Coach Plan (`/me`) school/district mission nouns — 2026-09-11
+- Founder account experience editable on `/admin/users` — 2026-09-11
 
 ## Last tick
 
+- 2026-09-11 — Protected founder accounts on `/admin/users` are no longer fully read-only: account experience (student/parent/coach) can change for founders and for your own row; platform administration stays locked. Migration `0092`.
+- 2026-09-11 — After a staff claim link, Account no longer says Coach / Organizer for school/district memberships; `/orgs` shows School administrator / District administrator role labels, drops Start a club for institutional-only staff, and titles Your organizations. Account role stays `coach` under the hood.
 - 2026-09-11 — Coach Plan mission no longer says “club” when memberships are school or district; `staffPlanMissionFromTypes` matches `/orgs` chrome.
 - 2026-09-10 — `/clubs` leads with a sample workspace, season ledger, and season file; districts keep a matching office window.
 - 2026-09-09 — `/districts` closing CTA sits copy + Book on one row so the white card is not an empty lane.

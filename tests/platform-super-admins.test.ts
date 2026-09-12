@@ -55,6 +55,48 @@ describe("platform super-admin migration", () => {
   });
 });
 
+describe("founder account role edits", () => {
+  const sql = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/0092_founder_account_role_edits.sql"
+    ),
+    "utf8"
+  );
+  const form = readFileSync(
+    resolve(process.cwd(), "components/AdminUserAccessForm.tsx"),
+    "utf8"
+  );
+
+  it("lets founders change account experience without demoting platform admin", () => {
+    expect(sql).toContain("previous_super and not p_platform_admin");
+    expect(sql).toContain("p_profile_id = actor and privilege_changed");
+    expect(sql).toContain("cannot_modify_super_admin");
+    expect(sql).toContain("cannot_change_own_access");
+    expect(form).toContain("Account experience can change");
+    expect(form).toContain("platformAdminLocked");
+    expect(form).not.toContain("Your own access is read-only here");
+  });
+});
+
+describe("delete user missing review-table guard", () => {
+  const sql = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/0091_delete_user_missing_review_table.sql"
+    ),
+    "utf8"
+  );
+
+  it("skips organization_verification_reviews when the table was never applied", () => {
+    expect(sql).toContain(
+      "to_regclass('public.organization_verification_reviews')"
+    );
+    expect(sql).toContain("create or replace function public.delete_platform_user");
+    expect(sql).toContain("create or replace function public.delete_own_account");
+  });
+});
+
 describe("adminDeleteUser action", () => {
   beforeEach(() => {
     mocks.getPlatformAdminUser.mockReset();

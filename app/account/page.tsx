@@ -13,7 +13,6 @@ import { ProfileNotReady } from "@/components/ProfileNotReady";
 import { UnlinkChildButton } from "@/components/UnlinkChildButton";
 import { isCurrentUserPlatformAdmin } from "@/lib/auth/platform-admin";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
-import type { AccountRole } from "@/lib/auth/types";
 import { preferredDiscoveryHref } from "@/lib/category-discovery";
 import { getNotificationPreferences } from "@/lib/data/district";
 import {
@@ -24,9 +23,11 @@ import {
   type MyOrgRow,
 } from "@/lib/data/portal";
 import { canCreateOrg, isOrgAdmin } from "@/lib/org-permissions";
+import { ORG_ROLE_LABELS } from "@/lib/auth/orgs";
 import {
   SEARCH_TOURNAMENTS_LABEL,
   accountOrganizationsEmptyCta,
+  staffAccountPersonaLabel,
   studentOrgChromeFromTypes,
   workspaceOpenCta,
 } from "@/lib/portal-copy";
@@ -39,30 +40,12 @@ export const metadata: Metadata = {
     "Manage your Causey profile, sign-in, alert preferences, family links, and organizations.",
 };
 
-const ROLE_LABEL: Record<AccountRole, string> = {
-  student: "Student",
-  parent: "Parent",
-  coach: "Coach / Organizer",
-};
-
 function memberRoleLabel(row: MyOrgRow, userId: string): string {
   if (row.org.owner_profile_id === userId) return "Owner";
-  switch (row.memberRole) {
-    case "student":
-      return "Student";
-    case "assistant_coach":
-      return "Assistant coach";
-    case "coach":
-      return "Coach";
-    case "admin":
-      return "Admin";
-    case "school_admin":
-      return "School admin";
-    case "district_admin":
-      return "District admin";
-    default:
-      return "Member";
+  if (row.memberRole && row.memberRole in ORG_ROLE_LABELS) {
+    return ORG_ROLE_LABELS[row.memberRole];
   }
+  return "Member";
 }
 
 export default async function AccountPage() {
@@ -94,7 +77,6 @@ export default async function AccountPage() {
     isCurrentUserPlatformAdmin(),
   ]);
 
-  const roleLabel = ROLE_LABEL[profile.role];
   const hasDistrictAccess = myOrgs.some(
     (row) =>
       row.org.type === "district" || row.memberRole === "district_admin"
@@ -103,6 +85,11 @@ export default async function AccountPage() {
   const hasClubAccess = myOrgs.some(
     (row) => row.org.type === "club" || row.org.type === "team"
   );
+  const roleLabel = staffAccountPersonaLabel({
+    role: profile.role,
+    memberRoles: myOrgs.map((row) => row.memberRole),
+    orgTypes: myOrgs.map((row) => row.org.type),
+  });
   const workspace = workspaceOpenCta(profile.role, {
     hasDistrictAccess,
     hasSchoolAccess,
@@ -114,6 +101,7 @@ export default async function AccountPage() {
     role: profile.role,
     canCreate: canCreateOrg(profile),
     hasDistrictAccess,
+    hasSchoolAccess,
   });
   const studentOrgChrome = studentOrgChromeFromTypes(
     myOrgs.map((row) => row.org.type)
@@ -145,7 +133,11 @@ export default async function AccountPage() {
         Profile
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        {roleLabel} account (locked). Zip sets nearby tournament search
+        {roleLabel} account (locked)
+        {profile.role === "coach" && (hasSchoolAccess || hasDistrictAccess)
+          ? ". Organization roles on each workspace control what you can manage"
+          : ""}
+        . Zip sets nearby tournament search
         {profile.role === "student"
           ? "; coaches see name and age band on a roster, not your birth date"
           : ""}
@@ -364,10 +356,10 @@ export default async function AccountPage() {
               ? `Ask your coach for a join link, then open ${studentOrgChrome.heading.toLowerCase()} to finish joining.`
               : hasDistrictAccess
                 ? "District and school workspaces you administer appear here."
-                : canCreateOrg(profile)
-                  ? "Create a club or team workspace, or wait for a staff invitation claim link."
-                  : hasSchoolAccess && !hasClubAccess
-                    ? "Schools appear here after you join or claim a staff invitation."
+                : hasSchoolAccess
+                  ? "Schools appear here after you claim a staff invitation."
+                  : canCreateOrg(profile)
+                    ? "Create a club or team workspace, or wait for a staff invitation claim link."
                     : "Clubs appear here after you join or claim a staff invitation."
           }
           action={organizationsEmpty}

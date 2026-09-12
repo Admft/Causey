@@ -18,7 +18,9 @@ import {
 } from "@/lib/data/portal";
 import { canCreateOrg } from "@/lib/org-permissions";
 import { formatDateRange } from "@/lib/format";
+import { ORG_ROLE_LABELS } from "@/lib/auth/orgs";
 import {
+  offersClubSelfServe,
   staffOrgListChromeFromTypes,
   studentOrgChromeFromTypes,
 } from "@/lib/portal-copy";
@@ -29,8 +31,9 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your clubs",
-  description: "Clubs, teams, and schools you belong to on Causey, plus your invites.",
+  title: "Your organizations",
+  description:
+    "Districts, schools, clubs, and teams you belong to on Causey, plus your invites.",
 };
 
 const ORG_TYPE_LABEL: Record<string, string> = {
@@ -44,12 +47,10 @@ function staffRoleLabel(
   memberRole: string | null,
   isCoach: boolean
 ): string | null {
-  if (memberRole === "district_admin") return "district admin";
-  if (memberRole === "school_admin" || memberRole === "admin") {
-    return "admin";
+  if (memberRole && memberRole in ORG_ROLE_LABELS) {
+    return ORG_ROLE_LABELS[memberRole as keyof typeof ORG_ROLE_LABELS];
   }
-  if (memberRole === "assistant_coach") return "assistant coach";
-  if (memberRole === "coach" || isCoach) return "coach";
+  if (isCoach) return "Staff";
   return null;
 }
 
@@ -167,13 +168,15 @@ export default async function OrgsPage({
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/orgs");
   const profile = await getCurrentProfile();
-  const canStartOrganization = canCreateOrg(profile);
 
   const [myOrgs, entrantRows, recommendations] = await Promise.all([
     getMyOrgs(user.id),
     getMyEntrantRows(user.id),
     getMyRecommendations(user.id),
   ]);
+  const orgTypes = myOrgs.map(({ org }) => org.type);
+  const canStartOrganization =
+    canCreateOrg(profile) && offersClubSelfServe(orgTypes);
   const hasStaffMembership = myOrgs.some(({ isCoach }) => isCoach);
   const isStaffWorkspace =
     profile?.role === "coach" || hasStaffMembership;
@@ -229,12 +232,8 @@ export default async function OrgsPage({
   const primaryNeedsStudents = Boolean(
     primaryOrg && staffOrgsNeedingStudents.has(primaryOrg.org.id)
   );
-  const studentChrome = studentOrgChromeFromTypes(
-    myOrgs.map(({ org }) => org.type)
-  );
-  const staffChrome = staffOrgListChromeFromTypes(
-    myOrgs.map(({ org }) => org.type)
-  );
+  const studentChrome = studentOrgChromeFromTypes(orgTypes);
+  const staffChrome = staffOrgListChromeFromTypes(orgTypes);
 
   const invitationsSection = (
     <section id="rsvps" className="mt-10 scroll-mt-24">

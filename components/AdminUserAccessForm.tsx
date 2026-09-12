@@ -27,29 +27,46 @@ export function AdminUserAccessForm({
   ) => void;
 }) {
   const [accountRole, setAccountRole] = useState(user.account_role);
-  const [platformAdmin, setPlatformAdmin] = useState(user.platform_admin);
+  const [platformAdmin, setPlatformAdmin] = useState(
+    user.super_admin ? true : user.platform_admin
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const platformAdminLocked = user.super_admin || isSelf;
+  const lockedPlatformAdmin = user.super_admin
+    ? true
+    : user.platform_admin;
+
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (isSelf || user.super_admin) return;
 
-    const privilegeChanged =
-      platformAdmin !== user.platform_admin ||
-      accountRole !== user.account_role;
-    if (!privilegeChanged) {
+    const nextPlatformAdmin = platformAdminLocked
+      ? lockedPlatformAdmin
+      : platformAdmin;
+
+    const privilegeChanged = nextPlatformAdmin !== user.platform_admin;
+    const roleChanged = accountRole !== user.account_role;
+    if (!privilegeChanged && !roleChanged) {
       setMessage("No access changes to save.");
       return;
     }
 
-    const warning =
-      platformAdmin !== user.platform_admin
-        ? platformAdmin
-          ? "Platform admin grants access to every Causey account and administration surface."
-          : "This removes platform-wide administration from the account."
-        : "This changes which account workspace the person uses.";
+    if (platformAdminLocked && privilegeChanged) {
+      setError(
+        user.super_admin
+          ? "Protected founder accounts keep platform administration."
+          : "Use another platform administrator to change your platform access."
+      );
+      return;
+    }
+
+    const warning = privilegeChanged
+      ? nextPlatformAdmin
+        ? "Platform admin grants access to every Causey account and administration surface."
+        : "This removes platform-wide administration from the account."
+      : "This changes which account workspace the person uses.";
     if (!window.confirm(`${warning} Save this access change?`)) return;
 
     setMessage(null);
@@ -59,37 +76,32 @@ export function AdminUserAccessForm({
         adminUpdateUserAccess({
           profileId: user.profile_id,
           accountRole,
-          platformAdmin,
+          platformAdmin: nextPlatformAdmin,
         })
       );
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      onUpdated?.(accountRole, platformAdmin);
+      onUpdated?.(accountRole, nextPlatformAdmin);
       setMessage("Access updated and added to the admin audit log.");
     });
   }
 
-  if (isSelf) {
-    return (
-      <p className="text-xs text-muted">
-        Your own access is read-only here. Another platform administrator must
-        change it.
-      </p>
-    );
-  }
-
-  if (user.super_admin) {
-    return (
-      <p className="text-xs text-muted">
-        Protected founder account. Access cannot be changed or removed here.
-      </p>
-    );
-  }
-
   return (
     <form onSubmit={submit} className="mt-4 grid gap-4">
+      {user.super_admin ? (
+        <p className="text-xs text-muted">
+          Protected founder account. Account experience can change; platform
+          administration stays on and cannot be removed here.
+        </p>
+      ) : isSelf ? (
+        <p className="text-xs text-muted">
+          You can change your account experience here. Another platform
+          administrator must change your platform access.
+        </p>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <label>
           <span className="text-xs font-semibold text-muted-strong">
@@ -116,9 +128,11 @@ export function AdminUserAccessForm({
         <label className="flex items-start gap-3 rounded-xl border border-line bg-surface-soft p-4">
           <input
             type="checkbox"
-            checked={platformAdmin}
+            checked={platformAdminLocked ? lockedPlatformAdmin : platformAdmin}
             onChange={() => setPlatformAdmin((current) => !current)}
-            disabled={isPending || !canGrantPlatformAdmin}
+            disabled={
+              isPending || platformAdminLocked || !canGrantPlatformAdmin
+            }
             className="mt-1 size-4 accent-[var(--brand-red)]"
           />
           <span>
@@ -126,9 +140,13 @@ export function AdminUserAccessForm({
               Platform administrator
             </span>
             <span className="mt-1 block text-xs text-muted">
-              {canGrantPlatformAdmin
-                ? "Full access to users, moderation, organizations, and tournaments."
-                : "Only a founder super-admin can grant or remove this."}
+              {user.super_admin
+                ? "Founder accounts keep this permanently."
+                : isSelf
+                  ? "Another platform administrator must change this."
+                  : canGrantPlatformAdmin
+                    ? "Full access to users, moderation, organizations, and tournaments."
+                    : "Only a founder super-admin can grant or remove this."}
             </span>
           </span>
         </label>

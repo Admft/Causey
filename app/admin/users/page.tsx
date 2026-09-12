@@ -55,11 +55,12 @@ export default async function AdminUsersPage({
         Users &amp; access
       </h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        Search every Causey account by display name or email. Platform access
-        changes are confirmed, audited, and cannot be applied to your own
-        account from this page. Founder super-admins can also delete accounts
-        after typing the email. Organization membership can also be granted or
-        repaired here when a claim link is blocked.
+        Search every Causey account by display name or email. Account experience
+        changes are confirmed and audited, including founder accounts and your
+        own. Platform administration on your own account or a founder account
+        stays locked here. Founder super-admins can also delete non-founder
+        accounts after typing the email. Organization membership can be granted
+        or repaired when a claim link is blocked.
       </p>
 
       <div className="mt-8">
