@@ -80,20 +80,38 @@ describe("founder account role edits", () => {
 });
 
 describe("delete user missing review-table guard", () => {
-  const sql = readFileSync(
+  const sql0091 = readFileSync(
     resolve(
       process.cwd(),
       "supabase/migrations/0091_delete_user_missing_review_table.sql"
     ),
     "utf8"
   );
+  const sql0093 = readFileSync(
+    resolve(
+      process.cwd(),
+      "supabase/migrations/0093_delete_own_account_nested_review_guard.sql"
+    ),
+    "utf8"
+  );
 
   it("skips organization_verification_reviews when the table was never applied", () => {
-    expect(sql).toContain(
+    expect(sql0091).toContain(
       "to_regclass('public.organization_verification_reviews')"
     );
-    expect(sql).toContain("create or replace function public.delete_platform_user");
-    expect(sql).toContain("create or replace function public.delete_own_account");
+    expect(sql0091).toContain("create or replace function public.delete_platform_user");
+    expect(sql0091).toContain("create or replace function public.delete_own_account");
+  });
+
+  it("nests the review-history check so a missing table does not fail planning", () => {
+    expect(sql0093).toContain("create or replace function public.delete_own_account");
+    expect(sql0093).toContain(
+      "if to_regclass('public.organization_verification_reviews') is not null then"
+    );
+    expect(sql0093).toContain("into has_review_history");
+    expect(sql0093).not.toMatch(
+      /to_regclass\('public\.organization_verification_reviews'\) is not null\s+and exists/s
+    );
   });
 });
 
