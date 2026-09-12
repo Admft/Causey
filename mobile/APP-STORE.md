@@ -17,12 +17,14 @@ sees a broken app and rejects under Guideline 2.1.
    `/api/mobile/join`, `/api/mobile/results`, `/api/mobile/rating`,
    `/api/mobile/club-going`, `/api/mobile/event-attendance`, and
    `/api/competitions`. On mock data the reviewer's account resolves to nothing.
-2. **Supabase keys are set on the EAS build profile.** `eas.json` pins
-   `EXPO_PUBLIC_CAUSEY_API_URL`, but the two Supabase values are not committed:
+2. **Supabase keys and the public hCaptcha sitekey are set on the EAS build
+   profile.** `eas.json` pins `EXPO_PUBLIC_CAUSEY_API_URL`, but the auth values
+   are not committed:
 
    ```bash
    eas env:create --name EXPO_PUBLIC_SUPABASE_URL --scope project --visibility plaintext
    eas env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --scope project --visibility plaintext
+   eas env:create --name EXPO_PUBLIC_HCAPTCHA_SITE_KEY --scope project --visibility plaintext
    ```
 
    Without them the app builds fine and then refuses every sign-in. Verify with

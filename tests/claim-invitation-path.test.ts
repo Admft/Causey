@@ -79,6 +79,10 @@ describe("claim invitation path helpers", () => {
       resolve(process.cwd(), "components/OrganizationPeopleManager.tsx"),
       "utf8"
     );
+    const peoplePage = readFileSync(
+      resolve(process.cwd(), "app/orgs/[slug]/people/page.tsx"),
+      "utf8"
+    );
     const loginPage = readFileSync(
       resolve(process.cwd(), "app/login/page.tsx"),
       "utf8"
@@ -96,6 +100,11 @@ describe("claim invitation path helpers", () => {
     expect(peopleManager).toContain("Copy all claim links");
     expect(peopleManager).toContain("Copy code");
     expect(peopleManager).toContain("type the code at /claim");
+    // District People defaults to office admin, not Coach (hollow first session).
+    expect(peopleManager).toContain('orgType === "district" ? "district_admin"');
+    expect(peopleManager).toContain("Office access: schools, people, reports");
+    expect(peoplePage).toContain('isSchoolAdminSetup || needsSchoolAdminHandoff');
+    expect(peoplePage).toContain('"district_admin"');
     expect(loginPage).toContain("getInvitationPreviewForClaimPath");
     expect(loginPage).toContain("Create staff account");
   });

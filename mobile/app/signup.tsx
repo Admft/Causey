@@ -1,7 +1,12 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useAuth, type MobileSignupRole } from "../src/auth";
+import {
+  MOBILE_CAPTCHA_ERROR,
+  MobileCaptcha,
+  type MobileCaptchaHandle,
+} from "../src/MobileCaptcha";
 import { openExternalUrl } from "../src/open-url";
 import { siteUrl } from "../src/theme";
 import {
@@ -45,6 +50,7 @@ export default function SignupScreen() {
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const captchaRef = useRef<MobileCaptchaHandle | null>(null);
 
   const canSubmit = Boolean(
     displayName.trim() && email.trim() && password.length >= 8
@@ -53,21 +59,36 @@ export default function SignupScreen() {
   async function onSubmit() {
     setBusy(true);
     setError(null);
-    const result = await signUp({ role, displayName, email, password, zip });
-    setBusy(false);
-    if (!result.ok) {
-      if (result.error.startsWith("An account for that email already exists")) {
-        setAlreadyRegistered(true);
+    try {
+      const captchaToken = await captchaRef.current?.verify();
+      const result = await signUp({
+        role,
+        displayName,
+        email,
+        password,
+        zip,
+        captchaToken,
+      });
+      if (!result.ok) {
+        if (
+          result.error.startsWith("An account for that email already exists")
+        ) {
+          setAlreadyRegistered(true);
+          return;
+        }
+        setError(result.error);
         return;
       }
-      setError(result.error);
-      return;
+      if (result.needsEmailConfirmation) {
+        setConfirmSent(true);
+        return;
+      }
+      router.replace("/");
+    } catch {
+      setError(MOBILE_CAPTCHA_ERROR);
+    } finally {
+      setBusy(false);
     }
-    if (result.needsEmailConfirmation) {
-      setConfirmSent(true);
-      return;
-    }
-    router.replace("/");
   }
 
   if (alreadyRegistered) {
@@ -202,6 +223,7 @@ export default function SignupScreen() {
           onPress={() => router.replace("/login")}
         />
       </Screen>
+      <MobileCaptcha ref={captchaRef} />
     </KeyboardAvoidingView>
   );
 }

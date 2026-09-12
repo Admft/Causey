@@ -14,8 +14,8 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
-      "style-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://hcaptcha.com https://*.hcaptcha.com${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
+      "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com",
       // HTTPS: scraped chess covers live on organizer hosts (US Chess, TCA,
       // CCA, etc.). Restricting to *.supabase.co hides those photos; cards
       // then drop the image on error. Keep scripts/connect locked down.
@@ -23,7 +23,8 @@ const securityHeaders = [
       "font-src 'self'",
       // Production page views go same-origin (/_vercel/insights). Local
       // debug and fallback ingest use Vercel's analytics hosts.
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://va.vercel-scripts.com https://vitals.vercel-insights.com https://hcaptcha.com https://*.hcaptcha.com",
+      "frame-src https://hcaptcha.com https://*.hcaptcha.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

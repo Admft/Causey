@@ -1,7 +1,12 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useAuth } from "../src/auth";
+import {
+  MOBILE_CAPTCHA_ERROR,
+  MobileCaptcha,
+  type MobileCaptchaHandle,
+} from "../src/MobileCaptcha";
 import {
   ErrorText,
   Field,
@@ -20,14 +25,21 @@ export default function ForgotPasswordScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const captchaRef = useRef<MobileCaptchaHandle | null>(null);
 
   async function onSubmit() {
     setBusy(true);
     setError(null);
-    const message = await sendPasswordReset(email);
-    setBusy(false);
-    if (message) setError(message);
-    else setSent(true);
+    try {
+      const captchaToken = await captchaRef.current?.verify();
+      const message = await sendPasswordReset(email, captchaToken);
+      if (message) setError(message);
+      else setSent(true);
+    } catch {
+      setError(MOBILE_CAPTCHA_ERROR);
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (sent) {
@@ -80,6 +92,7 @@ export default function ForgotPasswordScreen() {
           onPress={() => router.replace("/login")}
         />
       </Screen>
+      <MobileCaptcha ref={captchaRef} />
     </KeyboardAvoidingView>
   );
 }

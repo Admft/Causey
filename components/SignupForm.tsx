@@ -22,8 +22,16 @@ import {
   type DiscoveryCategory,
 } from "@/lib/category-discovery";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
+import {
+  AUTH_CAPTCHA_ENABLED,
+  AuthCaptcha,
+  CAPTCHA_REQUIRED_MESSAGE,
+} from "@/components/AuthCaptcha";
 import { PasswordField } from "@/components/PasswordField";
-import { ZipCaptureField } from "@/components/ZipCaptureField";
+import {
+  UseLocationControl,
+  ZipCaptureField,
+} from "@/components/ZipCaptureField";
 import {
   WEAK_PASSWORD_MESSAGE,
   isPasswordAcceptable,
@@ -68,6 +76,7 @@ const SAFE_SIGNUP_ERRORS = new Set([
   "Enter a valid date of birth.",
   "Date of birth can’t be in the future.",
   "Zip must be 5 digits.",
+  CAPTCHA_REQUIRED_MESSAGE,
   "That action is happening too often. Wait a minute and try again.",
 ]);
 
@@ -113,6 +122,8 @@ export function SignupForm({
   const [resendState, setResendState] = useState<
     "idle" | "pending" | "sent" | "error"
   >("idle");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaVersion, setCaptchaVersion] = useState(0);
 
   const derivedBand = useMemo((): AgeBand | null => {
     if (!dateOfBirth || !parseDateOnly(dateOfBirth)) return null;
@@ -152,6 +163,9 @@ export function SignupForm({
       if (zip && !/^\d{5}$/.test(zip)) {
         throw new Error("Zip must be 5 digits.");
       }
+      if (AUTH_CAPTCHA_ENABLED && !captchaToken) {
+        throw new Error(CAPTCHA_REQUIRED_MESSAGE);
+      }
 
       const selectedInterests = DISCOVERY_CATEGORIES.filter((category) =>
         interests.has(category.id)
@@ -170,6 +184,7 @@ export function SignupForm({
         password,
         options: {
           emailRedirectTo: callbackUrl.toString(),
+          captchaToken: captchaToken ?? undefined,
           data: {
             role,
             display_name: displayName.trim(),
@@ -211,6 +226,8 @@ export function SignupForm({
       }
     } finally {
       setPending(false);
+      setCaptchaToken(null);
+      setCaptchaVersion((current) => current + 1);
     }
   }
 
@@ -281,11 +298,22 @@ export function SignupForm({
               ? "continue where you left off."
               : roleCopy.confirmationNext}
         </p>
+        <div className="mt-5">
+          <AuthCaptcha
+            key={captchaVersion}
+            onTokenChange={setCaptchaToken}
+          />
+        </div>
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <button
             type="button"
-            disabled={resendState === "pending" || resendState === "sent"}
+            disabled={
+              resendState === "pending" ||
+              resendState === "sent" ||
+              (AUTH_CAPTCHA_ENABLED && !captchaToken)
+            }
             onClick={async () => {
+              if (AUTH_CAPTCHA_ENABLED && !captchaToken) return;
               setResendState("pending");
               try {
                 const supabase = createBrowserSupabaseClient();
@@ -297,11 +325,17 @@ export function SignupForm({
                 const { error: resendError } = await supabase.auth.resend({
                   type: "signup",
                   email: email.trim(),
-                  options: { emailRedirectTo: callbackUrl.toString() },
+                  options: {
+                    emailRedirectTo: callbackUrl.toString(),
+                    captchaToken: captchaToken ?? undefined,
+                  },
                 });
                 setResendState(resendError ? "error" : "sent");
               } catch {
                 setResendState("error");
+              } finally {
+                setCaptchaToken(null);
+                setCaptchaVersion((current) => current + 1);
               }
             }}
             className="action-button"
@@ -412,7 +446,11 @@ export function SignupForm({
             onChange={(e) => setDisplayName(e.target.value)}
             autoComplete="name"
           />
-          <span className="text-2xs text-muted">{roleCopy.nameHelp}</span>
+          <span className="text-2xs text-muted">
+            {invitation && invitation.accountRole === "coach"
+              ? `Use the name ${invitation.orgName} staff will recognize.`
+              : roleCopy.nameHelp}
+          </span>
         </label>
         <label className="flex flex-col gap-1 sm:col-span-2">
           <span className="text-xs font-semibold text-muted-strong">Email</span>
@@ -472,9 +510,15 @@ export function SignupForm({
             </span>
           </label>
         ) : null}
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-semibold text-muted-strong">State</span>
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="signup-state"
+            className="text-xs font-semibold text-muted-strong"
+          >
+            State
+          </label>
           <select
+            id="signup-state"
             className="field"
             value={state}
             onChange={(e) => setState(e.target.value)}
@@ -486,12 +530,20 @@ export function SignupForm({
               </option>
             ))}
           </select>
-        </label>
+          <UseLocationControl
+            id="signup-location"
+            onLocated={({ zip: locatedZip, state: locatedState }) => {
+              setZip(locatedZip);
+              if (locatedState) setState(locatedState);
+            }}
+          />
+        </div>
         <ZipCaptureField
           id="signup-zip"
           value={zip}
           onChange={setZip}
           helper="Nearby search uses this zip. Optional — you can add it after you confirm email."
+          showLocationControl={false}
         />
       </div>
 
@@ -545,6 +597,11 @@ export function SignupForm({
           })}
         </div>
       </fieldset>
+
+      <AuthCaptcha
+        key={captchaVersion}
+        onTokenChange={setCaptchaToken}
+      />
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">

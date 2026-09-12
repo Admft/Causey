@@ -35,6 +35,7 @@ export type SignUpInput = {
   displayName: string;
   role: MobileSignupRole;
   zip: string;
+  captchaToken?: string | null;
 };
 
 export type SignUpOutcome =
@@ -50,9 +51,16 @@ type AuthValue = {
   profile: PublicProfile | null;
   access: MobileAccess | null;
   error: string | null;
-  signIn: (email: string, password: string) => Promise<string | null>;
+  signIn: (
+    email: string,
+    password: string,
+    captchaToken?: string | null
+  ) => Promise<string | null>;
   signUp: (input: SignUpInput) => Promise<SignUpOutcome>;
-  sendPasswordReset: (email: string) => Promise<string | null>;
+  sendPasswordReset: (
+    email: string,
+    captchaToken?: string | null
+  ) => Promise<string | null>;
   deleteAccount: (confirmationEmail: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshMe: () => Promise<void>;
@@ -135,18 +143,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     lastUserId.current = session?.user.id ?? null;
   }, [session?.user.id]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    if (!supabaseConfigured) return NOT_CONFIGURED;
-    setError(null);
-    const { error: signError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    if (signError?.message.toLowerCase().includes("invalid login credentials")) {
-      return "Email or password is incorrect. Reset your password or create an account if you’re new to Causey.";
-    }
-    return signError?.message ?? null;
-  }, []);
+  const signIn = useCallback(
+    async (
+      email: string,
+      password: string,
+      captchaToken?: string | null
+    ) => {
+      if (!supabaseConfigured) return NOT_CONFIGURED;
+      setError(null);
+      const { error: signError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+        options: { captchaToken: captchaToken ?? undefined },
+      });
+      if (
+        signError?.message.toLowerCase().includes("invalid login credentials")
+      ) {
+        return "Email or password is incorrect. Reset your password or create an account if you’re new to Causey.";
+      }
+      return signError?.message ?? null;
+    },
+    []
+  );
 
   const signUp = useCallback(
     async (input: SignUpInput): Promise<SignUpOutcome> => {
@@ -157,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password: input.password,
         options: {
           emailRedirectTo: `${siteUrl}/auth/callback`,
+          captchaToken: input.captchaToken ?? undefined,
           data: {
             role: input.role,
             display_name: input.displayName.trim(),
@@ -201,16 +220,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const sendPasswordReset = useCallback(async (email: string) => {
-    if (!supabaseConfigured) return NOT_CONFIGURED;
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-      email.trim(),
-      { redirectTo: `${siteUrl}/auth/callback?next=/reset-password` }
-    );
-    return resetError
-      ? "Could not send the reset link. Check your connection and try again."
-      : null;
-  }, []);
+  const sendPasswordReset = useCallback(
+    async (email: string, captchaToken?: string | null) => {
+      if (!supabaseConfigured) return NOT_CONFIGURED;
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        {
+          redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+          captchaToken: captchaToken ?? undefined,
+        }
+      );
+      return resetError
+        ? "Could not send the reset link. Check your connection and try again."
+        : null;
+    },
+    []
+  );
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();

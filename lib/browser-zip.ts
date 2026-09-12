@@ -13,7 +13,7 @@ function geolocationAllowedByPolicy(): boolean {
 }
 
 export async function requestNearestZip(): Promise<
-  { ok: true; zip: string } | { ok: false; error: string }
+  { ok: true; zip: string; state: string | null } | { ok: false; error: string }
 > {
   if (typeof window === "undefined" || !navigator.geolocation) {
     return {
@@ -74,7 +74,7 @@ export async function requestNearestZip(): Promise<
     };
   }
   const payload = (await response.json().catch(() => null)) as
-    | { zip?: string; error?: string }
+    | { zip?: string; state?: string | null; error?: string }
     | null;
   if (!response.ok || !payload?.zip || !/^\d{5}$/.test(payload.zip)) {
     return {
@@ -84,5 +84,7 @@ export async function requestNearestZip(): Promise<
         "Could not match that location to a zip. Type it instead.",
     };
   }
-  return { ok: true, zip: payload.zip };
+  const state =
+    payload.state && /^[A-Z]{2}$/.test(payload.state) ? payload.state : null;
+  return { ok: true, zip: payload.zip, state };
 }

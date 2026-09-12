@@ -31,7 +31,7 @@ From the repo root, keep `npm run dev` running for `/api/mobile/*`.
 ```bash
 cd mobile
 cp .env.example .env
-# Copy NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY from the web .env
+# Copy the Supabase values and hCaptcha sitekey from the web environment
 npm start
 ```
 

@@ -6,6 +6,11 @@ import { FormEvent, useState } from "react";
 import { homePathForRole } from "@/lib/auth/home-path";
 import type { AccountRole } from "@/lib/auth/types";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import {
+  AUTH_CAPTCHA_ENABLED,
+  AuthCaptcha,
+  CAPTCHA_REQUIRED_MESSAGE,
+} from "@/components/AuthCaptcha";
 import { PasswordField } from "@/components/PasswordField";
 
 export function LoginForm({
@@ -34,6 +39,8 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaVersion, setCaptchaVersion] = useState(0);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -43,10 +50,14 @@ export function LoginForm({
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
         throw new Error("Account sign-in is unavailable in this build.");
       }
+      if (AUTH_CAPTCHA_ENABLED && !captchaToken) {
+        throw new Error(CAPTCHA_REQUIRED_MESSAGE);
+      }
       const supabase = createBrowserSupabaseClient();
       const { error: signError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
+        options: { captchaToken: captchaToken ?? undefined },
       });
       if (signError) throw signError;
 
@@ -73,6 +84,11 @@ export function LoginForm({
       const message = err instanceof Error ? err.message : "";
       if (message === "Account sign-in is unavailable in this build.") {
         setError(message);
+      } else if (
+        message === CAPTCHA_REQUIRED_MESSAGE ||
+        message.toLowerCase().includes("captcha")
+      ) {
+        setError("Complete the security check again.");
       } else if (message.toLowerCase().includes("invalid login credentials")) {
         setError(
           "Email or password is incorrect. Reset your password or create an account if you’re new to Causey."
@@ -85,6 +101,8 @@ export function LoginForm({
       }
     } finally {
       setPending(false);
+      setCaptchaToken(null);
+      setCaptchaVersion((current) => current + 1);
     }
   }
 
@@ -116,6 +134,11 @@ export function LoginForm({
           Forgot password?
         </Link>
       </div>
+
+      <AuthCaptcha
+        key={captchaVersion}
+        onTokenChange={setCaptchaToken}
+      />
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">

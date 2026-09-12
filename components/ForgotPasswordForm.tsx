@@ -3,12 +3,19 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import {
+  AUTH_CAPTCHA_ENABLED,
+  AuthCaptcha,
+  CAPTCHA_REQUIRED_MESSAGE,
+} from "@/components/AuthCaptcha";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaVersion, setCaptchaVersion] = useState(0);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -18,25 +25,34 @@ export function ForgotPasswordForm() {
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
         throw new Error("Account recovery is unavailable in this build.");
       }
+      if (AUTH_CAPTCHA_ENABLED && !captchaToken) {
+        throw new Error(CAPTCHA_REQUIRED_MESSAGE);
+      }
       const supabase = createBrowserSupabaseClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
         {
           redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+          captchaToken: captchaToken ?? undefined,
         }
       );
       if (resetError) throw resetError;
       setDone(true);
     } catch (err) {
       console.error("Password reset request failed:", err);
+      const message = err instanceof Error ? err.message : "";
       setError(
-        err instanceof Error &&
-          err.message === "Account recovery is unavailable in this build."
-          ? err.message
-          : "Could not send the reset link. Check your connection and try again."
+        message === "Account recovery is unavailable in this build."
+          ? message
+          : message === CAPTCHA_REQUIRED_MESSAGE ||
+              message.toLowerCase().includes("captcha")
+            ? "Complete the security check again."
+            : "Could not send the reset link. Check your connection and try again."
       );
     } finally {
       setPending(false);
+      setCaptchaToken(null);
+      setCaptchaVersion((current) => current + 1);
     }
   }
 
@@ -68,6 +84,10 @@ export function ForgotPasswordForm() {
           autoComplete="email"
         />
       </label>
+      <AuthCaptcha
+        key={captchaVersion}
+        onTokenChange={setCaptchaToken}
+      />
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">
           {error}

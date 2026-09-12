@@ -1,7 +1,12 @@
 import { Redirect, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useAuth } from "../src/auth";
+import {
+  MOBILE_CAPTCHA_ERROR,
+  MobileCaptcha,
+  type MobileCaptchaHandle,
+} from "../src/MobileCaptcha";
 import { openExternalUrl } from "../src/open-url";
 import { siteUrl } from "../src/theme";
 import {
@@ -21,6 +26,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const captchaRef = useRef<MobileCaptchaHandle | null>(null);
 
   if (session && access?.allowed === false) return <Redirect href="/blocked" />;
   // "/" resolves the role's own home once the profile lands, and shows the
@@ -31,10 +37,16 @@ export default function LoginScreen() {
   async function onSubmit() {
     setBusy(true);
     setError(null);
-    const message = await signIn(email, password);
-    setBusy(false);
-    if (message) setError(message);
-    else router.replace("/");
+    try {
+      const captchaToken = await captchaRef.current?.verify();
+      const message = await signIn(email, password, captchaToken);
+      if (message) setError(message);
+      else router.replace("/");
+    } catch {
+      setError(MOBILE_CAPTCHA_ERROR);
+    } finally {
+      setBusy(false);
+    }
   }
 
   const canSubmit = Boolean(email.trim() && password);
@@ -104,6 +116,7 @@ export default function LoginScreen() {
           onPress={() => router.replace("/search")}
         />
       </Screen>
+      <MobileCaptcha ref={captchaRef} />
     </KeyboardAvoidingView>
   );
 }

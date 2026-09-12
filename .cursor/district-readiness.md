@@ -167,9 +167,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 21. **P1 · Claimed staff account still brands as coach · S · shipped 2026-09-11**  
    Surface: Account uses `staffAccountPersonaLabel` (School staff / District staff) instead of Coach / Organizer when memberships are institutional; `/orgs` shows `ORG_ROLE_LABELS`, hides Start a club for school/district-only staff, and titles Your organizations. Under the hood the account role remains `coach`.
 
+22. **P1 · People invite defaults created hollow district staff · S · shipped 2026-09-11**  
+   Surface: District People defaults to District administrator (not Coach); school-admin setup keeps School administrator even when a pending invite already exists; role help names office vs competition-only access; district Competitions empty state no longer says “invite your roster”; claim signup name help uses the org name for staff invitations.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules.
+Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules. Remaining code-path nits: settings website help still says “club overview”; Account “Create another club” for institutional-only staff; district `/orgs` listHeading still names clubs.
 
 ### Out-of-scope refusals this pass
 

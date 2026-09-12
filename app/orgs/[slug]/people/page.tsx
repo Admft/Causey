@@ -258,7 +258,11 @@ export default async function OrganizationPeoplePage({
             invitations={invitations}
             rosterHref={isDistrict ? undefined : rosterHref}
             defaultRole={
-              needsSchoolAdminHandoff ? "school_admin" : undefined
+              isSchoolAdminSetup || needsSchoolAdminHandoff
+                ? "school_admin"
+                : isDistrict
+                  ? "district_admin"
+                  : undefined
             }
           />
         </section>

@@ -73,6 +73,36 @@ function canReissueInvitation(invitation: OrgInvitationRow): boolean {
   return invitation.status === "revoked" || invitation.status === "expired";
 }
 
+function inviteRoleHelp(orgType: string, role: OrgMemberRole): string {
+  if (orgType === "district") {
+    if (role === "district_admin") {
+      return "Office access: schools, people, reports, and activity.";
+    }
+    if (role === "coach") {
+      return "Competition ops only — no district office tabs after they claim.";
+    }
+    if (role === "assistant_coach") {
+      return "Read-only competition help — no district office tabs.";
+    }
+    return "District offices invite administrators or coaches here, not students.";
+  }
+  if (orgType === "school") {
+    if (role === "school_admin") {
+      return "Day-to-day school settings, roster, and staff.";
+    }
+    if (role === "coach") {
+      return "Runs competitions and invites students.";
+    }
+    if (role === "assistant_coach") {
+      return "Read-only help on competitions and roster.";
+    }
+    if (role === "student") {
+      return "Prefer the roster join link for most students.";
+    }
+  }
+  return "";
+}
+
 function claimsToCsv(claims: BulkInviteClaimRow[]): string {
   const header = "email,role,claim_path,expires_at";
   const rows = claims.map((claim) => {
@@ -102,9 +132,17 @@ export function OrganizationPeopleManager({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<OrgMemberRole>(
-    defaultRole ?? (orgType === "district" ? "coach" : "student")
-  );
+  const [role, setRole] = useState<OrgMemberRole>(() => {
+    // District office invites should open the office (schools/reports/activity),
+    // not Coach — coaches only keep Overview + Competitions after claim.
+    const preferred =
+      defaultRole ?? (orgType === "district" ? "district_admin" : "student");
+    return invitationRoleFitsOrganization(orgType, preferred)
+      ? preferred
+      : orgType === "district"
+        ? "district_admin"
+        : "student";
+  });
   const [csv, setCsv] = useState("");
   const [filename, setFilename] = useState("");
   const [pending, setPending] = useState<"single" | "bulk" | string | null>(
@@ -385,6 +423,11 @@ export function OrganizationPeopleManager({
                 </option>
               ))}
             </select>
+            {inviteRoleHelp(orgType, role) ? (
+              <span className="mt-1 block text-2xs text-muted">
+                {inviteRoleHelp(orgType, role)}
+              </span>
+            ) : null}
           </label>
           <button
             type="submit"

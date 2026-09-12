@@ -9,6 +9,7 @@ import {
   isPlausibleUsCoordinate,
   nearestZipFromCoords,
 } from "@/lib/nearest-zip";
+import { stateForZip } from "@/lib/zip-state";
 import { getDataSource } from "@/lib/data";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
-    return NextResponse.json({ zip });
+    return NextResponse.json({ zip, state: stateForZip(zip) });
   }
 
   const sample = zipsJson as Array<{ zip: string; lat: number; lng: number }>;
@@ -91,5 +92,5 @@ export async function POST(request: NextRequest) {
       { status: 404 }
     );
   }
-  return NextResponse.json({ zip });
+  return NextResponse.json({ zip, state: stateForZip(zip) });
 }

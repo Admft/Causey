@@ -258,7 +258,9 @@ export default async function OrgCompetitionsPage({
                   : view.canManageTournaments
                     ? view.org.type === "club" || view.org.type === "team"
                       ? "Find a public tournament for the roster, or host one here."
-                      : "Create a competition, choose who can see it, then invite your roster."
+                      : view.org.type === "district"
+                        ? "Host a district-wide competition, or open a school workspace to invite students from connected schools."
+                        : "Create a competition, choose who can see it, then invite your roster."
                     : "Competitions you can view will appear here after staff publish them."
               }
               action={
