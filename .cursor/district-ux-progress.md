@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Phone/Settings Delete account no longer fails with “needs a database update” when `organization_verification_reviews` was never applied — nested `to_regclass` guard in `delete_own_account` (`0093`, applied on live Supabase) — 2026-09-12
 - [x] Founder/own accounts on `/admin/users` can change account experience (student/parent/coach); platform admin stays locked for self and founders (`0092`) — 2026-09-11
 - [x] Super-admin can permanently delete a district (type `DELETE {slug}`) including child schools and hosted competitions (`0090`) — 2026-09-11
 - [x] Claimed school/district staff accounts brand as Staff on Account (not Coach / Organizer); `/orgs` uses organization role labels, drops club self-serve for institutional-only memberships, and titles “Your organizations” — 2026-09-11
