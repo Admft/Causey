@@ -1,7 +1,13 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import {
+  AUTH_CAPTCHA_ENABLED,
+  AuthCaptcha,
+  CAPTCHA_REQUIRED_MESSAGE,
+} from "@/components/AuthCaptcha";
 import { submitSupportReport } from "@/lib/actions/support";
+import { attemptAction } from "@/lib/attempt-action";
 import {
   SUPPORT_ATTACHMENT_ACCEPT,
   SUPPORT_REPORT_MAX_BODY,
@@ -9,18 +15,24 @@ import {
 
 export function SupportReportForm({
   initialEmail,
+  signedIn = false,
 }: {
   initialEmail: string;
+  signedIn?: boolean;
 }) {
   const [email, setEmail] = useState(initialEmail);
   const [body, setBody] = useState("");
   const [pageLabel, setPageLabel] = useState("");
+  const [website, setWebsite] = useState("");
   const [screenshotName, setScreenshotName] = useState<string | null>(null);
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaVersion, setCaptchaVersion] = useState(0);
+  const captchaRequired = AUTH_CAPTCHA_ENABLED && !signedIn;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,21 +40,34 @@ export function SupportReportForm({
     setError(null);
     setSuccess(null);
     try {
-      const result = await submitSupportReport({
-        body,
-        email,
-        pageLabel,
-        screenshot,
-      });
+      if (captchaRequired && !captchaToken) {
+        setError(CAPTCHA_REQUIRED_MESSAGE);
+        return;
+      }
+      const result = await attemptAction(() =>
+        submitSupportReport({
+          body,
+          email,
+          pageLabel,
+          screenshot,
+          website,
+          captchaToken,
+        })
+      );
       if (!result.ok) {
         setError(result.error);
+        setCaptchaToken(null);
+        setCaptchaVersion((current) => current + 1);
         return;
       }
       setBody("");
       setPageLabel("");
+      setWebsite("");
       setScreenshot(null);
       setScreenshotName(null);
       setFileKey((current) => current + 1);
+      setCaptchaToken(null);
+      setCaptchaVersion((current) => current + 1);
       setSuccess(
         result.emailConfigured
           ? "Saved. The founding team gets this by email. If you have a Causey account, replies also show in Alerts."
@@ -56,7 +81,24 @@ export function SupportReportForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4">
+    <form onSubmit={submit} className="relative flex flex-col gap-4">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-[10000px] h-px w-px overflow-hidden"
+      >
+        <label>
+          Website
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+          />
+        </label>
+      </div>
+
       <label className="flex flex-col gap-1">
         <span className="text-xs font-semibold text-muted-strong">
           Email for a reply
@@ -123,6 +165,10 @@ export function SupportReportForm({
           <p className="text-xs text-muted">Up to 4 MB. iPhone photos may need to be saved as JPEG.</p>
         )}
       </div>
+
+      {captchaRequired ? (
+        <AuthCaptcha key={captchaVersion} onTokenChange={setCaptchaToken} />
+      ) : null}
 
       {error ? (
         <p className="text-sm font-medium text-brand-red" role="alert">

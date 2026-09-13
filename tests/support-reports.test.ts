@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { truncateSupportAlertBody } from "@/lib/support";
+import { truncateSupportAlertBody, looksLikeGibberishSupportBody } from "@/lib/support";
 
 const read = (path: string) =>
   readFileSync(resolve(process.cwd(), path), "utf8");
@@ -63,8 +63,13 @@ describe("support problem reports", () => {
     expect(form).toContain('type="email"');
     expect(form).toContain("required");
     expect(form).toContain("Send problem report");
+    expect(form).toContain('name="website"');
+    expect(form).toContain("AuthCaptcha");
+    expect(form).toContain("captchaToken");
     expect(actions).toContain('"support"');
     expect(actions).toContain("submitSupportReport");
+    expect(actions).toContain("looksLikeGibberishSupportBody");
+    expect(actions).toContain("bulkUpdateSupportReports");
     expect(layout).toContain("report a problem");
     expect(layout).toContain("Report a problem");
     expect(layout).toContain('href="/support"');
@@ -103,6 +108,7 @@ describe("support problem reports", () => {
     expect(config).toContain("CAUSEY_SUPPORT_INBOX");
     expect(config).toContain("amoffat@causey.dev");
     expect(envExample).toContain("CAUSEY_SUPPORT_INBOX");
+    expect(envExample).toContain("HCAPTCHA_SECRET");
     expect(delivery).toContain("support_intake");
     expect(delivery).toContain("support_reply");
     expect(delivery).toContain("replyTo");
@@ -118,6 +124,18 @@ describe("support problem reports", () => {
     const detail = read("app/admin/support/[id]/page.tsx");
     const subnav = read("components/AdminSubnav.tsx");
     expect(adminPage).toContain("Problem reports");
+    expect(adminPage).toContain("AdminSupportReportsQueue");
+    expect(adminPage).toContain("supportReportsHref");
+    expect(read("components/AdminSupportReportsQueue.tsx")).toContain(
+      "Select all"
+    );
+    expect(read("components/AdminSupportReportsQueue.tsx")).toContain(
+      "Close selected"
+    );
+    expect(read("components/AdminSupportReportsQueue.tsx")).toContain(
+      "Reopen selected"
+    );
+    expect(read("lib/hcaptcha.ts")).toContain("hcaptcha.com/siteverify");
     expect(detail).toContain("AdminSupportReplyForm");
     expect(detail).not.toContain("notFound()");
     expect(detail).toContain("That report isn");
@@ -125,6 +143,14 @@ describe("support problem reports", () => {
     expect(truncateSupportAlertBody("ok")).toBe("ok");
     expect(truncateSupportAlertBody("a".repeat(1001))).toHaveLength(1000);
     expect(truncateSupportAlertBody("a".repeat(1001)).endsWith("...")).toBe(true);
+  });
+
+  it("rejects the mixed-case token spam without blocking a real sentence", () => {
+    expect(looksLikeGibberishSupportBody("szUNinhBIAcQNYigvzOX")).toBe(true);
+    expect(looksLikeGibberishSupportBody("hFjkjdIHNItWBYyYkxP")).toBe(true);
+    expect(looksLikeGibberishSupportBody("Problem wiht tournament")).toBe(false);
+    expect(looksLikeGibberishSupportBody("Search is blank.")).toBe(false);
+    expect(looksLikeGibberishSupportBody("Broken")).toBe(false);
   });
 });
 
@@ -165,6 +191,48 @@ describe("support report actions", () => {
     await expect(
       closeSupportReport({
         reportId: "00000000-0000-0000-0000-000000000000",
+      })
+    ).resolves.toEqual({
+      ok: false,
+      error: "Platform administrator access required.",
+    });
+  });
+
+  it("quietly accepts a filled honeypot and refuses token-soup bodies", async () => {
+    mocks.getSessionUser.mockResolvedValue(null);
+    mocks.consumeRateLimit.mockResolvedValue(true);
+    mocks.hashedRequestActorKey.mockResolvedValue(
+      "ip:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    );
+    const { submitSupportReport } = await import("@/lib/actions/support");
+    await expect(
+      submitSupportReport({
+        body: "Search is blank on chess.",
+        email: "person@example.com",
+        website: "https://spam.example",
+      })
+    ).resolves.toEqual({ ok: true, emailConfigured: false });
+    await expect(
+      submitSupportReport({
+        body: "szUNinhBIAcQNYigvzOX",
+        email: "person@example.com",
+      })
+    ).resolves.toEqual({
+      ok: false,
+      error: "Write a short sentence about what went wrong.",
+    });
+    expect(mocks.getServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it("rejects bulk report actions for non-admins", async () => {
+    mocks.getPlatformAdminUser.mockResolvedValue(null);
+    const { bulkUpdateSupportReports } = await import(
+      "@/lib/actions/support"
+    );
+    await expect(
+      bulkUpdateSupportReports({
+        reportIds: ["00000000-0000-0000-0000-000000000000"],
+        action: "close",
       })
     ).resolves.toEqual({
       ok: false,

@@ -33,7 +33,7 @@ A coach can run a **coordination club**: roster, travel + hosted events, RSVP, a
 - [x] Phone Family lists settled upcoming tournaments by name (Going / Can't go / registration complete) and opens the event; it no longer stops at "1 upcoming tournament" — 2026-09-06
 - [x] Phone event page lets a coach Bring your roster / Mark club as going on a public listing (`GET/POST /api/mobile/org-attendance`); inviting students still opens website manage — 2026-09-06
 - [x] Phone event details show the listing photo, US Chess rated/not rated, Going/Can't go, and “did you finish organizer registration?” after the organizer site; calendar falls back outside Expo Go — 2026-09-06
-- [x] Support problem reports from `/support` with optional screenshot; founding-team email and Alerts replies — 2026-09-06
+- [x] Support problem reports from `/support` with optional screenshot; founding-team email and Alerts replies; bot tickets refused; platform admins can close the queue in bulk — 2026-09-12
 - [x] Phone Search is simple name/zip with Advanced search covering the website filters — 2026-09-06
 - [x] Phone lists clubs/teams (and any school/district memberships) the signed-in account belongs to (`GET /api/mobile/orgs`); coaches open roster; no create/settings/CSV — 2026-09-05
 - [x] Phone Alerts inbox shows the same invitation/RSVP/result rows as website `/me/notifications`; event pages open in-app, manage/orgs/account stay on the website — 2026-09-05

@@ -52,7 +52,10 @@ export default async function SupportPage() {
             . Do not send passwords or student records.
           </p>
           <div className="mt-6">
-            <SupportReportForm initialEmail={user?.email ?? ""} />
+            <SupportReportForm
+              initialEmail={user?.email ?? ""}
+              signedIn={Boolean(user)}
+            />
           </div>
         </section>
 

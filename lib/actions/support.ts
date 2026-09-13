@@ -18,12 +18,19 @@ import {
   consumeRateLimit,
   hashedRequestActorKey,
 } from "@/lib/rate-limit";
+import {
+  hcaptchaSiteKeyConfigured,
+  verifyHcaptchaToken,
+} from "@/lib/hcaptcha";
 import { getServiceRoleClient } from "@/lib/supabase/client";
 import {
   SUPPORT_ATTACHMENT_BUCKET,
   SUPPORT_ATTACHMENT_MAX_BYTES,
+  SUPPORT_BULK_CAP,
+  SUPPORT_GIBBERISH_BODY_MESSAGE,
   SUPPORT_REPORT_MAX_BODY,
   isSupportAttachmentType,
+  looksLikeGibberishSupportBody,
   supportAttachmentExtension,
   truncateSupportAlertBody,
 } from "@/lib/support";
@@ -53,6 +60,14 @@ const ReplySchema = z.object({
       SUPPORT_REPORT_MAX_BODY,
       `Keep the reply under ${SUPPORT_REPORT_MAX_BODY} characters.`
     ),
+});
+
+const BulkUpdateSchema = z.object({
+  reportIds: z
+    .array(z.string().uuid())
+    .min(1, "Select at least one report.")
+    .max(SUPPORT_BULK_CAP, `Select at most ${SUPPORT_BULK_CAP} reports.`),
+  action: z.enum(["close", "reopen"]),
 });
 
 function missingDatabaseError(): { ok: false; error: string } {
@@ -91,6 +106,8 @@ export async function submitSupportReport(input: {
   email: string;
   pageLabel?: string;
   screenshot?: File | null;
+  website?: string;
+  captchaToken?: string | null;
 }): Promise<ActionResult<{ emailConfigured: boolean }>> {
   const parsed = SubmitSchema.safeParse({
     body: input.body,
@@ -123,6 +140,19 @@ export async function submitSupportReport(input: {
     await hashedRequestActorKey(user?.id ?? null)
   );
   if (!allowed) return { ok: false, error: RATE_LIMIT_MESSAGE };
+
+  if (input.website?.trim()) {
+    return { ok: true, emailConfigured: hasProductEmailConfig() };
+  }
+  if (looksLikeGibberishSupportBody(parsed.data.body)) {
+    return { ok: false, error: SUPPORT_GIBBERISH_BODY_MESSAGE };
+  }
+  if (!user && hcaptchaSiteKeyConfigured()) {
+    const captchaOk = await verifyHcaptchaToken(input.captchaToken);
+    if (!captchaOk) {
+      return { ok: false, error: "Complete the security check." };
+    }
+  }
 
   const service = getServiceRoleClient();
   if (!service) return missingDatabaseError();
@@ -337,29 +367,64 @@ export async function replyToSupportReport(input: {
 export async function closeSupportReport(input: {
   reportId: string;
 }): Promise<ActionResult> {
+  const result = await bulkUpdateSupportReports({
+    reportIds: [input.reportId],
+    action: "close",
+  });
+  if (!result.ok) return result;
+  if (result.updated === 0) {
+    return { ok: false, error: "Could not close the report." };
+  }
+  return { ok: true };
+}
+
+export async function bulkUpdateSupportReports(input: {
+  reportIds: string[];
+  action: "close" | "reopen";
+}): Promise<ActionResult<{ updated: number; skipped: number }>> {
   const admin = await getPlatformAdminUser();
   if (!admin) {
     return { ok: false, error: "Platform administrator access required." };
   }
-  const parsed = z.object({ reportId: z.string().uuid() }).safeParse(input);
+  const parsed = BulkUpdateSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "That report was not found." };
-  }
-  const service = getServiceRoleClient();
-  if (!service) return missingDatabaseError();
-  const { data, error } = await service
-    .from("support_reports")
-    .update({ status: "closed" })
-    .eq("id", parsed.data.reportId)
-    .select("id")
-    .maybeSingle();
-  if (error || !data) {
     return {
       ok: false,
-      error: actionErrorMessage(error, "Could not close the report."),
+      error: parsed.error.issues[0]?.message ?? "Select reports to update.",
     };
   }
+
+  const service = getServiceRoleClient();
+  if (!service) return missingDatabaseError();
+
+  const ids = [...new Set(parsed.data.reportIds)];
+  const nextStatus = parsed.data.action === "close" ? "closed" : "open";
+  let query = service
+    .from("support_reports")
+    .update({ status: nextStatus })
+    .in("id", ids);
+  query =
+    parsed.data.action === "close"
+      ? query.neq("status", "closed")
+      : query.eq("status", "closed");
+
+  const { data, error } = await query.select("id");
+  if (error) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        parsed.data.action === "close"
+          ? "Could not close the selected reports."
+          : "Could not reopen the selected reports."
+      ),
+    };
+  }
+
+  const updated = data?.length ?? 0;
   revalidatePath("/admin/support");
-  revalidatePath(`/admin/support/${parsed.data.reportId}`);
-  return { ok: true };
+  for (const id of ids) {
+    revalidatePath(`/admin/support/${id}`);
+  }
+  return { ok: true, updated, skipped: ids.length - updated };
 }

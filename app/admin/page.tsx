@@ -79,7 +79,7 @@ export default async function AdminOverviewPage() {
                   : `${openReports} problem reports are waiting`,
               description:
                 "People sent these from Support. Reply in Causey to email them and write an Alert when they have an account.",
-              action: { href: "/admin/support", label: "Open problem reports" },
+              action: { href: "/admin/support?status=open", label: "Open problem reports" },
               secondary: {
                 href: "/admin/moderation",
                 label: "Open moderation",

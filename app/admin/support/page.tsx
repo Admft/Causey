@@ -1,41 +1,41 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminSupportReportsQueue } from "@/components/AdminSupportReportsQueue";
 import { AdminMixChart } from "@/components/AdminCharts";
 import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminOpsStats } from "@/lib/data/admin";
 import { getAdminSupportReports } from "@/lib/data/support";
+import {
+  parseSupportReportStatusFilter,
+  supportReportsHref,
+} from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Problem reports",
   description: "Read and reply to problem reports sent from Support.",
 };
 
-function formatWhen(iso: string) {
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function statusLabel(status: "open" | "replied" | "closed") {
-  if (status === "open") return "Open";
-  if (status === "replied") return "Replied";
-  return "Closed";
-}
-
-export default async function AdminSupportPage() {
+export default async function AdminSupportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   const admin = await getPlatformAdminUser();
   if (!admin) redirect("/");
 
-  const [stats, reports] = await Promise.all([
+  const [{ status: statusParam }, stats, reports] = await Promise.all([
+    searchParams,
     getAdminOpsStats(["support"]),
     getAdminSupportReports(),
   ]);
+  const statusFilter = parseSupportReportStatusFilter(statusParam);
+  const visible = reports.error
+    ? []
+    : statusFilter === "all"
+      ? reports.reports
+      : reports.reports.filter((report) => report.status === statusFilter);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -44,9 +44,9 @@ export default async function AdminSupportPage() {
         Problem reports
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        People send these from Support. Reply here to email them and write an
-        Alert when they have a Causey account. Replying only in email skips
-        Alerts.
+        People send these from Support. Reply on a report to email them and
+        write an Alert when they have a Causey account. Close junk in bulk —
+        that does not send mail. Replying only in email skips Alerts.
       </p>
 
       <div className="mt-8">
@@ -56,17 +56,20 @@ export default async function AdminSupportPage() {
             {
               label: "Open",
               value: stats.support.open,
-              href: "/admin/support",
+              href: supportReportsHref("open"),
+              current: statusFilter === "open",
             },
             {
               label: "Replied",
               value: stats.support.replied,
-              href: "/admin/support",
+              href: supportReportsHref("replied"),
+              current: statusFilter === "replied",
             },
             {
               label: "Closed",
               value: stats.support.closed,
-              href: "/admin/support",
+              href: supportReportsHref("closed"),
+              current: statusFilter === "closed",
             },
           ]}
           chart={
@@ -94,6 +97,18 @@ export default async function AdminSupportPage() {
         />
       </div>
 
+      {statusFilter !== "all" ? (
+        <p className="mt-4 text-sm text-muted">
+          Showing {statusFilter} reports.{" "}
+          <Link
+            href={supportReportsHref("all")}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Show all
+          </Link>
+        </p>
+      ) : null}
+
       {reports.error ? (
         <p className="mt-8 text-sm text-muted" role="alert">
           {reports.error}
@@ -102,25 +117,26 @@ export default async function AdminSupportPage() {
         <p className="mt-8 text-sm text-muted">
           No problem reports yet. They appear here after someone uses Support.
         </p>
+      ) : visible.length === 0 ? (
+        <p className="mt-8 text-sm text-muted">
+          No {statusFilter} reports.{" "}
+          <Link
+            href={supportReportsHref("all")}
+            className="font-semibold text-brand-red hover:underline"
+          >
+            Show all
+          </Link>
+        </p>
       ) : (
-        <ul className="mt-8 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
-          {reports.reports.map((report) => (
-            <li key={report.id} className="px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                {statusLabel(report.status)} · {formatWhen(report.createdAt)}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                <Link
-                  href={`/admin/support/${report.id}`}
-                  className="hover:text-brand-red hover:underline"
-                >
-                  {report.reporterEmail}
-                </Link>
-              </p>
-              <p className="mt-1 line-clamp-2 text-sm text-muted">{report.body}</p>
-            </li>
-          ))}
-        </ul>
+        <AdminSupportReportsQueue
+          reports={visible.map((report) => ({
+            id: report.id,
+            reporterEmail: report.reporterEmail,
+            body: report.body,
+            status: report.status,
+            createdAt: report.createdAt,
+          }))}
+        />
       )}
     </div>
   );
