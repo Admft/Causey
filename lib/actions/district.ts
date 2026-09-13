@@ -165,6 +165,7 @@ export async function createDistrictSchool(input: {
       };
     }
     revalidatePath(`/orgs/${parsed.data.districtSlug}`);
+    revalidatePath(`/orgs/${parsed.data.districtSlug}/schools`);
     revalidatePath("/orgs");
     return { ok: true, slug: school.school_slug };
   }

@@ -30,11 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- District and school consoles enforce scoped administrator, coach, and
-  assistant authority — 2026-09-12
+- Founder super-admins can permanently delete a school workspace — 2026-09-12
 
 ## Last tick
 
+- 2026-09-12 — Founder super-admins can delete a school from `/admin/organizations` (including orphan schools not under a district) with the same `DELETE {slug}` confirm as districts; hyphens and underscores both count. Migration `0101`.
 - 2026-09-12 — District administrators now get Schools, scoped Staff,
   delegated peers, district competitions, and aggregate-only student/event
   reporting; school administrators get full roster/staff/group controls;
@@ -47,6 +47,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
   takes protected ownership from the temporary super-admin owner (`0099`).
   Claim membership and ownership both bind to the authenticated invited email;
   school ownership remains an explicit handoff.
+- 2026-09-12 — Inherited child-school access no longer falls into assistant
+  coach copy or a denied roster loop. Safe staff reads drive delegation,
+  legacy district `admin` roles align with district routes, Account/mobile
+  shortcuts retain the district label, and `0100` closes stale school event and
+  roster gates.
 - 2026-09-12 — District claim links no longer stop at a coach login: a matching signed-in mailbox auto-joins as district/school administrator (`0096` makes a repeat claim a no-op), `/admin/users` name search shows that membership instead of only `coach`, and an empty district overview has the create-school form on the page.
 - 2026-09-12 — Public `/support` blocks bot tickets (hidden honeypot, mixed-case token-soup bodies, hCaptcha when configured). `/admin/support` can select all shown reports and close or reopen them without emailing anyone.
 - 2026-09-12 — `/admin/users` now has indexed, keyset-paginated filters for a district plus connected schools, exact organization, organization type, full membership role/status, account experience, and platform access (`0095`). Matching rows name the organization context; household links never imply district membership.

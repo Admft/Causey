@@ -32,6 +32,10 @@ import {
   type AdminUserDirectoryRow,
 } from "@/lib/data/admin";
 import { slugifyName, withSlugSuffix } from "@/lib/slug";
+import {
+  districtDeleteConfirmationPhrase,
+  matchesOrgDeleteConfirmation,
+} from "@/lib/admin-org-delete";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   TournamentCreateSchema,
@@ -531,11 +535,11 @@ export async function adminDeleteDistrict(input: {
     return { ok: false, error: "Only district workspaces can be deleted here." };
   }
 
-  const expected = `DELETE ${district.slug}`;
-  if (parsed.data.confirmation !== expected) {
+  const expected = districtDeleteConfirmationPhrase(district.slug);
+  if (!matchesOrgDeleteConfirmation(parsed.data.confirmation, district.slug)) {
     return {
       ok: false,
-      error: `Type ${expected} exactly to confirm deletion.`,
+      error: `Type ${expected} to confirm deletion.`,
     };
   }
 
@@ -543,6 +547,12 @@ export async function adminDeleteDistrict(input: {
     p_district_id: parsed.data.districtId,
   });
   if (error) {
+    console.error("Admin admin_delete_district failed:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
     if (error.message.includes("super_admin_required")) {
       return { ok: false, error: "Founder super-admin access required." };
     }
@@ -552,7 +562,10 @@ export async function adminDeleteDistrict(input: {
     if (error.message.includes("not_a_district")) {
       return { ok: false, error: "Only district workspaces can be deleted here." };
     }
-    return { ok: false, error: "Could not delete this district." };
+    return {
+      ok: false,
+      error: actionErrorMessage(error, "Could not delete this district."),
+    };
   }
 
   const payload =
@@ -577,6 +590,113 @@ export async function adminDeleteDistrict(input: {
     name,
     slug,
     schoolsDeleted: Number.isFinite(schoolsDeleted) ? schoolsDeleted : 0,
+    competitionsDeleted: Number.isFinite(competitionsDeleted)
+      ? competitionsDeleted
+      : 0,
+  };
+}
+
+const AdminSchoolDeleteSchema = z.object({
+  schoolId: z.string().uuid(),
+  confirmation: z.string().trim().min(1).max(200),
+});
+
+export async function adminDeleteSchool(input: {
+  schoolId: string;
+  confirmation: string;
+}): Promise<
+  ActionResult<{
+    name: string;
+    slug: string;
+    competitionsDeleted: number;
+  }>
+> {
+  const admin = await getSuperAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Founder super-admin access required.",
+    };
+  }
+  const parsed = AdminSchoolDeleteSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "Type DELETE followed by the school slug to confirm.",
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: school, error: schoolError } = await supabase
+    .from("organizations")
+    .select("id, name, slug, type")
+    .eq("id", parsed.data.schoolId)
+    .maybeSingle();
+
+  if (schoolError || !school) {
+    return { ok: false, error: "That school no longer exists." };
+  }
+  if (school.type !== "school") {
+    return { ok: false, error: "Only school workspaces can be deleted here." };
+  }
+
+  const expected = districtDeleteConfirmationPhrase(school.slug);
+  if (!matchesOrgDeleteConfirmation(parsed.data.confirmation, school.slug)) {
+    return {
+      ok: false,
+      error: `Type ${expected} to confirm deletion.`,
+    };
+  }
+
+  const { data, error } = await supabase.rpc("admin_delete_school", {
+    p_school_id: parsed.data.schoolId,
+  });
+  if (error) {
+    console.error("Admin admin_delete_school failed:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
+    if (error.message.includes("super_admin_required")) {
+      return { ok: false, error: "Founder super-admin access required." };
+    }
+    if (error.message.includes("organization_not_found")) {
+      return { ok: false, error: "That school no longer exists." };
+    }
+    if (error.message.includes("not_a_school")) {
+      return { ok: false, error: "Only school workspaces can be deleted here." };
+    }
+    if (error.message.includes("school_has_child_organizations")) {
+      return {
+        ok: false,
+        error: "This school still has attached organizations. Remove those first.",
+      };
+    }
+    return {
+      ok: false,
+      error: actionErrorMessage(error, "Could not delete this school."),
+    };
+  }
+
+  const payload =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : {};
+  const competitionsDeleted = Number(payload.competitions_deleted ?? 0);
+  const name = typeof payload.name === "string" ? payload.name : school.name;
+  const slug = typeof payload.slug === "string" ? payload.slug : school.slug;
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/organizations");
+  revalidatePath("/orgs");
+  revalidatePath(`/orgs/${slug}`);
+  revalidatePublicDiscovery();
+
+  return {
+    ok: true,
+    name,
+    slug,
     competitionsDeleted: Number.isFinite(competitionsDeleted)
       ? competitionsDeleted
       : 0,

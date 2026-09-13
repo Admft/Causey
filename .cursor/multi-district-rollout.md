@@ -43,7 +43,10 @@ Make Causey ready to operate **two independent school districts** in parallel: s
   school-staff actions are audited.
 - The first matching district-admin claim now takes protected ownership from
   the temporary provisioning super admin (`0099`).
-- The remaining gate is operational: apply through `0099` and pass the
+- `0100` aligns legacy district `admin` memberships and child-school
+  competition/roster gates with inherited district authority; web and mobile
+  now avoid named-roster dead ends for district operators.
+- The remaining gate is operational: apply through `0100` and pass the
   bidirectional live two-district role/isolation smoke before onboarding.
 
 ## Audit snapshot (coordinator, 2026-08-12)

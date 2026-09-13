@@ -18,15 +18,38 @@ export type MobileOrgListItem = {
 
 /** Memberships for this account — not a public club directory. */
 export function serializeMobileOrgs(rows: MyOrgRow[]): MobileOrgListItem[] {
-  return rows.map((row) => ({
-    id: row.org.id,
-    name: row.org.name,
-    slug: row.org.slug,
-    type: row.org.type,
-    role: row.memberRole,
-    isCoach: row.isCoach,
-    has_roster: canMarkOrganizationAttending(row.org),
-  }));
+  const administeredDistrictIds = new Set(
+    rows
+      .filter(
+        (row) =>
+          row.org.type === "district" &&
+          (row.memberRole === "district_admin" || row.memberRole === "admin")
+      )
+      .map((row) => row.org.id)
+  );
+  return rows.map((row) => {
+    const inheritedDistrictAdmin =
+      row.org.type === "school" &&
+      Boolean(
+        row.org.parent_org_id &&
+          administeredDistrictIds.has(row.org.parent_org_id)
+      );
+    const contextualRole =
+      inheritedDistrictAdmin ||
+      (row.org.type === "district" && row.memberRole === "admin")
+        ? "district_admin"
+        : row.memberRole;
+    return {
+      id: row.org.id,
+      name: row.org.name,
+      slug: row.org.slug,
+      type: row.org.type,
+      role: contextualRole,
+      isCoach: row.isCoach,
+      has_roster:
+        !inheritedDistrictAdmin && canMarkOrganizationAttending(row.org),
+    };
+  });
 }
 
 export async function GET(request: Request) {

@@ -17,6 +17,9 @@ describe("district and school role boundaries", () => {
   const claimHandoff = source(
     "supabase/migrations/0099_district_claim_owner_handoff.sql"
   );
+  const integrationFollowups = source(
+    "supabase/migrations/0100_role_console_integration_followups.sql"
+  );
 
   it("protects owners, self-revocation, and the last administrator", () => {
     expect(boundaries).toContain("protected_owner_cannot_be_revoked");
@@ -141,6 +144,15 @@ describe("district and school role boundaries", () => {
     expect(boundaries).toContain(
       "membership.role in ('coach', 'assistant_coach')"
     );
+    expect(integrationFollowups).toContain(
+      "public.can_operate_org_competitions("
+    );
+    expect(integrationFollowups).toContain(
+      "and not (\n        organization.type = 'school'"
+    );
+    expect(integrationFollowups).toContain(
+      "staff_membership.status = 'active'"
+    );
   });
 
   it("keeps district event invitations aggregate-only", () => {
@@ -168,6 +180,10 @@ describe("district and school role boundaries", () => {
 });
 
 describe("role console navigation and branding", () => {
+  const integrationFollowups = source(
+    "supabase/migrations/0100_role_console_integration_followups.sql"
+  );
+
   it("shows exact contextual authority labels", () => {
     expect(
       contextualOrganizationRoleLabel({
@@ -204,9 +220,40 @@ describe("role console navigation and branding", () => {
     expect(subnav).toContain('path: "/schools"');
     expect(subnav).toContain('? "Students & groups"');
     expect(subnav).toContain('? "Coaches & staff"');
+    expect(subnav).toContain(
+      'orgType === "school" && item.id === "reports" && !showRoster'
+    );
     expect(source("app/orgs/[slug]/schools/page.tsx")).toContain(
       "DistrictSchoolForm"
     );
     expect(source("app/orgs/page.tsx")).toContain("your role:");
+  });
+
+  it("keeps inherited district operators out of school roster dead ends", () => {
+    const overview = source("app/orgs/[slug]/page.tsx");
+    expect(overview).toContain("if (districtScopedSchoolView)");
+    expect(overview).toContain("District access stays aggregate-only.");
+    expect(overview).toContain("Review school staff");
+    expect(overview).not.toContain(
+      'districtScopedSchoolView\n            ? "Your assistant-coach access'
+    );
+    expect(integrationFollowups).toContain(
+      "membership.role in ('district_admin', 'admin')"
+    );
+    expect(source("app/account/page.tsx")).toContain(
+      "inheritedDistrictAdmin ||"
+    );
+    expect(source("lib/data/portal.ts")).toContain(
+      'memberRole === "admin" ||\n          org.owner_profile_id === userId'
+    );
+    expect(source("app/orgs/page.tsx")).toContain(
+      '(memberRole === "district_admin" || memberRole === "admin")'
+    );
+    expect(source("app/orgs/[slug]/reports/export/route.ts")).toContain(
+      "if (!view.canViewNamedRoster)"
+    );
+    expect(source("lib/actions/district.ts")).toContain(
+      "revalidatePath(`/orgs/${parsed.data.districtSlug}/schools`)"
+    );
   });
 });

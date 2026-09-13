@@ -12,6 +12,8 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
   center, protected ownership handoff, and delegated administrator controls
 - Role-scoped consoles: aggregate-only district office; full-roster school
   administrators; assigned-group coaches; read-only assigned-group assistants
+- Founder super-admin can permanently delete a district or a school (including
+  orphan schools not under a district) from `/admin/organizations`
 - Audiences: public / district-only / school-only / invite-only
 - Competitions inventory with host filter across district + schools
 - Family desk, alerts (in-app; email configured not volume-proven); linked parents get invite/change/result/announcement copies
@@ -72,6 +74,10 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] First valid district-admin claim takes protected ownership from the
   temporary provisioning super admin; email, claimed identity, and active
   district membership must agree (`0099`) — 2026-09-12
+- [x] Inherited district school views no longer impersonate assistant coaches,
+  link into a denied roster, or infer delegation from a privacy-empty roster;
+  web/mobile shortcuts and legacy `admin` aliases use the same district scope
+  (`0100`) — 2026-09-12
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -188,11 +194,12 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 
 ### Recommended next shippable win
 
-Ops proof of email at school volume, apply migrations through `0099` in each
+Ops proof of email at school volume, apply migrations through `0100` in each
 environment, and run the live two-district role/isolation smoke in the pilot
 runbook. `0096` is the claim auto-join gate; `0097`–`0098` are the scoped role
 console and aggregate-read gates; `0099` completes protected district
-ownership handoff. Defer to owner/legal gates.
+ownership handoff; `0100` aligns legacy aliases and child-school UI/permission
+gates. Defer to owner/legal gates.
 
 ### Out-of-scope refusals this pass
 

@@ -81,7 +81,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Public chess search | Indexed US chess listings by zip, radius, date, grade, rating, fee, and source | Yes, with incomplete coverage |
 | Qualification pathways | Chess pathway explorer for selected series; “Get your kid to chess nationals” pin above chess search | Illustrative scaffolding; swap in verified US Chess rules when they arrive; confirm with the organizer |
 | District → school structure | One district over many schools | Yes, Causey-assisted |
-| Role-based access | Protected district/school owners, delegated administrators, assigned-group coaches, read-only assistants, parents, and students each see scoped work | Yes; migrations through `0099` required |
+| Role-based access | Protected district/school owners, delegated administrators, assigned-group coaches, read-only assistants, parents, and students each see scoped work | Yes; migrations through `0100` required |
 | Claim-link provisioning | Email or copyable invite plus a typable activation code; CSV import/export via one set-based RPC; reissue; Causey super admin can provision a district or a child school | Yes |
 | Rosters and groups | School/club roster, groups for invites and attendance | Yes |
 | Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters, stamps school of origin, and labels replies by school | Yes |

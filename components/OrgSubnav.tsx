@@ -96,6 +96,9 @@ export function OrgSubnavBar({
   const tabs = sourceTabs.filter((item) => {
     if (item.access === "member") return true;
     if (item.access === "staff") return showRoster;
+    if (orgType === "school" && item.id === "reports" && !showRoster) {
+      return false;
+    }
     return showAdmin;
   });
   return (

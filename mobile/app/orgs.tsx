@@ -128,7 +128,8 @@ function OrgsDesk({ token }: { token: string }) {
       {!orgs.length ? (
         <>
           <Lede>
-            You are not on a roster yet. Ask a coach for a join code.
+            No organization access is connected yet. Students can use a join
+            code; staff join from their invitation link.
           </Lede>
           <LinkButton
             label="Enter a join code"

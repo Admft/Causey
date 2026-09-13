@@ -296,12 +296,15 @@ function OrganizationPanel({
         />
       ) : null}
 
-      {isDistrict && canDeleteDistrict ? (
+      {canDeleteDistrict && (isDistrict || org.type === "school") ? (
         <AdminDistrictDeleteForm
           districtId={org.id}
           districtSlug={org.slug}
           districtName={org.name}
+          orgType={isDistrict ? "district" : "school"}
           schoolCount={schools.length}
+          tournamentCount={org.tournament_count}
+          parentName={org.parent?.name ?? null}
           onDeleted={() => onDistrictDeleted?.(org.id)}
         />
       ) : null}
@@ -343,7 +346,7 @@ export function AdminOrganizationsExplorer({
   organizations: AdminOrganizationRow[];
   districtReadinessById: DistrictReadinessById;
   initialStatus?: StatusFilter;
-  /** District create/delete is reserved for founder super admins. */
+  /** District and school create/delete is reserved for founder super admins. */
   canProvisionDistrict?: boolean;
 }) {
   const router = useRouter();

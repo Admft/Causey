@@ -52,6 +52,15 @@ export async function GET(
   }
 
   if (view.org.type !== "district") {
+    if (!view.canViewNamedRoster) {
+      return NextResponse.json(
+        {
+          error:
+            "Named school reports are available only to authorized school staff.",
+        },
+        { status: 403, headers: { "Cache-Control": "private, no-store" } }
+      );
+    }
     const attendanceResult = await getOrgSeasonAttendance(view.org.id);
     if (!attendanceResult.ok) {
       return NextResponse.json(

@@ -14,7 +14,7 @@ the verified `causey.dev` Resend domain (cornell team, Causey Sign up key).
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0099_district_claim_owner_handoff.sql` (including
+   `0100_role_console_integration_followups.sql` (including
    `0045_atomic_district_school_creation.sql`,
    `0046_district_hosted_reporting.sql`,
    `0060_district_admin_activity.sql`,
@@ -26,7 +26,9 @@ the verified `causey.dev` Resend domain (cornell team, Causey Sign up key).
    `0075_guardian_link_consent.sql`,
    `0096_claim_and_admin_membership_context.sql`,
    `0097_district_school_role_boundaries.sql`, and
-   `0098_role_console_reads_and_district_invites.sql`).
+   `0098_role_console_reads_and_district_invites.sql`,
+   `0099_district_claim_owner_handoff.sql`, and
+   `0100_role_console_integration_followups.sql`).
    **`0074` is a hard gate, not an optional newer file.** `0070` recreated
    `create_org_invitation` with `search_path = public`, which reverted the
    extension search path `0030` had set. On any project that applied `0070`,
@@ -38,12 +40,14 @@ the verified `causey.dev` Resend domain (cornell team, Causey Sign up key).
    shipped in `0062` with an allowlist that never included the `comment` or
    `geo` buckets the app already sends, so event comments fail closed on any
    project running `0062` without `0075`.
-   Apply `0099` before using the role consoles. `0097` is the hard permission
+   Apply through `0100` before using the role consoles. `0097` is the hard permission
    boundary for delegated administrators and assigned-group coaches; `0098`
    adds aggregate-only district reads, district event bulk invites, scoped
    staff directories, and announcement fan-out without student IDs. `0099`
    transfers protected district ownership from the temporary provisioning
-   super admin to the first matching district-administrator claimant.
+   super admin to the first matching district-administrator claimant. `0100`
+   aligns legacy district-admin aliases and child-school competition/roster
+   gates with the same inherited-authority boundary.
    A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch
@@ -243,7 +247,7 @@ between districts to make the test pass.
 9. Return to the platform-admin queue. Confirm both districts and their child
    schools remain independently grouped and each verification review/audit
    result names only the organization acted on.
-10. Record the target project, migration ledger through `0099`,
+10. Record the target project, migration ledger through `0100`,
     branch migrations, test-account IDs, organization IDs, timestamps, and
     pass/fail result in the private deployment log. Do not put participant
     names or claim tokens in that log.

@@ -100,6 +100,7 @@ export default async function AccountPage() {
         (row) =>
           row.org.type === "district" &&
           (row.memberRole === "district_admin" ||
+            row.memberRole === "admin" ||
             row.org.owner_profile_id === profile.id)
       )
       .map((row) => row.org.id)
@@ -396,13 +397,15 @@ export default async function AccountPage() {
                 row.org.parent_org_id &&
                   districtAdminIds.has(row.org.parent_org_id)
               );
-            const admin = isOrgAdmin(
-              row.org,
-              row.memberRole
-                ? { role: row.memberRole, status: "active" }
-                : null,
-              profile.id
-            );
+            const admin =
+              inheritedDistrictAdmin ||
+              isOrgAdmin(
+                row.org,
+                row.memberRole
+                  ? { role: row.memberRole, status: "active" }
+                  : null,
+                profile.id
+              );
             return (
               <li key={row.org.id} className="py-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">

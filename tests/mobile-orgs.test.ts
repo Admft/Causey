@@ -134,8 +134,9 @@ describe("phone organizations screen", () => {
   it("lists memberships with Club/Team vs School/District nouns", () => {
     expect(screen).toContain("<Title>Your organizations</Title>");
     expect(screen).toContain(
-      "You are not on a roster yet. Ask a coach for a join code."
+      "No organization access is connected yet. Students can use a join"
     );
+    expect(screen).toContain("staff join from their invitation link.");
     expect(screen).toContain("/api/mobile/orgs");
     expect(screen).toContain('if (type === "team") return "Team"');
     expect(screen).toContain('if (type === "school") return "School"');

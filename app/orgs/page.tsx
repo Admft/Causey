@@ -67,7 +67,8 @@ function OrgDirectory({
     rows
       .filter(
         ({ org, memberRole }) =>
-          org.type === "district" && memberRole === "district_admin"
+          org.type === "district" &&
+          (memberRole === "district_admin" || memberRole === "admin")
       )
       .map(({ org }) => org.id)
   );
@@ -216,7 +217,8 @@ export default async function OrgsPage({
   const coachedOrgs = myOrgs.filter(({ isCoach }) => isCoach);
   const districtOrg = coachedOrgs.find(
     ({ org, memberRole }) =>
-      org.type === "district" && memberRole === "district_admin"
+      org.type === "district" &&
+      (memberRole === "district_admin" || memberRole === "admin")
   );
   const hasDistrictWorkspace = Boolean(districtOrg);
   const staffOrgsNeedingStudents = new Set<string>();
@@ -224,7 +226,8 @@ export default async function OrgsPage({
     myOrgs
       .filter(
         ({ org, memberRole }) =>
-          org.type === "district" && memberRole === "district_admin"
+          org.type === "district" &&
+          (memberRole === "district_admin" || memberRole === "admin")
       )
       .map(({ org }) => org.id)
   );

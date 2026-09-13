@@ -309,7 +309,9 @@ export async function getMyOrgs(
     .filter(
       ({ org, memberRole }) =>
         org.type === "district" &&
-        (memberRole === "district_admin" || org.owner_profile_id === userId)
+        (memberRole === "district_admin" ||
+          memberRole === "admin" ||
+          org.owner_profile_id === userId)
     )
     .map(({ org }) => org.id);
   if (administeredDistrictIds.length) {

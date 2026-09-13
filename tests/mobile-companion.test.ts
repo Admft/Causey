@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { mobileAppAccess } from "@/lib/auth/mobile-access";
+import { serializeMobileOrgs } from "@/app/api/mobile/orgs/route";
 import { serializeFamilyDesk } from "@/lib/data/mobile-family";
-import type { ChildSummary } from "@/lib/data/portal";
+import type { ChildSummary, MyOrgRow } from "@/lib/data/portal";
 import { accessTokenFromRequest } from "@/lib/supabase/access-token";
 
 const read = (path: string) =>
@@ -64,6 +65,56 @@ describe("mobile app access", () => {
     expect(
       mobileAppAccess({ role: "student", date_of_birth: thirteen }).allowed
     ).toBe(true);
+  });
+});
+
+describe("mobile organization roles", () => {
+  it("normalizes legacy district admin access across the district and its schools", () => {
+    const organizationDefaults = {
+      state: "TX",
+      created_by: "owner",
+      owner_profile_id: "owner",
+      verification_status: "verified" as const,
+      verified_at: null,
+      verified_by: null,
+      join_code: null,
+      join_code_rotated_at: null,
+      website_url: null,
+      meeting_note: null,
+    };
+    const rows: MyOrgRow[] = [
+      {
+        org: {
+          ...organizationDefaults,
+          id: "district-1",
+          name: "District",
+          slug: "district",
+          type: "district",
+          parent_org_id: null,
+        },
+        memberRole: "admin",
+        isCoach: true,
+      },
+      {
+        org: {
+          ...organizationDefaults,
+          id: "school-1",
+          name: "School",
+          slug: "school",
+          type: "school",
+          parent_org_id: "district-1",
+        },
+        memberRole: null,
+        isCoach: true,
+      },
+    ];
+
+    const serialized = serializeMobileOrgs(rows);
+    const district = serialized.find((row) => row.id === "district-1");
+    const school = serialized.find((row) => row.id === "school-1");
+    expect(district?.role).toBe("district_admin");
+    expect(school?.role).toBe("district_admin");
+    expect(school?.has_roster).toBe(false);
   });
 });
 

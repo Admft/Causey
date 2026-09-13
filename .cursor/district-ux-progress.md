@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Founder super-admins can permanently delete a school workspace (including orphan “not under a district” schools) from `/admin/organizations`; confirmation accepts hyphen or underscore in the slug (`0101`) — 2026-09-12
 - [x] District and school role consoles now enforce the real hierarchy:
   district administrators get first-class Schools, scoped Staff, delegated
   peers, and aggregate-only student/event data; school administrators get the
@@ -29,6 +30,11 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
   ownership from the temporary provisioning super admin; the transfer requires
   the claimed invitation email and active district-admin membership (`0099`)
   — 2026-09-12
+- [x] District operators opening a child school now get staffing/competition
+  actions instead of assistant-coach copy or a roster redirect loop. Delegation
+  checks use the safe staff directory, inherited Account/mobile role shortcuts
+  agree, dropped staff-console writes report failure, and `0100` normalizes
+  legacy district-admin/event/roster gates — 2026-09-12
 - [x] District claim from a provision pack finishes the office role: matching sign-in auto-joins, `/admin/users` name search shows District administrator (not only `coach`), and an empty district overview creates the first school on the page (`0096`) — 2026-09-12
 - [x] Public `/support` refuses bot problem reports (honeypot, mixed-case token-soup bodies, hCaptcha when the site key is set). `/admin/support` can select all shown reports and close or reopen them without emailing anyone — 2026-09-12
 - [x] Platform admin `/admin/users` filters 100k+ account directories by district tree, exact organization, organization type, full membership role/status, account experience, and platform access. Migration `0095` adds indexed admin-only scope lookup plus stable keyset pagination; district scope includes direct district staff and connected-school members but never infers parents from household links — 2026-09-12

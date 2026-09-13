@@ -17,6 +17,7 @@ import { competitionTypeLabel } from "@/lib/competition-types";
 import { isCompetitionStarted } from "@/lib/competition-timing";
 import {
   getDistrictPilotReadiness,
+  getOrgStaffDirectory,
   getOrgSeasonAttendance,
 } from "@/lib/data/district";
 import {
@@ -142,6 +143,7 @@ export default async function OrgPage({
     competitionWorkspace,
     seasonAttendanceResult,
     connectedSchools,
+    schoolStaffResult,
   ] =
     await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
@@ -161,6 +163,9 @@ export default async function OrgPage({
     org.type === "district" && canManageTournaments
       ? getChildSchoolsForDistrict(org.id)
       : Promise.resolve([]),
+    org.type === "school" && isAdmin
+      ? getOrgStaffDirectory(org.id)
+      : Promise.resolve(null),
   ]);
   const events = competitionWorkspace?.events ?? directEvents;
   const drafts = competitionWorkspace?.drafts ?? directDrafts;
@@ -174,15 +179,21 @@ export default async function OrgPage({
     (row) => row.member_status === "active" && row.member_role === "student"
   ).length;
   const hasStudents = activeStudentCount > 0;
+  const districtScopedSchoolView =
+    org.type === "school" && isAdmin && !canViewNamedRoster;
+  const activeSchoolAdminCount =
+    schoolStaffResult?.ok === true
+      ? schoolStaffResult.data.filter(
+          (row) =>
+            row.member_status === "active" &&
+            (row.member_role === "school_admin" ||
+              row.member_role === "admin")
+        ).length
+      : null;
   const needsSchoolAdminHandoff =
     org.type === "school" &&
     Boolean(org.parent_org_id) &&
-    !roster.some(
-      (row) =>
-        row.profile_id !== user.id &&
-        row.member_status === "active" &&
-        row.member_role !== "student"
-    );
+    activeSchoolAdminCount === 0;
   const isDirectSchoolAdmin =
     org.type === "school" &&
     isAdmin &&
@@ -228,6 +239,45 @@ export default async function OrgPage({
     : null;
 
   const coachMission = (() => {
+    if (districtScopedSchoolView) {
+      if (schoolStaffResult?.ok !== true) {
+        return {
+          title: "School staffing could not load",
+          description:
+            "Causey could not verify this school’s administrators. Retry before sending or changing staff access.",
+          action: {
+            href: `/orgs/${org.slug}`,
+            label: "Retry school staffing",
+          },
+          secondary: { href: "/orgs", label: "Back to organizations" },
+        };
+      }
+      if (needsSchoolAdminHandoff) {
+        return {
+          title: "Delegate this school",
+          description:
+            "Invite a school administrator before provisioning students. District access stays aggregate-only.",
+          action: {
+            href: `/orgs/${org.slug}/people`,
+            label: "Invite school administrator",
+          },
+          secondary: { href: "/orgs", label: "Back to organizations" },
+        };
+      }
+      return {
+        title: "Coordinate school staffing",
+        description:
+          "Review school administrators and coaches here. Student names and groups stay with school staff.",
+        action: {
+          href: `/orgs/${org.slug}/people`,
+          label: "Review school staff",
+        },
+        secondary: {
+          href: `/orgs/${org.slug}/competitions`,
+          label: "View school competitions",
+        },
+      };
+    }
     if (!isCoach || org.type === "district") return null;
     if (!canManageTournaments) {
       return {
@@ -524,9 +574,6 @@ export default async function OrgPage({
     isDistrictAdmin,
     canViewNamedRoster,
   });
-  const districtScopedSchoolView =
-    org.type === "school" && isAdmin && !canViewNamedRoster;
-
   return (
     <>
       <OrgSubnavBar

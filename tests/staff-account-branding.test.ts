@@ -66,6 +66,9 @@ describe("staff account branding after claim", () => {
     const account = source("app/account/page.tsx");
     const orgs = source("app/orgs/page.tsx");
     expect(account).toContain("staffAccountPersonaLabel");
+    expect(account).toContain(
+      "const admin =\n              inheritedDistrictAdmin ||"
+    );
     expect(account).not.toContain('coach: "Coach / Organizer"');
     expect(orgs).toContain("offersClubSelfServe");
     expect(orgs).toContain("ORG_ROLE_LABELS");

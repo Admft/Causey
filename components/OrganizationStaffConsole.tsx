@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { setOrganizationAdministrator } from "@/lib/actions/district";
+import { attemptAction } from "@/lib/attempt-action";
 import { ORG_ROLE_LABELS } from "@/lib/auth/orgs";
 import type { OrgStaffDirectoryRow } from "@/lib/data/district";
 
@@ -41,12 +42,14 @@ export function OrganizationStaffConsole({
     setError(null);
     startTransition(async () => {
       try {
-        const result = await setOrganizationAdministrator({
-          orgId: row.org_id,
-          orgSlug: row.org_slug,
-          profileId: row.profile_id,
-          makeAdmin,
-        });
+        const result = await attemptAction(() =>
+          setOrganizationAdministrator({
+            orgId: row.org_id,
+            orgSlug: row.org_slug,
+            profileId: row.profile_id,
+            makeAdmin,
+          })
+        );
         if (!result.ok) {
           setError(result.error);
           return;
