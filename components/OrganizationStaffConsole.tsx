@@ -16,10 +16,13 @@ export function OrganizationStaffConsole({
   rows,
   currentUserId,
   showOrganization = false,
+  canAssignGroups = false,
 }: {
   rows: OrgStaffDirectoryRow[];
   currentUserId: string;
   showOrganization?: boolean;
+  /** School admins can open Students & groups to assign coaches. */
+  canAssignGroups?: boolean;
 }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -94,6 +97,11 @@ export function OrganizationStaffConsole({
             row.is_owner || row.profile_id === currentUserId;
           const rowPending =
             isPending && pendingId === `${row.org_id}:${row.profile_id}`;
+          const needsGroupAssignment =
+            (row.member_role === "coach" ||
+              row.member_role === "assistant_coach") &&
+            row.assigned_group_names.length === 0 &&
+            row.org_type === "school";
           return (
             <li
               key={`${row.org_id}:${row.profile_id}`}
@@ -113,14 +121,21 @@ export function OrganizationStaffConsole({
                   <p className="mt-1 text-xs text-muted-strong">
                     Assigned: {row.assigned_group_names.join(", ")}
                   </p>
-                ) : row.member_role === "coach" ||
-                  row.member_role === "assistant_coach" ? (
+                ) : needsGroupAssignment ? (
                   <p className="mt-1 text-xs text-muted">
                     No groups assigned
                   </p>
                 ) : null}
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-3">
+                {needsGroupAssignment && canAssignGroups ? (
+                  <Link
+                    href={`/orgs/${row.org_slug}/roster#groups`}
+                    className="action-button"
+                  >
+                    Assign groups
+                  </Link>
+                ) : null}
                 {showOrganization ? (
                   <Link
                     href={`/orgs/${row.org_slug}`}

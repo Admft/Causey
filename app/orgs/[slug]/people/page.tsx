@@ -288,6 +288,7 @@ export default async function OrganizationPeoplePage({
                 rows={staffResult.data}
                 currentUserId={user.id}
                 showOrganization={isDistrict}
+                canAssignGroups={!isDistrict && view.canViewNamedRoster}
               />
             ) : (
               <p className="text-sm font-medium text-brand-red" role="alert">

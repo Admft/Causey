@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Founder super-admins can permanently delete a school workspace — 2026-09-12
+- Unassigned school coach/assistant group-assignment wait state — 2026-09-13
 
 ## Last tick
 
+- 2026-09-13 — Unassigned school coaches and assistants no longer hit a roster redirect loop after claim. Overview and manage show a wait-for-assignment mission; school Staff adds Assign groups; People invite success names the next step; Activity labels administrator grant/revoke and group staff changes with People / Students & groups follow-through. No schema change.
 - 2026-09-12 — Founder super-admins can delete a school from `/admin/organizations` (including orphan schools not under a district) with the same `DELETE {slug}` confirm as districts; hyphens and underscores both count. Migration `0101`.
 - 2026-09-12 — District administrators now get Schools, scoped Staff,
   delegated peers, district competitions, and aggregate-only student/event

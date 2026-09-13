@@ -99,6 +99,15 @@ describe("district admin activity feed", () => {
     expect(districtActivityActionLabel("organization.invitation_created")).toBe(
       "Staff invitation sent"
     );
+    expect(districtActivityActionLabel("organization.admin_granted")).toBe(
+      "Administrator granted"
+    );
+    expect(districtActivityActionLabel("organization.admin_revoked")).toBe(
+      "Administrator removed"
+    );
+    expect(districtActivityActionLabel("organization.group_staff_changed")).toBe(
+      "Group staff updated"
+    );
     expect(districtActivityActionLabel("unknown.action")).toBe(
       "Administrative update"
     );
@@ -192,6 +201,26 @@ describe("district admin activity feed", () => {
     ).toEqual({
       href: "/orgs/sample-district",
       label: "Open district overview",
+    });
+
+    expect(
+      districtActivityFollowThrough(
+        sampleRow({ action: "organization.admin_granted" }),
+        ctx
+      )
+    ).toEqual({
+      href: "/orgs/lincoln-hs/people",
+      label: "Open People",
+    });
+
+    expect(
+      districtActivityFollowThrough(
+        sampleRow({ action: "organization.group_staff_changed" }),
+        ctx
+      )
+    ).toEqual({
+      href: "/orgs/lincoln-hs/roster#groups",
+      label: "Open Students & groups",
     });
 
     expect(

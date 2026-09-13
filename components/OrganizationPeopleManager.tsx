@@ -91,10 +91,10 @@ function inviteRoleHelp(orgType: string, role: OrgMemberRole): string {
       return "Day-to-day school settings, roster, and staff.";
     }
     if (role === "coach") {
-      return "Runs competitions and invites students.";
+      return "Runs competitions and invites students in assigned groups. Assign groups after they claim.";
     }
     if (role === "assistant_coach") {
-      return "Read-only help on competitions and roster.";
+      return "Read-only help on assigned groups. Assign groups after they claim.";
     }
     if (role === "student") {
       return "Prefer the roster join link for most students.";
@@ -200,7 +200,12 @@ export function OrganizationPeopleManager({
         setError(result.error);
         return;
       }
-      setMessage(`Invitation created for ${email}.`);
+      const nextStep =
+        orgType === "school" &&
+        (role === "coach" || role === "assistant_coach")
+          ? " Next: after they claim, assign them to a group on Students & groups."
+          : "";
+      setMessage(`Invitation created for ${email}.${nextStep}`);
       setClaimPath(result.claimPath);
       setActivationCode(result.activationCode);
       setEmail("");

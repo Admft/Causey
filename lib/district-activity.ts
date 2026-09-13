@@ -16,6 +16,9 @@ const ACTION_LABELS: Record<string, string> = {
   "organization.invitation_revoked": "Invitation revoked",
   "organization.invitation_expired": "Invitation expired",
   "organization.announcement_published": "Announcement published",
+  "organization.admin_granted": "Administrator granted",
+  "organization.admin_revoked": "Administrator removed",
+  "organization.group_staff_changed": "Group staff updated",
   "competition.created": "Competition created",
   "competition.status_changed": "Competition status changed",
 };
@@ -87,6 +90,29 @@ export function districtActivityFollowThrough(
 
   if (row.action === "organization.announcement_published") {
     return openWorkspace;
+  }
+
+  if (
+    row.action === "organization.admin_granted" ||
+    row.action === "organization.admin_revoked"
+  ) {
+    return {
+      href: `/orgs/${scopeSlug}/people`,
+      label: "Open People",
+    };
+  }
+
+  if (row.action === "organization.group_staff_changed") {
+    if (row.scope_org_type === "school") {
+      return {
+        href: `/orgs/${scopeSlug}/roster#groups`,
+        label: "Open Students & groups",
+      };
+    }
+    return {
+      href: `/orgs/${scopeSlug}/people`,
+      label: "Open People",
+    };
   }
 
   if (row.action === "organization.created") {

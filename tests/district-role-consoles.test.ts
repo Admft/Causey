@@ -256,4 +256,43 @@ describe("role console navigation and branding", () => {
       "revalidatePath(`/orgs/${parsed.data.districtSlug}/schools`)"
     );
   });
+
+  it("keeps unassigned school coaches out of the roster redirect loop", () => {
+    const overview = source("app/orgs/[slug]/page.tsx");
+    expect(overview).toContain('title: "Waiting for a group assignment"');
+    expect(overview).toContain("Group assignment pending");
+    expect(overview).toContain(
+      '!canViewNamedRoster &&\n      !districtScopedSchoolView'
+    );
+    expect(overview.indexOf("Waiting for a group assignment")).toBeLessThan(
+      overview.indexOf('title: "Review the roster and groups"')
+    );
+    expect(overview.indexOf("Waiting for a group assignment")).toBeLessThan(
+      overview.indexOf('title: "Invite your first students"')
+    );
+
+    const manage = source("app/event/[slug]/manage/page.tsx");
+    expect(manage).toContain("awaitingGroupAssignment");
+    expect(manage).toContain('"Waiting for a group assignment"');
+    expect(manage).toContain("Back to school overview");
+    expect(manage).toContain(
+      'awaitingGroupAssignment\n              ? { href: workspaceHref, label: "Back to school overview" }'
+    );
+
+    const roster = source("app/orgs/[slug]/roster/page.tsx");
+    expect(roster).toContain(
+      "if (!view.canViewNamedRoster) redirect(`/orgs/${slug}`)"
+    );
+
+    const staffConsole = source("components/OrganizationStaffConsole.tsx");
+    expect(staffConsole).toContain("canAssignGroups");
+    expect(staffConsole).toContain("Assign groups");
+    expect(staffConsole).toContain("/roster#groups");
+    expect(source("app/orgs/[slug]/people/page.tsx")).toContain(
+      "canAssignGroups={!isDistrict && view.canViewNamedRoster}"
+    );
+    expect(source("components/OrganizationPeopleManager.tsx")).toContain(
+      "assign them to a group on Students & groups"
+    );
+  });
 });

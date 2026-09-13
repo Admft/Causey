@@ -78,6 +78,10 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
   link into a denied roster, or infer delegation from a privacy-empty roster;
   web/mobile shortcuts and legacy `admin` aliases use the same district scope
   (`0100`) — 2026-09-12
+- [x] Unassigned school coaches/assistants get a wait-for-group-assignment
+  mission (overview + manage) instead of a roster redirect loop; school Staff
+  offers Assign groups; People invite success names the next step; Activity
+  labels admin grant/revoke and group staff changes — 2026-09-13
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -192,14 +196,18 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 24. **P0 · District claim left a coach account with no office · M · shipped 2026-09-12**
    Surface: Creating an account from a district claim link used the coach persona and required a second Accept click, so `/admin/users` showed `coach` / Standard account and the claimant never reached Add a school. Matching sign-in now auto-joins as District administrator; `0096` makes a repeat claim a no-op and always returns memberships on name search; empty district overview mounts the create-school form. Coaches still belong on a school, not the district office.
 
+25. **P0 · Unassigned school coach bounced overview ↔ roster · M · shipped 2026-09-13**  
+   Surface: school overview mission + `/event/.../manage` invite empty state; school People Staff “Assign groups”; People invite success; Activity admin/group-staff labels. No migration.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, apply migrations through `0100` in each
+Ops proof of email at school volume, apply migrations through `0101` in each
 environment, and run the live two-district role/isolation smoke in the pilot
 runbook. `0096` is the claim auto-join gate; `0097`–`0098` are the scoped role
 console and aggregate-read gates; `0099` completes protected district
 ownership handoff; `0100` aligns legacy aliases and child-school UI/permission
-gates. Defer to owner/legal gates.
+gates; `0101` is founder school delete. Unassigned school coach wait-state
+shipped 2026-09-13 (no migration). Defer to owner/legal gates.
 
 ### Out-of-scope refusals this pass
 

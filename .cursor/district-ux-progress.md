@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Unassigned school coaches and assistants no longer bounce overview ↔ roster after claim: wait-state mission, manage invite copy, school Staff “Assign groups,” People invite next step, and Activity labels for admin/group-staff audits — 2026-09-13
 - [x] Founder super-admins can permanently delete a school workspace (including orphan “not under a district” schools) from `/admin/organizations`; confirmation accepts hyphen or underscore in the slug (`0101`) — 2026-09-12
 - [x] District and school role consoles now enforce the real hierarchy:
   district administrators get first-class Schools, scoped Staff, delegated

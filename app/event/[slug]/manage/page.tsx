@@ -245,6 +245,7 @@ export default async function ManageEventPage({
     name: string;
     orgType: "school" | "district" | "club" | "team";
   } | null = null;
+  let canViewNamedRoster = true;
   let moderationNote: string | null = null;
   const preferredOrgId =
     canManage && competition.org_id
@@ -276,17 +277,25 @@ export default async function ManageEventPage({
           name: view.org.name,
           orgType: view.org.type,
         };
+        canViewNamedRoster = view.canViewNamedRoster;
       }
     }
   }
+  const workspaceHref = orgShell ? `/orgs/${orgShell.slug}` : "/orgs";
+  const awaitingGroupAssignment =
+    Boolean(canManage) &&
+    hostOrg?.type === "school" &&
+    !canViewNamedRoster &&
+    activeStudents.length === 0;
   const rosterHref = isDistrictHost
     ? orgShell
       ? `/orgs/${orgShell.slug}/schools`
       : "/orgs"
-    : orgShell
-      ? `/orgs/${orgShell.slug}/roster`
-      : "/orgs#organizations";
-  const workspaceHref = orgShell ? `/orgs/${orgShell.slug}` : "/orgs";
+    : awaitingGroupAssignment
+      ? workspaceHref
+      : orgShell
+        ? `/orgs/${orgShell.slug}/roster`
+        : "/orgs#organizations";
   const workspaceTitle = manageEventTitle(
     canManage ? hostOrg?.type : orgShell?.orgType
   );
@@ -433,13 +442,19 @@ export default async function ManageEventPage({
       : {
           title: activeStudents.length
             ? "Invite students or a group"
-            : "Add students, then invite",
+            : awaitingGroupAssignment
+              ? "Waiting for a group assignment"
+              : "Add students, then invite",
           description: activeStudents.length
             ? "Nobody is invited yet. Invite a group in one tap, or pick students from your roster."
-            : "Your roster has no active students. Share a join link, then come back to invite them.",
+            : awaitingGroupAssignment
+              ? "Ask your school administrator to assign you to a student group. Until then you cannot see names or invite anyone from this event."
+              : "Your roster has no active students. Share a join link, then come back to invite them.",
           action: activeStudents.length
             ? { href: "#invite", label: "Invite students" }
-            : { href: rosterHref, label: "Open roster" },
+            : awaitingGroupAssignment
+              ? { href: workspaceHref, label: "Back to school overview" }
+              : { href: rosterHref, label: "Open roster" },
           secondary: activeStudents.length
             ? { href: rosterHref, label: "Open roster" }
             : { href: workspaceHref, label: "Back to workspace" },

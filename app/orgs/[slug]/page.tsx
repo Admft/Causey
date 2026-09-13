@@ -279,6 +279,25 @@ export default async function OrgPage({
       };
     }
     if (!isCoach || org.type === "district") return null;
+    // School coaches/assistants without a group assignment cannot open the
+    // named roster — never send them into the roster redirect loop.
+    if (
+      org.type === "school" &&
+      !canViewNamedRoster &&
+      !districtScopedSchoolView
+    ) {
+      return {
+        title: "Waiting for a group assignment",
+        description: canManageTournaments
+          ? "A school administrator must assign you to a student group before you can see names or invite anyone. You can still open competitions you already host."
+          : "A school administrator must assign you to a student group before you can review students. Your assistant access stays read-only after that.",
+        action: {
+          href: `/orgs/${org.slug}/competitions`,
+          label: "View competitions",
+        },
+        secondary: { href: "/orgs", label: "Back to organizations" },
+      };
+    }
     if (!canManageTournaments) {
       return {
         title: "Review the roster and groups",
@@ -596,6 +615,10 @@ export default async function OrgPage({
         <p className="mt-2 text-sm text-muted">
           {districtScopedSchoolView
             ? "District administrator · aggregate student access · school staffing and setup"
+            : org.type === "school" &&
+                isCoach &&
+                !canViewNamedRoster
+              ? "Group assignment pending"
             : isCoach && org.type !== "district"
             ? `${activeStudentCount} active ${
                 activeStudentCount === 1 ? "student" : "students"
