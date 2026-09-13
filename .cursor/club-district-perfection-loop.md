@@ -30,10 +30,11 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- District People invite defaults to office admin — 2026-09-11
+- Platform admin account directory filters at district scale — 2026-09-12
 
 ## Last tick
 
+- 2026-09-12 — `/admin/users` now has indexed, keyset-paginated filters for a district plus connected schools, exact organization, organization type, full membership role/status, account experience, and platform access (`0095`). Matching rows name the organization context; household links never imply district membership.
 - 2026-09-12 — Admin `/organizations` expand panel shows Created by (and Owner when different) plus a paginated name/email member search (`0094` `search_org_members`) so a large school does not dump the whole roster.
 - 2026-09-11 — District People no longer defaults to Coach (hollow office after claim): District administrator is the default, school-admin setup keeps School administrator while an invite is pending, role help names office vs competition-only access, district Competitions empty copy drops “invite your roster,” and claim signup name help uses the org name for staff.
 - 2026-09-11 — Protected founder accounts on `/admin/users` are no longer fully read-only: account experience (student/parent/coach) can change for founders and for your own row; platform administration stays locked. Migration `0092`.

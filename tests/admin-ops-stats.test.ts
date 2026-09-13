@@ -115,9 +115,9 @@ describe("platform admin ops stats", () => {
     expect(orgs).toContain("/admin/organizations?status=pending");
     expect(users).not.toContain("getAdminOpsStats");
     expect(users).toContain("countPlatformAdmins");
-    expect(users).toContain("parseAdminUserAccess");
+    expect(users).toContain("parseAdminUserFilters");
     expect(users).toContain("adminUsersHref");
-    expect(users).toContain('adminUsersHref("admins")');
+    expect(users).toContain('href: "/admin/users?access=admins"');
     expect(users).toContain("Platform admins");
     expect(overview).toContain("/admin/users?access=admins");
     expect(scrapers).not.toContain("getAdminOpsStats");

@@ -17,6 +17,7 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Platform admin `/admin/users` filters 100k+ account directories by district tree, exact organization, organization type, full membership role/status, account experience, and platform access. Migration `0095` adds indexed admin-only scope lookup plus stable keyset pagination; district scope includes direct district staff and connected-school members but never infers parents from household links — 2026-09-12
 - [x] Admin `/organizations` shows who created each org (and owner when different) plus a paginated name/email member search in the expand panel (`0094` `search_org_members`) so large schools do not dump 10k rows — 2026-09-12
 - [x] Phone/Settings Delete account no longer fails with “needs a database update” when `organization_verification_reviews` was never applied — nested `to_regclass` guard in `delete_own_account` (`0093`, applied on live Supabase) — 2026-09-12
 - [x] Founder/own accounts on `/admin/users` can change account experience (student/parent/coach); platform admin stays locked for self and founders (`0092`) — 2026-09-11

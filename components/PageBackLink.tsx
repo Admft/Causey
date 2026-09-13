@@ -65,6 +65,42 @@ export function PageBackButton({
   );
 }
 
+function NextChevron() {
+  return (
+    <svg
+      className="page-back-mark"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M6 3.5 10.5 8 6 12.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function PageNextLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link href={href} className="page-back">
+      {children}
+      <NextChevron />
+    </Link>
+  );
+}
+
 export function PageNextButton({
   onClick,
   children,
@@ -82,22 +118,7 @@ export function PageNextButton({
       disabled={disabled}
     >
       {children}
-      <svg
-        className="page-back-mark"
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-        aria-hidden
-      >
-        <path
-          d="M6 3.5 10.5 8 6 12.5"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <NextChevron />
     </button>
   );
 }

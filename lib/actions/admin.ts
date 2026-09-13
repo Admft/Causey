@@ -26,6 +26,8 @@ import {
   getAdminUsers,
   parseAdminOrgMemberRole,
   parseAdminUserAccess,
+  searchAdminOrganizationScopes,
+  type AdminOrganizationScope,
   type AdminOrgMemberRow,
   type AdminUserDirectoryRow,
 } from "@/lib/data/admin";
@@ -198,7 +200,22 @@ const AdminOrgMemberSearchSchema = z.object({
   orgId: z.string().uuid(),
   query: z.string().trim().max(200),
   page: z.number().int().min(1).max(10_000),
-  role: z.enum(["all", "admin", "coach", "student"]).optional(),
+  role: z
+    .enum([
+      "all",
+      "admin",
+      "district_admin",
+      "school_admin",
+      "coach",
+      "assistant_coach",
+      "student",
+    ])
+    .optional(),
+});
+
+const AdminOrganizationScopeSearchSchema = z.object({
+  query: z.string().trim().max(100),
+  kind: z.enum(["all", "district"]),
 });
 
 const AdminOrganizationVerificationSchema = z
@@ -304,6 +321,26 @@ export async function adminSearchOrgMembers(input: {
     total: result.total,
     page: parsed.data.page,
   };
+}
+
+export async function adminSearchOrganizationScopes(input: {
+  query: string;
+  kind: "all" | "district";
+}): Promise<ActionResult<{ scopes: AdminOrganizationScope[] }>> {
+  const admin = await getPlatformAdminUser();
+  if (!admin) {
+    return {
+      ok: false,
+      error: "Platform administrator access required.",
+    };
+  }
+  const parsed = AdminOrganizationScopeSearchSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Check the organization search." };
+  }
+  const result = await searchAdminOrganizationScopes(parsed.data);
+  if (result.error) return { ok: false, error: result.error };
+  return { ok: true, scopes: result.scopes };
 }
 
 export async function adminUpdateUserAccess(input: {

@@ -1,6 +1,12 @@
 import "server-only";
 
+import type { AdminUserCursor, AdminUserFilters } from "@/lib/admin-user-filters";
 import type { AdminTournamentListFilters } from "@/lib/admin-tournament-filters";
+import type {
+  OrganizationType,
+  OrgMemberRole,
+  OrgMemberStatus,
+} from "@/lib/auth/orgs";
 import { todayIsoDate } from "@/lib/competition-timing";
 import {
   INGESTION_SOURCES,
@@ -66,7 +72,7 @@ export type AdminOrgMemberRow = {
   email: string;
   display_name: string;
   account_role: "student" | "parent" | "coach";
-  membership_role: "student" | "coach" | "admin";
+  membership_role: OrgMemberRole;
   membership_status: "active" | "invited" | "removed";
   joined_at: string;
   total_count: number;
@@ -75,7 +81,10 @@ export type AdminOrgMemberRow = {
 export const ADMIN_ORG_MEMBER_ROLES = [
   "all",
   "admin",
+  "district_admin",
+  "school_admin",
   "coach",
+  "assistant_coach",
   "student",
 ] as const;
 export type AdminOrgMemberRoleFilter =
@@ -101,6 +110,28 @@ export type AdminUserDirectoryRow = {
   super_admin: boolean;
   created_at: string;
   total_count: number;
+  matching_memberships?: AdminUserMatchingMembership[];
+};
+
+export type AdminUserMatchingMembership = {
+  org_id: string;
+  org_name: string;
+  org_slug: string;
+  org_type: OrganizationType;
+  parent_org_id: string | null;
+  parent_name: string | null;
+  role: OrgMemberRole;
+  status: OrgMemberStatus;
+};
+
+export type AdminOrganizationScope = {
+  id: string;
+  name: string;
+  slug: string;
+  type: OrganizationType;
+  state: string | null;
+  parent_org_id: string | null;
+  parent_name: string | null;
 };
 
 export const ADMIN_USER_ACCESS_FILTERS = ["all", "admins"] as const;
@@ -952,6 +983,165 @@ export async function getAdminUsers({
     });
   }
   return { users: [], total: 0, error: result.error };
+}
+
+function cursorFromAdminUser(
+  user: AdminUserDirectoryRow | undefined
+): AdminUserCursor | null {
+  if (!user) return null;
+  return {
+    name: user.display_name ?? "",
+    email: user.email ?? "",
+    id: user.profile_id,
+  };
+}
+
+export async function getFilteredAdminUsers(
+  filters: AdminUserFilters,
+  limit = 50
+): Promise<{
+  users: AdminUserDirectoryRow[];
+  total: number;
+  error: string | null;
+  previousCursor: AdminUserCursor | null;
+  nextCursor: AdminUserCursor | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("search_platform_users_filtered", {
+    p_query: filters.q ?? "",
+    p_limit: limit,
+    p_access: filters.access,
+    p_district_id: filters.districtId ?? null,
+    p_org_id: filters.orgId ?? null,
+    p_org_type: filters.orgType ?? null,
+    p_account_role: filters.accountRole ?? null,
+    p_membership_role: filters.membershipRole ?? null,
+    p_membership_status: filters.membershipStatus ?? null,
+    p_cursor_name: filters.cursor?.name ?? null,
+    p_cursor_email: filters.cursor?.email ?? null,
+    p_cursor_id: filters.cursor?.id ?? null,
+    p_direction: filters.direction,
+  });
+
+  if (error) {
+    console.error("Filtered platform user search failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      users: [],
+      total: 0,
+      error: isMissingAdminRpc(error, "search_platform_users_filtered")
+        ? "User filters are unavailable on this deployment."
+        : "User search could not be loaded. Check the connection and try again.",
+      previousCursor: null,
+      nextCursor: null,
+    };
+  }
+
+  const rows = ((data ?? []) as Array<
+    AdminUserDirectoryRow & {
+      matching_memberships: AdminUserMatchingMembership[] | null;
+      has_more: boolean;
+    }
+  >).map((row) => ({
+    ...row,
+    platform_admin: Boolean(row.platform_admin),
+    super_admin: Boolean(row.super_admin),
+    total_count: Number(row.total_count ?? 0),
+    matching_memberships: Array.isArray(row.matching_memberships)
+      ? row.matching_memberships
+      : [],
+  }));
+  const hasMore = Boolean(rows[0]?.has_more);
+  const arrivedFromCursor = Boolean(filters.cursor);
+  const canGoPrevious =
+    filters.direction === "previous" ? hasMore : arrivedFromCursor;
+  const canGoNext =
+    filters.direction === "previous" ? arrivedFromCursor : hasMore;
+
+  return {
+    users: rows,
+    total: Number(rows[0]?.total_count ?? 0),
+    error: null,
+    previousCursor: canGoPrevious ? cursorFromAdminUser(rows[0]) : null,
+    nextCursor: canGoNext
+      ? cursorFromAdminUser(rows[rows.length - 1])
+      : null,
+  };
+}
+
+export async function searchAdminOrganizationScopes({
+  query = "",
+  kind = "all",
+}: {
+  query?: string;
+  kind?: "all" | "district";
+}): Promise<{
+  scopes: AdminOrganizationScope[];
+  error: string | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc(
+    "search_admin_organization_scopes",
+    {
+      p_query: query,
+      p_kind: kind,
+      p_limit: 20,
+    }
+  );
+  if (error) {
+    console.error("Admin organization scope search failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return {
+      scopes: [],
+      error: isMissingAdminRpc(error, "search_admin_organization_scopes")
+        ? "Organization filters are unavailable on this deployment."
+        : "Organizations could not be searched. Try again.",
+    };
+  }
+  return {
+    scopes: (data ?? []) as AdminOrganizationScope[],
+    error: null,
+  };
+}
+
+export async function getAdminOrganizationScopesById(
+  ids: string[]
+): Promise<Map<string, AdminOrganizationScope>> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  const scopes = new Map<string, AdminOrganizationScope>();
+  if (!unique.length) return scopes;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("organizations")
+    .select(
+      "id, name, slug, type, state, parent_org_id, parent:organizations!parent_org_id(name)"
+    )
+    .in("id", unique);
+  if (error) {
+    console.error("Admin organization scope labels failed:", {
+      code: error.code,
+      message: error.message,
+    });
+    return scopes;
+  }
+  for (const row of data ?? []) {
+    const parent = Array.isArray(row.parent) ? row.parent[0] : row.parent;
+    scopes.set(row.id, {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      type: row.type as OrganizationType,
+      state: row.state,
+      parent_org_id: row.parent_org_id,
+      parent_name: parent?.name ?? null,
+    });
+  }
+  return scopes;
 }
 
 export async function getAdminTournaments(

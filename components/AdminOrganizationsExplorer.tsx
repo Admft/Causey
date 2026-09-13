@@ -314,6 +314,16 @@ function OrganizationPanel({
           Open workspace
         </Link>
         <Link
+          href={
+            org.type === "district"
+              ? `/admin/users?district=${org.id}`
+              : `/admin/users?org=${org.id}`
+          }
+          className="font-semibold text-muted-strong hover:text-brand-red"
+        >
+          View users
+        </Link>
+        <Link
           href={`/admin/tournaments/new?org=${org.id}`}
           className="font-semibold text-muted-strong hover:text-brand-red"
         >

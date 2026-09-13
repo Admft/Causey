@@ -12,8 +12,11 @@ import { attemptAction } from "@/lib/attempt-action";
 const PAGE_SIZE = 25;
 
 const ROLE_LABELS: Record<AdminOrgMemberRow["membership_role"], string> = {
-  admin: "Admin",
+  admin: "Organization admin",
+  district_admin: "District administrator",
+  school_admin: "School administrator",
   coach: "Coach",
+  assistant_coach: "Assistant coach",
   student: "Student",
 };
 
@@ -92,8 +95,9 @@ export function AdminOrgMembersPanel({
   }
 
   useEffect(() => {
-    search(1, "", "all");
-    // Load the first page when this org panel opens.
+    const load = window.setTimeout(() => search(1, "", "all"), 0);
+    return () => window.clearTimeout(load);
+    // Load the first page after this org panel opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- orgId identity
   }, [orgId]);
 
@@ -146,9 +150,12 @@ export function AdminOrgMembersPanel({
             }
           >
             <option value="all">All roles</option>
-            <option value="admin">Admins</option>
+            <option value="district_admin">District administrators</option>
+            <option value="school_admin">School administrators</option>
             <option value="coach">Coaches</option>
+            <option value="assistant_coach">Assistant coaches</option>
             <option value="student">Students</option>
+            <option value="admin">Legacy organization admins</option>
           </select>
         </label>
         <button

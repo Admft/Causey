@@ -77,7 +77,15 @@ begin
   if p_org_id is null then
     raise exception 'org_id_required';
   end if;
-  if role_filter not in ('all', 'student', 'coach', 'admin') then
+  if role_filter not in (
+    'all',
+    'student',
+    'assistant_coach',
+    'coach',
+    'school_admin',
+    'district_admin',
+    'admin'
+  ) then
     raise exception 'invalid_membership_role';
   end if;
   if not exists (

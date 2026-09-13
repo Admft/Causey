@@ -80,6 +80,20 @@ describe("platform admin actions", () => {
     });
   });
 
+  it("rejects organization-scope searches for non-admins", async () => {
+    mocks.getPlatformAdminUser.mockResolvedValue(null);
+    const { adminSearchOrganizationScopes } = await import(
+      "@/lib/actions/admin"
+    );
+
+    await expect(
+      adminSearchOrganizationScopes({ query: "district", kind: "district" })
+    ).resolves.toEqual({
+      ok: false,
+      error: "Platform administrator access required.",
+    });
+  });
+
   it("rejects organization verification for non-admins", async () => {
     mocks.getPlatformAdminUser.mockResolvedValue(null);
     const { adminReviewOrganization } = await import("@/lib/actions/admin");
@@ -230,9 +244,10 @@ describe("platform user directory access filter", () => {
   });
 
   it("keeps the users list on the selected access filter", () => {
-    expect(usersPage).toContain("parseAdminUserAccess");
+    expect(usersPage).toContain("parseAdminUserFilters");
+    expect(usersPage).toContain("getFilteredAdminUsers");
     expect(directory).toContain("access?: AdminUserAccessFilter");
-    expect(directory).toContain("access,");
+    expect(directory).toContain('name="access" value="admins"');
     expect(directory).toContain("Platform admins");
   });
 });

@@ -24,6 +24,9 @@ describe("Admin org creator + member search", () => {
     expect(migration).toContain("limit safe_limit");
     expect(migration).toContain("offset safe_offset");
     expect(migration).toContain("status is distinct from 'removed'");
+    expect(migration).toContain("'school_admin'");
+    expect(migration).toContain("'district_admin'");
+    expect(migration).toContain("'assistant_coach'");
   });
 
   it("loads creator and owner contacts on the org directory", () => {

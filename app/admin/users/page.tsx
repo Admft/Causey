@@ -5,14 +5,20 @@ import { AdminStatStrip } from "@/components/AdminStatStrip";
 import { AdminUserDirectory } from "@/components/AdminUserDirectory";
 import { remainderCount } from "@/lib/admin-charts";
 import {
+  adminUsersClearHref,
+  adminUsersHaveFilters,
+  adminUsersHref,
+  parseAdminUserFilters,
+} from "@/lib/admin-user-filters";
+import {
   getPlatformAdminUser,
   isCurrentUserSuperAdmin,
 } from "@/lib/auth/platform-admin";
 import {
-  adminUsersHref,
   countPlatformAdmins,
+  getAdminOrganizationScopesById,
   getAdminUsers,
-  parseAdminUserAccess,
+  getFilteredAdminUsers,
 } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
@@ -23,44 +29,78 @@ export const metadata: Metadata = {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ access?: string }>;
+  searchParams: Promise<{
+    access?: string;
+    q?: string;
+    district?: string;
+    org?: string;
+    orgType?: string;
+    accountRole?: string;
+    membershipRole?: string;
+    membershipStatus?: string;
+    cursor?: string;
+    direction?: string;
+  }>;
 }) {
   const admin = await getPlatformAdminUser();
   if (!admin) return null;
   const isSuperAdmin = await isCurrentUserSuperAdmin();
-  const { access: rawAccess } = await searchParams;
-  const access = parseAdminUserAccess(rawAccess);
-  const [directory, platformAdmins, allAccounts] = await Promise.all([
-    getAdminUsers({
-      limit: 50,
-      access,
-    }),
+  const filters = parseAdminUserFilters(await searchParams);
+  const hasFilters = adminUsersHaveFilters(filters);
+  const [directory, platformAdmins, allAccounts, scopeLabels] = await Promise.all([
+    getFilteredAdminUsers(filters, 50),
     countPlatformAdmins(),
-    access === "admins" ? getAdminUsers({ limit: 1 }) : Promise.resolve(null),
+    getAdminUsers({ limit: 1 }),
+    getAdminOrganizationScopesById(
+      [filters.districtId, filters.orgId].filter(
+        (id): id is string => Boolean(id)
+      )
+    ),
   ]);
   const { users, total, error } = directory;
-  const totalAccounts =
-    access === "admins"
-      ? allAccounts && !allAccounts.error
-        ? allAccounts.total
-        : null
-      : error
-        ? null
-        : total;
+  const totalAccounts = allAccounts.error ? null : allAccounts.total;
+  const initialDistrict = filters.districtId
+    ? (scopeLabels.get(filters.districtId) ?? null)
+    : null;
+  const initialOrganization = filters.orgId
+    ? (scopeLabels.get(filters.orgId) ?? null)
+    : null;
+  const previousHref = directory.previousCursor
+    ? adminUsersHref(filters, {
+        cursor: directory.previousCursor,
+        direction: "previous",
+      })
+    : null;
+  const nextHref = directory.nextCursor
+    ? adminUsersHref(filters, {
+        cursor: directory.nextCursor,
+        direction: "next",
+      })
+    : null;
+  const directoryKey = [
+    filters.access,
+    filters.q,
+    filters.districtId,
+    filters.orgId,
+    filters.orgType,
+    filters.accountRole,
+    filters.membershipRole,
+    filters.membershipStatus,
+    filters.cursor?.id,
+    filters.direction,
+  ].join(":");
 
   return (
-    <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
+    <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <p className="text-sm font-semibold text-brand-red">Platform admin</p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
         Users &amp; access
       </h1>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        Search every Causey account by display name or email. Account experience
-        changes are confirmed and audited, including founder accounts and your
-        own. Platform administration on your own account or a founder account
-        stays locked here. Founder super-admins can also delete non-founder
-        accounts after typing the email. Organization membership can be granted
-        or repaired when a claim link is blocked.
+        Search accounts by name, district, school, club, team, and role. Results
+        stay server-filtered and paginated so the directory remains usable as
+        Causey grows. Account and platform-access changes remain confirmed and
+        audited.
       </p>
 
       <div className="mt-8">
@@ -70,14 +110,14 @@ export default async function AdminUsersPage({
             {
               label: "Total accounts",
               value: totalAccounts,
-              href: adminUsersHref("all"),
-              current: access === "all",
+              href: "/admin/users",
+              current: filters.access === "all",
             },
             {
               label: "Platform admins",
               value: platformAdmins,
-              href: adminUsersHref("admins"),
-              current: access === "admins",
+              href: "/admin/users?access=admins",
+              current: filters.access === "admins",
             },
           ]}
           chart={
@@ -102,11 +142,22 @@ export default async function AdminUsersPage({
 
       <div className="mt-8">
         <AdminUserDirectory
-          key={access}
-          access={access}
+          key={directoryKey}
+          access={filters.access}
           initialUsers={users}
           initialTotal={total}
           initialError={error}
+          initialQuery={filters.q}
+          initialDistrict={initialDistrict}
+          initialOrganization={initialOrganization}
+          initialOrgType={filters.orgType}
+          initialAccountRole={filters.accountRole}
+          initialMembershipRole={filters.membershipRole}
+          initialMembershipStatus={filters.membershipStatus}
+          clearHref={adminUsersClearHref(filters)}
+          previousHref={previousHref}
+          nextHref={nextHref}
+          hasFilters={hasFilters}
           currentAdminId={admin.id}
           isSuperAdmin={isSuperAdmin}
         />
