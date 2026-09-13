@@ -106,7 +106,7 @@ export default async function ClaimCodePage({
           next={next}
           signedIn={Boolean(user)}
           signedInEmail={user?.email ?? null}
-          claimControl={<ClaimCodeInvitationButton code={code} />}
+          claimControl={<ClaimCodeInvitationButton code={code} autoAccept />}
         />
       </section>
     </div>

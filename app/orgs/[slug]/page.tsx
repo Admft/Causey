@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AnnouncementForm } from "@/components/AnnouncementForm";
+import { DistrictSchoolForm } from "@/components/DistrictSchoolForm";
 import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import {
@@ -37,6 +38,7 @@ import { formatDateRange, formatFeeCents, formatRecordedResult } from "@/lib/for
 import { safeExternalUrl } from "@/lib/safe-url";
 import {
   SEARCH_TOURNAMENTS_LABEL,
+  contextualOrganizationRoleLabel,
   organizationKindLabel,
 } from "@/lib/portal-copy";
 
@@ -118,6 +120,7 @@ export default async function OrgPage({
     membership,
     isCoach,
     canManageTournaments,
+    canViewNamedRoster,
     isAdmin,
     isDistrictAdmin,
     activeMemberCount,
@@ -125,6 +128,9 @@ export default async function OrgPage({
     drafts: directDrafts,
     announcements,
   } = view;
+  const canPublishAnnouncements =
+    isAdmin ||
+    ((org.type === "club" || org.type === "team") && canManageTournaments);
   // Typed by an organization admin, so it is untrusted in an href.
   const orgWebsiteHref = safeExternalUrl(org.website_url);
 
@@ -140,7 +146,7 @@ export default async function OrgPage({
     await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
     getOrgAttendedEvents(org.id),
-    isCoach && org.type !== "district"
+    canViewNamedRoster && org.type !== "district"
       ? getOrgRoster(org.id)
       : Promise.resolve([]),
     isDistrictAdmin
@@ -149,7 +155,7 @@ export default async function OrgPage({
     org.type === "district"
       ? getOrgCompetitionWorkspace(org)
       : Promise.resolve(null),
-    isCoach && org.type !== "district"
+    canViewNamedRoster && org.type !== "district"
       ? getOrgSeasonAttendance(org.id)
       : Promise.resolve({ ok: true as const, data: [] }),
     org.type === "district" && canManageTournaments
@@ -511,6 +517,15 @@ export default async function OrgPage({
     });
     return recorded ? [{ ...row, recorded }] : [];
   });
+  const contextRoleLabel = contextualOrganizationRoleLabel({
+    orgType: org.type,
+    memberRole: membership?.role,
+    isAdmin,
+    isDistrictAdmin,
+    canViewNamedRoster,
+  });
+  const districtScopedSchoolView =
+    org.type === "school" && isAdmin && !canViewNamedRoster;
 
   return (
     <>
@@ -518,9 +533,10 @@ export default async function OrgPage({
         slug={org.slug}
         orgName={org.name}
         tab="overview"
-        showRoster={isCoach && org.type !== "district"}
+        showRoster={canViewNamedRoster && org.type !== "district"}
         showAdmin={isAdmin}
         orgType={org.type}
+        roleLabel={contextRoleLabel}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
@@ -531,7 +547,9 @@ export default async function OrgPage({
           {org.name}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          {isCoach && org.type !== "district"
+          {districtScopedSchoolView
+            ? "District administrator · aggregate student access · school staffing and setup"
+            : isCoach && org.type !== "district"
             ? `${activeStudentCount} active ${
                 activeStudentCount === 1 ? "student" : "students"
               }`
@@ -655,7 +673,11 @@ export default async function OrgPage({
                   </p>
                 </div>
                 <Link
-                  href={`/orgs/${org.slug}/settings#schools`}
+                  href={
+                    districtReadiness?.schools.length
+                      ? `/orgs/${org.slug}/schools`
+                      : `#add-school`
+                  }
                   className="text-xs font-semibold text-muted-strong hover:text-brand-red"
                 >
                   {districtReadiness?.schools.length
@@ -665,17 +687,18 @@ export default async function OrgPage({
               </div>
 
               {!districtReadiness?.schools.length ? (
-                <p className="mt-4 max-w-prose text-sm text-muted">
-                  No school workspaces yet.{" "}
-                  <Link
-                    href={`/orgs/${org.slug}/settings#schools`}
-                    className="font-semibold text-brand-red hover:underline"
-                  >
-                    Create the first school
-                  </Link>
-                  , then delegate its administrator before provisioning
-                  students.
-                </p>
+                <div id="add-school" className="mt-4 scroll-mt-24">
+                  <p className="mb-4 max-w-prose text-sm text-muted">
+                    No school workspaces yet. Create one here, then invite its
+                    school administrator. Coaches are assigned on the school,
+                    not from this district office.
+                  </p>
+                  <DistrictSchoolForm
+                    districtId={org.id}
+                    districtSlug={org.slug}
+                    defaultState={org.state}
+                  />
+                </div>
               ) : (
                 <ul className="mt-4 divide-y divide-line border-y border-line">
                   {districtReadiness.schools.map((school) => {
@@ -1160,7 +1183,7 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {canManageTournaments ? (
+        {canPublishAnnouncements ? (
           <section className="mt-10 border-t border-line pt-8">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
               <div>

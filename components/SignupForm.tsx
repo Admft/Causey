@@ -290,8 +290,8 @@ export function SignupForm({
         }
       : invitation
         ? {
-            title: "Accept your invitation",
-            copy: `${invitation.roleLabel} at ${invitation.orgName}.`,
+            title: "Join your organization",
+            copy: `You’ll join ${invitation.orgName} as ${invitation.roleLabel.toLowerCase()}.`,
           }
         : next
           ? { title: "Continue where you left off", copy: null }
@@ -466,8 +466,8 @@ export function SignupForm({
             {invitation.accountRole === "student" ? "Student" : "Staff"}
           </p>
           <p className="text-xs text-muted">
-            After email confirmation, accept the {invitation.roleLabel.toLowerCase()}{" "}
-            role in {invitation.orgName}.
+            After email confirmation you join {invitation.orgName} as{" "}
+            {invitation.roleLabel.toLowerCase()}.
           </p>
         </div>
       ) : (

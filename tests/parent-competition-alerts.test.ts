@@ -13,6 +13,9 @@ describe("parent competition alerts", () => {
     );
     const invites = read("lib/actions/entrants.ts");
     const district = read("lib/actions/district.ts");
+    const scopedReads = read(
+      "supabase/migrations/0098_role_console_reads_and_district_invites.sql"
+    );
     const results = read("lib/results-write.ts");
 
     expect(migration).toContain("get_active_guardians_for_profiles");
@@ -22,9 +25,12 @@ describe("parent competition alerts", () => {
     expect(invites).toContain("getActiveGuardiansForProfiles");
     expect(invites).toContain("/family#needs-response");
     expect(invites).toContain(":parent:");
-    expect(district).toContain("announcement:${row.id}:parent:");
+    expect(scopedReads).toContain(
+      "'announcement:' || announcement_row.id::text || ':parent:'"
+    );
     expect(results).toContain('kind: "result"');
-    expect(district).toContain("/family");
+    expect(scopedReads).toContain("'/family'");
+    expect(district).toContain('"notify_org_announcement_recipients"');
   });
 
   it("emails recorded results without duplicating student invitation mail", () => {

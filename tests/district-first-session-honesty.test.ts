@@ -19,7 +19,7 @@ describe("district first-session next-step honesty", () => {
   it("sends district Account rows to Schools instead of a dead Roster link", () => {
     const account = source("app/account/page.tsx");
     expect(account).toContain('row.org.type === "district"');
-    expect(account).toContain("settings#schools");
+    expect(account).toContain("row.org.slug}/schools");
     expect(account).toContain("studentOrgChromeFromTypes");
     expect(account).not.toContain("Not on a club yet");
     expect(account).not.toContain("share clubs and RSVP help");

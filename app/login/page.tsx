@@ -57,7 +57,7 @@ export default async function LoginPage({
   } else if (isStaffClaim) {
     heading = "Sign in to accept your staff invitation";
     supporting =
-      "Use the email that received the invitation. After signing in, you’ll return to claim your school or district role.";
+      "Use the email that received the invitation. After signing in, Causey assigns the school or district role and opens that workspace.";
   } else if (isClaimingInvitation) {
     heading = "Sign in to accept your invitation";
     supporting =
@@ -91,7 +91,7 @@ export default async function LoginPage({
               </h2>
               <p className="mt-1 text-sm text-muted">
                 {isStaffClaim
-                  ? "Create a coach or organizer account with your own password. Staff invites do not need a student date of birth."
+                  ? "Create a staff account with your own password. After you confirm email, Causey assigns the district or school role from the invitation — it is not a club-coach login."
                   : isJoiningOrganization
                     ? "Most people opening a coach invite need to create an account first."
                     : "Create the matching account type, then you’ll return here to accept."}

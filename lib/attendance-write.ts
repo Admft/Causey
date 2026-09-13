@@ -21,19 +21,15 @@ export async function performMarkAttendance(input: {
     return { ok: false, error: "Choose a valid attendance status." };
   }
 
-  const [managementCheck, entrantCheck] = await Promise.all([
-    input.supabase.rpc("can_manage_competition", {
-      p_competition_id: input.competitionId,
-      p_profile_id: input.userId,
-    }),
-    input.supabase.rpc("can_invite_to_competition", {
+  const managementCheck = await input.supabase.rpc(
+    "can_operate_competition_entrant",
+    {
       p_competition_id: input.competitionId,
       p_entrant_id: input.profileId,
-      p_inviter_id: input.userId,
-    }),
-  ]);
-  const canManage = managementCheck.data === true || entrantCheck.data === true;
-  if (!canManage && managementCheck.error && entrantCheck.error) {
+      p_actor_id: input.userId,
+    }
+  );
+  if (managementCheck.error) {
     return {
       ok: false,
       error: actionErrorMessage(
@@ -42,7 +38,7 @@ export async function performMarkAttendance(input: {
       ),
     };
   }
-  if (!canManage) {
+  if (managementCheck.data !== true) {
     return { ok: false, error: "Only competition staff can record attendance." };
   }
 

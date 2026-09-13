@@ -14,7 +14,7 @@ the verified `causey.dev` Resend domain (cornell team, Causey Sign up key).
    do not provision either district unless the target ledger and schema effects
    include every versioned file through `0044`. Also apply every newer
    migration in the branch, currently through
-   `0078_admin_provision_district_school.sql` (including
+   `0099_district_claim_owner_handoff.sql` (including
    `0045_atomic_district_school_creation.sql`,
    `0046_district_hosted_reporting.sql`,
    `0060_district_admin_activity.sql`,
@@ -23,7 +23,10 @@ the verified `causey.dev` Resend domain (cornell team, Causey Sign up key).
    `0069_p1_isolation_email_comments.sql`,
    `0070_p2_origin_reports_invites.sql`,
    `0074_district_provisioning_codes.sql`, and
-   `0075_guardian_link_consent.sql`).
+   `0075_guardian_link_consent.sql`,
+   `0096_claim_and_admin_membership_context.sql`,
+   `0097_district_school_role_boundaries.sql`, and
+   `0098_role_console_reads_and_district_invites.sql`).
    **`0074` is a hard gate, not an optional newer file.** `0070` recreated
    `create_org_invitation` with `search_path = public`, which reverted the
    extension search path `0030` had set. On any project that applied `0070`,
@@ -35,7 +38,12 @@ the verified `causey.dev` Resend domain (cornell team, Causey Sign up key).
    shipped in `0062` with an allowlist that never included the `comment` or
    `geo` buckets the app already sends, so event comments fail closed on any
    project running `0062` without `0075`.
-   Apply `0078` before using **Provision school** from `/admin/organizations`.
+   Apply `0099` before using the role consoles. `0097` is the hard permission
+   boundary for delegated administrators and assigned-group coaches; `0098`
+   adds aggregate-only district reads, district event bulk invites, scoped
+   staff directories, and announcement fan-out without student IDs. `0099`
+   transfers protected district ownership from the temporary provisioning
+   super admin to the first matching district-administrator claimant.
    A clean filename check alone
    does not prove the target database is current. `PENDING_SCRAPE.sql` was
    removed after integration; do not restore or apply a copy of that scratch
@@ -134,7 +142,7 @@ account with that email, and accept.
 
 **District office.** From the district workspace:
 
-1. Open Settings → District schools.
+1. Open **Schools** in the district console.
 2. Create the school with its official name and state.
 3. Causey redirects to the school People page. Create a
    `school_admin` invitation.
@@ -163,9 +171,10 @@ non-school records, and schools that are not pending.
 
 ## 5. Provision students and staff
 
-1. Open each school Roster page.
+1. Open each school **Students & groups** page.
 2. Share the student join link for normal student onboarding.
-3. Use People for assistant coaches, coaches, and one-off claim invitations.
+3. Use **Coaches & staff** for school administrators, coaches, assistants,
+   claim invitations, and group assignments.
 4. For a staff CSV, export the generated claim links and distribute them
    directly. Never send shared passwords.
 5. Confirm at least one student is active so the district workspace marks the
@@ -180,11 +189,14 @@ At one school:
 
 1. Create a tournament draft.
 2. Preview and publish with the intended audience.
-3. Invite at least one rostered student.
+3. Assign the coach to a group, then invite one student from that assigned
+   group. Confirm an unassigned student is absent from the coach's controls.
 4. Respond to the invitation as the student or linked parent.
 5. Track organizer registration separately when the tournament uses an
    external registration URL.
-6. After the event, mark attendance from the manage page.
+6. After the event, mark attendance and record a result from the manage page.
+   Confirm an assistant can read assigned context but cannot perform either
+   write.
 7. Confirm the district Reports page shows aggregate school counts without
    exposing browsing, saved-event, or search activity.
 8. Confirm invite, RSVP, announcement, and tournament-change updates appear
@@ -211,7 +223,8 @@ between districts to make the test pass.
    account, transfer ownership, and activate one student. Repeat independently
    in District B with District B accounts.
 4. Confirm the District A administrator can see only District A child schools,
-   memberships, readiness rows, and People/Roster actions. Directly requesting
+   staff, readiness rows, and aggregate reports. Confirm child-school student
+   names, profile history, and entrant rows are unavailable. Directly requesting
    a District B workspace or report must return not-found/forbidden behavior,
    not a partially populated page.
 5. Repeat the previous check from the District B administrator session against
@@ -230,7 +243,7 @@ between districts to make the test pass.
 9. Return to the platform-admin queue. Confirm both districts and their child
    schools remain independently grouped and each verification review/audit
    result names only the organization acted on.
-10. Record the target project, migration ledger through `0044` plus all newer
+10. Record the target project, migration ledger through `0099`,
     branch migrations, test-account IDs, organization IDs, timestamps, and
     pass/fail result in the private deployment log. Do not put participant
     names or claim tokens in that log.

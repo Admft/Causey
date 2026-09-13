@@ -1,5 +1,6 @@
 import { homePathForRole } from "@/lib/auth/home-path";
 import type { AccountRole } from "@/lib/auth/types";
+import { ORG_ROLE_LABELS, type OrgMemberRole } from "@/lib/auth/orgs";
 
 /**
  * Shared portal vocabulary so empty/error/success CTAs match AuthNav terms.
@@ -16,6 +17,32 @@ export const CREATE_ORGANIZATION_LABEL = "Create an organization";
 export const CREATE_CLUB_LABEL = "Create a club";
 export const START_A_CLUB_LABEL = "Start a club";
 export const START_CLUB_SIGNUP_HREF = "/signup?role=coach&next=/orgs/new";
+
+export function contextualOrganizationRoleLabel(input: {
+  orgType: string;
+  memberRole?: OrgMemberRole | null;
+  isAdmin: boolean;
+  isDistrictAdmin: boolean;
+  canViewNamedRoster: boolean;
+}): string {
+  if (input.orgType === "district" && input.isDistrictAdmin) {
+    return "District administrator";
+  }
+  if (
+    input.orgType === "school" &&
+    input.isAdmin &&
+    !input.canViewNamedRoster
+  ) {
+    return "District administrator";
+  }
+  if (input.memberRole) return ORG_ROLE_LABELS[input.memberRole];
+  if (input.isAdmin) {
+    return input.orgType === "school"
+      ? "School administrator"
+      : "Administrator";
+  }
+  return "Organization member";
+}
 
 /** Plain noun for copy: club, team, school, or district. */
 export function organizationKindLabel(
@@ -355,12 +382,25 @@ export function staffAccountPersonaLabel(options: {
   const hasSchool = kinds.has("school");
   const hasDistrict = kinds.has("district");
 
-  if (roles.has("district_admin") || hasDistrict) {
+  if (roles.has("district_admin")) {
+    return "District administrator";
+  }
+  if (roles.has("school_admin")) {
+    return "School administrator";
+  }
+  if (roles.has("admin")) {
+    return "Organization administrator";
+  }
+  if (roles.size === 1 && roles.has("assistant_coach")) {
+    return "Assistant coach";
+  }
+  if (roles.size === 1 && roles.has("coach")) {
+    return "Coach";
+  }
+  if (hasDistrict) {
     return hasClubOrTeam ? "Staff" : "District staff";
   }
   if (
-    roles.has("school_admin") ||
-    roles.has("admin") ||
     (hasSchool && !hasClubOrTeam)
   ) {
     return "School staff";

@@ -8,8 +8,10 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 
 ## Have (ready enough for a chess pilot with Causey ops)
 
-- District → school hierarchy, readiness command center, ownership handoff
-- Role split (district admin, school admin, coach, assistant, parent, student)
+- District → school hierarchy, first-class Schools console, readiness command
+  center, protected ownership handoff, and delegated administrator controls
+- Role-scoped consoles: aggregate-only district office; full-roster school
+  administrators; assigned-group coaches; read-only assigned-group assistants
 - Audiences: public / district-only / school-only / invite-only
 - Competitions inventory with host filter across district + schools
 - Family desk, alerts (in-app; email configured not volume-proven); linked parents get invite/change/result/announcement copies
@@ -62,6 +64,14 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
 - [x] Family can mark a linked student Going on a public listing without a school/club invite (`0080`); organizer-site entry is still Mark complete, not an import — 2026-09-05
 - [x] District first-session next-step honesty: stage-aware command-center secondary (no empty Reports mid-setup), Account district Schools link, school-or-club Family/Account/Leave/event invite chrome — 2026-09-07
 - [x] Coach Plan (`/me`) mission uses school/district nouns from memberships — 2026-09-11
+- [x] District and school role consoles: delegated peer administrators with
+  owner/self/last-admin guards; first-class Schools and scoped Staff consoles;
+  aggregate-only district student/event reads; full school roster controls;
+  coach/assistant group assignments; assigned-only competition operations;
+  exact role branding and workspace switching (`0097`–`0098`) — 2026-09-12
+- [x] First valid district-admin claim takes protected ownership from the
+  temporary provisioning super admin; email, claimed identity, and active
+  district membership must agree (`0099`) — 2026-09-12
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 
@@ -85,8 +95,8 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Area | Status | Evidence |
 | --- | --- | --- |
 | Platform provisions district; coach cannot self-serve | **works** | `0025` + `/admin/organizations`; `tests/district-lifecycle-guardrails.test.ts` |
-| Add school → invite named admin → claim → ownership; district retains authority | **works** | `createDistrictSchool` / `0045`; super-admin `admin_provision_district_school` / `0078`; `/orgs/[slug]/settings#schools`; `/people`; ownership settings |
-| Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school |
+| Add school → invite named admin → claim → ownership; district retains authority | **works** | `createDistrictSchool` / `0045`; overview `#add-school` form; super-admin `admin_provision_district_school` / `0078`; `/orgs/[slug]/settings#schools`; `/people`; ownership settings |
+| Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school; matching sign-in auto-joins (`0096`) |
 | Command center: one next action + per-school readiness | **works** | `lib/district-readiness.ts` → `run_competitions`; `/orgs/[slug]` school list |
 | N=2 isolation (readiness/reports/CSV/activity) | **works** in repo; live env still ops-gated | `tests/multi-district-isolation.test.ts`; runbook §7 |
 | School chrome says School account | **works** | `components/OrgSubnav.tsx`; Family/Plan/Orgs/`membershipHistoryEyebrow` type-aware nouns |
@@ -97,7 +107,7 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 | Overview calendar of school + district events | **works** | `/orgs/[slug]` “Upcoming across the district” (prior tick) |
 | Reports + CSV school- vs district-hosted; fail closed | **works** | `/orgs/[slug]/reports` + `export/route.ts`; `0046`; type filter + origin-school table (`0070`); school attendance fails closed |
 | District-hosted invite of connected-school students | **works** | manage loads child-school rosters; `inviteConnectedSchoolRosters`; `origin_org_id` stamped (`0070`) |
-| Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school |
+| Claim-link provisioning | **works** | Email or copyable invite plus activation code; CSV via `create_org_invitations`; reissue; `/admin/organizations` Provision district / Provision school; matching sign-in auto-joins (`0096`) |
 | Activity feed scoped | **works** | `/orgs/[slug]/activity`; `0060` |
 | Family RSVP + organizer registration | **works** | `/family` plus event-page Invite then Going without a roster invite (`0080`/`0082`); organizer mark-complete still required |
 | School roster / manage composition | **works** | progressive groups; status-grouped replies; group-first invite picks |
@@ -173,9 +183,16 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 23. **Platform ops · Account search did not scale by district · M · shipped 2026-09-12**
    Surface: `/admin/users` filters by district plus connected schools, exact organization, organization type, full membership role/status, account experience, and platform access. Migration `0095` adds indexed name/email and membership predicates plus stable keyset pagination. Results name the matching organization context. This remains platform-admin support tooling: district offices do not gain central student browsing, and household links do not infer district membership.
 
+24. **P0 · District claim left a coach account with no office · M · shipped 2026-09-12**
+   Surface: Creating an account from a district claim link used the coach persona and required a second Accept click, so `/admin/users` showed `coach` / Standard account and the claimant never reached Add a school. Matching sign-in now auto-joins as District administrator; `0096` makes a repeat claim a no-op and always returns memberships on name search; empty district overview mounts the create-school form. Coaches still belong on a school, not the district office.
+
 ### Recommended next shippable win
 
-Ops proof of email at school volume, and apply migrations through `0082` (and later source migrations) in each environment (`0074`–`0082` are hard gates — see the runbook). Defer to owner/legal gates — do not invent FERPA/price UI. Swap the P4 pathway copy when US Chess sends written rules. Remaining code-path nits: settings website help still says “club overview”; Account “Create another club” for institutional-only staff; district `/orgs` listHeading still names clubs.
+Ops proof of email at school volume, apply migrations through `0099` in each
+environment, and run the live two-district role/isolation smoke in the pilot
+runbook. `0096` is the claim auto-join gate; `0097`–`0098` are the scoped role
+console and aggregate-read gates; `0099` completes protected district
+ownership handoff. Defer to owner/legal gates.
 
 ### Out-of-scope refusals this pass
 

@@ -40,8 +40,7 @@ describe("mobile results write path", () => {
 
   it("shares one permission and notification path with the website", () => {
     const shared = read("lib/results-write.ts");
-    expect(shared).toContain("can_manage_competition");
-    expect(shared).toContain("can_invite_to_competition");
+    expect(shared).toContain("can_operate_competition_entrant");
     expect(shared).toContain("Only competition staff can record a result.");
     expect(shared).toContain("result_marked_by");
     expect(shared).toContain("result_marked_at");
@@ -68,11 +67,8 @@ describe("mobile results write path", () => {
   it("loads guardians on the passed client instead of a cookie session", async () => {
     const { performRecordResult } = await import("@/lib/results-write");
     const rpc = vi.fn(async (name: string) => {
-      if (name === "can_manage_competition") {
+      if (name === "can_operate_competition_entrant") {
         return { data: true, error: null };
-      }
-      if (name === "can_invite_to_competition") {
-        return { data: false, error: null };
       }
       if (name === "get_active_guardians_for_profiles") {
         return {
@@ -163,10 +159,7 @@ describe("mobile results write path", () => {
   it("skips parent alerts when clearing a result", async () => {
     const { performRecordResult } = await import("@/lib/results-write");
     const rpc = vi.fn(async (name: string) => {
-      if (
-        name === "can_manage_competition" ||
-        name === "can_invite_to_competition"
-      ) {
+      if (name === "can_operate_competition_entrant") {
         return { data: true, error: null };
       }
       throw new Error(name);

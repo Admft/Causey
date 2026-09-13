@@ -130,3 +130,27 @@ describe("indexed platform user filter migration", () => {
     }
   });
 });
+
+describe("admin user membership context", () => {
+  const membershipMigration = read(
+    "supabase/migrations/0096_claim_and_admin_membership_context.sql"
+  );
+  const directory = read("components/AdminUserDirectory.tsx");
+
+  it("always returns staff-first memberships on name search", () => {
+    expect(membershipMigration).toContain(
+      "coalesce(matched.items, '[]'::jsonb) as matching_memberships"
+    );
+    expect(membershipMigration).not.toContain(
+      "when has_membership_filter then coalesce(matched.items"
+    );
+    expect(membershipMigration).toContain("when 'district_admin' then 0");
+    expect(membershipMigration).toContain("limit 3");
+  });
+
+  it("labels claimed district staff as district staff, not the coach account type", () => {
+    expect(directory).toContain("staffAccountPersonaLabel");
+    expect(directory).toContain("accountExperienceLabel");
+    expect(directory).toContain("Coach / organizer (account type)");
+  });
+});

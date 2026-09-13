@@ -18,13 +18,32 @@ describe("district-hosted multi-school invite", () => {
     expect(manage).toContain("Invite connected schools");
     expect(manage).toContain("isDistrictHost");
     expect(action).toContain("export async function inviteConnectedSchoolRosters");
-    expect(action).toContain('host?.type !== "district"');
-    expect(action).toContain("list_connected_school_student_ids");
-    expect(action).toContain("origin_org_id");
-    expect(action).toContain("school_id");
+    expect(action).toContain('"invite_connected_school_rosters"');
+    expect(action).toContain("p_competition_id: competitionId");
+    expect(action).not.toContain("list_connected_school_student_ids");
     expect(action).not.toContain("getOrgRoster");
     expect(form).toContain("inviteConnectedSchoolRosters");
     expect(form).toContain("Invite every connected school");
+  });
+
+  it("fans out aggregate invitations without requiring per-student district authority", () => {
+    const migration = source(
+      "supabase/migrations/0098_role_console_reads_and_district_invites.sql"
+    );
+    const start = migration.indexOf(
+      "create or replace function public.invite_connected_school_rosters"
+    );
+    const end = migration.indexOf(
+      "revoke all on function public.invite_connected_school_rosters",
+      start
+    );
+    const bulkInvite = migration.slice(start, end);
+    expect(bulkInvite).toContain("insert into public.notifications");
+    expect(bulkInvite).toContain("coalesce(preference.invitation, true)");
+    expect(bulkInvite).toContain(":parent:");
+    expect(bulkInvite).not.toContain(
+      "perform public.create_in_app_notification"
+    );
   });
 
   it("labels district-hosted replies by connected school for follow-up", () => {

@@ -26,6 +26,7 @@ export function ClaimInvitationAuth({
   invitation: {
     member_role: string;
     email_hint: string;
+    org_name?: string;
   };
   next: string;
   signedIn: boolean;
@@ -55,7 +56,7 @@ export function ClaimInvitationAuth({
           student account already exists.
         </p>
         <div className="mt-5">
-          <ClaimSignOutButton />
+          <ClaimSignOutButton next={next} />
         </div>
       </>
     );
@@ -65,10 +66,14 @@ export function ClaimInvitationAuth({
     return (
       <>
         <h2 className="font-display text-xl font-bold text-foreground">
-          Accept this invitation
+          {invitation.org_name
+            ? `Joining ${invitation.org_name}`
+            : "Accept this invitation"}
         </h2>
         <p className="mt-2 text-sm text-muted">
-          The signed-in email must match {invitation.email_hint}.
+          Signed in as {signedInEmail}. Causey is assigning the{" "}
+          {roleLabel.toLowerCase()} role
+          {invitation.org_name ? ` for ${invitation.org_name}` : ""}.
         </p>
         <div className="mt-5">{claimControl}</div>
       </>
@@ -83,7 +88,7 @@ export function ClaimInvitationAuth({
       <p className="mt-2 text-sm text-muted">
         {invitation.member_role === "student"
           ? "Create a student account or sign in with the invited email."
-          : `Create a ${roleLabel.toLowerCase()} account or sign in.`}{" "}
+          : `Create a staff account, then Causey assigns the ${roleLabel.toLowerCase()} role.`}{" "}
         You will return here automatically without losing the invitation.
       </p>
       <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -100,7 +105,7 @@ export function ClaimInvitationAuth({
   );
 }
 
-function ClaimSignOutButton() {
+function ClaimSignOutButton({ next }: { next: string }) {
   return (
     <button
       type="button"
@@ -108,7 +113,9 @@ function ClaimSignOutButton() {
       // Back to sign-in rather than a refresh in place: the point of this
       // button is to arrive as the invited person, not to sit on the claim
       // page signed out.
-      onClick={() => void signOutAndLeave("/login")}
+      onClick={() =>
+        void signOutAndLeave(`/login?next=${encodeURIComponent(next)}`)
+      }
     >
       Sign out to use the invited email
     </button>

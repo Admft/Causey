@@ -102,7 +102,9 @@ describe("staff team-entry for going / not going", () => {
 
   it("returns response_source on event attendance for manage labels", () => {
     const attendance = effectiveFunction("get_event_attendance");
-    expect(attendance.file).toBe("0076_staff_team_entry.sql");
+    expect(attendance.file).toBe(
+      "0097_district_school_role_boundaries.sql"
+    );
     expect(attendance.sql).toContain("entrant.response_source");
     expect(source("lib/auth/orgs.ts")).toContain(
       'response_source: "self" | "parent" | "staff" | null'

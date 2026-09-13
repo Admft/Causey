@@ -183,3 +183,42 @@ export async function setGroupMembers(
   revalidatePath(`/orgs/${orgSlug}/roster`);
   return { ok: true };
 }
+
+/** School-admin only: replace the coaches/assistants assigned to one group. */
+export async function setGroupStaffAssignments(
+  groupId: string,
+  orgSlug: string,
+  profileIds: string[]
+): Promise<ActionResult> {
+  const user = await getSessionUser();
+  if (!user) return { ok: false, error: "Sign in to continue." };
+  const parsed = z
+    .object({
+      groupId: z.string().uuid(),
+      profileIds: z.array(z.string().uuid()).max(100),
+    })
+    .safeParse({ groupId, profileIds: [...new Set(profileIds)] });
+  if (!parsed.success) {
+    return { ok: false, error: "Choose valid coaches or assistants." };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.rpc("set_group_staff_assignments", {
+    p_group_id: parsed.data.groupId,
+    p_profile_ids: parsed.data.profileIds,
+  });
+  if (error) {
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "Could not update coach assignments.",
+        "Only a school administrator can assign staff to groups."
+      ),
+    };
+  }
+
+  revalidatePath(`/orgs/${orgSlug}/roster`);
+  revalidatePath(`/orgs/${orgSlug}/people`);
+  return { ok: true };
+}

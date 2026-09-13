@@ -13,6 +13,7 @@ import type {
   AdminUserDirectoryRow,
   AdminUserMatchingMembership,
 } from "@/lib/data/admin";
+import { staffAccountPersonaLabel } from "@/lib/portal-copy";
 
 function formatCreatedAt(value: string): string {
   return new Intl.DateTimeFormat("en-US", {
@@ -41,6 +42,16 @@ const MEMBERSHIP_ROLE_LABELS: Record<
   district_admin: "District administrator",
   admin: "Organization admin",
 };
+
+function accountExperienceLabel(user: AdminUserRow): string {
+  return staffAccountPersonaLabel({
+    role: user.account_role,
+    memberRoles: user.matching_memberships?.map(
+      (membership) => membership.role
+    ),
+    orgTypes: user.matching_memberships?.map((membership) => membership.org_type),
+  });
+}
 
 function membershipLine(membership: AdminUserMatchingMembership): string {
   const org =
@@ -200,7 +211,7 @@ export function AdminUserDirectory({
                 <option value="">Any account experience</option>
                 <option value="student">Student</option>
                 <option value="parent">Parent</option>
-                <option value="coach">Coach / organizer</option>
+                <option value="coach">Coach / organizer (account type)</option>
               </select>
             </label>
             <label>
@@ -273,7 +284,7 @@ export function AdminUserDirectory({
               {initialError}
             </p>
             <p className="mt-1 text-xs text-muted">
-              Apply migration 0095 on the linked database, then retry.
+              Apply migrations through 0099 on the linked database, then retry.
             </p>
           </div>
         ) : !users.length ? (
@@ -297,7 +308,8 @@ export function AdminUserDirectory({
                           {user.profile_id === currentAdminId ? " (you)" : ""}
                         </span>
                         <span className="mt-0.5 block break-all text-xs text-muted">
-                          {user.email || "No email"} · {user.account_role}
+                          {user.email || "No email"} ·{" "}
+                          {accountExperienceLabel(user)}
                           {!user.role_unlocked ? " · restricted" : ""}
                         </span>
                         {user.matching_memberships?.length ? (

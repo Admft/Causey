@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/actions/result";
 import { actionErrorMessage } from "@/lib/actions/errors";
-import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/actions/in-app-notifications";
 import type { OrgMemberRole } from "@/lib/auth/orgs";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import {
@@ -266,7 +265,7 @@ export async function transferOrganizationOwnership(input: {
   const [{ data: org }, { data: nextOwner }] = await Promise.all([
     supabase
       .from("organizations")
-      .select("owner_profile_id")
+      .select("owner_profile_id, type")
       .eq("id", parsed.data.orgId)
       .maybeSingle(),
     supabase
@@ -280,10 +279,13 @@ export async function transferOrganizationOwnership(input: {
   if (!org || org.owner_profile_id !== user.id) {
     return { ok: false, error: "Only the current owner can transfer ownership." };
   }
-  if (
-    !nextOwner ||
-    !["coach", "school_admin", "district_admin"].includes(nextOwner.role)
-  ) {
+  const eligibleRole =
+    org?.type === "district"
+      ? ["district_admin", "admin"].includes(nextOwner?.role ?? "")
+      : org?.type === "school"
+        ? ["school_admin", "admin"].includes(nextOwner?.role ?? "")
+        : ["coach", "admin"].includes(nextOwner?.role ?? "");
+  if (!nextOwner || !eligibleRole) {
     return { ok: false, error: "Transfer ownership to an active administrator." };
   }
 
@@ -302,6 +304,62 @@ export async function transferOrganizationOwnership(input: {
   }
   revalidatePath(`/orgs/${parsed.data.orgSlug}/settings`);
   return { ok: true };
+}
+
+export async function setOrganizationAdministrator(input: {
+  orgId: string;
+  orgSlug: string;
+  profileId: string;
+  makeAdmin: boolean;
+}): Promise<ActionResult<{ role: OrgMemberRole }>> {
+  const parsed = z
+    .object({
+      orgId: z.string().uuid(),
+      orgSlug: z.string().min(1),
+      profileId: z.string().uuid(),
+      makeAdmin: z.boolean(),
+    })
+    .safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Choose a valid staff account." };
+  }
+  const user = await currentUserOrError();
+  if (!user.ok) return user;
+
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc(
+    "set_organization_administrator",
+    {
+      p_org_id: parsed.data.orgId,
+      p_profile_id: parsed.data.profileId,
+      p_make_admin: parsed.data.makeAdmin,
+    }
+  );
+  if (error || typeof data !== "string") {
+    const message = (error?.message ?? "").toLowerCase();
+    const protectionMessage = message.includes("protected_owner")
+      ? "Transfer ownership before changing the primary administrator."
+      : message.includes("revoke_self")
+        ? "You cannot remove your own administrator access."
+        : message.includes("last_administrator")
+          ? "Add another administrator before removing the last one."
+          : null;
+    return {
+      ok: false,
+      error:
+        protectionMessage ??
+        actionErrorMessage(
+          error,
+          "Could not update administrator access.",
+          "Only an administrator for this organization can change this role."
+        ),
+    };
+  }
+
+  revalidatePath(`/orgs/${parsed.data.orgSlug}/people`);
+  revalidatePath(`/orgs/${parsed.data.orgSlug}`);
+  revalidatePath("/orgs");
+  return { ok: true, role: data as OrgMemberRole };
 }
 
 type InvitationResult = {
@@ -719,6 +777,7 @@ export async function claimOrganizationInvitation(
     return { ok: false, error: "This invitation is invalid, expired, or belongs to another email." };
   }
   revalidatePath("/orgs");
+  revalidatePath(`/orgs/${row.org_slug}`);
   return { ok: true, slug: row.org_slug, name: row.org_name };
 }
 
@@ -754,6 +813,7 @@ export async function claimOrganizationInvitationByCode(
     };
   }
   revalidatePath("/orgs");
+  revalidatePath(`/orgs/${row.org_slug}`);
   return { ok: true, slug: row.org_slug, name: row.org_name };
 }
 
@@ -775,9 +835,9 @@ export async function publishOrganizationAnnouncement(input: {
   if (!profile) return { ok: false, error: "Sign in to continue." };
   const supabase = await createServerSupabaseClient();
 
-  async function assertCanOperate(orgId: string): Promise<ActionResult> {
-    const { data: canOperate, error: permissionError } = await supabase.rpc(
-      "can_operate_org_competitions",
+  async function assertCanPublish(orgId: string): Promise<ActionResult> {
+    const { data: canPublish, error: permissionError } = await supabase.rpc(
+      "can_publish_org_announcement",
       {
         p_org_id: orgId,
         p_profile_id: profile!.id,
@@ -792,17 +852,16 @@ export async function publishOrganizationAnnouncement(input: {
         ),
       };
     }
-    if (canOperate !== true) {
+    if (canPublish !== true) {
       return {
         ok: false,
-        error:
-          "Only a coach or organization administrator can publish announcements.",
+        error: "You don’t have permission to publish this announcement.",
       };
     }
     return { ok: true };
   }
 
-  const operatorCheck = await assertCanOperate(parsed.data.orgId);
+  const operatorCheck = await assertCanPublish(parsed.data.orgId);
   if (!operatorCheck.ok) return operatorCheck;
 
   type PublishTarget = { id: string; slug: string };
@@ -875,12 +934,20 @@ export async function publishOrganizationAnnouncement(input: {
     }
 
     for (const school of childSchools) {
-      const schoolCheck = await assertCanOperate(school.id);
-      if (!schoolCheck.ok) {
+      const { data: canAdministerSchool, error: schoolPermissionError } =
+        await supabase.rpc("can_administer_org", {
+          p_org_id: school.id,
+          p_profile_id: profile.id,
+        });
+      if (schoolPermissionError || canAdministerSchool !== true) {
         return {
           ok: false,
-          error:
-            "You don’t have permission to publish announcements for those schools.",
+          error: schoolPermissionError
+            ? actionErrorMessage(
+                schoolPermissionError,
+                "Could not verify connected-school announcement access."
+              )
+            : "You don’t have permission to publish announcements for those schools.",
         };
       }
     }
@@ -928,66 +995,19 @@ export async function publishOrganizationAnnouncement(input: {
     });
   }
 
-  const notificationInputs: {
-    recipientId: string;
-    kind: "announcement";
-    title: string;
-    body: string;
-    href: string;
-    entityType: string;
-    entityId: string;
-    dedupeKey: string;
-  }[] = [];
-  const seenRecipients = new Set<string>();
-
   for (const row of published) {
-    const { data: members, error: membersError } = await supabase
-      .from("org_memberships")
-      .select("profile_id, role")
-      .eq("org_id", row.orgId)
-      .eq("status", "active");
-    if (membersError) {
-      for (const item of published) {
-        revalidatePath(`/orgs/${item.slug}`);
-      }
-      revalidatePath("/me/notifications");
-      return {
-        ok: false,
-        error:
-          "The announcement was published, but recipients could not be loaded for in-app updates.",
-      };
-    }
     const isSchoolTarget = row.orgId !== parsed.data.orgId;
-    for (const member of members ?? []) {
-      const recipientId = member.profile_id as string;
-      if (!recipientId || recipientId === profile.id) continue;
-      const isStudent = member.role === "student";
-      if (isSchoolTarget) {
-        if (isStudent && !parsed.data.notifyStudents) continue;
-        if (!isStudent && !parsed.data.notifyStaff) continue;
+    const { error: notifyError } = await supabase.rpc(
+      "notify_org_announcement_recipients",
+      {
+        p_announcement_id: row.id,
+        p_notify_staff: isSchoolTarget ? parsed.data.notifyStaff : true,
+        p_notify_students: isSchoolTarget
+          ? parsed.data.notifyStudents
+          : true,
       }
-      if (seenRecipients.has(recipientId)) continue;
-      seenRecipients.add(recipientId);
-      notificationInputs.push({
-        recipientId,
-        kind: "announcement",
-        title: parsed.data.title,
-        body: parsed.data.body.slice(0, 240),
-        href: `/orgs/${row.slug}`,
-        entityType: "org_announcement",
-        entityId: row.id,
-        dedupeKey: `announcement:${row.id}:${recipientId}`,
-      });
-    }
-    const studentIds = (members ?? [])
-      .filter((member) => {
-        if (member.role !== "student") return false;
-        if (isSchoolTarget && !parsed.data.notifyStudents) return false;
-        return Boolean(member.profile_id);
-      })
-      .map((member) => member.profile_id as string);
-    const guardians = await getActiveGuardiansForProfiles(studentIds);
-    if (guardians.error) {
+    );
+    if (notifyError) {
       for (const item of published) {
         revalidatePath(`/orgs/${item.slug}`);
       }
@@ -995,40 +1015,7 @@ export async function publishOrganizationAnnouncement(input: {
       return {
         ok: false,
         error:
-          "The announcement was published, but linked parents could not be notified.",
-      };
-    }
-    for (const guardian of guardians.guardians) {
-      if (!guardian.parentId || guardian.parentId === profile.id) continue;
-      if (seenRecipients.has(guardian.parentId)) continue;
-      seenRecipients.add(guardian.parentId);
-      notificationInputs.push({
-        recipientId: guardian.parentId,
-        kind: "announcement",
-        title: parsed.data.title,
-        body: parsed.data.body.slice(0, 240),
-        href: "/family",
-        entityType: "org_announcement",
-        entityId: row.id,
-        dedupeKey: `announcement:${row.id}:parent:${guardian.parentId}`,
-      });
-    }
-  }
-
-  if (notificationInputs.length) {
-    const notifications = await createInAppNotifications(notificationInputs);
-    if (notifications.failures.length) {
-      for (const item of published) {
-        revalidatePath(`/orgs/${item.slug}`);
-      }
-      revalidatePath("/me/notifications");
-      return {
-        ok: false,
-        error: `The announcement was published, but ${notifications.failures.length} ${
-          notifications.failures.length === 1
-            ? "recipient update could"
-            : "recipient updates could"
-        } not be created.`,
+          "The announcement was published, but recipients could not be notified.",
       };
     }
   }

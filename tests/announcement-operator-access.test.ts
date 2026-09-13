@@ -7,7 +7,7 @@ describe("organization announcement operator access", () => {
     const migration = readFileSync(
       resolve(
         process.cwd(),
-        "supabase/migrations/0043_announcement_district_operator_access.sql"
+        "supabase/migrations/0099_district_claim_owner_handoff.sql"
       ),
       "utf8"
     );
@@ -15,13 +15,10 @@ describe("organization announcement operator access", () => {
       resolve(process.cwd(), "lib/actions/district.ts"),
       "utf8"
     );
-    expect(migration).toContain("can_operate_org_competitions(org_id, auth.uid())");
+    expect(migration).toContain("can_publish_org_announcement");
     expect(migration).toContain('create policy "announcements_insert_staff"');
-    expect(actions).toContain("can_operate_org_competitions");
-    expect(actions).toContain(
-      "Only a coach or organization administrator can publish announcements."
-    );
+    expect(actions).toContain("can_publish_org_announcement");
     expect(actions).toContain('audience === "connected_schools"');
-    expect(actions).toContain("assertCanOperate");
+    expect(actions).toContain("assertCanPublish");
   });
 });

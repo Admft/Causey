@@ -127,13 +127,11 @@ export async function removeMember(
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
-  const { count, error } = await supabase
-    .from("org_memberships")
-    .update({ status: "removed" }, { count: "exact" })
-    .eq("org_id", orgId)
-    .eq("profile_id", profileId)
-    .neq("status", "removed");
-  if (error || count !== 1) {
+  const { error } = await supabase.rpc("remove_organization_member", {
+    p_org_id: orgId,
+    p_profile_id: profileId,
+  });
+  if (error) {
     return {
       ok: false,
       error: actionErrorMessage(
@@ -144,37 +142,8 @@ export async function removeMember(
     };
   }
 
-  // Drop them from the org's groups too.
-  const { data: groups, error: groupsError } = await supabase
-    .from("org_groups")
-    .select("id")
-    .eq("org_id", orgId);
-  if (groupsError) {
-    revalidatePath(`/orgs/${orgSlug}/roster`);
-    revalidatePath(`/orgs/${orgSlug}`);
-    return {
-      ok: false,
-      error: "The member was removed, but their group assignments could not be checked.",
-    };
-  }
-  const groupIds = (groups ?? []).map((g) => g.id);
-  if (groupIds.length) {
-    const { error: cleanupError } = await supabase
-      .from("org_group_members")
-      .delete()
-      .in("group_id", groupIds)
-      .eq("profile_id", profileId);
-    if (cleanupError) {
-      revalidatePath(`/orgs/${orgSlug}/roster`);
-      revalidatePath(`/orgs/${orgSlug}`);
-      return {
-        ok: false,
-        error: "The member was removed, but some group assignments could not be cleaned up.",
-      };
-    }
-  }
-
   revalidatePath(`/orgs/${orgSlug}/roster`);
+  revalidatePath(`/orgs/${orgSlug}/people`);
   revalidatePath(`/orgs/${orgSlug}`);
   return { ok: true };
 }
@@ -184,13 +153,16 @@ export async function leaveOrg(orgId: string): Promise<ActionResult> {
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
-  const { count, error } = await supabase
-    .from("org_memberships")
-    .update({ status: "removed" }, { count: "exact" })
-    .eq("org_id", orgId)
-    .eq("profile_id", user.id)
-    .eq("status", "active");
-  if (error || count !== 1) {
+  const { error } = await supabase.rpc("leave_organization", {
+    p_org_id: orgId,
+  });
+  if (error) {
+    if (error.message?.includes("protected_owner_cannot_be_revoked")) {
+      return {
+        ok: false,
+        error: "Transfer organization ownership before leaving.",
+      };
+    }
     return {
       ok: false,
       error: actionErrorMessage(

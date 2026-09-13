@@ -108,7 +108,7 @@ export default async function SignupPage({
             {isJoiningOrganization
               ? "This join link is for a student roster. After confirming your email, you’ll return to review the organization before joining."
               : invitation
-                ? `This invitation assigns the ${INVITATION_ROLE_LABELS[invitation.member_role] ?? invitation.member_role} role after you confirm your email and accept it.`
+                ? `This invitation assigns the ${INVITATION_ROLE_LABELS[invitation.member_role] ?? invitation.member_role} role after you confirm your email.`
                 : startingClub
                   ? "Coach is the account type — not a fourth club login. After you confirm email, you create the club, then invite students with a join code and other coaches as staff."
                   : "Students join schools or clubs, parents link to a student, and coaches start a club or team."}

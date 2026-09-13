@@ -12,35 +12,35 @@ function source(path: string) {
 }
 
 describe("staff account branding after claim", () => {
-  it("labels claimed school and district coach accounts as staff", () => {
+  it("labels claimed organization administrators by their exact authority", () => {
     expect(
       staffAccountPersonaLabel({
         role: "coach",
         memberRoles: ["school_admin"],
         orgTypes: ["school"],
       })
-    ).toBe("School staff");
+    ).toBe("School administrator");
     expect(
       staffAccountPersonaLabel({
         role: "coach",
         memberRoles: ["district_admin"],
         orgTypes: ["district"],
       })
-    ).toBe("District staff");
+    ).toBe("District administrator");
     expect(
       staffAccountPersonaLabel({
         role: "coach",
         memberRoles: ["coach"],
         orgTypes: ["school"],
       })
-    ).toBe("School staff");
+    ).toBe("Coach");
     expect(
       staffAccountPersonaLabel({
         role: "coach",
         memberRoles: ["coach"],
         orgTypes: ["club"],
       })
-    ).toBe("Coach / Organizer");
+    ).toBe("Coach");
     expect(staffAccountPersonaLabel({ role: "student" })).toBe("Student");
   });
 
@@ -71,5 +71,8 @@ describe("staff account branding after claim", () => {
     expect(orgs).toContain("ORG_ROLE_LABELS");
     expect(orgs).toContain('title: "Your organizations"');
     expect(orgs).not.toContain('title: "Your clubs"');
+    expect(source("components/AdminUserDirectory.tsx")).toContain(
+      "staffAccountPersonaLabel"
+    );
   });
 });

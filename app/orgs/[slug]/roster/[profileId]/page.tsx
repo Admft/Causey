@@ -15,6 +15,7 @@ import {
 } from "@/lib/data/portal";
 import { formatDateRange, formatRecordedResult, gradeLabel } from "@/lib/format";
 import {
+  contextualOrganizationRoleLabel,
   membershipHistoryEyebrow,
   organizationKindLabel,
 } from "@/lib/portal-copy";
@@ -49,9 +50,11 @@ export default async function RosterMemberHistoryPage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (view.org.type === "district") {
-    redirect(`/orgs/${slug}/settings#schools`);
+    redirect(`/orgs/${slug}/schools`);
   }
-  if (!view.isCoach && user.id !== profileId) redirect(`/orgs/${slug}`);
+  if (!view.canViewNamedRoster && user.id !== profileId) {
+    redirect(`/orgs/${slug}`);
+  }
 
   const { org } = view;
   const orgKind = organizationKindLabel(org.type);
@@ -120,6 +123,13 @@ export default async function RosterMemberHistoryPage({
         showRoster
         showAdmin={view.isAdmin}
         orgType={org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <PageBackLink href={`/orgs/${org.slug}/roster`}>Roster</PageBackLink>

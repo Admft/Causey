@@ -99,8 +99,9 @@ export default async function AdminUsersPage({
       <p className="mt-2 max-w-prose text-sm text-muted">
         Search accounts by name, district, school, club, team, and role. Results
         stay server-filtered and paginated so the directory remains usable as
-        Causey grows. Account and platform-access changes remain confirmed and
-        audited.
+        Causey grows. Name search lists organization roles so a claimed district
+        administrator is not mistaken for a club-only coach login. Account and
+        platform-access changes remain confirmed and audited.
       </p>
 
       <div className="mt-8">

@@ -140,7 +140,76 @@ describe("claim invitation path helpers", () => {
     );
     expect(auth).toContain("This invitation is for a different email");
     expect(auth).toContain("Sign out to use the invited email");
+    expect(auth).toContain(
+      "`/login?next=${encodeURIComponent(next)}`"
+    );
+    expect(auth).toContain("Create a staff account, then Causey assigns");
     expect(tokenPage).toContain("ClaimInvitationAuth");
+    expect(tokenPage).toContain("autoAccept");
     expect(codePage).toContain("ClaimInvitationAuth");
+    expect(codePage).toContain("autoAccept");
+  });
+});
+
+describe("staff claim auto-accept", () => {
+  it("auto-accepts when the signed-in mailbox matches and repeats are a no-op", () => {
+    const tokenButton = readFileSync(
+      resolve(process.cwd(), "components/ClaimInvitationButton.tsx"),
+      "utf8"
+    );
+    const codeButton = readFileSync(
+      resolve(process.cwd(), "components/ClaimCodeInvitationButton.tsx"),
+      "utf8"
+    );
+    const loginPage = readFileSync(
+      resolve(process.cwd(), "app/login/page.tsx"),
+      "utf8"
+    );
+    const migration = readFileSync(
+      resolve(
+        process.cwd(),
+        "supabase/migrations/0096_claim_and_admin_membership_context.sql"
+      ),
+      "utf8"
+    );
+    expect(tokenButton).toContain("autoAccept");
+    expect(codeButton).toContain("autoAccept");
+    expect(loginPage).toContain(
+      "Create a staff account with your own password"
+    );
+    expect(loginPage).not.toContain("Create a coach or organizer account");
+    expect(migration).toContain("target.status = 'claimed' and target.claimed_by = auth.uid()");
+    expect(migration).toContain(
+      "grant execute on function public.claim_org_invitation_by_code(text)\n  to authenticated"
+    );
+  });
+
+  it("hands a provisioned district to the matching claimant, not the super admin", () => {
+    const migration = readFileSync(
+      resolve(
+        process.cwd(),
+        "supabase/migrations/0099_district_claim_owner_handoff.sql"
+      ),
+      "utf8"
+    );
+    expect(migration).toContain(
+      "create or replace function public.handoff_provisioned_district_owner_on_claim"
+    );
+    expect(migration).toContain("new.claimed_by");
+    expect(migration).toContain(
+      "lower(coalesce(auth_user.email, '')) = lower(new.email)"
+    );
+    expect(migration).toContain("membership.role = 'district_admin'");
+    expect(migration).toContain(
+      "organization.owner_profile_id = organization.created_by"
+    );
+    expect(migration).toContain("platform.super_admin");
+    expect(migration).toContain(
+      'create policy "memberships_insert_non_admin_or_platform"'
+    );
+    expect(migration).toContain(
+      "role in ('student', 'assistant_coach', 'coach')"
+    );
+    expect(migration).not.toContain("new.role is distinct from 'school_admin'");
   });
 });

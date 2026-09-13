@@ -7,7 +7,10 @@ import {
   PortalErrorState,
 } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
-import { getDistrictAdminActivity } from "@/lib/data/district";
+import {
+  getDistrictAdminActivity,
+  getOrgAdminActivity,
+} from "@/lib/data/district";
 import {
   getChildSchoolsForDistrict,
   getOrgBySlugForViewer,
@@ -18,6 +21,7 @@ import {
   districtActivityFollowThrough,
   formatDistrictActivityWhen,
 } from "@/lib/district-activity";
+import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
 
 // Reads the signed-in account, so this response is never shareable.
 // Declared rather than inferred from cookies(): the day someone moves the
@@ -25,7 +29,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "District activity",
+  title: "Organization activity",
   description:
     "Review recent district and school administrative actions without opening private student browsing data.",
 };
@@ -40,13 +44,18 @@ export default async function DistrictActivityPage({
   if (!user) redirect(`/login?next=/orgs/${slug}/activity`);
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
-  if (view.org.type !== "district" || !view.isDistrictAdmin) {
+  const isDistrict = view.org.type === "district";
+  if (!view.isAdmin || (isDistrict && !view.isDistrictAdmin)) {
     redirect(`/orgs/${slug}`);
   }
 
   const [activityResult, childSchools] = await Promise.all([
-    getDistrictAdminActivity(view.org.id),
-    getChildSchoolsForDistrict(view.org.id),
+    isDistrict
+      ? getDistrictAdminActivity(view.org.id)
+      : getOrgAdminActivity(view.org.id),
+    isDistrict
+      ? getChildSchoolsForDistrict(view.org.id)
+      : Promise.resolve([]),
   ]);
   const rows = activityResult.ok ? activityResult.data : [];
   const loadFailed = activityResult.ok === false;
@@ -61,20 +70,28 @@ export default async function DistrictActivityPage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="activity"
-        showRoster={false}
+        showRoster={view.canViewNamedRoster}
         showAdmin={view.isAdmin}
         orgType={view.org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: view.org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
-        <p className="text-sm font-semibold text-brand-red">District activity</p>
+        <p className="text-sm font-semibold text-brand-red">
+          {isDistrict ? "District activity" : "School activity"}
+        </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
           Recent administrative actions
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          School creates, staff invitations, verification decisions, and
-          competition status changes for this district and its connected
-          schools. Invitation emails and private student browsing stay out of
-          this list.
+          {isDistrict
+            ? "School creates, staff invitations, role changes, and competition status changes for this district and its connected schools. Student names stay out of this list."
+            : "Staff invitations, role and group assignment changes, and competition status changes for this school. Student browsing activity stays out of this list."}
         </p>
 
         {loadFailed ? (
@@ -83,17 +100,25 @@ export default async function DistrictActivityPage({
             description="No activity rows were shown. Retry before treating the feed as empty."
             action={{
               href: `/orgs/${view.org.slug}/activity?retry=activity`,
-              label: "Retry district activity",
+              label: `Retry ${isDistrict ? "district" : "school"} activity`,
             }}
           />
         ) : !rows.length ? (
           <section className="section-rule mt-8 pt-8">
             <PortalEmptyState
-              title="No district activity recorded yet"
-              description="Actions appear here after you create a school, send a staff invitation, or change school settings."
+              title={`No ${isDistrict ? "district" : "school"} activity recorded yet`}
+              description={
+                isDistrict
+                  ? "Actions appear here after you create a school, send a staff invitation, or change school settings."
+                  : "Actions appear here after you invite staff, assign a coach to a group, or change school settings."
+              }
               action={{
-                href: `/orgs/${view.org.slug}/settings#schools`,
-                label: "Open schools setup",
+                href: isDistrict
+                  ? `/orgs/${view.org.slug}/schools`
+                  : `/orgs/${view.org.slug}/people`,
+                label: isDistrict
+                  ? "Open schools setup"
+                  : "Open coaches & staff",
               }}
             />
           </section>
@@ -113,11 +138,13 @@ export default async function DistrictActivityPage({
                   row.scope_org_type === "district"
                     ? "District"
                     : "School";
-                const followThrough = districtActivityFollowThrough(row, {
-                  districtSlug: view.org.slug,
-                  districtOrgId: view.org.id,
-                  slugByOrgId,
-                });
+                const followThrough = isDistrict
+                  ? districtActivityFollowThrough(row, {
+                      districtSlug: view.org.slug,
+                      districtOrgId: view.org.id,
+                      slugByOrgId,
+                    })
+                  : null;
                 return (
                   <li key={row.id} className="py-3">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -157,7 +184,7 @@ export default async function DistrictActivityPage({
                 href={`/orgs/${view.org.slug}/reports`}
                 className="font-semibold text-brand-red hover:underline"
               >
-                Open district reports
+                Open {isDistrict ? "district" : "school"} reports
               </Link>
               .
             </p>

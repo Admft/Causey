@@ -40,7 +40,20 @@ export const metadata: Metadata = {
     "Manage your Causey profile, sign-in, alert preferences, family links, and organizations.",
 };
 
-function memberRoleLabel(row: MyOrgRow, userId: string): string {
+function memberRoleLabel(
+  row: MyOrgRow,
+  userId: string,
+  districtAdminIds: Set<string>
+): string {
+  if (
+    row.org.type === "school" &&
+    row.org.parent_org_id &&
+    districtAdminIds.has(row.org.parent_org_id)
+  ) {
+    return row.org.owner_profile_id === userId
+      ? "District administrator · temporary school owner"
+      : "District administrator";
+  }
   if (row.org.owner_profile_id === userId) return "Owner";
   if (row.memberRole && row.memberRole in ORG_ROLE_LABELS) {
     return ORG_ROLE_LABELS[row.memberRole];
@@ -80,6 +93,16 @@ export default async function AccountPage() {
   const hasDistrictAccess = myOrgs.some(
     (row) =>
       row.org.type === "district" || row.memberRole === "district_admin"
+  );
+  const districtAdminIds = new Set(
+    myOrgs
+      .filter(
+        (row) =>
+          row.org.type === "district" &&
+          (row.memberRole === "district_admin" ||
+            row.org.owner_profile_id === profile.id)
+      )
+      .map((row) => row.org.id)
   );
   const hasSchoolAccess = myOrgs.some((row) => row.org.type === "school");
   const hasClubAccess = myOrgs.some(
@@ -367,6 +390,12 @@ export default async function AccountPage() {
       ) : (
         <ul className="mt-4 divide-y divide-line border-y border-line">
           {myOrgs.map((row) => {
+            const inheritedDistrictAdmin =
+              row.org.type === "school" &&
+              Boolean(
+                row.org.parent_org_id &&
+                  districtAdminIds.has(row.org.parent_org_id)
+              );
             const admin = isOrgAdmin(
               row.org,
               row.memberRole
@@ -387,7 +416,7 @@ export default async function AccountPage() {
                     <p className="mt-0.5 text-xs text-muted">
                       {row.org.type}
                       {" · "}
-                      {memberRoleLabel(row, profile.id)}
+                      {memberRoleLabel(row, profile.id, districtAdminIds)}
                       {row.org.state ? ` · ${row.org.state}` : ""}
                     </p>
                   </div>
@@ -400,17 +429,19 @@ export default async function AccountPage() {
                     </Link>
                     {row.isCoach && row.org.type === "district" ? (
                       <Link
-                        href={`/orgs/${row.org.slug}/settings#schools`}
+                        href={`/orgs/${row.org.slug}/schools`}
                         className="text-muted-strong hover:text-brand-red"
                       >
                         Schools
                       </Link>
-                    ) : row.isCoach ? (
+                    ) : row.isCoach && !inheritedDistrictAdmin ? (
                       <Link
                         href={`/orgs/${row.org.slug}/roster`}
                         className="text-muted-strong hover:text-brand-red"
                       >
-                        Roster
+                        {row.org.type === "school"
+                          ? "Students & groups"
+                          : "Roster"}
                       </Link>
                     ) : null}
                     {admin ? (

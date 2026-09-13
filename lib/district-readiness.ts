@@ -192,7 +192,7 @@ export function getDistrictReadinessAction(
         readiness.verificationStatus === "pending"
           ? "Create a school workspace while Causey reviews the district identity. Then delegate its administrator before provisioning students."
           : "Create a school workspace, then delegate its administrator before provisioning students.",
-      href: `${settingsHref}#schools`,
+      href: `/orgs/${readiness.districtSlug}#add-school`,
       label: "Create school",
       schoolId: null,
     };

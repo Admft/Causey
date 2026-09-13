@@ -37,6 +37,7 @@ describe("district announcement fan-out to connected schools", () => {
     expect(actions).toContain('.eq("parent_org_id", parsed.data.orgId)');
     expect(actions).toContain("targets.push(...childSchools)");
     expect(actions).toContain("Choose at least one school.");
+    expect(actions).toContain('.rpc("can_administer_org"');
   });
 
   it("keeps school and club announcement copy coach-scoped", () => {
@@ -49,11 +50,9 @@ describe("district announcement fan-out to connected schools", () => {
 
   it("still relies on district operator RLS for child-school inserts", () => {
     const migration = source(
-      "supabase/migrations/0043_announcement_district_operator_access.sql"
+      "supabase/migrations/0099_district_claim_owner_handoff.sql"
     );
-    expect(migration).toContain(
-      "can_operate_org_competitions(org_id, auth.uid())"
-    );
+    expect(migration).toContain("can_publish_org_announcement");
     expect(migration).toContain('create policy "announcements_insert_staff"');
   });
 });

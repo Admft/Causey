@@ -2,11 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
-import { createGroup, deleteGroup, setGroupMembers } from "@/lib/actions/groups";
+import {
+  createGroup,
+  deleteGroup,
+  setGroupMembers,
+  setGroupStaffAssignments,
+} from "@/lib/actions/groups";
 import { attemptAction } from "@/lib/attempt-action";
 import type { GroupWithMembers } from "@/lib/data/portal";
 
 type RosterEntry = { profile_id: string; display_name: string };
+type StaffEntry = {
+  profile_id: string;
+  display_name: string;
+  roleLabel: string;
+};
 
 /**
  * Coach tool: groups are named subsets of the roster ("Varsity", "JV") used
@@ -18,11 +28,13 @@ export function GroupManager({
   orgSlug,
   groups,
   roster,
+  staff = [],
 }: {
   orgId: string;
   orgSlug: string;
   groups: GroupWithMembers[];
   roster: RosterEntry[];
+  staff?: StaffEntry[];
 }) {
   const router = useRouter();
   const [newName, setNewName] = useState("");
@@ -121,6 +133,32 @@ export function GroupManager({
     });
   }
 
+  function toggleStaff(group: GroupWithMembers, profileId: string) {
+    setError(null);
+    setStatus(null);
+    setPendingAction(`staff-${group.id}`);
+    const next = group.assigned_staff_ids.includes(profileId)
+      ? group.assigned_staff_ids.filter((id) => id !== profileId)
+      : [...group.assigned_staff_ids, profileId];
+    startTransition(async () => {
+      try {
+        const result = await attemptAction(() =>
+          setGroupStaffAssignments(group.id, orgSlug, next)
+        );
+        if (!result.ok) {
+          setError(`${result.error} Try again.`);
+          return;
+        }
+        setStatus(
+          `${group.name} staff updated. Those coaches now see only their assigned groups.`
+        );
+        router.refresh();
+      } finally {
+        setPendingAction(null);
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col gap-5">
       {error ? (
@@ -162,10 +200,20 @@ export function GroupManager({
                           : undefined
                       }
                     >
-                      {isPending && pendingAction === `members-${group.id}`
+                      {isPending &&
+                      (pendingAction === `members-${group.id}` ||
+                        pendingAction === `staff-${group.id}`)
                         ? "Saving changes…"
                         : `${group.member_ids.length} of ${roster.length} ${
                             roster.length === 1 ? "student" : "students"
+                          }${
+                            staff.length
+                              ? ` · ${group.assigned_staff_ids.length} assigned ${
+                                  group.assigned_staff_ids.length === 1
+                                    ? "coach"
+                                    : "coaches"
+                                }`
+                              : ""
                           }`}
                     </p>
                   </div>
@@ -179,7 +227,7 @@ export function GroupManager({
                       className="action-button"
                       aria-expanded={isEditing}
                     >
-                      {isEditing ? "Done" : "Edit students"}
+                      {isEditing ? "Done" : "Edit group"}
                     </button>
                     <button
                       type="button"
@@ -194,33 +242,76 @@ export function GroupManager({
                   </div>
                 </div>
                 {isEditing ? (
-                  !roster.length ? (
-                    <p className="mt-3 text-xs text-muted">
-                      Your roster is empty — share the join link first.
-                    </p>
-                  ) : (
-                    <div className="mt-3 grid gap-1.5 border-t border-line pt-3 sm:grid-cols-2">
-                      {roster.map((member) => (
-                        <label
-                          key={member.profile_id}
-                          className="flex min-h-11 items-center gap-2 text-sm text-foreground"
-                        >
-                          <input
-                            type="checkbox"
-                            disabled={isPending}
-                            checked={group.member_ids.includes(
-                              member.profile_id
-                            )}
-                            onChange={() =>
-                              toggleMember(group, member.profile_id)
-                            }
-                            className="size-4 accent-[var(--brand-red)]"
-                          />
-                          {member.display_name || "Unnamed student"}
-                        </label>
-                      ))}
-                    </div>
-                  )
+                  <div className="mt-3 border-t border-line pt-3">
+                    <h5 className="text-xs font-semibold text-muted-strong">
+                      Students
+                    </h5>
+                    {!roster.length ? (
+                      <p className="mt-2 text-xs text-muted">
+                        Your roster is empty. Share the join link first.
+                      </p>
+                    ) : (
+                      <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                        {roster.map((member) => (
+                          <label
+                            key={member.profile_id}
+                            className="flex min-h-11 items-center gap-2 text-sm text-foreground"
+                          >
+                            <input
+                              type="checkbox"
+                              disabled={isPending}
+                              checked={group.member_ids.includes(
+                                member.profile_id
+                              )}
+                              onChange={() =>
+                                toggleMember(group, member.profile_id)
+                              }
+                              className="size-4 accent-[var(--brand-red)]"
+                            />
+                            {member.display_name || "Unnamed student"}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {staff.length ? (
+                      <div className="mt-4 border-t border-line pt-3">
+                        <h5 className="text-xs font-semibold text-muted-strong">
+                          Assigned coaches
+                        </h5>
+                        <p className="mt-1 text-xs text-muted">
+                          Coaches can operate these students. Assistants can
+                          review them but cannot make changes.
+                        </p>
+                        <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                          {staff.map((member) => (
+                            <label
+                              key={member.profile_id}
+                              className="flex min-h-11 items-center gap-2 text-sm text-foreground"
+                            >
+                              <input
+                                type="checkbox"
+                                disabled={isPending}
+                                checked={group.assigned_staff_ids.includes(
+                                  member.profile_id
+                                )}
+                                onChange={() =>
+                                  toggleStaff(group, member.profile_id)
+                                }
+                                className="size-4 accent-[var(--brand-red)]"
+                              />
+                              <span>
+                                {member.display_name || "Unnamed staff"}
+                                <span className="text-muted">
+                                  {" "}
+                                  · {member.roleLabel}
+                                </span>
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
               </li>
             );

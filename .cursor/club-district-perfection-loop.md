@@ -30,10 +30,24 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Support spam guards plus bulk close/reopen on `/admin/support` — 2026-09-12
+- District and school consoles enforce scoped administrator, coach, and
+  assistant authority — 2026-09-12
 
 ## Last tick
 
+- 2026-09-12 — District administrators now get Schools, scoped Staff,
+  delegated peers, district competitions, and aggregate-only student/event
+  reporting; school administrators get full roster/staff/group controls;
+  coaches operate assigned groups only; assistants are assigned-group
+  read-only. `0097`–`0098` enforce owner/self/last-admin protections, scoped
+  entrant operations, aggregate bulk invites, and announcement fan-out without
+  exposing child-school student IDs. Exact roles appear in claims, Account,
+  workspace rows, and organization navigation.
+- 2026-09-12 — A provisioned district's first matching administrator claim now
+  takes protected ownership from the temporary super-admin owner (`0099`).
+  Claim membership and ownership both bind to the authenticated invited email;
+  school ownership remains an explicit handoff.
+- 2026-09-12 — District claim links no longer stop at a coach login: a matching signed-in mailbox auto-joins as district/school administrator (`0096` makes a repeat claim a no-op), `/admin/users` name search shows that membership instead of only `coach`, and an empty district overview has the create-school form on the page.
 - 2026-09-12 — Public `/support` blocks bot tickets (hidden honeypot, mixed-case token-soup bodies, hCaptcha when configured). `/admin/support` can select all shown reports and close or reopen them without emailing anyone.
 - 2026-09-12 — `/admin/users` now has indexed, keyset-paginated filters for a district plus connected schools, exact organization, organization type, full membership role/status, account experience, and platform access (`0095`). Matching rows name the organization context; household links never imply district membership.
 - 2026-09-12 — Admin `/organizations` expand panel shows Created by (and Owner when different) plus a paginated name/email member search (`0094` `search_org_members`) so a large school does not dump the whole roster.

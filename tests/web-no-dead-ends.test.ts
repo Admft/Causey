@@ -138,8 +138,8 @@ describe("a failed save says so", () => {
 
   it("clears which group action was running, even when it failed", () => {
     const source = read("components/GroupManager.tsx");
-    // Three transitions, each with a finally that resets the label.
-    expect(source.match(/setPendingAction\(null\)/g)?.length).toBe(3);
+    // Four transitions, each with a finally that resets the label.
+    expect(source.match(/setPendingAction\(null\)/g)?.length).toBe(4);
   });
 
   it("lets a navigation button re-enable itself", () => {

@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { claimOrganizationInvitation } from "@/lib/actions/district";
 import { attemptAction } from "@/lib/attempt-action";
 
-export function ClaimInvitationButton({ token }: { token: string }) {
+const autoClaimStarted = new Set<string>();
+
+export function ClaimInvitationButton({
+  token,
+  autoAccept = false,
+}: {
+  token: string;
+  autoAccept?: boolean;
+}) {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
+  const [pending, setPending] = useState(autoAccept);
   const [error, setError] = useState<string | null>(null);
+  const started = useRef(false);
 
   async function claim() {
     setPending(true);
@@ -19,6 +28,7 @@ export function ClaimInvitationButton({ token }: { token: string }) {
       );
       if (!result.ok) {
         setError(result.error);
+        autoClaimStarted.delete(token);
         return;
       }
       router.replace(`/orgs/${result.slug}`);
@@ -28,11 +38,23 @@ export function ClaimInvitationButton({ token }: { token: string }) {
     }
   }
 
+  useEffect(() => {
+    if (!autoAccept || started.current || autoClaimStarted.has(token)) {
+      return;
+    }
+    started.current = true;
+    autoClaimStarted.add(token);
+    void claim();
+    // Mount-only: a matching signed-in mailbox should finish the invite after
+    // signup or email confirmation without a second Accept click.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoAccept, token]);
+
   return (
     <div>
       <button
         type="button"
-        onClick={claim}
+        onClick={() => void claim()}
         disabled={pending}
         className="cta-enabled disabled:opacity-60"
       >

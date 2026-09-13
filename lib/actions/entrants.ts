@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth/session";
 import { actionErrorMessage } from "@/lib/actions/errors";
 import { createInAppNotifications, getActiveGuardiansForProfiles } from "@/lib/actions/in-app-notifications";
-import { getChildSchoolsForDistrict } from "@/lib/data/portal";
 import { performClearRsvp, performSetRsvp } from "@/lib/rsvp-write";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/actions/result";
@@ -108,19 +107,15 @@ export async function markEntrantStaffRsvp(input: {
   }
 
   const supabase = await createServerSupabaseClient();
-  const [managementCheck, entrantCheck] = await Promise.all([
-    supabase.rpc("can_manage_competition", {
-      p_competition_id: input.competitionId,
-      p_profile_id: user.id,
-    }),
-    supabase.rpc("can_invite_to_competition", {
+  const managementCheck = await supabase.rpc(
+    "can_operate_competition_entrant",
+    {
       p_competition_id: input.competitionId,
       p_entrant_id: input.profileId,
-      p_inviter_id: user.id,
-    }),
-  ]);
-  const canManage = managementCheck.data === true || entrantCheck.data === true;
-  if (!canManage && managementCheck.error && entrantCheck.error) {
+      p_actor_id: user.id,
+    }
+  );
+  if (managementCheck.error) {
     return {
       ok: false,
       error: actionErrorMessage(
@@ -129,7 +124,7 @@ export async function markEntrantStaffRsvp(input: {
       ),
     };
   }
-  if (!canManage) {
+  if (managementCheck.data !== true) {
     return {
       ok: false,
       error: "Only coaches and administrators can mark a student going.",
@@ -420,85 +415,23 @@ export async function inviteConnectedSchoolRosters(
   if (!user) return { ok: false, error: "Sign in to continue." };
 
   const supabase = await createServerSupabaseClient();
-  const { data: canManage, error: manageError } = await supabase.rpc(
-    "can_manage_competition",
-    {
-      p_competition_id: competitionId,
-      p_profile_id: user.id,
-    }
+  const { data, error } = await supabase.rpc(
+    "invite_connected_school_rosters",
+    { p_competition_id: competitionId }
   );
-  if (manageError || canManage !== true) {
-    return {
-      ok: false,
-      error: "You don’t have permission to invite students to this competition.",
-    };
-  }
-
-  const { data: competition } = await supabase
-    .from("competitions")
-    .select("org_id")
-    .eq("id", competitionId)
-    .maybeSingle();
-  if (!competition?.org_id) {
-    return {
-      ok: false,
-      error: "This competition is not hosted by a district.",
-    };
-  }
-
-  const { data: host } = await supabase
-    .from("organizations")
-    .select("id, type")
-    .eq("id", competition.org_id)
-    .maybeSingle();
-  if (host?.type !== "district") {
-    return {
-      ok: false,
-      error: "Invite connected schools only works on a district-hosted event.",
-    };
-  }
-
-  const schools = await getChildSchoolsForDistrict(host.id);
-  if (!schools.length) {
-    return {
-      ok: false,
-      error: "Add a school, then invite its roster.",
-    };
-  }
-
-  const { data: profileRows, error: rosterError } = await supabase.rpc(
-    "list_connected_school_student_ids",
-    { p_district_id: host.id }
-  );
-  if (rosterError) {
+  if (error) {
     return {
       ok: false,
       error: actionErrorMessage(
-        rosterError,
-        "Could not load connected-school rosters. Reload and try again.",
+        error,
+        "Could not invite connected schools. Reload and try again.",
         "You don’t have permission to invite students to this competition."
       ),
     };
   }
-  const originByProfile: Record<string, string> = {};
-  const profileIds: string[] = [];
-  for (const row of (profileRows ?? []) as {
-    profile_id: string;
-    school_id?: string;
-  }[]) {
-    if (originByProfile[row.profile_id]) continue;
-    profileIds.push(row.profile_id);
-    if (row.school_id) originByProfile[row.profile_id] = row.school_id;
-  }
-  if (!profileIds.length) {
-    return {
-      ok: false,
-      error:
-        "Connected schools have no students on roster yet. Share a school join link, then invite.",
-    };
-  }
 
-  return inviteEntrants(competitionId, eventSlug, profileIds, originByProfile);
+  revalidateEventSurfaces(eventSlug);
+  return { ok: true, invited: Number(data ?? 0) };
 }
 
 export async function removeEntrant(

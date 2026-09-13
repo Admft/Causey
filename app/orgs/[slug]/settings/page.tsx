@@ -11,13 +11,16 @@ import {
   PORTAL_PREVIEW_PATH,
   isLocalPreviewEnabled,
 } from "@/lib/local-preview";
-import { getDistrictPilotReadiness } from "@/lib/data/district";
+import {
+  getDistrictPilotReadiness,
+  getOrgStaffDirectory,
+} from "@/lib/data/district";
 import {
   getOrganizationVerificationReview,
   getOrgBySlugForViewer,
-  getOrgRoster,
 } from "@/lib/data/portal";
 import { getDistrictSchoolReadinessStatus } from "@/lib/district-readiness";
+import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
 
 // Reads the signed-in account, so this response is never shareable.
 // Declared rather than inferred from cookies(): the day someone moves the
@@ -43,14 +46,30 @@ export default async function OrganizationSettingsPage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
-  const [roster, verificationReview, districtReadinessResult] =
+  const [staffResult, verificationReview, districtReadinessResult] =
     await Promise.all([
-      getOrgRoster(view.org.id),
+      getOrgStaffDirectory(view.org.id),
       getOrganizationVerificationReview(view.org.id),
       view.isDistrictAdmin
         ? getDistrictPilotReadiness(view.org.id)
         : Promise.resolve(null),
     ]);
+  const roster =
+    staffResult.ok === true
+      ? staffResult.data.map((member) => ({
+          profile_id: member.profile_id,
+          display_name: member.display_name,
+          age_band: null,
+          grade: null,
+          credential_ids: {},
+          member_role: member.member_role,
+          member_status: member.member_status as
+            | "active"
+            | "invited"
+            | "removed",
+          joined_at: member.joined_at,
+        }))
+      : [];
   const districtReadiness =
     districtReadinessResult?.ok === true ? districtReadinessResult.data : null;
   const districtReadinessError = districtReadinessResult?.ok === false;
@@ -74,9 +93,16 @@ export default async function OrganizationSettingsPage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="settings"
-        showRoster={view.isCoach && view.org.type !== "district"}
+        showRoster={view.canViewNamedRoster && view.org.type !== "district"}
         showAdmin={view.isAdmin}
         orgType={view.org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: view.org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">Settings</p>
@@ -159,7 +185,7 @@ export default async function OrganizationSettingsPage({
                 </Link>
               ) : (
                 <Link
-                  href={`#schools`}
+                  href={`/orgs/${view.org.slug}/schools`}
                   className="text-sm font-semibold text-muted-strong hover:text-brand-red"
                 >
                   Manage schools
@@ -256,7 +282,7 @@ export default async function OrganizationSettingsPage({
                 title="School readiness could not load"
                 description="Retry this list before inviting administrators or provisioning students, so you do not act on incomplete information."
                 action={{
-                  href: `/orgs/${view.org.slug}/settings?retry=readiness#schools`,
+                  href: `/orgs/${view.org.slug}/schools?retry=readiness`,
                   label: "Retry school readiness",
                 }}
               />

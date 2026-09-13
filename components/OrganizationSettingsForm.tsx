@@ -36,10 +36,16 @@ export function OrganizationSettingsForm({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const ownerId = org.owner_profile_id ?? org.created_by;
+  const ownerRoles =
+    org.type === "district"
+      ? ["district_admin", "admin"]
+      : org.type === "school"
+        ? ["school_admin", "admin"]
+        : ["coach", "admin"];
   const eligibleOwners = staff.filter(
     (member) =>
       member.profile_id !== ownerId &&
-      ["coach", "school_admin", "district_admin"].includes(member.member_role) &&
+      ownerRoles.includes(member.member_role) &&
       member.member_status === "active"
   );
   // Claimed school admin viewing before the district transfers ownership:

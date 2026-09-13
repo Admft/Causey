@@ -101,19 +101,19 @@ describe("effective database security remediation", () => {
     const setGroupMembers = effectiveFunction("set_group_members");
 
     expect(invite.sql).toContain(
-      "public.can_operate_org_competitions("
+      "public.can_operate_competition_entrant("
     );
     expect(attendance.sql).toContain(
-      "public.can_operate_org_competitions("
+      "public.can_view_competition_entrant("
     );
     expect(roster.sql).toContain(
-      "public.can_administer_org(p_org_id, auth.uid())"
+      "public.can_view_named_org_roster(p_org_id, auth.uid())"
     );
     expect(rotate.sql).toContain(
       "public.can_administer_org(p_org_id, auth.uid())"
     );
     expect(setGroupMembers.sql).toContain(
-      "public.can_operate_org_competitions(target_org_id, auth.uid())"
+      "public.can_manage_org_groups(target_org_id, auth.uid())"
     );
     expect(setGroupMembers.sql).toContain(
       "delete from public.org_group_members"
@@ -161,9 +161,11 @@ describe("effective database security remediation", () => {
     const history = effectiveFunction(
       "get_org_member_competition_history"
     );
-    expect(attendance.file).toBe("0076_staff_team_entry.sql");
+    expect(attendance.file).toBe(
+      "0097_district_school_role_boundaries.sql"
+    );
     expect(attendance.sql).toContain(
-      "public.can_operate_org_competitions("
+      "public.can_view_competition_entrant("
     );
     expect(attendance.sql).toContain("entrant.placement");
     expect(attendance.sql).toContain("entrant.award_label");

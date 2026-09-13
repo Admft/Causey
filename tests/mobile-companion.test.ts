@@ -521,8 +521,7 @@ describe("every signed-in role has a home", () => {
 
   it("shares one attendance permission path with the website", () => {
     const shared = read("lib/attendance-write.ts");
-    expect(shared).toContain("can_manage_competition");
-    expect(shared).toContain("can_invite_to_competition");
+    expect(shared).toContain("can_operate_competition_entrant");
     expect(shared).toContain("Only competition staff can record attendance.");
     for (const caller of [
       "lib/actions/district.ts",

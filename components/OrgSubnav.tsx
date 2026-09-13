@@ -17,6 +17,7 @@ const TABS = [
   { id: "roster", label: "Roster & groups", path: "/roster", access: "staff" },
   { id: "people", label: "Invites & staff", path: "/people", access: "admin" },
   { id: "reports", label: "Reports", path: "/reports", access: "admin" },
+  { id: "activity", label: "Activity", path: "/activity", access: "admin" },
   { id: "settings", label: "Settings", path: "/settings", access: "admin" },
 ] as const;
 
@@ -28,8 +29,13 @@ const DISTRICT_TABS = [
     path: "/competitions",
     access: "member",
   },
-  { id: "schools", label: "Schools", path: "/settings#schools", access: "admin" },
-  { id: "people", label: "District staff", path: "/people", access: "admin" },
+  { id: "schools", label: "Schools", path: "/schools", access: "admin" },
+  {
+    id: "people",
+    label: "District & school staff",
+    path: "/people",
+    access: "admin",
+  },
   { id: "reports", label: "Reports", path: "/reports", access: "admin" },
   { id: "activity", label: "Activity", path: "/activity", access: "admin" },
   { id: "settings", label: "Settings", path: "/settings", access: "admin" },
@@ -64,6 +70,7 @@ export function OrgSubnavBar({
   showRoster,
   showAdmin = false,
   orgType,
+  roleLabel,
 }: {
   slug: string;
   orgName: string;
@@ -72,8 +79,20 @@ export function OrgSubnavBar({
   showRoster: boolean;
   showAdmin?: boolean;
   orgType?: OrganizationType;
+  roleLabel?: string;
 }) {
   const sourceTabs = orgType === "district" ? DISTRICT_TABS : TABS;
+  const resolvedRoleLabel =
+    roleLabel ??
+    (orgType === "district" && showAdmin
+      ? "District administrator"
+      : orgType === "school" && showAdmin
+        ? showRoster
+          ? "School administrator"
+          : "District administrator"
+        : orgType === "school" && showRoster
+          ? "School staff"
+          : null);
   const tabs = sourceTabs.filter((item) => {
     if (item.access === "member") return true;
     if (item.access === "staff") return showRoster;
@@ -96,6 +115,11 @@ export function OrgSubnavBar({
               {ORG_ACCOUNT_LABEL[orgType]}
             </span>
           ) : null}
+          {resolvedRoleLabel ? (
+            <span className="shrink-0 text-xs font-semibold text-foreground">
+              · {resolvedRoleLabel}
+            </span>
+          ) : null}
         </div>
         <nav
           aria-label="Organization sections"
@@ -103,10 +127,16 @@ export function OrgSubnavBar({
         >
           {tabs.map((t) => {
             const active = tab !== null && t.id === tab;
+            const label =
+              orgType === "school" && t.id === "roster"
+                ? "Students & groups"
+                : orgType === "school" && t.id === "people"
+                  ? "Coaches & staff"
+                  : t.label;
             if (active) {
               return (
                 <span key={t.id} aria-current="page" className={tabClass(true)}>
-                  {t.label}
+                  {label}
                 </span>
               );
             }
@@ -116,7 +146,7 @@ export function OrgSubnavBar({
                 href={`/orgs/${slug}${t.path}`}
                 className={tabClass(false)}
               >
-                {t.label}
+                {label}
               </Link>
             );
           })}

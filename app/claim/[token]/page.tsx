@@ -83,7 +83,7 @@ export default async function ClaimInvitationPage({
           next={next}
           signedIn={Boolean(user)}
           signedInEmail={user?.email ?? null}
-          claimControl={<ClaimInvitationButton token={token} />}
+          claimControl={<ClaimInvitationButton token={token} autoAccept />}
         />
       </section>
     </div>

@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OrganizationPeopleManager } from "@/components/OrganizationPeopleManager";
+import { OrganizationStaffConsole } from "@/components/OrganizationStaffConsole";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
 import { PortalMission } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
-import { getOrgInvitations } from "@/lib/data/district";
+import {
+  getDistrictStaffDirectory,
+  getOrgInvitations,
+  getOrgStaffDirectory,
+} from "@/lib/data/district";
 import { getOrgBySlugForViewer, getOrgRoster } from "@/lib/data/portal";
+import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
 
 // Reads the signed-in account, so this response is never shareable.
 // Declared rather than inferred from cookies(): the day someone moves the
@@ -32,9 +38,13 @@ export default async function OrganizationPeoplePage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
-  const [invitations, roster] = await Promise.all([
+  const isDistrict = view.org.type === "district";
+  const [invitations, roster, staffResult] = await Promise.all([
     getOrgInvitations(view.org.id),
     getOrgRoster(view.org.id),
+    isDistrict
+      ? getDistrictStaffDirectory(view.org.id)
+      : getOrgStaffDirectory(view.org.id),
   ]);
   const pendingInvites = invitations.filter(
     (row) =>
@@ -43,13 +53,16 @@ export default async function OrganizationPeoplePage({
   const activeStudents = roster.filter(
     (row) => row.member_status === "active" && row.member_role === "student"
   ).length;
-  const activeDelegatedSchoolAdmins = roster.filter(
-    (row) =>
-      row.profile_id !== user.id &&
-      row.member_status === "active" &&
-      (row.member_role === "school_admin" || row.member_role === "admin")
-  ).length;
-  const isDistrict = view.org.type === "district";
+  const activeDelegatedSchoolAdmins = staffResult.ok
+    ? staffResult.data.filter(
+        (row) =>
+          row.org_id === view.org.id &&
+          row.profile_id !== user.id &&
+          row.member_status === "active" &&
+          (row.member_role === "school_admin" ||
+            row.member_role === "admin")
+      ).length
+    : 0;
   const districtSlug =
     query.district && /^[a-z0-9-]+$/.test(query.district)
       ? query.district
@@ -75,7 +88,17 @@ export default async function OrganizationPeoplePage({
     action: { href: string; label: string };
     secondary?: { href: string; label: string };
   };
-  if (
+  if (!staffResult.ok) {
+    mission = {
+      title: "Staff access is unavailable",
+      description:
+        "Causey could not verify the current administrators. Retry before inviting or changing staff access.",
+      action: {
+        href: `/orgs/${view.org.slug}/people`,
+        label: "Retry staff access",
+      },
+    };
+  } else if (
     isSchoolAdminSetup &&
     activeDelegatedSchoolAdmins > 0 &&
     view.org.owner_profile_id === user.id
@@ -154,7 +177,7 @@ export default async function OrganizationPeoplePage({
         "Invite district administrators or coaches here. Create or open a school workspace for school administrators and students.",
       action: { href: "#invite-one", label: "Invite district staff" },
       secondary: {
-        href: `/orgs/${view.org.slug}/settings#schools`,
+        href: `/orgs/${view.org.slug}/schools`,
         label: "Manage schools",
       },
     };
@@ -193,9 +216,16 @@ export default async function OrganizationPeoplePage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="people"
-        showRoster={view.isCoach && !isDistrict}
+        showRoster={view.canViewNamedRoster && !isDistrict}
         showAdmin={view.isAdmin}
         orgType={view.org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: view.org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
@@ -208,7 +238,7 @@ export default async function OrganizationPeoplePage({
                 : "Club staffing"}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-          Invites &amp; staff
+          {isDistrict ? "District & school staff" : "Coaches & staff"}
         </h1>
         <p className="mt-2 max-w-prose text-sm text-muted">
           {isDistrict
@@ -238,6 +268,35 @@ export default async function OrganizationPeoplePage({
           />
         </div>
 
+        <section className="section-rule mt-10 pt-8">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold text-foreground">
+              Active staff access
+            </h2>
+            <span className="text-xs text-muted">
+              {staffResult.ok ? staffResult.data.length : 0} staff
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-muted">
+            {isDistrict
+              ? "District administrators can manage district and school staff here. Student names are not included."
+              : "School administrators can delegate peers and assign coaches to groups from Students & groups."}
+          </p>
+          <div className="mt-4">
+            {staffResult.ok ? (
+              <OrganizationStaffConsole
+                rows={staffResult.data}
+                currentUserId={user.id}
+                showOrganization={isDistrict}
+              />
+            ) : (
+              <p className="text-sm font-medium text-brand-red" role="alert">
+                Staff access could not load. Retry before changing roles.
+              </p>
+            )}
+          </div>
+        </section>
+
         {hasJoinCode ? (
           <p className="mt-6 text-sm text-muted">
             Prefer the join link for the whole roster?{" "}
@@ -250,22 +309,24 @@ export default async function OrganizationPeoplePage({
           </p>
         ) : null}
 
-        <section className="section-rule mt-10 pt-8">
-          <OrganizationPeopleManager
-            orgId={view.org.id}
-            orgSlug={view.org.slug}
-            orgType={view.org.type}
-            invitations={invitations}
-            rosterHref={isDistrict ? undefined : rosterHref}
-            defaultRole={
-              isSchoolAdminSetup || needsSchoolAdminHandoff
-                ? "school_admin"
-                : isDistrict
-                  ? "district_admin"
-                  : undefined
-            }
-          />
-        </section>
+        {staffResult.ok ? (
+          <section className="section-rule mt-10 pt-8">
+            <OrganizationPeopleManager
+              orgId={view.org.id}
+              orgSlug={view.org.slug}
+              orgType={view.org.type}
+              invitations={invitations}
+              rosterHref={isDistrict ? undefined : rosterHref}
+              defaultRole={
+                isSchoolAdminSetup || needsSchoolAdminHandoff
+                  ? "school_admin"
+                  : isDistrict
+                    ? "district_admin"
+                    : undefined
+              }
+            />
+          </section>
+        ) : null}
       </div>
     </>
   );

@@ -9,6 +9,7 @@ import {
   getTournamentDraftForViewer,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
+import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -47,13 +48,6 @@ export default async function NewCompetitionPage({
             type: view.org.type,
             parentOrgId: view.org.parent_org_id,
           },
-          ...view.schools.map((school) => ({
-            id: school.id,
-            name: school.name,
-            state: school.state,
-            type: "school" as const,
-            parentOrgId: view.org.id,
-          })),
         ]
       : [
           {
@@ -88,9 +82,16 @@ export default async function NewCompetitionPage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="competitions"
-        showRoster={view.isCoach && view.org.type !== "district"}
+        showRoster={view.canViewNamedRoster && view.org.type !== "district"}
         showAdmin={view.isAdmin}
         orgType={view.org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: view.org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">New competition</p>

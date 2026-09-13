@@ -77,14 +77,19 @@ describe("district admin activity feed", () => {
     expect(migration).toContain("'role', event.detail->>'role'");
   });
 
-  it("wires a district-only Activity tab and fail-closed page", () => {
+  it("wires scoped district and school Activity tabs with fail-closed reads", () => {
     expect(orgSubnav).toContain('{ id: "activity", label: "Activity"');
     expect(orgSubnav).toContain('path: "/activity"');
-    expect(activityPage).toContain('view.org.type !== "district"');
-    expect(activityPage).toContain("!view.isDistrictAdmin");
+    expect(activityPage).toContain('view.org.type === "district"');
+    expect(activityPage).toContain(
+      "!view.isAdmin || (isDistrict && !view.isDistrictAdmin)"
+    );
     expect(activityPage).toContain("getDistrictAdminActivity(view.org.id)");
+    expect(activityPage).toContain("getOrgAdminActivity(view.org.id)");
     expect(activityPage).toContain("Activity could not load");
-    expect(activityPage).toContain("Retry district activity");
+    expect(activityPage).toContain(
+      'label: `Retry ${isDistrict ? "district" : "school"} activity`'
+    );
     expect(activityPage).toContain("Open schools setup");
     expect(districtData).toContain('rpc("get_district_admin_activity"');
     expect(districtData).toContain("p_district_id: districtId");

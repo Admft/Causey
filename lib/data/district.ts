@@ -72,6 +72,33 @@ export type DistrictAdminActivityRow = {
   summary: DistrictAdminActivitySummary;
 };
 
+export type OrgStaffDirectoryRow = {
+  org_id: string;
+  org_name: string;
+  org_slug: string;
+  org_type: string;
+  profile_id: string;
+  display_name: string;
+  member_role: OrgMemberRole;
+  member_status: string;
+  joined_at: string;
+  is_owner: boolean;
+  assigned_group_ids: string[];
+  assigned_group_names: string[];
+};
+
+export type DistrictEventSchoolSummaryRow = {
+  school_id: string;
+  school_name: string;
+  active_students: number;
+  not_invited: number;
+  awaiting_reply: number;
+  going_count: number;
+  not_going_count: number;
+  attended_count: number;
+  did_not_attend_count: number;
+};
+
 export type OrgInvitationRow = {
   id: string;
   org_id: string;
@@ -213,6 +240,85 @@ export async function getDistrictAdminActivity(
     data: ((data ?? []) as DistrictAdminActivityRow[]).map((row) => ({
       ...row,
       summary: (row.summary ?? {}) as DistrictAdminActivitySummary,
+    })),
+  };
+}
+
+export async function getOrgAdminActivity(
+  orgId: string,
+  limit = 50
+): Promise<DistrictReadResult<DistrictAdminActivityRow[]>> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_org_admin_activity", {
+    p_org_id: orgId,
+    p_limit: limit,
+  });
+  if (error) return { ok: false };
+  return {
+    ok: true,
+    data: ((data ?? []) as DistrictAdminActivityRow[]).map((row) => ({
+      ...row,
+      summary: (row.summary ?? {}) as DistrictAdminActivitySummary,
+    })),
+  };
+}
+
+export async function getOrgStaffDirectory(
+  orgId: string
+): Promise<DistrictReadResult<OrgStaffDirectoryRow[]>> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_org_staff_directory", {
+    p_org_id: orgId,
+  });
+  if (error) return { ok: false };
+  return {
+    ok: true,
+    data: ((data ?? []) as OrgStaffDirectoryRow[]).map((row) => ({
+      ...row,
+      assigned_group_ids: row.assigned_group_ids ?? [],
+      assigned_group_names: row.assigned_group_names ?? [],
+    })),
+  };
+}
+
+export async function getDistrictStaffDirectory(
+  districtId: string
+): Promise<DistrictReadResult<OrgStaffDirectoryRow[]>> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc("get_district_staff_directory", {
+    p_district_id: districtId,
+  });
+  if (error) return { ok: false };
+  return {
+    ok: true,
+    data: ((data ?? []) as OrgStaffDirectoryRow[]).map((row) => ({
+      ...row,
+      assigned_group_ids: row.assigned_group_ids ?? [],
+      assigned_group_names: row.assigned_group_names ?? [],
+    })),
+  };
+}
+
+export async function getDistrictEventSchoolSummary(
+  competitionId: string
+): Promise<DistrictReadResult<DistrictEventSchoolSummaryRow[]>> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.rpc(
+    "get_district_event_school_summary",
+    { p_competition_id: competitionId }
+  );
+  if (error) return { ok: false };
+  return {
+    ok: true,
+    data: ((data ?? []) as DistrictEventSchoolSummaryRow[]).map((row) => ({
+      ...row,
+      active_students: Number(row.active_students ?? 0),
+      not_invited: Number(row.not_invited ?? 0),
+      awaiting_reply: Number(row.awaiting_reply ?? 0),
+      going_count: Number(row.going_count ?? 0),
+      not_going_count: Number(row.not_going_count ?? 0),
+      attended_count: Number(row.attended_count ?? 0),
+      did_not_attend_count: Number(row.did_not_attend_count ?? 0),
     })),
   };
 }

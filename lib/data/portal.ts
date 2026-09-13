@@ -140,6 +140,10 @@ export type OrgForViewer = {
   isCoach: boolean;
   /** Narrow operator access: coach/admin/owner, never assistant coach. */
   canManageTournaments: boolean;
+  /** Named students are visible only inside a school/club/team scope. */
+  canViewNamedRoster: boolean;
+  /** School groups are shaped by school admins; club/team coaches keep access. */
+  canManageGroups: boolean;
   isAdmin: boolean;
   isDistrictAdmin: boolean;
   activeMemberCount: number;
@@ -231,7 +235,10 @@ export type EntrantWithEvent = {
   registration_status: "opened" | "registered" | "not_registered" | null;
 };
 
-export type GroupWithMembers = OrgGroup & { member_ids: string[] };
+export type GroupWithMembers = OrgGroup & {
+  member_ids: string[];
+  assigned_staff_ids: string[];
+};
 
 /** Events that haven't finished yet come first; the past is history. */
 export function isUpcomingEvent(
@@ -256,8 +263,28 @@ export async function getMyOrgs(
   ]);
 
   const rows = new Map<string, MyOrgRow>();
+  const activeMembershipOrgIds = new Set(
+    (membershipRes.data ?? []).flatMap((row) => {
+      const organization =
+        row.organizations as unknown as Organization | null;
+      return organization ? [organization.id] : [];
+    })
+  );
   for (const org of (ownedRes.data ?? []) as unknown as Organization[]) {
-    rows.set(org.id, { org, memberRole: null, isCoach: true });
+    // District/school provisioning ownership is temporary custody, not a
+    // tenant identity. Institutional workspaces appear once the person has an
+    // active membership (or through an administered parent district below).
+    if (
+      (org.type === "district" || org.type === "school") &&
+      !activeMembershipOrgIds.has(org.id)
+    ) {
+      continue;
+    }
+    rows.set(org.id, {
+      org,
+      memberRole: org.type === "district" ? "district_admin" : null,
+      isCoach: true,
+    });
   }
   for (const row of membershipRes.data ?? []) {
     const org = row.organizations as unknown as Organization | null;
@@ -277,6 +304,28 @@ export async function getMyOrgs(
           "district_admin",
         ].includes(memberRole),
     });
+  }
+  const administeredDistrictIds = [...rows.values()]
+    .filter(
+      ({ org, memberRole }) =>
+        org.type === "district" &&
+        (memberRole === "district_admin" || org.owner_profile_id === userId)
+    )
+    .map(({ org }) => org.id);
+  if (administeredDistrictIds.length) {
+    const { data: connectedSchools } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("type", "school")
+      .in("parent_org_id", administeredDistrictIds);
+    for (const school of (connectedSchools ?? []) as Organization[]) {
+      if (rows.has(school.id)) continue;
+      rows.set(school.id, {
+        org: school,
+        memberRole: null,
+        isCoach: true,
+      });
+    }
   }
   return [...rows.values()].sort((a, b) => a.org.name.localeCompare(b.org.name));
 }
@@ -302,6 +351,8 @@ export async function getOrgBySlugForViewer(
     announcementsRes,
     staffAccessRes,
     coachAccessRes,
+    namedRosterAccessRes,
+    groupManagementAccessRes,
     adminAccessRes,
     districtAccessRes,
   ] =
@@ -355,6 +406,14 @@ export async function getOrgBySlugForViewer(
       p_org_id: org.id,
       p_profile_id: userId,
     }),
+    supabase.rpc("can_view_named_org_roster", {
+      p_org_id: org.id,
+      p_profile_id: userId,
+    }),
+    supabase.rpc("can_manage_org_groups", {
+      p_org_id: org.id,
+      p_profile_id: userId,
+    }),
     supabase.rpc("can_administer_org", {
       p_org_id: org.id,
       p_profile_id: userId,
@@ -384,6 +443,8 @@ export async function getOrgBySlugForViewer(
     membership,
     isCoach: staffAccessRes.data === true,
     canManageTournaments: coachAccessRes.data === true,
+    canViewNamedRoster: namedRosterAccessRes.data === true,
+    canManageGroups: groupManagementAccessRes.data === true,
     isAdmin,
     isDistrictAdmin:
       typedOrg.type === "district" &&
@@ -1176,7 +1237,9 @@ export async function getOrgGroups(orgId: string): Promise<GroupWithMembers[]> {
   const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from("org_groups")
-    .select("id, org_id, name, created_at, org_group_members(profile_id)")
+    .select(
+      "id, org_id, name, created_at, org_group_members(profile_id), org_group_staff_assignments(profile_id)"
+    )
     .eq("org_id", orgId)
     .order("name");
 
@@ -1188,5 +1251,8 @@ export async function getOrgGroups(orgId: string): Promise<GroupWithMembers[]> {
     member_ids: ((row.org_group_members ?? []) as { profile_id: string }[]).map(
       (m) => m.profile_id
     ),
+    assigned_staff_ids: (
+      (row.org_group_staff_assignments ?? []) as { profile_id: string }[]
+    ).map((assignment) => assignment.profile_id),
   }));
 }

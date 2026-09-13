@@ -15,6 +15,7 @@ import { PortalMission } from "@/components/PortalPrimitives";
 import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { isCompetitionStarted } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
+import { getDistrictEventSchoolSummary } from "@/lib/data/district";
 import {
   canManageCompetitionAsViewer,
   getChildSchoolsForDistrict,
@@ -89,6 +90,7 @@ export default async function ManageEventPage({
     }
   }
   const isDistrictHost = hostOrg?.type === "district";
+  const districtOfficeView = Boolean(canManage && isDistrictHost);
   const childSchools =
     canManage && isDistrictHost && hostOrg
       ? await getChildSchoolsForDistrict(hostOrg.id)
@@ -107,10 +109,17 @@ export default async function ManageEventPage({
       : [];
   if (!canManage && !attendingOrgs.length) redirect(`/event/${slug}`);
 
-  const attendance = await getEventAttendance(competition.id);
+  const districtSummaryResult = districtOfficeView
+    ? await getDistrictEventSchoolSummary(competition.id)
+    : null;
+  const districtSchoolSummary =
+    districtSummaryResult?.ok === true ? districtSummaryResult.data : [];
+  const attendance = districtOfficeView
+    ? []
+    : await getEventAttendance(competition.id);
   const rosterSources = [
     ...(canManage && hostOrg && !isDistrictHost ? [hostOrg] : []),
-    ...childSchools,
+    ...(districtOfficeView ? [] : childSchools),
     ...attendingOrgs.map((entry) => entry.org),
   ];
   const rosterOrgIds = [...new Set(rosterSources.map((org) => org.id))];
@@ -181,7 +190,34 @@ export default async function ManageEventPage({
       display_name: row.display_name,
       orgName: isDistrictHost ? row.orgName : null,
     }));
-  const summary = summarizeAttendance(labeledAttendance);
+  const districtActiveStudents = districtSchoolSummary.reduce(
+    (sum, row) => sum + row.active_students,
+    0
+  );
+  const districtNotInvited = districtSchoolSummary.reduce(
+    (sum, row) => sum + row.not_invited,
+    0
+  );
+  const districtInvited = districtActiveStudents - districtNotInvited;
+  const districtAwaiting = districtSchoolSummary.reduce(
+    (sum, row) => sum + row.awaiting_reply,
+    0
+  );
+  const districtGoing = districtSchoolSummary.reduce(
+    (sum, row) => sum + row.going_count + row.attended_count,
+    0
+  );
+  const districtNotGoing = districtSchoolSummary.reduce(
+    (sum, row) => sum + row.not_going_count + row.did_not_attend_count,
+    0
+  );
+  const summary = districtOfficeView
+    ? {
+        going: districtGoing,
+        notGoing: districtNotGoing,
+        awaiting: districtAwaiting,
+      }
+    : summarizeAttendance(labeledAttendance);
   const today = new Date().toISOString().slice(0, 10);
   const attendanceOpen = isCompetitionStarted(competition, today);
   const isDraft = canManage && competition.status === "draft";
@@ -196,7 +232,7 @@ export default async function ManageEventPage({
   ).length;
   const inviteFirst =
     !isDraft &&
-    (needsInvite ||
+    ((districtOfficeView ? districtInvited === 0 : needsInvite) ||
       (candidates.length > 0 && !needsReplies && !attendanceOpen));
   const resultSections = competition.sections.map((section) => ({
     id: section.id,
@@ -244,11 +280,9 @@ export default async function ManageEventPage({
     }
   }
   const rosterHref = isDistrictHost
-    ? childSchools[0]
-      ? `/orgs/${childSchools[0].slug}/roster#add-students`
-      : orgShell
-        ? `/orgs/${orgShell.slug}/settings#schools`
-        : "/orgs"
+    ? orgShell
+      ? `/orgs/${orgShell.slug}/schools`
+      : "/orgs"
     : orgShell
       ? `/orgs/${orgShell.slug}/roster`
       : "/orgs#organizations";
@@ -303,6 +337,53 @@ export default async function ManageEventPage({
       },
       secondary: { href: workspaceHref, label: "Back to workspace" },
     };
+  } else if (districtOfficeView) {
+    mission =
+      districtSummaryResult?.ok === false
+        ? {
+            title: "School totals could not load",
+            description:
+              "No student-level fallback is shown. Retry the aggregate read before inviting schools or treating this event as empty.",
+            action: {
+              href: `/event/${competition.slug}/manage?retry=school-totals`,
+              label: "Retry school totals",
+            },
+            secondary: { href: workspaceHref, label: "Back to district" },
+          }
+        : districtActiveStudents === 0
+          ? {
+              title: childSchools.length
+                ? "Schools need student rosters"
+                : "Add a school before inviting",
+              description: childSchools.length
+                ? "Connected schools have no active students yet. School administrators and assigned coaches build those rosters."
+                : "Create school workspaces and delegate school administrators before sending district event invitations.",
+              action: {
+                href: rosterHref,
+                label: childSchools.length
+                  ? "Review school readiness"
+                  : "Add a school",
+              },
+              secondary: { href: workspaceHref, label: "Back to district" },
+            }
+          : districtNotInvited > 0
+            ? {
+                title: "Invite connected schools",
+                description: `${districtNotInvited} ${
+                  districtNotInvited === 1 ? "student is" : "students are"
+                } available across connected schools. Causey sends the invitations without exposing student names to the district office.`,
+                action: { href: "#invite", label: "Invite connected schools" },
+                secondary: {
+                  href: "#rsvps",
+                  label: "Review school totals",
+                },
+              }
+            : {
+                title: "School replies at a glance",
+                description: `${districtGoing} going · ${districtNotGoing} can’t go · ${districtAwaiting} awaiting. School staff handle named follow-up, attendance, and results.`,
+                action: { href: "#rsvps", label: "Review school totals" },
+                secondary: { href: workspaceHref, label: "Back to district" },
+              };
   } else if (attendanceOpen && missingResults > 0) {
     mission = {
       title: "Record a result",
@@ -394,7 +475,9 @@ export default async function ManageEventPage({
       <h2 className="text-sm font-semibold text-foreground">Invite</h2>
       <p className="mt-1 text-sm text-muted">
         {isDistrictHost
-          ? "Invite students from connected schools. Groups stay with the school that created them."
+          ? districtOfficeView
+            ? "Invite every active connected-school roster in one step. Student names stay with school staff."
+            : "Invite students from your assigned school groups."
           : "Groups invite in one step. Individual picks work when you only need a few students."}
       </p>
       <div className="mt-4">
@@ -407,7 +490,11 @@ export default async function ManageEventPage({
             name: g.name,
             memberCount: g.member_ids.length,
           }))}
-          hasActiveRoster={activeStudents.length > 0}
+          hasActiveRoster={
+            districtOfficeView
+              ? districtActiveStudents > 0
+              : activeStudents.length > 0
+          }
           rosterHref={rosterHref}
           rosterLinkLabel={
             isDistrictHost
@@ -422,6 +509,13 @@ export default async function ManageEventPage({
                   studentCount: candidates.length,
                   schoolCount: childSchools.length,
                 }
+              : districtOfficeView && districtNotInvited > 0
+                ? {
+                    studentCount: districtNotInvited,
+                    schoolCount: districtSchoolSummary.filter(
+                      (school) => school.not_invited > 0
+                    ).length,
+                  }
               : null
           }
           isDistrictHosted={isDistrictHost}
@@ -569,6 +663,62 @@ export default async function ManageEventPage({
     </section>
   );
 
+  const districtSummarySection = (
+    <section id="rsvps" className="section-rule mt-10 scroll-mt-24 pt-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-semibold text-foreground">
+          School reply totals
+        </h2>
+        <p className="text-xs text-muted">
+          {districtGoing} going · {districtNotGoing} can&rsquo;t go ·{" "}
+          {districtAwaiting} awaiting
+        </p>
+      </div>
+      <p className="mt-2 max-w-prose text-sm text-muted">
+        District staff see aggregate school totals only. School administrators
+        and assigned coaches handle named replies, attendance, and results in
+        their own scope.
+      </p>
+      {districtSummaryResult?.ok === false ? (
+        <p className="mt-4 text-sm font-medium text-brand-red" role="alert">
+          School totals could not load. Retry this page before taking action.
+        </p>
+      ) : !districtSchoolSummary.length ? (
+        <p className="mt-4 text-sm text-muted">
+          No connected schools are available yet.
+        </p>
+      ) : (
+        <ul className="mt-4 divide-y divide-line border-y border-line">
+          {districtSchoolSummary.map((school) => (
+            <li
+              key={school.school_id}
+              className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+            >
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {school.school_name}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {school.active_students} active{" "}
+                  {school.active_students === 1 ? "student" : "students"} ·{" "}
+                  {school.not_invited} not invited
+                </p>
+              </div>
+              <p className="text-xs font-semibold text-muted-strong">
+                {school.going_count + school.attended_count} going ·{" "}
+                {school.not_going_count + school.did_not_attend_count} can&rsquo;t
+                go · {school.awaiting_reply} awaiting
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+  const replySection = districtOfficeView
+    ? districtSummarySection
+    : rsvpSection;
+
   return (
     <>
       <EventOrganizerSubnav
@@ -662,7 +812,7 @@ export default async function ManageEventPage({
           />
         </div>
 
-        {!isDraft ? (
+        {!isDraft && !districtOfficeView ? (
           <div className="mt-8">
             <EventPulseStrip
               pulse={pulse}
@@ -675,11 +825,11 @@ export default async function ManageEventPage({
         {isDraft ? null : inviteFirst ? (
           <>
             {inviteSection}
-            {rsvpSection}
+            {replySection}
           </>
         ) : (
           <>
-            {rsvpSection}
+            {replySection}
             {inviteSection}
           </>
         )}

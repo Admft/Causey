@@ -6,7 +6,7 @@
 
 **Audience:** district administrators, school administrators, and program coordinators  
 **Product:** Causey (`https://causey.dev`)  
-**Date:** August 24, 2026  
+**Date:** September 12, 2026
 **Status:** Assisted chess pilot. Not a self-serve district product and not a finished procurement package. Club/team owners use a separate self-serve workspace (`docs/club-feature-overview.md`); this page is district + school only.
 
 Causey helps a district run scholastic competition programs without giving the central office a copy of every student’s browsing history. Families can search public chess tournaments for free. A district pilot uses the same organization workspace as schools — not a custom portal. A vanity host is a later unsold SKU (local `/portals` layout only). Chess is the working surface; other types can be hosted. The pilot still adds the school-side work: getting the right people onto the right teams, telling families about events, recording who attended, and giving the district participation totals.
@@ -21,9 +21,13 @@ Chess is the working surface. Other competition types exist in the product but a
 
 ### District office
 - Hold a **district account** that oversees connected schools, not a single club page pretending to be a district.
-- **Add schools** and see each school’s setup status (administrator assigned, ownership handed off, roster started) on the district overview **and** on Schools settings — not verification labels alone.
+- **Add schools** and see each school’s setup status (administrator assigned, ownership handed off, roster started) on the district overview and the first-class **Schools** console.
 - Follow **one next action** on the district overview instead of a dump of every setting.
 - Invite **district staff** without giving them student-by-student browsing access.
+- Grant or unassign delegated district administrators. The protected owner,
+  current administrator, and last active administrator cannot be removed.
+- Open a district **Staff** console spanning connected schools without exposing
+  student names.
 - Open **Reports** for school-level totals: students on roster, upcoming events, pending RSVPs, going, and attendance.
 - Export those totals as **CSV**.
 - See **district-hosted** events separately from **school-hosted** events, so a district tournament is not counted as if every school ran it.
@@ -37,15 +41,20 @@ Chess is the working surface. Other competition types exist in the product but a
 - Receive a **named invitation** and claim a school account. No shared passwords.
 - Take **ownership** of the school workspace after claim.
 - Invite coaches, assistants, students, and families.
+- Grant or unassign delegated school administrators and assign coaches or
+  assistants to one or more student groups.
 - Import staff or students from **CSV**, with a row-by-row error list when a file fails.
 - Manage **school settings**, verification, and the people list.
 - See school-hosted competitions and school reporting.
 
 ### Coaches
-- Run a **roster** and **groups** (for invites and attendance).
+- Work only with assigned **groups** and their students. Assistants can read
+  assigned groups but cannot change rosters, invitations, attendance, or
+  results.
 - Create competitions as **drafts**, preview them, then publish.
 - Choose who can see an event: **public**, **district-only**, **school-only**, or **invite-only**.
-- Invite students, collect **RSVPs**, and see who still needs to finish **organizer registration** on the tournament’s own site.
+- Invite assigned students, collect **RSVPs**, and see who still needs to
+  finish **organizer registration** on the tournament’s own site.
 - Record **attendance** and review a **season attendance** view.
 - Post short **announcements** (“Bring boards Saturday”).
 - Edit or cancel a hosted event after it is published.
@@ -72,7 +81,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Public chess search | Indexed US chess listings by zip, radius, date, grade, rating, fee, and source | Yes, with incomplete coverage |
 | Qualification pathways | Chess pathway explorer for selected series; “Get your kid to chess nationals” pin above chess search | Illustrative scaffolding; swap in verified US Chess rules when they arrive; confirm with the organizer |
 | District → school structure | One district over many schools | Yes, Causey-assisted |
-| Role-based access | District, school, coach, assistant, parent, student each see their own work | Yes |
+| Role-based access | Protected district/school owners, delegated administrators, assigned-group coaches, read-only assistants, parents, and students each see scoped work | Yes; migrations through `0099` required |
 | Claim-link provisioning | Email or copyable invite plus a typable activation code; CSV import/export via one set-based RPC; reissue; Causey super admin can provision a district or a child school | Yes |
 | Rosters and groups | School/club roster, groups for invites and attendance | Yes |
 | Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters, stamps school of origin, and labels replies by school | Yes |

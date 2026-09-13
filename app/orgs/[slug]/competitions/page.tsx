@@ -13,6 +13,7 @@ import {
   isUpcomingEvent,
 } from "@/lib/data/portal";
 import { formatDateRange, formatFeeCents } from "@/lib/format";
+import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
 import { CompetitionCategorySchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -120,9 +121,16 @@ export default async function OrgCompetitionsPage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="competitions"
-        showRoster={view.isCoach && view.org.type !== "district"}
+        showRoster={view.canViewNamedRoster && view.org.type !== "district"}
         showAdmin={view.isAdmin}
         orgType={view.org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: view.org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">

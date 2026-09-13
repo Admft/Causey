@@ -49,9 +49,9 @@ describe("district pilot readiness priority", () => {
   });
 
   it("creates the first school when the district is empty", () => {
-    expect(getDistrictReadinessAction(readiness()).stage).toBe(
-      "create_school"
-    );
+    const action = getDistrictReadinessAction(readiness());
+    expect(action.stage).toBe("create_school");
+    expect(action.href).toBe("/orgs/sample-district#add-school");
   });
 
   it("orders rejected correction, admin claim, ownership, and students before pending review", () => {
@@ -215,6 +215,8 @@ describe("district command center competitions calendar", () => {
     expect(overview).toContain("Create a district-wide competition");
     expect(overview).toContain("See all competitions");
     expect(overview).toContain("getOrgCompetitionWorkspace(org)");
+    expect(overview).toContain("DistrictSchoolForm");
+    expect(overview).toContain('id="add-school"');
   });
 });
 

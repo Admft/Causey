@@ -107,7 +107,9 @@ describe("portal next-action vocabulary", () => {
     expect(portalPrimitives).toContain("export function PortalErrorState");
     expect(portalPrimitives).toContain('role="alert"');
     expect(activityPage).toContain("PortalErrorState");
-    expect(activityPage).toContain("Retry district activity");
+    expect(activityPage).toContain(
+      'label: `Retry ${isDistrict ? "district" : "school"} activity`'
+    );
     expect(reportsPage).toContain("PortalErrorState");
     expect(reportsPage).toContain("Retry district reporting");
     expect(orgOverview).toContain("PortalErrorState");

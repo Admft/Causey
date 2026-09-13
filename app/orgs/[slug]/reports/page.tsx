@@ -23,6 +23,7 @@ import { COMPETITION_TYPES } from "@/lib/competition-types";
 import { formatDateRange, formatRecordedResult } from "@/lib/format";
 import {
   OPEN_COMPETITIONS_LABEL,
+  contextualOrganizationRoleLabel,
   orgCompetitionsHref,
   organizationKindLabel,
 } from "@/lib/portal-copy";
@@ -52,6 +53,9 @@ export default async function OrganizationReportsPage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (!view.isAdmin) redirect(`/orgs/${slug}`);
+  if (view.org.type === "school" && !view.canViewNamedRoster) {
+    redirect(`/orgs/${slug}`);
+  }
 
   const categoryParse = CompetitionCategorySchema.safeParse(filters.category);
   const reportCategory = categoryParse.success ? categoryParse.data : null;
@@ -105,9 +109,16 @@ export default async function OrganizationReportsPage({
         slug={view.org.slug}
         orgName={view.org.name}
         tab="reports"
-        showRoster={view.isCoach && view.org.type !== "district"}
+        showRoster={view.canViewNamedRoster && view.org.type !== "district"}
         showAdmin={view.isAdmin}
         orgType={view.org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: view.org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
         <p className="text-sm font-semibold text-brand-red">
@@ -270,7 +281,7 @@ export default async function OrganizationReportsPage({
                     No school workspaces are connected. District-hosted totals
                     remain separate above.{" "}
                     <Link
-                      href={`/orgs/${view.org.slug}/settings#schools`}
+                      href={`/orgs/${view.org.slug}/schools`}
                       className="font-semibold text-brand-red hover:underline"
                     >
                       Create a school workspace

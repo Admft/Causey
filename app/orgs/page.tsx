@@ -45,8 +45,10 @@ const ORG_TYPE_LABEL: Record<string, string> = {
 
 function staffRoleLabel(
   memberRole: string | null,
-  isCoach: boolean
+  isCoach: boolean,
+  inheritedDistrictAdmin: boolean
 ): string | null {
+  if (inheritedDistrictAdmin) return "District administrator";
   if (memberRole && memberRole in ORG_ROLE_LABELS) {
     return ORG_ROLE_LABELS[memberRole as keyof typeof ORG_ROLE_LABELS];
   }
@@ -61,6 +63,14 @@ function OrgDirectory({
   rows: MyOrgRow[];
   needingStudents: Set<string>;
 }) {
+  const districtAdminIds = new Set(
+    rows
+      .filter(
+        ({ org, memberRole }) =>
+          org.type === "district" && memberRole === "district_admin"
+      )
+      .map(({ org }) => org.id)
+  );
   const groups = [
     {
       title: "Districts",
@@ -83,7 +93,15 @@ function OrgDirectory({
     return (
       <ul className="mt-2">
         {groupRows.map(({ org, isCoach, memberRole }) => {
-          const role = staffRoleLabel(memberRole, isCoach);
+          const role = staffRoleLabel(
+            memberRole,
+            isCoach,
+            org.type === "school" &&
+              Boolean(
+                org.parent_org_id &&
+                  districtAdminIds.has(org.parent_org_id)
+              )
+          );
           const needsStudents = needingStudents.has(org.id);
           const meta = [
             omitType ? null : ORG_TYPE_LABEL[org.type] ?? org.type,
@@ -196,15 +214,32 @@ export default async function OrgsPage({
     (row) => row.status === "invited"
   ).length;
   const coachedOrgs = myOrgs.filter(({ isCoach }) => isCoach);
-  const districtOrg = coachedOrgs.find(({ org, memberRole }) =>
-    Boolean(org.type === "district" && (memberRole === "district_admin" || isStaffWorkspace))
+  const districtOrg = coachedOrgs.find(
+    ({ org, memberRole }) =>
+      org.type === "district" && memberRole === "district_admin"
   );
   const hasDistrictWorkspace = Boolean(districtOrg);
   const staffOrgsNeedingStudents = new Set<string>();
+  const administeredDistrictIds = new Set(
+    myOrgs
+      .filter(
+        ({ org, memberRole }) =>
+          org.type === "district" && memberRole === "district_admin"
+      )
+      .map(({ org }) => org.id)
+  );
   if (isStaffWorkspace) {
     await Promise.all(
       coachedOrgs
-        .filter(({ org }) => org.type !== "district")
+        .filter(
+          ({ org }) =>
+            org.type !== "district" &&
+            !(
+              org.type === "school" &&
+              org.parent_org_id &&
+              administeredDistrictIds.has(org.parent_org_id)
+            )
+        )
         .map(async ({ org }) => {
           const students = (await getOrgRoster(org.id)).filter(
             (row) =>

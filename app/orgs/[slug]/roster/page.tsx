@@ -18,6 +18,7 @@ import {
 import { formatDate, gradeLabel } from "@/lib/format";
 import {
   OPEN_COMPETITIONS_LABEL,
+  contextualOrganizationRoleLabel,
   orgCompetitionsHref,
 } from "@/lib/portal-copy";
 
@@ -31,9 +32,9 @@ export const metadata: Metadata = {
 function roleLabel(role: string) {
   if (role === "student") return "Student";
   if (role === "assistant_coach") return "Assistant coach";
-  if (role === "school_admin" || role === "district_admin" || role === "admin") {
-    return "Admin";
-  }
+  if (role === "school_admin") return "School administrator";
+  if (role === "district_admin") return "District administrator";
+  if (role === "admin") return "Administrator";
   return "Coach";
 }
 
@@ -50,9 +51,9 @@ export default async function RosterPage({
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
   if (view.org.type === "district") {
-    redirect(`/orgs/${slug}/settings#schools`);
+    redirect(`/orgs/${slug}/schools`);
   }
-  if (!view.isCoach) redirect(`/orgs/${slug}`);
+  if (!view.canViewNamedRoster) redirect(`/orgs/${slug}`);
   const { org } = view;
 
   const [roster, groups] = await Promise.all([
@@ -64,6 +65,8 @@ export default async function RosterPage({
   const staff = activeMembers.filter((row) => row.member_role !== "student");
   const emptyRoster = activeMembers.length === 0;
   const canOperate = view.canManageTournaments;
+  const canEditRoster =
+    org.type === "school" ? view.canManageGroups : canOperate;
   const needsGroups = !emptyRoster && groups.length === 0;
   const groupNamesByStudent = new Map<string, string[]>();
   for (const group of groups) {
@@ -196,7 +199,7 @@ export default async function RosterPage({
                     {` · joined ${formatDate(row.joined_at.slice(0, 10))}`}
                   </p>
                 </div>
-                {canOperate ? (
+                {canEditRoster ? (
                   <div className="sm:shrink-0">
                     <RemoveMemberButton
                       orgId={org.id}
@@ -221,7 +224,7 @@ export default async function RosterPage({
         Optional. Use groups to invite a subset of students to a tournament in
         one step.
       </p>
-      {canOperate ? (
+      {view.canManageGroups ? (
         <div className="mt-4">
           <GroupManager
             orgId={org.id}
@@ -231,6 +234,15 @@ export default async function RosterPage({
               profile_id: row.profile_id,
               display_name: row.display_name,
             }))}
+            staff={staff
+              .filter((row) =>
+                ["coach", "assistant_coach"].includes(row.member_role)
+              )
+              .map((row) => ({
+                profile_id: row.profile_id,
+                display_name: row.display_name,
+                roleLabel: roleLabel(row.member_role),
+              }))}
           />
         </div>
       ) : groups.length ? (
@@ -283,17 +295,29 @@ export default async function RosterPage({
         showRoster
         showAdmin={view.isAdmin}
         orgType={org.type}
+        roleLabel={contextualOrganizationRoleLabel({
+          orgType: org.type,
+          memberRole: view.membership?.role,
+          isAdmin: view.isAdmin,
+          isDistrictAdmin: view.isDistrictAdmin,
+          canViewNamedRoster: view.canViewNamedRoster,
+        })}
       />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
-          {org.type === "school" ? "School roster" : "Roster"}
+          {org.type === "school" ? "School program" : "Roster"}
         </p>
         <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-          {org.name}
+          {org.type === "school" ? "Students & groups" : org.name}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Invite students, put them in groups, then open competitions. Staff stay
-          quieter below.
+          {org.type === "school"
+            ? `${org.name}. ${
+                view.canManageGroups
+                  ? "Build groups and assign coaches before tournament work begins."
+                  : "You only see students and groups assigned to you."
+              }`
+            : "Invite students, put them in groups, then open competitions. Staff stay quieter below."}
         </p>
 
         <div className="mt-8">
@@ -338,7 +362,7 @@ export default async function RosterPage({
                       {roleLabel(row.member_role)}
                     </p>
                   </div>
-                  {canOperate && row.profile_id !== user.id ? (
+                  {canEditRoster && row.profile_id !== user.id ? (
                     <div className="sm:shrink-0">
                       <RemoveMemberButton
                         orgId={org.id}

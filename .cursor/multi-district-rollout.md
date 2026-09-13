@@ -29,6 +29,23 @@ Make Causey ready to operate **two independent school districts** in parallel: s
 - [ ] Empty/error/success states always name the next action
 - [ ] Mobile portals: no viewport eaten by chrome; sticky next action where needed
 
+## Role-console update (2026-09-12)
+
+- Repo enforcement now separates inherited district setup authority from
+  child-school named rosters and per-student history (`0097`–`0098`).
+- District admins use aggregate school/event reads and a count-returning bulk
+  invite; school admins retain full school roster and staff controls.
+- Coaches see and operate only assigned groups/students. Assistants receive
+  assigned-group read access without roster, invite, attendance, or result
+  writes.
+- Protected owner, self-revocation, and last-admin guards apply to delegated
+  district and school administrators. Role changes and district emergency
+  school-staff actions are audited.
+- The first matching district-admin claim now takes protected ownership from
+  the temporary provisioning super admin (`0099`).
+- The remaining gate is operational: apply through `0099` and pass the
+  bidirectional live two-district role/isolation smoke before onboarding.
+
 ## Audit snapshot (coordinator, 2026-08-12)
 Repo evidence (no real district/school names):
 
