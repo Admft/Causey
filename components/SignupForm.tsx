@@ -46,24 +46,35 @@ const STATES = [
 
 const ROLE_SIGNUP_COPY: Record<
   AccountRole,
-  { nameLabel: string; nameHelp: string; confirmationNext: string }
+  {
+    nameLabel: string;
+    nameHelp: string;
+    confirmationStep: { title: string; copy: string };
+  }
 > = {
   student: {
     nameLabel: "Student name",
     nameHelp: "This is the name coaches see on school and club rosters.",
-    confirmationNext:
-      "join your school or club with a coach link, then track invites on Plan.",
+    confirmationStep: {
+      title: "Join your school or club",
+      copy: "Use a coach link, then track invites on Plan.",
+    },
   },
   parent: {
     nameLabel: "Your name",
     nameHelp: "Use the name your student will recognize.",
-    confirmationNext:
-      "open Family — your student needs their own account before you can link.",
+    confirmationStep: {
+      title: "Open Family",
+      copy: "Your student needs their own account before you can link.",
+    },
   },
   coach: {
     nameLabel: "Your name",
     nameHelp: "Use the name your club knows you by.",
-    confirmationNext: "create your club from My clubs.",
+    confirmationStep: {
+      title: "Create your club",
+      copy: "Start from My clubs.",
+    },
   },
 };
 
@@ -272,105 +283,166 @@ export function SignupForm({
   }
 
   if (needsConfirm) {
+    const finishStep = joiningOrganization
+      ? {
+          title: "Review the organization",
+          copy: "You’ll review it before joining its roster.",
+        }
+      : invitation
+        ? {
+            title: "Accept your invitation",
+            copy: `${invitation.roleLabel} at ${invitation.orgName}.`,
+          }
+        : next
+          ? { title: "Continue where you left off", copy: null }
+          : roleCopy.confirmationStep;
+
     return (
-      <div
-        className="rounded-xl border border-brand-red/25 bg-accent-soft p-6"
-        role="status"
-      >
-        <h2 className="font-display text-display-sm font-bold text-foreground">
-          Confirm your email to finish
-        </h2>
-        <p className="mt-3 text-sm text-muted">
-          We sent a confirmation link to <strong className="text-foreground">{email}</strong>.
-          School inboxes often send it to junk — check spam before creating a
-          second account.
-        </p>
-        <p className="mt-4 text-sm font-semibold text-foreground">
-          Open that email on this device next.
-        </p>
-        <p className="mt-1 text-sm text-muted">
-          After you confirm, you&rsquo;ll{" "}
-          {joiningOrganization
-            ? "return to review the organization before joining its roster."
-            : invitation
-              ? `return to accept your ${invitation.roleLabel.toLowerCase()} invitation to ${invitation.orgName}.`
-            : next
-              ? "continue where you left off."
-              : roleCopy.confirmationNext}
-        </p>
-        <div className="mt-5">
-          <AuthCaptcha
-            key={captchaVersion}
-            onTokenChange={setCaptchaToken}
-          />
+      <div role="status" className="animate-rise">
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-red text-white"
+          >
+            <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+              <path
+                d="M5 10.5l3.5 3.5L15 6.5"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <h2 className="font-display text-display-sm font-bold text-foreground">
+            Confirm your email to finish
+          </h2>
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            disabled={
-              resendState === "pending" ||
-              resendState === "sent" ||
-              (AUTH_CAPTCHA_ENABLED && !captchaToken)
-            }
-            onClick={async () => {
-              if (AUTH_CAPTCHA_ENABLED && !captchaToken) return;
-              setResendState("pending");
-              try {
-                const supabase = createBrowserSupabaseClient();
-                const callbackUrl = new URL(
-                  "/auth/callback",
-                  window.location.origin
-                );
-                if (next) callbackUrl.searchParams.set("next", next);
-                const { error: resendError } = await supabase.auth.resend({
-                  type: "signup",
-                  email: email.trim(),
-                  options: {
-                    emailRedirectTo: callbackUrl.toString(),
-                    captchaToken: captchaToken ?? undefined,
-                  },
-                });
-                setResendState(resendError ? "error" : "sent");
-              } catch {
-                setResendState("error");
-              } finally {
-                setCaptchaToken(null);
-                setCaptchaVersion((current) => current + 1);
-              }
-            }}
-            className="action-button"
-          >
-            {resendState === "pending"
-              ? "Sending…"
-              : resendState === "sent"
-                ? "Confirmation resent"
-                : "Resend confirmation"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setNeedsConfirm(false);
-              setResendState("idle");
-              setPassword("");
-              setConfirmPassword("");
-            }}
-            className="action-button"
-          >
-            Use a different email
-          </button>
-          <Link
-            href={loginHref}
-            className="action-button"
-          >
-            Already confirmed? Sign in
-          </Link>
-        </div>
-        {resendState === "error" ? (
-          <p className="mt-3 text-sm font-medium text-brand-red" role="alert">
-            Could not resend. Wait a minute and try again, or sign in if the
-            account already exists.
+
+        {/* §8.11 path rail, same motif as PathwayList: filled nodes for
+            done/current, hollow for what is still ahead. */}
+        <ol className="mt-6 flex flex-col gap-5 border-l-2 border-brand-red pl-0">
+          <li className="relative pl-6">
+            <span
+              aria-hidden="true"
+              className="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full border-2 border-brand-red bg-brand-red"
+            />
+            <p className="text-base font-semibold text-foreground">
+              Account created
+            </p>
+            <p className="mt-0.5 text-sm text-muted">
+              We sent a confirmation link to{" "}
+              <strong className="text-foreground">{email}</strong>.
+            </p>
+          </li>
+          <li className="relative pl-6">
+            <span
+              aria-hidden="true"
+              className="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full border-2 border-brand-red bg-brand-red ring-4 ring-accent-soft"
+            />
+            <p className="text-base font-semibold text-foreground">
+              Open the email on this device
+            </p>
+            <p className="mt-0.5 text-sm text-muted">
+              Tap the confirmation link inside. School inboxes often send it to
+              junk — check spam before creating a second account.
+            </p>
+          </li>
+          <li className="relative pl-6">
+            <span
+              aria-hidden="true"
+              className="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full border-2 border-brand-red bg-surface"
+            />
+            <p className="text-base font-semibold text-foreground">
+              {finishStep.title}
+            </p>
+            {finishStep.copy ? (
+              <p className="mt-0.5 text-sm text-muted">{finishStep.copy}</p>
+            ) : null}
+          </li>
+        </ol>
+
+        <div className="mt-8 border-t border-line pt-6">
+          <p className="text-xs font-semibold text-muted-strong">
+            Didn’t get the email?
           </p>
-        ) : null}
+          <div className="mt-4 flex flex-col gap-4">
+            <AuthCaptcha
+              key={captchaVersion}
+              onTokenChange={setCaptchaToken}
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={
+                  resendState === "pending" ||
+                  resendState === "sent" ||
+                  (AUTH_CAPTCHA_ENABLED && !captchaToken)
+                }
+                onClick={async () => {
+                  if (AUTH_CAPTCHA_ENABLED && !captchaToken) return;
+                  setResendState("pending");
+                  try {
+                    const supabase = createBrowserSupabaseClient();
+                    const callbackUrl = new URL(
+                      "/auth/callback",
+                      window.location.origin
+                    );
+                    if (next) callbackUrl.searchParams.set("next", next);
+                    const { error: resendError } = await supabase.auth.resend({
+                      type: "signup",
+                      email: email.trim(),
+                      options: {
+                        emailRedirectTo: callbackUrl.toString(),
+                        captchaToken: captchaToken ?? undefined,
+                      },
+                    });
+                    setResendState(resendError ? "error" : "sent");
+                  } catch {
+                    setResendState("error");
+                  } finally {
+                    setCaptchaToken(null);
+                    setCaptchaVersion((current) => current + 1);
+                  }
+                }}
+                className="cta-outline disabled:opacity-60"
+              >
+                {resendState === "pending"
+                  ? "Sending…"
+                  : resendState === "sent"
+                    ? "Confirmation resent"
+                    : "Resend confirmation"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNeedsConfirm(false);
+                  setResendState("idle");
+                  setPassword("");
+                  setConfirmPassword("");
+                }}
+                className="action-button"
+              >
+                Use a different email
+              </button>
+              <Link
+                href={loginHref}
+                className="group text-sm font-semibold text-muted-strong hover:text-brand-red"
+              >
+                Already confirmed? Sign in{" "}
+                <span aria-hidden="true" className="nudge-x">
+                  →
+                </span>
+              </Link>
+            </div>
+          </div>
+          {resendState === "error" ? (
+            <p className="mt-3 text-sm font-medium text-brand-red" role="alert">
+              Could not resend. Wait a minute and try again, or sign in if the
+              account already exists.
+            </p>
+          ) : null}
+        </div>
       </div>
     );
   }
