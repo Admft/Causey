@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "validate:migrations": "node scripts/validate-migrations.mjs",
+    "smoke:public-directory": "node scripts/smoke-public-directory.mjs",
     "verify:purge-dry-run": "node scripts/verify-purge-dry-run.mjs",
     "icons:mobile": "tsx scripts/export-mobile-icons.tsx",
     "seed:generate": "node scripts/generate-seed.mjs",

@@ -1,6 +1,10 @@
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import {
+  collectAnonSearchRlsViolations,
+  loadMigrationSql,
+} from "./anon-search-rls.mjs";
 
 const LEGACY_DUPLICATE_PREFIXES = new Map([
   [
@@ -88,6 +92,9 @@ function main() {
   const { errors, warnings } = validateMigrationDirectory(
     migrationsDirectory
   );
+  errors.push(
+    ...collectAnonSearchRlsViolations(loadMigrationSql(migrationsDirectory))
+  );
 
   for (const warning of warnings) {
     console.warn(`migration warning: ${warning}`);
@@ -101,6 +108,9 @@ function main() {
   }
 
   console.log("Migration filenames are reproducible.");
+  console.log(
+    "Unsigned competition SELECT policies do not name staff helpers."
+  );
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

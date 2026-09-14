@@ -17,6 +17,10 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] CI blocks a repeat of unsigned search 500s: migration validation
+  rejects PUBLIC competition/section SELECT policies that name staff
+  helpers, and CI smokes causey.dev search/event/pathways without a
+  session — 2026-09-14
 - [x] Unsigned tournament search no longer 500s: unpublished-manager
   SELECT policies on competitions/sections are authenticated-only
   (`0106`), so phones and other signed-out devices can run the public
