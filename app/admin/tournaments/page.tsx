@@ -18,6 +18,7 @@ import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import {
   getAdminOpsStats,
   getAdminTournamentCount,
+  getAdminTournamentDrafts,
   getAdminTournaments,
 } from "@/lib/data/admin";
 import {
@@ -59,11 +60,15 @@ export default async function AdminTournamentsPage({
   const filters = parseAdminTournamentFilters(rawFilters);
   const hasFilters = adminTournamentsHaveFilters(filters);
   const queue = adminTournamentQueue(filters);
-  const [tournaments, totalTournamentCount, ops] = await Promise.all([
-    getAdminTournaments(filters),
-    getAdminTournamentCount(),
-    getAdminOpsStats(["listings", "readyDrafts"]),
-  ]);
+  const [tournaments, totalTournamentCount, ops, inProgressDrafts] =
+    await Promise.all([
+      getAdminTournaments(filters),
+      getAdminTournamentCount(),
+      getAdminOpsStats(["listings", "readyDrafts"]),
+      filters.status === "draft"
+        ? getAdminTournamentDrafts()
+        : Promise.resolve([]),
+    ]);
   const draftSourceGroup =
     filters.status === "draft" && filters.source
       ? competitionSourceLabel(filters.source)
@@ -394,7 +399,42 @@ export default async function AdminTournamentsPage({
               : ""}
           </span>
         </div>
-        {!tournaments.length ? (
+        {filters.status === "draft" && inProgressDrafts.length ? (
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              In-progress drafts
+            </h3>
+            <p className="mt-1 text-xs text-muted">
+              Saved from Add a tournament draft. Resume one to keep editing
+              before it becomes a competition record.
+            </p>
+            <ul className="mt-3 divide-y divide-line border-y border-line">
+              {inProgressDrafts.map((draft) => (
+                <li
+                  key={draft.id}
+                  className="flex flex-wrap items-baseline justify-between gap-2 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {draft.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">{draft.orgName}</p>
+                  </div>
+                  <Link
+                    href={`/admin/tournaments/new?org=${encodeURIComponent(
+                      draft.orgId
+                    )}&draft=${encodeURIComponent(draft.id)}`}
+                    className="text-sm font-semibold text-brand-red hover:underline"
+                  >
+                    Resume draft
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {!tournaments.length &&
+        !(filters.status === "draft" && inProgressDrafts.length) ? (
           <div className="mt-4 text-sm text-muted">
             <p>No tournaments match these filters.</p>
             <Link

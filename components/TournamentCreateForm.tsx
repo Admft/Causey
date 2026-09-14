@@ -472,7 +472,11 @@ export function TournamentCreateForm({
         return;
       }
       leaving.current = true;
-      router.push(returnTo ?? (admin ? "/admin/tournaments?status=draft" : `/orgs/${orgSlug}`));
+      // returnTo is the post-publish destination; a saved draft must land on a
+      // list that actually shows drafts.
+      router.push(
+        admin ? "/admin/tournaments?status=draft" : (returnTo ?? `/orgs/${orgSlug}`)
+      );
       router.refresh();
     } finally {
       setPending(false);
@@ -505,7 +509,11 @@ export function TournamentCreateForm({
         setError(result.error);
         return;
       }
-      router.push(returnTo ?? `/orgs/${orgSlug}/competitions`);
+      // Same reason as saveDraftAndLeave: don't send a discarded draft to the
+      // post-publish returnTo filter.
+      router.push(
+        admin ? "/admin/tournaments" : (returnTo ?? `/orgs/${orgSlug}/competitions`)
+      );
       router.refresh();
     } finally {
       setPending(false);

@@ -22,6 +22,7 @@ import {
   isTournamentPublishReady,
   type TournamentReadinessInput,
 } from "@/lib/tournament-readiness";
+import { TournamentDraftDataSchema } from "@/lib/schemas";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type SchoolAdminStaffing =
@@ -1206,6 +1207,46 @@ export async function getAdminTournamentCount(): Promise<number> {
     .from("competitions")
     .select("*", { count: "exact", head: true });
   return count ?? 0;
+}
+
+export async function getAdminTournamentDrafts(): Promise<
+  {
+    id: string;
+    orgId: string;
+    orgName: string;
+    orgSlug: string;
+    name: string;
+    updatedAt: string;
+  }[]
+> {
+  const supabase = await createServerSupabaseClient();
+  const { data } = await supabase
+    .from("tournament_drafts")
+    .select(
+      "id, org_id, data, updated_at, organizations(name, slug)"
+    )
+    .order("updated_at", { ascending: false })
+    .limit(100);
+  return (data ?? []).flatMap((row) => {
+    const org = Array.isArray(row.organizations)
+      ? row.organizations[0]
+      : row.organizations;
+    if (!org?.slug) return [];
+    const parsed = TournamentDraftDataSchema.safeParse(row.data);
+    return [
+      {
+        id: row.id as string,
+        orgId: row.org_id as string,
+        orgName: (org.name as string) || "Organization",
+        orgSlug: org.slug as string,
+        name:
+          parsed.success && parsed.data.name.trim()
+            ? parsed.data.name
+            : "Untitled draft",
+        updatedAt: row.updated_at as string,
+      },
+    ];
+  });
 }
 
 export async function getAdminTournament(

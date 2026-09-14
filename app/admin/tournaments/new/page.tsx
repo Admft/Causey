@@ -6,6 +6,7 @@ import { PageBackLink } from "@/components/PageBackLink";
 import { TournamentCreateForm } from "@/components/TournamentCreateForm";
 import { getPlatformAdminUser } from "@/lib/auth/platform-admin";
 import { getAdminOrganizations } from "@/lib/data/admin";
+import { getTournamentDraftForViewer } from "@/lib/data/portal";
 
 export const metadata: Metadata = {
   title: "Add tournament",
@@ -15,15 +16,24 @@ export const metadata: Metadata = {
 export default async function AdminNewTournamentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ org?: string }>;
+  searchParams: Promise<{ org?: string; draft?: string }>;
 }) {
   const admin = await getPlatformAdminUser();
   if (!admin) redirect("/");
 
-  const { org: selectedId } = await searchParams;
+  const { org: selectedId, draft: draftQuery } = await searchParams;
   const organizations = await getAdminOrganizations();
   const selected = organizations.find((org) => org.id === selectedId) ?? null;
-  const draftId = randomUUID();
+  const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const requestedDraft =
+    selected && draftQuery && UUID_PATTERN.test(draftQuery)
+      ? await getTournamentDraftForViewer(draftQuery, selected.id)
+      : null;
+  if (draftQuery && selected && !requestedDraft) {
+    redirect(`/admin/tournaments/new?org=${encodeURIComponent(selected.id)}`);
+  }
+  const draftId = requestedDraft?.id ?? randomUUID();
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
@@ -89,6 +99,7 @@ export default async function AdminNewTournamentPage({
             orgType={selected.type}
             parentOrgId={selected.parent_org_id}
             draftId={draftId}
+            initialDraft={requestedDraft ?? undefined}
             admin
             returnTo="/admin/tournaments?status=published"
           />
