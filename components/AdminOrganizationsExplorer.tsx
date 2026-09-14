@@ -173,6 +173,7 @@ function OrganizationPanel({
   canDeleteDistrict?: boolean;
   onDistrictDeleted?: (districtId: string) => void;
 }) {
+  const router = useRouter();
   const review = org.organization_verification_reviews[0] ?? null;
   const pendingSchools = schools.filter(
     (school) => school.verification_status === "pending"
@@ -248,12 +249,13 @@ function OrganizationPanel({
             </p>
             <p className="mt-1 text-xs text-muted">
               Do not treat this district as empty or ready.{" "}
-              <Link
-                href="/admin/organizations?retry=readiness"
+              <button
+                type="button"
+                onClick={() => router.refresh()}
                 className="font-semibold text-brand-red hover:underline"
               >
                 Retry organization readiness
-              </Link>
+              </button>
               .
             </p>
           </div>
