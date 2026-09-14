@@ -9,6 +9,7 @@ import {
   extractClaimCode,
   extractClaimToken,
   invitationEmailHintMatches,
+  invitationSignupEmailMatches,
   invitationRoleFitsOrganization,
   isClaimNextPath,
   isJoinCodeNextPath,
@@ -107,6 +108,8 @@ describe("claim invitation path helpers", () => {
     expect(peoplePage).toContain('"district_admin"');
     expect(loginPage).toContain("getInvitationPreviewForClaimPath");
     expect(loginPage).toContain("Create staff account");
+    expect(loginPage).toContain('params.error === "auth"');
+    expect(loginPage).toContain("Request a new reset link");
   });
 
   it("masks invitation emails and blocks a clearly mismatched signed-in mailbox", () => {
@@ -118,6 +121,18 @@ describe("claim invitation path helpers", () => {
     ).toBe(false);
     expect(
       invitationEmailHintMatches("jordan@other.edu", "j***@school.edu")
+    ).toBe(false);
+    expect(
+      invitationSignupEmailMatches(
+        "ADMIN@causey.dev",
+        "admin@causey.dev"
+      )
+    ).toBe(true);
+    expect(
+      invitationSignupEmailMatches(
+        "another@causey.dev",
+        "admin@causey.dev"
+      )
     ).toBe(false);
     expect(claimSignupHref("/claim/abc", "student")).toBe(
       `/signup?role=student&next=${encodeURIComponent("/claim/abc")}`
@@ -138,8 +153,16 @@ describe("claim invitation path helpers", () => {
       resolve(process.cwd(), "app/claim/page.tsx"),
       "utf8"
     );
+    const signupForm = readFileSync(
+      resolve(process.cwd(), "components/SignupForm.tsx"),
+      "utf8"
+    );
     expect(auth).toContain("This invitation is for a different email");
     expect(auth).toContain("Sign out to use the invited email");
+    expect(auth).toContain('invitation.member_role === "student"');
+    expect(auth).toContain(
+      "a roster join code still works if the student account already exists"
+    );
     expect(auth).toContain(
       "`/login?next=${encodeURIComponent(next)}`"
     );
@@ -148,6 +171,12 @@ describe("claim invitation path helpers", () => {
     expect(tokenPage).toContain("autoAccept");
     expect(codePage).toContain("ClaimInvitationAuth");
     expect(codePage).toContain("autoAccept");
+    expect(signupForm).toContain(
+      "invitation && next ? { next, email: email.trim() }"
+    );
+    expect(signupForm).toContain(
+      "A different address will not receive the invited role."
+    );
   });
 });
 
@@ -211,5 +240,31 @@ describe("staff claim auto-accept", () => {
       "role in ('student', 'assistant_coach', 'coach')"
     );
     expect(migration).not.toContain("new.role is distinct from 'school_admin'");
+  });
+
+  it("moves super-admin-owned child schools with the district claim", () => {
+    const migration = readFileSync(
+      resolve(
+        process.cwd(),
+        "supabase/migrations/0103_district_claim_child_school_handoff.sql"
+      ),
+      "utf8"
+    );
+    const peoplePage = readFileSync(
+      resolve(process.cwd(), "app/orgs/[slug]/people/page.tsx"),
+      "utf8"
+    );
+    expect(migration).toContain(
+      "create or replace function public.handoff_provisioned_district_owner_on_claim"
+    );
+    expect(migration).toContain("school.parent_org_id = new.org_id");
+    expect(migration).toContain("school.type = 'school'");
+    expect(migration).toContain(
+      "school.owner_profile_id is distinct from new.claimed_by"
+    );
+    expect(migration).toContain(
+      "set owner_profile_id = district.owner_profile_id"
+    );
+    expect(peoplePage).not.toContain("row.profile_id !== user.id");
   });
 });
