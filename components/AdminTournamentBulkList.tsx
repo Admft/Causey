@@ -189,12 +189,15 @@ export function AdminTournamentBulkList({
       setSelected(new Set());
       const publishedLabel =
         result.updated === 1 ? "tournament" : "tournaments";
+      const verb = restoring ? "Restored" : "Published";
       setMessage(
         result.skipped > 0
-          ? `Published ${result.updated}; ${result.skipped} could not be updated.`
-          : filterStatus === "draft"
-            ? `Published ${result.updated} ${publishedLabel}. They left this Draft list. Filter to Published to see them; public records appear in their matching category directory.`
-            : `Published ${result.updated} ${publishedLabel}. They stay here as Published; public records appear in their matching category directory.`
+          ? `${verb} ${result.updated}; ${result.skipped} could not be updated.`
+          : restoring
+            ? `Restored ${result.updated} ${publishedLabel}. They left this Archived list. Filter to Published to see them; public records appear in their matching category directory.`
+            : filterStatus === "draft"
+              ? `Published ${result.updated} ${publishedLabel}. They left this Draft list. Filter to Published to see them; public records appear in their matching category directory.`
+              : `Published ${result.updated} ${publishedLabel}. They stay here as Published; public records appear in their matching category directory.`
       );
       router.refresh();
     } finally {
