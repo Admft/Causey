@@ -58,7 +58,10 @@ function ExternalRegistrationPanelState({
 }: ExternalRegistrationPanelProps) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
-  const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "registered" | "not_registered" | "leave" | null
+  >(null);
+  const pending = pendingAction !== null;
   const [error, setError] = useState<string | null>(null);
   const registrationHref = profileId
     ? `/event/${eventSlug}/register?for=${encodeURIComponent(profileId)}`
@@ -69,7 +72,7 @@ function ExternalRegistrationPanelState({
   async function respond(next: "registered" | "not_registered") {
     if (pending) return;
     const previous = status;
-    setPending(true);
+    setPendingAction(next);
     setError(null);
     setStatus(next);
     try {
@@ -88,13 +91,13 @@ function ExternalRegistrationPanelState({
       }
       router.refresh();
     } finally {
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
   async function leave() {
     if (pending) return;
-    setPending(true);
+    setPendingAction("leave");
     setError(null);
     try {
       const result = await attemptAction(() =>
@@ -111,7 +114,7 @@ function ExternalRegistrationPanelState({
       setStatus("not_registered");
       router.refresh();
     } finally {
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
@@ -158,7 +161,11 @@ function ExternalRegistrationPanelState({
               onClick={() => void leave()}
               className="action-button"
             >
-              {pending ? "Saving…" : forLabel ? `Can't go for ${forLabel}` : "Can't go"}
+              {pendingAction === "leave"
+                ? "Saving…"
+                : forLabel
+                  ? `Can't go for ${forLabel}`
+                  : "Can't go"}
             </button>
           ) : null}
           <button
@@ -167,7 +174,7 @@ function ExternalRegistrationPanelState({
             onClick={() => respond("not_registered")}
             className="action-button action-button--reversal"
           >
-            {pending ? "Saving…" : "Undo complete mark"}
+            {pendingAction === "not_registered" ? "Saving…" : "Undo complete mark"}
           </button>
           <a
             href={registrationHref}
@@ -229,7 +236,9 @@ function ExternalRegistrationPanelState({
             onClick={() => respond("registered")}
             className="cta-enabled disabled:opacity-60"
           >
-            {pending ? "Saving…" : "Yes, registration is complete"}
+            {pendingAction === "registered"
+              ? "Saving…"
+              : "Yes, registration is complete"}
           </button>
           <button
             type="button"
@@ -237,7 +246,9 @@ function ExternalRegistrationPanelState({
             onClick={() => respond("not_registered")}
             className="action-button"
           >
-            Still need to register
+            {pendingAction === "not_registered"
+              ? "Saving…"
+              : "Still need to register"}
           </button>
           <a
             href={registrationHref}
@@ -315,7 +326,9 @@ function ExternalRegistrationPanelState({
           onClick={() => respond("registered")}
           className="action-button mt-3"
         >
-          Already finished? Mark registration complete
+          {pendingAction === "registered"
+            ? "Saving…"
+            : "Already finished? Mark registration complete"}
         </button>
       ) : null}
       {errorLine}
