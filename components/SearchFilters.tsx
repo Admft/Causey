@@ -56,7 +56,7 @@ export const EMPTY_FILTERS: FilterState = {
 
 // States with seeded events. Swap for a full state list once live data
 // covers more of the country.
-const STATES = ["AZ", "CA", "FL", "IL", "MO", "NJ", "NY", "TX"];
+const STATES = ["AZ", "CA", "DC", "FL", "IL", "MO", "NJ", "NY", "TX"];
 const FEE_CEILINGS = [
   { value: "25", label: "$25 or less" },
   { value: "40", label: "$40 or less" },
