@@ -161,19 +161,21 @@ export function OrganizationPeopleManager({
     { row: number; email: string; error: string }[]
   >([]);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedAction, setCopiedAction] = useState<
+    "link" | "code" | "bulk" | null
+  >(null);
 
-  async function copyText(value: string) {
+  async function copyText(value: string, action: "link" | "code" | "bulk") {
     const absolute =
       typeof window !== "undefined" && value.startsWith("/")
         ? new URL(value, window.location.origin).toString()
         : value;
     try {
       await navigator.clipboard.writeText(absolute);
-      setCopied(true);
+      setCopiedAction(action);
       return true;
     } catch {
-      setCopied(false);
+      setCopiedAction(null);
       return false;
     }
   }
@@ -187,7 +189,7 @@ export function OrganizationPeopleManager({
     setActivationCode(null);
     setBulkClaims([]);
     setFailedRows([]);
-    setCopied(false);
+    setCopiedAction(null);
     try {
       const result = await inviteOrganizationMember({
         orgId,
@@ -232,7 +234,7 @@ export function OrganizationPeopleManager({
     setActivationCode(null);
     setBulkClaims([]);
     setFailedRows([]);
-    setCopied(false);
+    setCopiedAction(null);
     try {
       const result = await bulkInviteOrganizationMembers({
         orgId,
@@ -273,7 +275,7 @@ export function OrganizationPeopleManager({
     setActivationCode(null);
     setBulkClaims([]);
     setFailedRows([]);
-    setCopied(false);
+    setCopiedAction(null);
     try {
       const result = await reissueOrganizationInvitation({
         orgId,
@@ -287,7 +289,7 @@ export function OrganizationPeopleManager({
       setMessage(`New claim link ready for ${result.email}.`);
       setClaimPath(result.claimPath);
       setActivationCode(result.activationCode);
-      await copyText(result.claimPath);
+      await copyText(result.claimPath, "link");
       router.refresh();
     } finally {
       setPending(null);
@@ -296,12 +298,12 @@ export function OrganizationPeopleManager({
 
   async function copyClaimPath() {
     if (!claimPath) return;
-    await copyText(claimPath);
+    await copyText(claimPath, "link");
   }
 
   async function copyActivationCode() {
     if (!activationCode) return;
-    await copyText(formatActivationCode(activationCode));
+    await copyText(formatActivationCode(activationCode), "code");
   }
 
   async function copyBulkClaims() {
@@ -316,9 +318,9 @@ export function OrganizationPeopleManager({
     });
     try {
       await navigator.clipboard.writeText(lines.join("\n"));
-      setCopied(true);
+      setCopiedAction("bulk");
     } catch {
-      setCopied(false);
+      setCopiedAction(null);
     }
   }
 
@@ -468,7 +470,7 @@ export function OrganizationPeopleManager({
                   onClick={copyClaimPath}
                   className="action-button"
                 >
-                  {copied ? "Copied" : "Copy link"}
+                  {copiedAction === "link" ? "Copied" : "Copy link"}
                 </button>
               </div>
               {activationCode ? (
@@ -481,7 +483,7 @@ export function OrganizationPeopleManager({
                     onClick={copyActivationCode}
                     className="action-button"
                   >
-                    Copy code
+                    {copiedAction === "code" ? "Copied" : "Copy code"}
                   </button>
                 </div>
               ) : null}
@@ -500,7 +502,7 @@ export function OrganizationPeopleManager({
                   onClick={copyBulkClaims}
                   className="action-button"
                 >
-                  {copied ? "Copied list" : "Copy all claim links"}
+                  {copiedAction === "bulk" ? "Copied list" : "Copy all claim links"}
                 </button>
                 <button
                   type="button"
