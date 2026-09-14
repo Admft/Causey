@@ -40,6 +40,13 @@ export async function performJoinOrgWithCode(input: {
     if (details.includes("not_authenticated")) {
       return { ok: false, error: "Sign in to join an organization." };
     }
+    if (details.includes("student_account_required")) {
+      return {
+        ok: false,
+        error:
+          "This join link is for student accounts. Sign in as the student, or ask a coach to invite you as staff.",
+      };
+    }
     return { ok: false, error: NO_MATCH };
   }
 

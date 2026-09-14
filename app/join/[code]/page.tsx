@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinByCodeButton } from "@/components/JoinByCodeButton";
-import { getSessionUser } from "@/lib/auth/session";
+import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/data/portal";
 import { formatJoinCode, isValidJoinCode, normalizeJoinCode } from "@/lib/org-codes";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -179,6 +179,30 @@ export default async function JoinPage({
       </div>
     );
   }
+
+  const profile = await getCurrentProfile();
+  if (profile && profile.role !== "student") {
+    return (
+      <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
+          Student invite · {formatJoinCode(code)}
+        </p>
+        <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
+          This link is for a student account
+        </h1>
+        <p className="mt-4 text-sm text-muted">
+          Join codes add a student to the roster. Sign in with the student
+          account, or ask a coach to invite you as staff from People.
+        </p>
+        <p className="mt-6 text-sm text-muted">
+          <Link href="/orgs" className="font-semibold text-brand-red hover:underline">
+            Open your organizations
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-md px-5 py-10 sm:px-8">
       <p className="text-xs font-semibold uppercase tracking-wide text-brand-red">
