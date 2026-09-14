@@ -44,7 +44,8 @@ export default async function SignupPage({
   const requestedPath = sanitizeNextPath(requestedNext);
   const isClaimPath = isClaimNextPath(requestedPath);
   const invitation = await getInvitationPreviewForClaimPath(requestedPath);
-  const next = isClaimPath && !invitation ? undefined : requestedPath;
+  const claimUnavailable = isClaimPath && !invitation;
+  const next = claimUnavailable ? undefined : requestedPath;
   const isJoiningOrganization = isJoinCodeNextPath(next);
   const invitationAccountRole = invitation
     ? accountRoleForOrgInvitationRole(invitation.member_role)
@@ -94,7 +95,9 @@ export default async function SignupPage({
         <div className="mt-6 rounded-3xl border border-line bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
           <p className="text-sm font-semibold text-brand-red">Account</p>
           <h1 className="mt-2 font-display text-display-lg tracking-tight text-foreground">
-            {isJoiningOrganization
+            {claimUnavailable
+              ? "This invitation is unavailable"
+              : isJoiningOrganization
               ? "Create a student account to join"
               : invitation
                 ? `Create a ${
@@ -105,7 +108,9 @@ export default async function SignupPage({
                   : "Create your Causey account"}
           </h1>
           <p className="mt-3 text-sm text-muted">
-            {isJoiningOrganization
+            {claimUnavailable
+              ? "The claim link is invalid, expired, or already used. Ask the organization administrator for a new invitation."
+              : isJoiningOrganization
               ? "This join link is for a student roster. After confirming your email, you’ll return to review the organization before joining."
               : invitation
                 ? `This invitation assigns the ${INVITATION_ROLE_LABELS[invitation.member_role] ?? invitation.member_role} role after you confirm your email.`
@@ -113,6 +118,19 @@ export default async function SignupPage({
                   ? "Coach is the account type — not a fourth club login. After you confirm email, you create the club, then invite students with a join code and other coaches as staff."
                   : "Students join schools or clubs, parents link to a student, and coaches start a club or team."}
           </p>
+          {claimUnavailable ? (
+            <div className="mt-8 flex flex-col gap-4">
+              <Link href="/#search" className="cta-enabled inline-flex w-fit">
+                Search tournaments
+              </Link>
+              <Link
+                href="/signup"
+                className="text-sm font-semibold text-muted-strong hover:text-brand-red"
+              >
+                Create an account without this invitation
+              </Link>
+            </div>
+          ) : (
           <div className="mt-8">
             <SignupForm
               initialRole={
@@ -134,17 +152,21 @@ export default async function SignupPage({
                         INVITATION_ROLE_LABELS[invitation.member_role] ??
                         invitation.member_role,
                       accountRole: invitationAccountRole,
+                      emailHint: invitation.email_hint,
                     }
                   : undefined
               }
             />
           </div>
+          )}
+          {claimUnavailable ? null : (
           <p className="mt-6 text-xs text-muted">
             You can search without creating an account.{" "}
             <Link href="/#search" className="font-bold text-muted-strong hover:text-brand-red">
               Keep browsing tournaments
             </Link>
           </p>
+          )}
         </div>
       </div>
     </section>

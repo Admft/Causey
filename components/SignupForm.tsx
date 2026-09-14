@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   ageBandFromDateOfBirth,
   ageBandLabel,
@@ -104,6 +104,7 @@ export function SignupForm({
     orgName: string;
     roleLabel: string;
     accountRole: "student" | "coach";
+    emailHint: string;
   };
 }) {
   const router = useRouter();
@@ -135,6 +136,12 @@ export function SignupForm({
   >("idle");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaVersion, setCaptchaVersion] = useState(0);
+
+  useEffect(() => {
+    if (resendState !== "sent") return;
+    const timer = window.setTimeout(() => setResendState("idle"), 20000);
+    return () => window.clearTimeout(timer);
+  }, [resendState]);
 
   const derivedBand = useMemo((): AgeBand | null => {
     if (!dateOfBirth || !parseDateOnly(dateOfBirth)) return null;
@@ -181,9 +188,12 @@ export function SignupForm({
       const selectedInterests = DISCOVERY_CATEGORIES.filter((category) =>
         interests.has(category.id)
       ).map((category) => category.id);
-      const signupGate = await assertSignupAllowed();
+      const signupGate = await assertSignupAllowed(
+        invitation && next ? { next, email: email.trim() } : undefined
+      );
       if (!signupGate.ok) {
-        throw new Error(signupGate.error);
+        setError(signupGate.error);
+        return;
       }
       const supabase = createBrowserSupabaseClient();
       const origin = window.location.origin;
@@ -436,6 +446,12 @@ export function SignupForm({
               </Link>
             </div>
           </div>
+          {resendState === "sent" ? (
+            <p className="mt-3 text-sm text-muted-strong" role="status">
+              Confirmation resent. If it still does not arrive, wait a moment
+              and send again, or check spam.
+            </p>
+          ) : null}
           {resendState === "error" ? (
             <p className="mt-3 text-sm font-medium text-brand-red" role="alert">
               Could not resend. Wait a minute and try again, or sign in if the
@@ -466,8 +482,9 @@ export function SignupForm({
             {invitation.accountRole === "student" ? "Student" : "Staff"}
           </p>
           <p className="text-xs text-muted">
-            After email confirmation you join {invitation.orgName} as{" "}
-            {invitation.roleLabel.toLowerCase()}.
+            Staff is your sign-in account type. This invitation grants{" "}
+            {invitation.roleLabel.toLowerCase()} access to {invitation.orgName}{" "}
+            after email confirmation.
           </p>
         </div>
       ) : (
@@ -534,6 +551,12 @@ export function SignupForm({
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
           />
+          {invitation ? (
+            <span className="text-2xs text-muted">
+              Use the address shown on the invitation: {invitation.emailHint}.
+              A different address will not receive the invited role.
+            </span>
+          ) : null}
         </label>
         <div className="sm:col-span-2">
           <PasswordField

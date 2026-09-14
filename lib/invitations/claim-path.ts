@@ -83,6 +83,16 @@ export function invitationEmailHintMatches(
   return prefix.length > 0 && local.startsWith(prefix) && domain === hintDomain;
 }
 
+/** Claim writes require the complete invited address, not only its public hint. */
+export function invitationSignupEmailMatches(
+  candidateEmail: string,
+  invitedEmail: string
+): boolean {
+  return (
+    candidateEmail.trim().toLowerCase() === invitedEmail.trim().toLowerCase()
+  );
+}
+
 export function claimSignupHref(next: string, memberRole: string): string {
   const role = accountRoleForOrgInvitationRole(memberRole);
   return `/signup?role=${role}&next=${encodeURIComponent(next)}`;

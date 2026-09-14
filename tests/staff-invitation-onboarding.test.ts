@@ -81,10 +81,15 @@ describe("staff invitation onboarding", () => {
   it("locks invitation signup to the correct account persona", () => {
     expect(signupPage).toContain("invitationAccountRole");
     expect(signupPage).toContain("getInvitationPreviewForClaimPath");
+    expect(signupPage).toContain("claimUnavailable");
+    expect(signupPage).toContain("This invitation is unavailable");
     expect(signupForm).toContain("invitation?.accountRole ?? initialRole");
     expect(signupForm).toContain('"Create staff account"');
     expect(signupForm).toContain("Resend confirmation");
     expect(signupForm).toContain('type: "signup"');
+    expect(signupForm).toContain(
+      'if (resendState !== "sent") return'
+    );
   });
 
   it("derives staff workspace navigation from scoped memberships", () => {

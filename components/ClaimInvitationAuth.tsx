@@ -52,8 +52,11 @@ export function ClaimInvitationAuth({
             ? `You’re signed in as ${signedInEmail}. `
             : "You’re already signed in. "}
           The invitation is for {invitation.email_hint}. Sign out, then create
-          or sign in with that address — a roster join code still works if the
-          student account already exists.
+          or sign in with that address
+          {invitation.member_role === "student"
+            ? " — a roster join code still works if the student account already exists"
+            : ""}
+          .
         </p>
         <div className="mt-5">
           <ClaimSignOutButton next={next} />
