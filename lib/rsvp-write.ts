@@ -211,10 +211,26 @@ export async function performClearRsvp(input: {
     .eq("competition_id", input.competitionId);
 
   const invitedBy = row.invited_by as string | null;
+  let invitedByIsHousehold = false;
+  if (
+    invitedBy &&
+    invitedBy !== input.userId &&
+    invitedBy !== (row.profile_id as string)
+  ) {
+    const { data: household } = await input.supabase
+      .from("household_links")
+      .select("parent_profile_id")
+      .eq("parent_profile_id", invitedBy)
+      .eq("child_profile_id", input.profileId)
+      .eq("status", "active")
+      .maybeSingle();
+    invitedByIsHousehold = Boolean(household);
+  }
   const mode = clearRsvpMode({
     invited_by: invitedBy,
     profile_id: row.profile_id as string,
     callerId: input.userId,
+    invitedByIsHousehold,
   });
 
   if (mode === "delete") {
@@ -248,15 +264,20 @@ export async function performClearRsvp(input: {
   }
 
   if (invitedBy && invitedBy !== input.userId) {
-    return notifyInvitingCoach({
-      supabase: input.supabase,
-      userId: input.userId,
-      competitionId: input.competitionId,
-      profileId: input.profileId,
-      status: "cleared",
-      invitedBy,
-      eventSlug: input.eventSlug,
-    });
+    const { error: notifyError } = await input.supabase.rpc(
+      "notify_rsvp_cleared",
+      {
+        p_competition_id: input.competitionId,
+        p_profile_id: input.profileId,
+        p_invited_by: invitedBy,
+      }
+    );
+    if (notifyError) {
+      console.error("notify_rsvp_cleared failed:", {
+        message: notifyError.message,
+        code: notifyError.code,
+      });
+    }
   }
 
   return { ok: true };

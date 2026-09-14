@@ -46,6 +46,14 @@ describe("clearRsvpMode", () => {
         callerId: "parent-1",
       })
     ).toBe("delete");
+    expect(
+      clearRsvpMode({
+        invited_by: "parent-1",
+        profile_id: "child-1",
+        callerId: "parent-2",
+        invitedByIsHousehold: true,
+      })
+    ).toBe("delete");
   });
 
   it("resets a coach invite to unanswered instead of deleting it", () => {
@@ -68,6 +76,8 @@ describe("clearRsvpMode", () => {
 
 describe("rsvpLabel", () => {
   it("labels every status", () => {
+    expect(rsvpLabel("attended")).toBe("Attended");
+    expect(rsvpLabel("did_not_attend")).toBe("Did not attend");
     expect(rsvpLabel("invited")).toBe("No response yet");
     expect(rsvpLabel("going")).toBe("Going");
     expect(rsvpLabel("not_going")).toBe("Not going");

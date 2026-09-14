@@ -15,14 +15,22 @@ export function clearRsvpMode(row: {
   invited_by: string | null;
   profile_id: string;
   callerId: string;
+  invitedByIsHousehold?: boolean;
 }): "delete" | "reset" {
   if (
     row.invited_by === row.callerId ||
-    row.invited_by === row.profile_id
+    row.invited_by === row.profile_id ||
+    row.invitedByIsHousehold
   ) {
     return "delete";
   }
   return "reset";
+}
+
+export function isAttendanceLocked(
+  status: string | null | undefined
+): boolean {
+  return status === "attended" || status === "did_not_attend";
 }
 
 export function canTransition(from: RsvpStatus, to: RsvpStatus): boolean {

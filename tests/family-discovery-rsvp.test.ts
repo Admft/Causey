@@ -126,7 +126,8 @@ describe("family discovery RSVP", () => {
     expect(sql).toContain("c.audience = 'public'");
     expect(sql).toContain("can_invite_to_competition");
     expect(source("lib/rsvp-write.ts")).toContain(".insert(");
-    expect(source("lib/rsvp-write.ts")).toContain("performClearRsvp");
+    expect(source("lib/rsvp-write.ts")).toContain("notify_rsvp_cleared");
+    expect(migrations).toContain("0104_family_tournament_club_followups.sql");
     expect(source("lib/rsvp.ts")).toContain("clearRsvpMode");
     expect(migrations).toContain("0082_clear_family_rsvp.sql");
     const clearSql = source("supabase/migrations/0082_clear_family_rsvp.sql");
