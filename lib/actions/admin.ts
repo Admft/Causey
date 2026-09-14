@@ -761,6 +761,13 @@ export async function adminUpsertOrgMembership(input: {
         error: "District administrator only applies to district organizations.",
       };
     }
+    if (error.message.includes("membership_role_does_not_fit_organization")) {
+      return {
+        ok: false,
+        error:
+          "That role does not fit this organization. Clubs and teams cannot have school or district administrators. Districts cannot have students or school administrators.",
+      };
+    }
     if (error.message.includes("profile_not_found")) {
       return { ok: false, error: "That account no longer exists." };
     }

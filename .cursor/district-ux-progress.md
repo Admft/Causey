@@ -17,6 +17,22 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Unsigned tournament search no longer 500s: unpublished-manager
+  SELECT policies on competitions/sections are authenticated-only
+  (`0106`), so phones and other signed-out devices can run the public
+  directory — 2026-09-14
+- [x] Other seats no longer get a next step that belongs to someone else:
+  school overview skips district ownership handoff as the mission; Plan
+  uses membership role; join-code and competitions empty copy stop
+  assuming club-coach; district People says Invite staff — 2026-09-14
+- [x] School Coaches & staff no longer tells a sitting school
+  administrator to “Delegate this school.” That mission is district
+  handoff only; the invite form defaults to Coach and school-admin
+  role help names a peer, not the viewer — 2026-09-14
+- [x] Membership grants fit the organization type: club/team cannot
+  receive school administrator via `/admin/users`; district competition-only
+  staff get Competitions on Account instead of a bouncing Schools link;
+  People CSV names allowed roles (`0105`) — 2026-09-14
 - [x] Family RSVP clear, household consent, public-listing edits, and club
   roster gates: coach-invite clear notifies without failing; household Going
   rows delete instead of becoming phantom invites; parent pending counts only

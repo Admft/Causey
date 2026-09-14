@@ -16,10 +16,11 @@ describe("district first-session next-step honesty", () => {
     );
   });
 
-  it("sends district Account rows to Schools instead of a dead Roster link", () => {
+  it("sends district Account office rows to Schools and competition staff to Competitions", () => {
     const account = source("app/account/page.tsx");
-    expect(account).toContain('row.org.type === "district"');
+    expect(account).toContain('row.org.type === "district" && admin');
     expect(account).toContain("row.org.slug}/schools");
+    expect(account).toContain("orgCompetitionsHref");
     expect(account).toContain("studentOrgChromeFromTypes");
     expect(account).not.toContain("Not on a club yet");
     expect(account).not.toContain("share clubs and RSVP help");

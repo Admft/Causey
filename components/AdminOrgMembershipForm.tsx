@@ -67,7 +67,10 @@ export function AdminOrgMembershipForm({
         </h3>
         <p className="mt-1 text-xs text-muted">
           Grant or repair workspace access when a claim link is blocked. Use the
-          organization slug from Admin → Organizations.
+          organization slug from Admin → Organizations. The role must fit that
+          organization: club or team can be student, coach, or assistant; a
+          school can also be school administrator; a district can be district
+          administrator, coach, or assistant.
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

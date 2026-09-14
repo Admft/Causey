@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Join an organization",
-  description: "Use a coach's join code to join their roster on Causey.",
+  description: "Use a school or club join code to get on the roster on Causey.",
 };
 
 const ORG_TYPE_LABEL: Record<string, string> = {
@@ -41,8 +41,9 @@ function NoMatch({ code }: { code?: string }) {
         That code didn&rsquo;t match
       </h1>
       <p className="mt-3 text-sm text-muted">
-        Codes are eight characters, like 2P85-8DZ6, and come from your coach. Double-check the
-        link, or ask your coach to share it again — they may have rotated the
+        Codes are eight characters, like 2P85-8DZ6, and come from your school
+        or coach. Double-check the
+        link, or ask them to share it again — they may have rotated the
         code.
         {code ? (
           <>
@@ -52,7 +53,7 @@ function NoMatch({ code }: { code?: string }) {
         ) : null}
       </p>
       <p className="mt-6 text-sm text-muted">
-        Still have the right code? Ask your coach for a fresh link, or{" "}
+        Still have the right code? Ask for a fresh link, or{" "}
         <Link href="/#search" className="font-semibold text-brand-red hover:underline">
           search tournaments
         </Link>{" "}
@@ -69,11 +70,11 @@ function PreviewUnavailable({ code }: { code: string }) {
         Join
       </p>
       <h1 className="mt-2 font-display text-display-lg font-bold tracking-tight text-foreground">
-        We couldn&rsquo;t check that team code
+        We couldn&rsquo;t check that join code
       </h1>
       <p className="mt-3 text-sm text-muted">
-        The code format is valid, but Causey could not reach the team lookup
-        right now. Your coach does not need to create a new code.
+        The code format is valid, but Causey could not reach the join-code lookup
+        right now. Nobody needs to create a new code.
       </p>
       <p className="mt-4 text-sm text-muted">
         Try <span className="font-semibold text-foreground">{formatJoinCode(code)}</span>{" "}
@@ -148,8 +149,9 @@ export default async function JoinPage({
           {org.state ? ` · ${org.state}` : ""}
         </p>
         <p className="mt-4 text-sm text-muted">
-          Create a student account to get on the roster. Your coach will see
-          your display name and age band, and can invite you to tournaments.
+          Create a student account to get on the roster. School and club staff
+          will see your display name and age band, and can invite you to
+          tournaments.
         </p>
 
         <div className="mt-8 rounded-2xl border border-accent/25 bg-accent-soft/40 p-5">
@@ -192,7 +194,8 @@ export default async function JoinPage({
         </h1>
         <p className="mt-4 text-sm text-muted">
           Join codes add a student to the roster. Sign in with the student
-          account, or ask a coach to invite you as staff from People.
+          account, or ask a school or club administrator to invite you as staff
+          from People.
         </p>
         <p className="mt-6 text-sm text-muted">
           <Link href="/orgs" className="font-semibold text-brand-red hover:underline">
@@ -216,8 +219,9 @@ export default async function JoinPage({
         {org.state ? ` · ${org.state}` : ""}
       </p>
       <p className="mt-4 text-sm text-muted">
-        Joining puts you on this organization&rsquo;s roster: your coach sees
-        your display name and age band, and can invite you to tournaments.
+        Joining puts you on this organization&rsquo;s roster: school or club
+        staff see your display name and age band, and can invite you to
+        tournaments.
       </p>
       <div className="mt-6">
         <JoinByCodeButton code={code} orgName={org.name} />

@@ -43,6 +43,11 @@ import {
   contextualOrganizationRoleLabel,
   organizationKindLabel,
 } from "@/lib/portal-copy";
+import {
+  countSchoolAdministrators,
+  schoolNeedsAdministratorInvite,
+  viewerHoldsSchoolAdminSeat,
+} from "@/lib/school-admin-handoff";
 
 export const dynamic = "force-dynamic";
 
@@ -184,33 +189,23 @@ export default async function OrgPage({
   const hasStudents = activeStudentCount > 0;
   const districtScopedSchoolView =
     org.type === "school" && isAdmin && !canViewNamedRoster;
+  const viewerIsSchoolAdmin = viewerHoldsSchoolAdminSeat(membership);
   const activeSchoolAdminCount =
     schoolStaffResult?.ok === true
-      ? schoolStaffResult.data.filter(
-          (row) =>
-            row.member_status === "active" &&
-            (row.member_role === "school_admin" ||
-              row.member_role === "admin")
-        ).length
+      ? countSchoolAdministrators(schoolStaffResult.data, org.id)
       : null;
-  const needsSchoolAdminHandoff =
-    org.type === "school" &&
-    Boolean(org.parent_org_id) &&
-    activeSchoolAdminCount === 0;
+  const needsSchoolAdminHandoff = schoolNeedsAdministratorInvite({
+    orgType: org.type,
+    parentOrgId: org.parent_org_id,
+    viewerIsSchoolAdmin,
+    schoolAdminCount: activeSchoolAdminCount,
+  });
   const isDirectSchoolAdmin =
     org.type === "school" &&
     isAdmin &&
     (org.owner_profile_id === user.id ||
       membership?.role === "admin" ||
       membership?.role === "school_admin");
-  // Claimed school admin, pre-transfer: the owner is still the district-side
-  // creator, so the handoff step belongs to the district workspace.
-  const ownershipHandoffPending =
-    org.type === "school" &&
-    Boolean(org.parent_org_id) &&
-    isDirectSchoolAdmin &&
-    (org.owner_profile_id ?? org.created_by) !== user.id &&
-    (!org.owner_profile_id || org.owner_profile_id === org.created_by);
 
   const activeEvents = events.filter((event) => event.status !== "archived");
   const upcoming = activeEvents.filter((e) => isUpcomingEvent(e, today));
@@ -256,9 +251,9 @@ export default async function OrgPage({
       }
       if (needsSchoolAdminHandoff) {
         return {
-          title: "Delegate this school",
+          title: "Invite a school administrator",
           description:
-            "Invite a school administrator before provisioning students. District access stays aggregate-only.",
+            "Send a claim link to the person who will run this school’s roster and staff. District access stays aggregate-only.",
           action: {
             href: `/orgs/${org.slug}/people`,
             label: "Invite school administrator",
@@ -330,9 +325,9 @@ export default async function OrgPage({
         };
       }
       return {
-        title: "Delegate this school",
+        title: "Invite a school administrator",
         description:
-          "Invite a school administrator before provisioning students. They can own the roster and day-to-day setup.",
+          "Send a claim link to the person who will run this school’s roster and staff.",
         action: {
           href: `/orgs/${org.slug}/people`,
           label: "Invite school administrator",
@@ -357,21 +352,7 @@ export default async function OrgPage({
           },
         };
       }
-      if (ownershipHandoffPending) {
-        return {
-          title: "Ownership handoff is pending",
-          description:
-            "The district workspace completes the handoff from this school's settings — there is nothing to submit. Staffing and roster setup can continue meanwhile.",
-          action: {
-            href: `/orgs/${org.slug}/people`,
-            label: "Review staffing",
-          },
-          secondary: {
-            href: `/orgs/${org.slug}/settings#ownership`,
-            label: "View ownership status",
-          },
-        };
-      }
+      // District ownership transfer is not this administrator’s next job.
       // Staffing leads only while the roster is empty; a provisioned school
       // advances to the competition chain below.
       if (!hasStudents) {

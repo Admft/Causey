@@ -1,6 +1,6 @@
-# Club + district perfection loop
+# Club + district + account-access loop
 
-Two specialist agents share one loop. Stop when the user says stop, or when three consecutive ticks find no P0/P1 gap that would change a first-session club-owner or district-office decision.
+Specialist agents share one loop. Stop when the user says stop, or when three consecutive ticks find no P0/P1 gap that would change a first-session club-owner, district-office, or account-access decision.
 
 ## Agents
 
@@ -8,8 +8,9 @@ Two specialist agents share one loop. Stop when the user says stop, or when thre
 | --- | --- | --- | --- |
 | Club owner | `.cursor/skills/club-owner-readiness/` | `.cursor/club-readiness.md` | `docs/club-feature-overview.md` |
 | District program | `.cursor/skills/district-program-readiness/` | `.cursor/district-readiness.md` | `docs/district-feature-overview.md` |
+| Account access | `.cursor/skills/account-access-customizability/` | `.cursor/account-access-readiness.md` | skill `account-types.md` + `access-grants.md` |
 
-Emulate **that buyer** before coding. Do not mix club IA into district chrome or district hierarchy into a club.
+Emulate **that buyer** before coding. Do not mix club IA into district chrome or district hierarchy into a club. Account-access ticks walk **every account type on one workflow** (customizability, missing features, grant-only-certain-access) — they do not invent Salesforce ACLs or a fourth signup type.
 
 ## Hard rules
 
@@ -21,21 +22,43 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Tick protocol
 
-1. **Pick a persona** (club owner *or* district program). Read that skill + backlog + catalog.
+1. **Pick a persona** (club owner, district program, *or* one account-access workflow agent). Read that skill + backlog + catalog.
 2. **Walk the skill’s workflow checklist** against routes/source (and live UI when a server is up).
-3. Write **5–12 findings** into that persona’s backlog (surface · gap · why it hurts · size).
+3. Write **5–12 findings** into that persona’s backlog (surface · gap · why it hurts · size). Account-access ticks also score Enough / Thin / Missing / Over-grant per type.
 4. Lock **one Active batch** below. Reject chrome-only batches.
 5. Ship the batch. Run relevant tests. Do not commit unless the user asked.
 6. Refresh the catalog table if a feature moved Ready / Partial / Missing / Out.
 
 ## Active batch
 
-- Club coaches no longer see Remove / rotate-join-code actions that always
-  fail; family RSVP clear works; editing an approved public listing no longer
-  silently unpublishes — 2026-09-13
+- Restore signed-out tournament search: unpublished-manager SELECT
+  policies must not call `is_org_coach` for anon — 2026-09-14
 
 ## Last tick
 
+- 2026-09-14 — Signed-out search 500ed on causey.dev (`permission denied
+  for function is_org_coach`) while a signed-in session on this machine
+  still worked. Live unpublished-manager policies on competitions/sections
+  were still PUBLIC; `0106` scopes them to authenticated using
+  `can_operate_org_competitions`.
+- 2026-09-14 — Walked other account-type landings for the same class of
+  lie as “Delegate this school.” School overview no longer pins district
+  ownership handoff as the admin’s mission; Plan copy follows membership
+  role (office vs assigned-group vs district competitions); /orgs empty
+  state, competitions empty copy, join-code nouns, and district People
+  “Delegate staff” were aligned to the person actually looking.
+- 2026-09-14 — School admin People: sitting administrators are not asked
+  to “delegate this school” / invite themselves. Remaining invite-admin
+  copy is for district operators only; school staff invites default to
+  Coach.
+- 2026-09-14 — Account-access Agents 1–15 walked. Closed Over-grant:
+  `school_admin` on a club/team via `/admin/users` (`0105` uses
+  `invitation_role_fits_organization` on membership writes). District
+  coaches no longer get a bouncing Schools shortcut. CSV import names
+  allowed roles.
+- 2026-09-14 — Account-access workflow agents (15) added: each walks every
+  account type for customizability, missing features, and grant-only-certain
+  access. Skill `.cursor/skills/account-access-customizability/`. No app code.
 - 2026-09-13 — Family RSVP clear no longer errors after resetting a coach
   invite; household-created answers delete instead of becoming phantom invites;
   parent pending-request counts only parent-opened rows; join codes are

@@ -22,6 +22,13 @@ const radiusDiscoverySql = readFileSync(
   ),
   "utf8"
 );
+const anonSearchSql = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/0106_anon_search_unpublished_staff_policies.sql"
+  ),
+  "utf8"
+);
 const supabaseSource = readFileSync(
   resolve(process.cwd(), "lib/data/supabase.ts"),
   "utf8"
@@ -51,6 +58,26 @@ describe("SQL radius search", () => {
     expect(supabaseSource).toContain("Boolean(filters.q)");
     expect(searchClient).toContain('state.radius !== "50"');
     expect(searchClient).toContain("searchGenerationRef");
+  });
+
+  it("keeps unpublished-manager search policies off the anon role", () => {
+    expect(anonSearchSql).toContain(
+      'drop policy if exists "competitions_select_unpublished_manager"'
+    );
+    expect(anonSearchSql).toContain(
+      'drop policy if exists "sections_select_unpublished_manager"'
+    );
+    expect(anonSearchSql).toMatch(
+      /create policy "competitions_select_unpublished_manager"[\s\S]*to authenticated/
+    );
+    expect(anonSearchSql).toMatch(
+      /create policy "sections_select_unpublished_manager"[\s\S]*to authenticated/
+    );
+    expect(anonSearchSql).toContain("can_operate_org_competitions");
+    expect(anonSearchSql.replace(/--[^\n]*/g, "")).not.toContain("is_org_coach");
+    expect(anonSearchSql).not.toMatch(
+      /grant execute on function public\.is_org_coach[\s\S]*to anon/
+    );
   });
 
   it("caps public page size at 100 and drops load-all", () => {

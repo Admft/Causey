@@ -52,11 +52,36 @@ describe("coach Plan mission school/district nouns", () => {
       href: "/orgs",
       label: OPEN_MY_CLUBS_LABEL,
     });
+
+    expect(staffPlanMissionFromTypes(["district"], ["coach"])).toEqual({
+      title: "Run your next district task",
+      description:
+        "Open your district workspace to host or review competitions. Schools, staff, and reports stay with district administrators.",
+      href: "/orgs",
+      label: "Open Districts & schools",
+    });
+
+    expect(staffPlanMissionFromTypes(["school"], ["coach"])).toEqual({
+      title: "Run your next school task",
+      description:
+        "Open your school workspace to run competitions for the groups you are assigned.",
+      href: "/orgs",
+      label: "Open my schools",
+    });
+
+    expect(staffPlanMissionFromTypes(["school"], ["school_admin"])).toEqual({
+      title: "Run your next school task",
+      description:
+        "Open your school workspace to manage rosters, invitations, and competitions.",
+      href: "/orgs",
+      label: "Open my schools",
+    });
   });
 
   it("wires Plan to load coach memberships and use staffPlanMissionFromTypes", () => {
     const me = source("app/me/page.tsx");
     expect(me).toContain("staffPlanMissionFromTypes");
+    expect(me).toContain("memberRole");
     expect(me).toContain('profile.role === "coach"');
     expect(me).toContain('profile.role === "student" || profile.role === "coach"');
     expect(me).not.toContain('title: "Run your next club task"');

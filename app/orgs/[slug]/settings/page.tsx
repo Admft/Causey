@@ -21,6 +21,7 @@ import {
 } from "@/lib/data/portal";
 import { getDistrictSchoolReadinessStatus } from "@/lib/district-readiness";
 import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
+import { viewerHoldsSchoolAdminSeat } from "@/lib/school-admin-handoff";
 
 // Reads the signed-in account, so this response is never shareable.
 // Declared rather than inferred from cookies(): the day someone moves the
@@ -85,7 +86,8 @@ export default async function OrganizationSettingsPage({
   const isOwnershipSetup =
     query.setup === "ownership" &&
     view.org.type === "school" &&
-    Boolean(view.org.parent_org_id);
+    Boolean(view.org.parent_org_id) &&
+    !viewerHoldsSchoolAdminSeat(view.membership);
 
   return (
     <>

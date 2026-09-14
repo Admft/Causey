@@ -263,7 +263,10 @@ export default async function MePage() {
   const isStudent = profile.role === "student";
   const nextAction =
     profile.role === "coach"
-      ? staffPlanMissionFromTypes(myOrgs.map(({ org }) => org.type))
+      ? staffPlanMissionFromTypes(
+          myOrgs.map(({ org }) => org.type),
+          myOrgs.map(({ memberRole }) => memberRole)
+        )
       : ROLE_NEXT_ACTION[profile.role];
   const orgChrome = studentOrgChromeFromTypes(myOrgs.map(({ org }) => org.type));
   // Generic discovery links follow the account's saved directory shortcut;

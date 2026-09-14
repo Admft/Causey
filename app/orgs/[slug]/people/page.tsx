@@ -13,6 +13,11 @@ import {
 } from "@/lib/data/district";
 import { getOrgBySlugForViewer, getOrgRoster } from "@/lib/data/portal";
 import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
+import {
+  countSchoolAdministrators,
+  schoolNeedsAdministratorInvite,
+  viewerHoldsSchoolAdminSeat,
+} from "@/lib/school-admin-handoff";
 
 // Reads the signed-in account, so this response is never shareable.
 // Declared rather than inferred from cookies(): the day someone moves the
@@ -54,14 +59,9 @@ export default async function OrganizationPeoplePage({
     (row) => row.member_status === "active" && row.member_role === "student"
   ).length;
   const activeDelegatedSchoolAdmins = staffResult.ok
-    ? staffResult.data.filter(
-        (row) =>
-          row.org_id === view.org.id &&
-          row.member_status === "active" &&
-          (row.member_role === "school_admin" ||
-            row.member_role === "admin")
-      ).length
+    ? countSchoolAdministrators(staffResult.data, view.org.id)
     : 0;
+  const viewerIsSchoolAdmin = viewerHoldsSchoolAdminSeat(view.membership);
   const districtSlug =
     query.district && /^[a-z0-9-]+$/.test(query.district)
       ? query.district
@@ -69,15 +69,18 @@ export default async function OrganizationPeoplePage({
   const isSchoolAdminSetup =
     query.setup === "school-admin" &&
     view.org.type === "school" &&
-    Boolean(view.org.parent_org_id);
+    Boolean(view.org.parent_org_id) &&
+    !viewerIsSchoolAdmin;
   const pendingSchoolAdminInvites = pendingInvites.filter(
     (row) => row.role === "school_admin"
   );
-  const needsSchoolAdminHandoff =
-    view.org.type === "school" &&
-    Boolean(view.org.parent_org_id) &&
-    activeDelegatedSchoolAdmins === 0 &&
-    pendingSchoolAdminInvites.length === 0;
+  const needsSchoolAdminHandoff = schoolNeedsAdministratorInvite({
+    orgType: view.org.type,
+    parentOrgId: view.org.parent_org_id,
+    viewerIsSchoolAdmin,
+    schoolAdminCount: activeDelegatedSchoolAdmins,
+    pendingSchoolAdminInvites: pendingSchoolAdminInvites.length,
+  });
   const rosterHref = `/orgs/${view.org.slug}/roster#add-students`;
   const hasJoinCode = !isDistrict && Boolean(view.org.join_code);
 
@@ -143,9 +146,9 @@ export default async function OrganizationPeoplePage({
     };
   } else if (needsSchoolAdminHandoff) {
     mission = {
-      title: "Delegate this school",
+      title: "Invite a school administrator",
       description:
-        "Invite a school administrator before provisioning students. Causey emails the claim link and keeps a copyable fallback here.",
+        "Send a claim link to the person who will run this school’s roster and staff. Causey emails it and keeps a copyable fallback here.",
       action: { href: "#invite-one", label: "Invite school administrator" },
       secondary: districtSlug
         ? {
@@ -171,7 +174,7 @@ export default async function OrganizationPeoplePage({
     };
   } else if (isDistrict) {
     mission = {
-      title: "Delegate district staff",
+      title: "Invite district staff",
       description:
         "Invite district administrators or coaches here. Create or open a school workspace for school administrators and students.",
       action: { href: "#invite-one", label: "Invite district staff" },
@@ -279,7 +282,7 @@ export default async function OrganizationPeoplePage({
           <p className="mt-1 text-sm text-muted">
             {isDistrict
               ? "District administrators can manage district and school staff here. Student names are not included."
-              : "School administrators can delegate peers and assign coaches to groups from Students & groups."}
+              : "Invite coaches here, or another school administrator if you want a peer. Assign coaches to groups from Students & groups."}
           </p>
           <div className="mt-4">
             {staffResult.ok ? (
@@ -322,7 +325,9 @@ export default async function OrganizationPeoplePage({
                   ? "school_admin"
                   : isDistrict
                     ? "district_admin"
-                    : undefined
+                    : view.org.type === "school"
+                      ? "coach"
+                      : undefined
               }
             />
           </section>
