@@ -31,12 +31,16 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Wrong-seat next steps: school admins are not asked to hand off
-  ownership; district coaches are not told to run schools/reports;
-  school coaches are not told to manage the whole roster — 2026-09-14
+- Restore signed-out tournament search: unpublished-manager SELECT
+  policies must not call `is_org_coach` for anon — 2026-09-14
 
 ## Last tick
 
+- 2026-09-14 — Signed-out search 500ed on causey.dev (`permission denied
+  for function is_org_coach`) while a signed-in session on this machine
+  still worked. Live unpublished-manager policies on competitions/sections
+  were still PUBLIC; `0106` scopes them to authenticated using
+  `can_operate_org_competitions`.
 - 2026-09-14 — Walked other account-type landings for the same class of
   lie as “Delegate this school.” School overview no longer pins district
   ownership handoff as the admin’s mission; Plan copy follows membership

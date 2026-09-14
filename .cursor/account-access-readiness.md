@@ -14,7 +14,7 @@ Causey is **Enough** at named roles + org-type fit + school group assignment, **
 | --- | --- | --- |
 | 1 | Signup, claim, identity | **Enough** — three person types; parent cannot eat a student session; claim email + invitation role; join codes student-only (`0104`). |
 | 2 | Account settings and alerts | **Thin** — profile/prefs/org labels work; leave is on overview not Account; alert kinds are not role-filtered (`guardian_routing` shown to students). |
-| 3 | Discover, save, Plan | **Enough** for chess; other directories honest/thin; signed-out zip search works. |
+| 3 | Discover, save, Plan | **Enough** for chess after `0106` (signed-out directory was 500ing); other directories honest/thin. |
 | 4 | Family desk | **Enough** — invite → Plan → mark complete; Clear; staff team-entry labeled. |
 | 5 | Club / team workspace | **Enough** — self-serve club/team only; type locked; People hides school/district admin. |
 | 6 | Roster, groups, join | **Enough** on school assigned groups; club group “Assigned coaches” does **not** limit roster (copy says so) — **Thin** knob. |
