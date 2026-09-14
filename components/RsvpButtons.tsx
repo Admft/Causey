@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { clearRsvp, setRsvp } from "@/lib/actions/entrants";
 import type { RsvpUiStatus } from "@/lib/event-rsvp-targets";
+import { isAttendanceLocked, rsvpLabel } from "@/lib/rsvp";
 
 /**
  * Two-button RSVP. Works for yourself and — when profileId is a linked
@@ -21,6 +22,11 @@ type RsvpButtonsProps = {
 };
 
 export function RsvpButtons(props: RsvpButtonsProps) {
+  if (isAttendanceLocked(props.status)) {
+    return (
+      <p className="text-sm text-muted">{rsvpLabel(props.status)}</p>
+    );
+  }
   return (
     <RsvpButtonState
       key={`${props.competitionId}:${props.profileId}:${props.status}`}
@@ -62,7 +68,10 @@ function RsvpButtonState({
 }: RsvpButtonsProps) {
   const router = useRouter();
   const [current, setCurrent] = useState<RsvpUiStatus>(status);
-  const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "going" | "not_going" | "clear" | null
+  >(null);
+  const pending = pendingAction !== null;
   const [error, setError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const resolvedTone =
@@ -71,12 +80,14 @@ function RsvpButtonState({
   async function respond(next: "going" | "not_going") {
     if (pending) return;
     if (current === next) {
-      await clearAnswer();
+      // Re-clicking the selected answer toggles it off; show the spinner on
+      // the button that was actually pressed.
+      await clearAnswer(next);
       return;
     }
     setError(null);
     setConfirmation(null);
-    setPending(true);
+    setPendingAction(next);
     const previous = current;
     setCurrent(next);
     try {
@@ -97,16 +108,16 @@ function RsvpButtonState({
       setCurrent(previous);
       setError("Could not save your RSVP. Check your connection and try again.");
     } finally {
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
-  async function clearAnswer() {
+  async function clearAnswer(source: "going" | "not_going" | "clear" = "clear") {
     if (pending) return;
     if (current !== "going" && current !== "not_going") return;
     setError(null);
     setConfirmation(null);
-    setPending(true);
+    setPendingAction(source);
     const previous = current;
     setCurrent(status === "invited" ? "invited" : "unanswered");
     try {
@@ -126,7 +137,7 @@ function RsvpButtonState({
       setCurrent(previous);
       setError("Could not clear that RSVP. Check your connection and try again.");
     } finally {
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
@@ -146,7 +157,7 @@ function RsvpButtonState({
           aria-pressed={current === "going"}
           className={buttonClass(current === "going")}
         >
-          {pending && current === "going" ? "Saving…" : "Going"}
+          {pendingAction === "going" ? "Saving…" : "Going"}
         </button>
         <button
           type="button"
@@ -155,7 +166,7 @@ function RsvpButtonState({
           aria-pressed={current === "not_going"}
           className={buttonClass(current === "not_going")}
         >
-          {pending && current === "not_going" ? "Saving…" : "Can't go"}
+          {pendingAction === "not_going" ? "Saving…" : "Can't go"}
         </button>
         {current === "going" || current === "not_going" ? (
           <button
@@ -164,7 +175,7 @@ function RsvpButtonState({
             onClick={() => void clearAnswer()}
             className="action-button action-button--reversal"
           >
-            {pending ? "Saving…" : "Clear answer"}
+            {pendingAction === "clear" ? "Clearing…" : "Clear answer"}
           </button>
         ) : null}
       </div>
