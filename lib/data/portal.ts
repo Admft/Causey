@@ -743,25 +743,36 @@ export async function getEntrantsForCompetition(
  * Roster via the get_org_roster RPC — display_name, age band, grade, and
  * typed credential IDs only (no DOB/zip/email).
  */
-export async function getOrgRoster(
+export async function getOrgRosterResult(
   orgId: string,
   client?: PortalSupabase
-): Promise<RosterRow[]> {
+): Promise<{ ok: true; data: RosterRow[] } | { ok: false }> {
   const supabase = await portalClient(client);
   const { data, error } = await supabase.rpc("get_org_roster", {
     p_org_id: orgId,
   });
-  if (error) return [];
-  return ((data ?? []) as RosterRow[]).map((row) => ({
-    ...row,
-    grade: typeof row.grade === "number" ? row.grade : null,
-    credential_ids:
-      row.credential_ids &&
-      typeof row.credential_ids === "object" &&
-      !Array.isArray(row.credential_ids)
-        ? row.credential_ids
-        : {},
-  }));
+  if (error) return { ok: false };
+  return {
+    ok: true,
+    data: ((data ?? []) as RosterRow[]).map((row) => ({
+      ...row,
+      grade: typeof row.grade === "number" ? row.grade : null,
+      credential_ids:
+        row.credential_ids &&
+        typeof row.credential_ids === "object" &&
+        !Array.isArray(row.credential_ids)
+          ? row.credential_ids
+          : {},
+    })),
+  };
+}
+
+export async function getOrgRoster(
+  orgId: string,
+  client?: PortalSupabase
+): Promise<RosterRow[]> {
+  const result = await getOrgRosterResult(orgId, client);
+  return result.ok ? result.data : [];
 }
 
 export async function getOrgMemberCompetitionHistory(
@@ -1231,7 +1242,8 @@ export async function getPendingChildRequestCount(
     .from("household_links")
     .select("*", { count: "exact", head: true })
     .eq("parent_profile_id", userId)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .eq("requested_by", userId);
   return count ?? 0;
 }
 
