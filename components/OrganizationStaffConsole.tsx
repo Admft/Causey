@@ -12,6 +12,14 @@ function isAdministrator(role: string) {
   return ["admin", "school_admin", "district_admin"].includes(role);
 }
 
+/** Org-type noun for labels: never say School/District to a club or team. */
+function orgNoun(orgType: string) {
+  if (orgType === "district") return "district";
+  if (orgType === "school") return "school";
+  if (orgType === "team") return "team";
+  return "club";
+}
+
 export function OrganizationStaffConsole({
   rows,
   currentUserId,
@@ -33,7 +41,7 @@ export function OrganizationStaffConsole({
   function changeAdministrator(row: OrgStaffDirectoryRow, makeAdmin: boolean) {
     if (
       !window.confirm(
-        `${makeAdmin ? "Grant" : "Remove"} ${row.org_type === "district" ? "district" : "school"} administrator access ${
+        `${makeAdmin ? "Grant" : "Remove"} ${orgNoun(row.org_type)} administrator access ${
           makeAdmin ? "to" : "from"
         } ${row.display_name || "this staff member"}?`
       )
@@ -141,7 +149,7 @@ export function OrganizationStaffConsole({
                     href={`/orgs/${row.org_slug}`}
                     className="action-button"
                   >
-                    Open {row.org_type === "district" ? "district" : "school"}
+                    Open {orgNoun(row.org_type)}
                   </Link>
                 ) : null}
                 {admin ? (
@@ -169,7 +177,7 @@ export function OrganizationStaffConsole({
                   >
                     {rowPending
                       ? "Updating…"
-                      : `Make ${row.org_type === "district" ? "district" : "school"} admin`}
+                      : `Make ${orgNoun(row.org_type)} admin`}
                   </button>
                 )}
               </div>
