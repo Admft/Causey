@@ -453,11 +453,13 @@ export type StaffPlanMission = {
 };
 
 /**
- * Coach Plan (/me) mission from membership types.
+ * Coach Plan (/me) mission from membership types and roles.
  * District and school staff must not see club-only nouns; empty self-serve stays clubs.
+ * Pass membership roles so competition-only district/school staff are not told to run the office.
  */
 export function staffPlanMissionFromTypes(
-  types: Iterable<string>
+  types: Iterable<string>,
+  memberRoles: Iterable<string | null | undefined> = []
 ): StaffPlanMission {
   const kinds = new Set(
     [...types]
@@ -467,11 +469,28 @@ export function staffPlanMissionFromTypes(
           k === "school" || k === "club" || k === "team" || k === "district"
       )
   );
+  const roles = new Set(
+    [...memberRoles].filter((role): role is string => Boolean(role))
+  );
   const hasDistrict = kinds.has("district");
   const hasSchool = kinds.has("school");
   const hasClubOrTeam = kinds.has("club") || kinds.has("team");
+  const rolesKnown = roles.size > 0;
+  const hasDistrictOffice =
+    !rolesKnown || roles.has("district_admin") || roles.has("admin");
+  const hasSchoolOffice =
+    !rolesKnown || roles.has("school_admin") || roles.has("admin");
 
   if (hasDistrict) {
+    if (!hasDistrictOffice) {
+      return {
+        title: "Run your next district task",
+        description:
+          "Open your district workspace to host or review competitions. Schools, staff, and reports stay with district administrators.",
+        href: "/orgs",
+        label: "Open Districts & schools",
+      };
+    }
     return {
       title: "Run your next district task",
       description:
@@ -492,6 +511,15 @@ export function staffPlanMissionFromTypes(
   }
 
   if (hasSchool) {
+    if (!hasSchoolOffice) {
+      return {
+        title: "Run your next school task",
+        description:
+          "Open your school workspace to run competitions for the groups you are assigned.",
+        href: "/orgs",
+        label: "Open my schools",
+      };
+    }
     return {
       title: "Run your next school task",
       description:

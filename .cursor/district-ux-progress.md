@@ -17,6 +17,10 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Other seats no longer get a next step that belongs to someone else:
+  school overview skips district ownership handoff as the mission; Plan
+  uses membership role; join-code and competitions empty copy stop
+  assuming club-coach; district People says Invite staff — 2026-09-14
 - [x] School Coaches & staff no longer tells a sitting school
   administrator to “Delegate this school.” That mission is district
   handoff only; the invite form defaults to Coach and school-admin

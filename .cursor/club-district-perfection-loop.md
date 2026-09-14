@@ -31,12 +31,18 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- A claimed school administrator no longer sees “Delegate this school”
-  on People; that copy was district-office handoff language. Invite
-  form defaults to Coach, not another school administrator — 2026-09-14
+- Wrong-seat next steps: school admins are not asked to hand off
+  ownership; district coaches are not told to run schools/reports;
+  school coaches are not told to manage the whole roster — 2026-09-14
 
 ## Last tick
 
+- 2026-09-14 — Walked other account-type landings for the same class of
+  lie as “Delegate this school.” School overview no longer pins district
+  ownership handoff as the admin’s mission; Plan copy follows membership
+  role (office vs assigned-group vs district competitions); /orgs empty
+  state, competitions empty copy, join-code nouns, and district People
+  “Delegate staff” were aligned to the person actually looking.
 - 2026-09-14 — School admin People: sitting administrators are not asked
   to “delegate this school” / invite themselves. Remaining invite-admin
   copy is for district operators only; school staff invites default to

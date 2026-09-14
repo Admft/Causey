@@ -269,7 +269,9 @@ export default async function OrgCompetitionsPage({
                       ? "Find a public tournament for the roster, or host one here."
                       : view.org.type === "district"
                         ? "Host a district-wide competition, or open a school workspace to invite students from connected schools."
-                        : "Create a competition, choose who can see it, then invite your roster."
+                        : view.canViewNamedRoster
+                          ? "Create a competition, choose who can see it, then invite your roster."
+                          : "A school administrator must assign you to a student group before you can invite anyone. You can still host a competition you already have access to."
                     : "Competitions you can view will appear here after staff publish them."
               }
               action={

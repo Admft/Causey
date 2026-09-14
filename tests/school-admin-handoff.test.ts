@@ -99,6 +99,9 @@ describe("school administrator invite mission", () => {
     expect(peoplePage).toContain('? "coach"');
     expect(overview).toContain("viewerHoldsSchoolAdminSeat");
     expect(overview).not.toContain("Delegate this school");
+    expect(overview).not.toContain("Ownership handoff is pending");
     expect(overview).toContain("Invite a school administrator");
+    const settings = read("app/orgs/[slug]/settings/page.tsx");
+    expect(settings).toContain("viewerHoldsSchoolAdminSeat");
   });
 });

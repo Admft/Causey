@@ -88,7 +88,7 @@ function inviteRoleHelp(orgType: string, role: OrgMemberRole): string {
   }
   if (orgType === "school") {
     if (role === "school_admin") {
-      return "Another school administrator — same access you have to settings, roster, and staff.";
+      return "Runs this school’s settings, roster, and staff. They get their own account — not a shared password.";
     }
     if (role === "coach") {
       return "Runs competitions and invites students in assigned groups. Assign groups after they claim.";

@@ -174,7 +174,7 @@ export default async function OrganizationPeoplePage({
     };
   } else if (isDistrict) {
     mission = {
-      title: "Delegate district staff",
+      title: "Invite district staff",
       description:
         "Invite district administrators or coaches here. Create or open a school workspace for school administrators and students.",
       action: { href: "#invite-one", label: "Invite district staff" },

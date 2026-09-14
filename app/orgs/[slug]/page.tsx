@@ -206,14 +206,6 @@ export default async function OrgPage({
     (org.owner_profile_id === user.id ||
       membership?.role === "admin" ||
       membership?.role === "school_admin");
-  // Claimed school admin, pre-transfer: the owner is still the district-side
-  // creator, so the handoff step belongs to the district workspace.
-  const ownershipHandoffPending =
-    org.type === "school" &&
-    Boolean(org.parent_org_id) &&
-    isDirectSchoolAdmin &&
-    (org.owner_profile_id ?? org.created_by) !== user.id &&
-    (!org.owner_profile_id || org.owner_profile_id === org.created_by);
 
   const activeEvents = events.filter((event) => event.status !== "archived");
   const upcoming = activeEvents.filter((e) => isUpcomingEvent(e, today));
@@ -360,21 +352,7 @@ export default async function OrgPage({
           },
         };
       }
-      if (ownershipHandoffPending) {
-        return {
-          title: "Ownership handoff is pending",
-          description:
-            "The district workspace completes the handoff from this school's settings — there is nothing to submit. Staffing and roster setup can continue meanwhile.",
-          action: {
-            href: `/orgs/${org.slug}/people`,
-            label: "Review staffing",
-          },
-          secondary: {
-            href: `/orgs/${org.slug}/settings#ownership`,
-            label: "View ownership status",
-          },
-        };
-      }
+      // District ownership transfer is not this administrator’s next job.
       // Staffing leads only while the roster is empty; a provisioned school
       // advances to the competition chain below.
       if (!hasStudents) {

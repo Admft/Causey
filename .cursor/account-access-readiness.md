@@ -60,11 +60,15 @@ Salesforce permission sets, custom role names, per-tab ACL, fourth signup type, 
 
 ## Active batch
 
-- Sitting school administrators are not asked to delegate the school;
-  People invite defaults to Coach — 2026-09-14
+- Wrong-seat next steps across school admin, district coach, school
+  coach, and join-code copy — 2026-09-14
 
 ## Last tick
 
+- 2026-09-14 — Walked other account-type landings for the same class of
+  lie as “Delegate this school.” School overview no longer pins district
+  ownership handoff; Plan copy follows membership role; competitions
+  empty and join-code nouns stop assuming a club coach.
 - 2026-09-14 — School People “Delegate this school” was district-office
   wording. A claimed school administrator now gets staff/roster next
   steps; remaining invite-admin copy is for operators who still need a
@@ -89,3 +93,6 @@ Salesforce permission sets, custom role names, per-tab ACL, fourth signup type, 
 14. Host audience · Agent 9 · `competitionAudienceOptions` drops district-only off hierarchy · Enough
 15. Profile · Agent 2 · grade field shown to parent/coach as well as student · Thin · S
 16. School admin · Agent 12 · People Coaches & staff · “Delegate this school / invite a school administrator before provisioning students” is district-handoff copy; claimed admin already holds the seat · Thin (wording + false mission) · S · **fixed**
+17. School admin · Agent 12 · school overview · “Ownership handoff is pending” was the district’s job pinned as their mission · Thin · S · **fixed**
+18. District coach · Agent 13 · `/me` Plan · types-only mission promised schools/reports · Thin · S · **fixed**
+19. School coach · Agent 12 · `/me` Plan + competitions empty · “manage rosters / invite your roster” before group assignment · Thin · S · **fixed**

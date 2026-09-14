@@ -367,12 +367,16 @@ export default async function OrgsPage({
                 title={
                   canStartOrganization
                     ? staffChrome.emptyTitle
-                    : "No club access yet"
+                    : staffChrome.emptyTitle === "Start your first club"
+                      ? "No organization access yet"
+                      : staffChrome.emptyTitle
                 }
                 description={
                   canStartOrganization
                     ? staffChrome.emptyDescription
-                    : "Staff invitations come from a club owner."
+                    : staffChrome.emptyDescription.includes("join link")
+                      ? "Staff invitations come from an organization administrator."
+                      : staffChrome.emptyDescription
                 }
                 action={
                   canStartOrganization
