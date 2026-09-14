@@ -12,10 +12,12 @@ export function JoinCodePanel({
   orgId,
   orgSlug,
   joinCode,
+  canRotate = true,
 }: {
   orgId: string;
   orgSlug: string;
   joinCode: string;
+  canRotate?: boolean;
 }) {
   const [code, setCode] = useState(joinCode);
   const [copied, setCopied] = useState(false);
@@ -67,35 +69,37 @@ export function JoinCodePanel({
         >
           {copied ? "Link copied" : "Copy join link"}
         </button>
-        {confirming ? (
-          <span className="flex items-center gap-2 text-sm">
+        {canRotate ? (
+          confirming ? (
+            <span className="flex items-center gap-2 text-sm">
+              <button
+                type="button"
+                onClick={rotate}
+                disabled={pending}
+                className="action-button action-button--reversal"
+              >
+                {pending ? "Rotating…" : "Yes, get a new code"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="action-button"
+              >
+                Cancel
+              </button>
+            </span>
+          ) : (
             <button
               type="button"
-              onClick={rotate}
-              disabled={pending}
-              className="action-button action-button--reversal"
-            >
-              {pending ? "Rotating…" : "Yes, get a new code"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
+              onClick={() => setConfirming(true)}
               className="action-button"
             >
-              Cancel
+              Get a new code
             </button>
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            className="action-button"
-          >
-            Get a new code
-          </button>
-        )}
+          )
+        ) : null}
       </div>
-      {confirming ? (
+      {canRotate && confirming ? (
         <p className="mt-2 text-xs text-muted">
           Students who already joined stay on the roster; the old code stops
           working immediately.

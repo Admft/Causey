@@ -14,7 +14,10 @@ describe("school-safe roster and manage composition", () => {
     expect(roster).toContain("Create a group for invites");
     expect(roster).toContain("needsGroups");
     expect(roster).toContain("groupNamesByStudent");
-    expect(roster).toContain("not in a group yet");
+    expect(roster).toContain("canRemoveMembers");
+    expect(roster).toContain("canRotate={view.isAdmin}");
+    expect(roster).toContain("Roster could not load");
+    expect(groups).toContain("orgType");
     expect(roster).toContain("Manage invites &amp; staff");
     expect(groups).toContain("Edit group");
     expect(groups).toContain("Assigned coaches");

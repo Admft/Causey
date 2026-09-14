@@ -111,7 +111,14 @@ export async function rotateJoinCode(
     p_org_id: orgId,
   });
   if (error || !data) {
-    return { ok: false, error: "Could not rotate the code. Try again." };
+    return {
+      ok: false,
+      error: actionErrorMessage(
+        error,
+        "Could not rotate the code. Try again.",
+        "Only an administrator can rotate this join code."
+      ),
+    };
   }
 
   revalidatePath(`/orgs/${orgSlug}`);

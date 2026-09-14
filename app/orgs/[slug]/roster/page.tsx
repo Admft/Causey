@@ -12,7 +12,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import {
   getOrgBySlugForViewer,
   getOrgGroups,
-  getOrgRoster,
+  getOrgRosterResult,
   isSupabaseConfigured,
 } from "@/lib/data/portal";
 import { formatDate, gradeLabel } from "@/lib/format";
@@ -56,18 +56,19 @@ export default async function RosterPage({
   if (!view.canViewNamedRoster) redirect(`/orgs/${slug}`);
   const { org } = view;
 
-  const [roster, groups] = await Promise.all([
-    getOrgRoster(org.id),
+  const [rosterResult, groups] = await Promise.all([
+    getOrgRosterResult(org.id),
     getOrgGroups(org.id),
   ]);
+  const rosterFailed = rosterResult.ok === false;
+  const roster = rosterResult.ok ? rosterResult.data : [];
   const activeMembers = roster.filter((row) => row.member_status === "active");
   const students = activeMembers.filter((row) => row.member_role === "student");
   const staff = activeMembers.filter((row) => row.member_role !== "student");
   const emptyRoster = activeMembers.length === 0;
   const canOperate = view.canManageTournaments;
-  const canEditRoster =
-    org.type === "school" ? view.canManageGroups : canOperate;
-  const needsGroups = !emptyRoster && groups.length === 0;
+  const canRemoveMembers = view.isAdmin;
+  const needsGroups = !rosterFailed && !emptyRoster && groups.length === 0;
   const groupNamesByStudent = new Map<string, string[]>();
   for (const group of groups) {
     for (const profileId of group.member_ids) {
@@ -77,7 +78,14 @@ export default async function RosterPage({
     }
   }
 
-  const mission = !canOperate
+  const mission = rosterFailed
+    ? {
+        title: "Roster could not load",
+        description:
+          "Causey could not load this roster. Retry before treating it as empty or adding students.",
+        action: { href: `/orgs/${org.slug}/roster`, label: "Retry roster" },
+      }
+    : !canOperate
     ? {
         title: "Review the roster",
         description:
@@ -134,6 +142,7 @@ export default async function RosterPage({
             orgId={org.id}
             orgSlug={org.slug}
             joinCode={org.join_code}
+            canRotate={view.isAdmin}
           />
         </div>
       </section>
@@ -199,7 +208,7 @@ export default async function RosterPage({
                     {` · joined ${formatDate(row.joined_at.slice(0, 10))}`}
                   </p>
                 </div>
-                {canEditRoster ? (
+                {canRemoveMembers ? (
                   <div className="sm:shrink-0">
                     <RemoveMemberButton
                       orgId={org.id}
@@ -243,6 +252,7 @@ export default async function RosterPage({
                 display_name: row.display_name,
                 roleLabel: roleLabel(row.member_role),
               }))}
+            orgType={org.type}
           />
         </div>
       ) : groups.length ? (
@@ -362,7 +372,7 @@ export default async function RosterPage({
                       {roleLabel(row.member_role)}
                     </p>
                   </div>
-                  {canEditRoster && row.profile_id !== user.id ? (
+                  {canRemoveMembers && row.profile_id !== user.id ? (
                     <div className="sm:shrink-0">
                       <RemoveMemberButton
                         orgId={org.id}
