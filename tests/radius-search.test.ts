@@ -15,6 +15,13 @@ const radiusSql = readFileSync(
   resolve(process.cwd(), "supabase/migrations/0061_search_competitions_radius.sql"),
   "utf8"
 );
+const radiusDiscoverySql = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/0102_search_radius_discovery_categories.sql"
+  ),
+  "utf8"
+);
 const supabaseSource = readFileSync(
   resolve(process.cwd(), "lib/data/supabase.ts"),
   "utf8"
@@ -38,6 +45,12 @@ describe("SQL radius search", () => {
     expect(supabaseSource).not.toMatch(
       /needsJsWindow\s*=\s*[\s\S]*preferredOrgIds\.size > 0/
     );
+    expect(radiusDiscoverySql).toContain(
+      "p_category is not null or c.category in ('chess', 'debate', 'stem', 'arts', 'writing')"
+    );
+    expect(supabaseSource).toContain("Boolean(filters.q)");
+    expect(searchClient).toContain('state.radius !== "50"');
+    expect(searchClient).toContain("searchGenerationRef");
   });
 
   it("caps public page size at 100 and drops load-all", () => {

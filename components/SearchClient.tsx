@@ -102,6 +102,10 @@ function queryFromState(
   if (state.zip) {
     p.set("zip", state.zip);
     p.set("radius", state.radius);
+  } else if (state.radius && state.radius !== "50") {
+    // Distance is chosen before zip; keep it in the URL so a later filter
+    // edit cannot snap it back to the default 50.
+    p.set("radius", state.radius);
   }
   if (state.filters.state) p.set("state", state.filters.state);
   if (state.filters.source) p.set("source", state.filters.source);
@@ -205,12 +209,14 @@ export function SearchClient({
     // URL navigation is an external state source; mirror it before outbound sync.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setKeyword(incoming.keyword);
-    setZipInput(incoming.zip);
-    setZip(incoming.zip);
+    if (incoming.zip !== zip) {
+      setZipInput(incoming.zip);
+      setZip(incoming.zip);
+      setZipError(null);
+    }
     setRadius(incoming.radius);
     setSort(incoming.sort);
     setFilters(incoming.filters);
-    setZipError(null);
     // Local state is intentionally excluded: this effect responds only to URL
     // navigation, while local edits flow through the outbound effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -253,10 +259,14 @@ export function SearchClient({
   );
 
   const abortRef = useRef<AbortController | null>(null);
+  const loadMoreAbortRef = useRef<AbortController | null>(null);
+  const searchGenerationRef = useRef(0);
   useEffect(() => {
     abortRef.current?.abort();
+    loadMoreAbortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    searchGenerationRef.current += 1;
     // Starting a request intentionally transitions the visible request state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus({ kind: "loading" });
@@ -305,20 +315,27 @@ export function SearchClient({
     const offset = status.results.length;
     if (offset >= status.total) return;
 
+    loadMoreAbortRef.current?.abort();
+    const controller = new AbortController();
+    loadMoreAbortRef.current = controller;
+    const generation = searchGenerationRef.current;
+
     setLoadingMore(true);
     setLoadMoreError(null);
     try {
       const chunk = resolvePageLimit(pageSize);
       const res = await fetchWithTimeout(
-        `/api/competitions?${buildApiParams(chunk, offset)}`
+        `/api/competitions?${buildApiParams(chunk, offset)}`,
+        { signal: controller.signal }
       );
       const body = await res.json();
+      if (generation !== searchGenerationRef.current) return;
       if (!res.ok) {
         setLoadMoreError(body.error ?? "Couldn't load more tournaments.");
         return;
       }
       setStatus((current) =>
-        current.kind === "ready"
+        current.kind === "ready" && generation === searchGenerationRef.current
           ? {
               kind: "ready",
               results: [...current.results, ...(body.results ?? [])],
@@ -326,12 +343,17 @@ export function SearchClient({
             }
           : current
       );
-    } catch {
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      if (generation !== searchGenerationRef.current) return;
+      console.error("Load more tournaments failed:", error);
       setLoadMoreError(
         "Couldn't load more tournaments. Check the connection and try again."
       );
     } finally {
-      setLoadingMore(false);
+      if (generation === searchGenerationRef.current) {
+        setLoadingMore(false);
+      }
     }
   }, [status, loadingMore, buildApiParams, pageSize]);
 
