@@ -24,6 +24,7 @@ import {
 } from "@/lib/home-my-tournaments";
 import { workspaceOpenCta } from "@/lib/portal-copy";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getViewerTodayIso } from "@/lib/viewer-today";
 
 function orgNavAccessFromMemberships(
   orgs: {
@@ -79,8 +80,8 @@ export async function getHomeMyTournaments(
   }
 
   try {
-    const today = new Date().toISOString().slice(0, 10);
-    const [entrantRows, orgs, children] = await Promise.all([
+    const [today, entrantRows, orgs, children] = await Promise.all([
+      getViewerTodayIso(profile.id),
       getMyEntrantRows(profile.id),
       getMyOrgs(profile.id),
       profile.role === "parent"

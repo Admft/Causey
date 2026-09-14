@@ -53,6 +53,12 @@ describe("parent competition alerts", () => {
     const enqueue = read("lib/email/enqueue.ts");
 
     expect(family).toContain("todayIsoInTimeZone");
+    expect(read("lib/viewer-today.ts")).toContain("getViewerTodayIso");
+    expect(read("app/me/page.tsx")).toContain("getViewerTodayIso");
+    expect(read("app/orgs/page.tsx")).toContain("getViewerTodayIso");
+    expect(read("app/event/[slug]/manage/page.tsx")).toContain(
+      "getViewerTodayIso"
+    );
     expect(family).toContain("getNotificationPreferences");
     expect(alerts).toContain("todayIsoInTimeZone");
     expect(alerts).toContain("buildLinkedChildAttentionItems");

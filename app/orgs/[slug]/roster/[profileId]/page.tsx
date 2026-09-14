@@ -14,6 +14,7 @@ import {
   isUpcomingEvent,
 } from "@/lib/data/portal";
 import { formatDateRange, formatRecordedResult, gradeLabel } from "@/lib/format";
+import { getViewerTodayIso } from "@/lib/viewer-today";
 import {
   contextualOrganizationRoleLabel,
   membershipHistoryEyebrow,
@@ -58,15 +59,15 @@ export default async function RosterMemberHistoryPage({
 
   const { org } = view;
   const orgKind = organizationKindLabel(org.type);
-  const [roster, history] = await Promise.all([
+  const [roster, history, today] = await Promise.all([
     getOrgRoster(org.id),
     getOrgMemberCompetitionHistory(org.id, profileId),
+    getViewerTodayIso(user.id),
   ]);
   const member = roster.find((row) => row.profile_id === profileId);
   if (!member && user.id !== profileId) notFound();
 
   const displayName = member?.display_name || "This student";
-  const today = new Date().toISOString().slice(0, 10);
   const pastMissingResult = history.filter(
     (row) =>
       row.status === "attended" &&

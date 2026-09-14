@@ -18,6 +18,7 @@ import {
 } from "@/lib/data/portal";
 import { canCreateOrg } from "@/lib/org-permissions";
 import { formatDateRange } from "@/lib/format";
+import { getViewerTodayIso } from "@/lib/viewer-today";
 import { ORG_ROLE_LABELS } from "@/lib/auth/orgs";
 import {
   offersClubSelfServe,
@@ -188,10 +189,11 @@ export default async function OrgsPage({
   if (!user) redirect("/login?next=/orgs");
   const profile = await getCurrentProfile();
 
-  const [myOrgs, entrantRows, recommendations] = await Promise.all([
+  const [myOrgs, entrantRows, recommendations, today] = await Promise.all([
     getMyOrgs(user.id),
     getMyEntrantRows(user.id),
     getMyRecommendations(user.id),
+    getViewerTodayIso(user.id),
   ]);
   const orgTypes = myOrgs.map(({ org }) => org.type);
   const canStartOrganization =
@@ -200,7 +202,6 @@ export default async function OrgsPage({
   const isStaffWorkspace =
     profile?.role === "coach" || hasStaffMembership;
   if (profile?.role === "parent" && !hasStaffMembership) redirect("/family");
-  const today = new Date().toISOString().slice(0, 10);
   const upcomingInvites = entrantRows
     .filter((row) => row.competition && isUpcomingEvent(row.competition, today))
     .sort((a, b) => {

@@ -15,6 +15,7 @@ import {
 import { formatDateRange, formatFeeCents } from "@/lib/format";
 import { contextualOrganizationRoleLabel } from "@/lib/portal-copy";
 import { CompetitionCategorySchema } from "@/lib/schemas";
+import { getViewerTodayIso } from "@/lib/viewer-today";
 
 export const dynamic = "force-dynamic";
 
@@ -64,13 +65,13 @@ export default async function OrgCompetitionsPage({
 
   const view = await getOrgBySlugForViewer(slug, user.id);
   if (!view) notFound();
-  const [workspace, attendedEvents] = await Promise.all([
+  const [workspace, attendedEvents, today] = await Promise.all([
     getOrgCompetitionWorkspace(view.org),
     view.org.type === "district"
       ? Promise.resolve([])
       : getOrgAttendedEvents(view.org.id),
+    getViewerTodayIso(user.id),
   ]);
-  const today = new Date().toISOString().slice(0, 10);
   const category = CompetitionCategorySchema.safeParse(filters.category);
   const status =
     view.canManageTournaments &&
