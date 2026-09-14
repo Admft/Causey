@@ -27,6 +27,7 @@ import { ORG_ROLE_LABELS } from "@/lib/auth/orgs";
 import {
   SEARCH_TOURNAMENTS_LABEL,
   accountOrganizationsEmptyCta,
+  orgCompetitionsHref,
   staffAccountPersonaLabel,
   studentOrgChromeFromTypes,
   workspaceOpenCta,
@@ -431,12 +432,19 @@ export default async function AccountPage() {
                     >
                       Overview
                     </Link>
-                    {row.isCoach && row.org.type === "district" ? (
+                    {row.org.type === "district" && admin ? (
                       <Link
                         href={`/orgs/${row.org.slug}/schools`}
                         className="text-muted-strong hover:text-brand-red"
                       >
                         Schools
+                      </Link>
+                    ) : row.org.type === "district" && row.isCoach ? (
+                      <Link
+                        href={orgCompetitionsHref(row.org.slug)}
+                        className="text-muted-strong hover:text-brand-red"
+                      >
+                        Competitions
                       </Link>
                     ) : row.isCoach && !inheritedDistrictAdmin ? (
                       <Link

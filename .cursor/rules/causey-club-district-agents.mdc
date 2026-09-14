@@ -1,11 +1,11 @@
 ---
-description: Two buyer agents — professional club/team owner and school-district program office. Apply when shipping product UX.
+description: Club/district buyer agents plus per-workflow account-access customizability agents. Apply when shipping product UX or changing roles, invites, or settings.
 alwaysApply: true
 ---
 
-# Club and district buyer agents
+# Club, district, and account-access agents
 
-Causey has two institutional buyers. Load the matching skill before changing org/portal UX.
+Causey has two institutional buyers. Load the matching skill before changing org/portal UX. Load the access skill before changing roles, People invites, claim, Account settings, or permission gates.
 
 ## Club / team owner
 Skill: `.cursor/skills/club-owner-readiness/SKILL.md`  
@@ -17,5 +17,10 @@ Skill: `.cursor/skills/district-program-readiness/SKILL.md`
 Backlog: `.cursor/district-readiness.md`  
 Walk provision schools → handoff → **school and district tournaments** → family RSVP → aggregate reports. Copy says School/District. No self-serve district signup, no partner names, fail-closed reports.
 
+## Account-access customizability
+Skill: `.cursor/skills/account-access-customizability/SKILL.md`  
+Backlog: `.cursor/account-access-readiness.md`  
+For **every workflow**, one named agent walks **each account type**: settings they should have, missing features, and whether access can be granted **only** to the right role and scope (named roles + group assignment, not Salesforce ACLs). Person accounts stay student / parent / coach.
+
 ## Shared
-Playbook: `.cursor/club-district-perfection-loop.md`. One workflow win per tick. `dev` only; never `main`. Update the persona backlog + `.cursor/district-ux-progress.md`.
+Playbook: `.cursor/club-district-perfection-loop.md`. One workflow win per tick. `dev` only; never `main`. Update the matching backlog + `.cursor/district-ux-progress.md`.

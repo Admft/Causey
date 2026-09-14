@@ -43,6 +43,11 @@ import {
   contextualOrganizationRoleLabel,
   organizationKindLabel,
 } from "@/lib/portal-copy";
+import {
+  countSchoolAdministrators,
+  schoolNeedsAdministratorInvite,
+  viewerHoldsSchoolAdminSeat,
+} from "@/lib/school-admin-handoff";
 
 export const dynamic = "force-dynamic";
 
@@ -184,19 +189,17 @@ export default async function OrgPage({
   const hasStudents = activeStudentCount > 0;
   const districtScopedSchoolView =
     org.type === "school" && isAdmin && !canViewNamedRoster;
+  const viewerIsSchoolAdmin = viewerHoldsSchoolAdminSeat(membership);
   const activeSchoolAdminCount =
     schoolStaffResult?.ok === true
-      ? schoolStaffResult.data.filter(
-          (row) =>
-            row.member_status === "active" &&
-            (row.member_role === "school_admin" ||
-              row.member_role === "admin")
-        ).length
+      ? countSchoolAdministrators(schoolStaffResult.data, org.id)
       : null;
-  const needsSchoolAdminHandoff =
-    org.type === "school" &&
-    Boolean(org.parent_org_id) &&
-    activeSchoolAdminCount === 0;
+  const needsSchoolAdminHandoff = schoolNeedsAdministratorInvite({
+    orgType: org.type,
+    parentOrgId: org.parent_org_id,
+    viewerIsSchoolAdmin,
+    schoolAdminCount: activeSchoolAdminCount,
+  });
   const isDirectSchoolAdmin =
     org.type === "school" &&
     isAdmin &&
@@ -256,9 +259,9 @@ export default async function OrgPage({
       }
       if (needsSchoolAdminHandoff) {
         return {
-          title: "Delegate this school",
+          title: "Invite a school administrator",
           description:
-            "Invite a school administrator before provisioning students. District access stays aggregate-only.",
+            "Send a claim link to the person who will run this school’s roster and staff. District access stays aggregate-only.",
           action: {
             href: `/orgs/${org.slug}/people`,
             label: "Invite school administrator",
@@ -330,9 +333,9 @@ export default async function OrgPage({
         };
       }
       return {
-        title: "Delegate this school",
+        title: "Invite a school administrator",
         description:
-          "Invite a school administrator before provisioning students. They can own the roster and day-to-day setup.",
+          "Send a claim link to the person who will run this school’s roster and staff.",
         action: {
           href: `/orgs/${org.slug}/people`,
           label: "Invite school administrator",

@@ -89,6 +89,9 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
   district claim also transfers super-admin-owned child schools (`0103`) so
   ownership handoff is not a dead end; district event manage fails closed on
   school totals — 2026-09-13
+- [x] Sitting school administrators no longer see district-office
+  “Delegate this school” copy on Coaches & staff; invite form defaults to
+  Coach — 2026-09-14
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 

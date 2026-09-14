@@ -88,7 +88,7 @@ function inviteRoleHelp(orgType: string, role: OrgMemberRole): string {
   }
   if (orgType === "school") {
     if (role === "school_admin") {
-      return "Day-to-day school settings, roster, and staff.";
+      return "Another school administrator — same access you have to settings, roster, and staff.";
     }
     if (role === "coach") {
       return "Runs competitions and invites students in assigned groups. Assign groups after they claim.";
@@ -714,11 +714,18 @@ export function OrganizationPeopleManager({
             <strong>name</strong>, and{" "}
             {orgType === "district" ? (
               <>
-                a required <strong>role</strong> column for district staff.
+                a required <strong>role</strong> column: district_admin, coach,
+                or assistant_coach.
+              </>
+            ) : orgType === "club" || orgType === "team" ? (
+              <>
+                an optional <strong>role</strong> column: student, coach, or
+                assistant_coach (default student).
               </>
             ) : (
               <>
-                an optional <strong>role</strong> column.
+                an optional <strong>role</strong> column: student, coach,
+                assistant_coach, or school_admin (default student).
               </>
             )}{" "}
             After import, copy or download claim links immediately.
