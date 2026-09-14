@@ -3,10 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { DistrictSchoolForm } from "@/components/DistrictSchoolForm";
 import { OrgSubnavBar } from "@/components/OrgSubnav";
-import {
-  PortalEmptyState,
-  PortalErrorState,
-} from "@/components/PortalPrimitives";
+import { PortalErrorState } from "@/components/PortalPrimitives";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDistrictPilotReadiness } from "@/lib/data/district";
 import { getOrgBySlugForViewer } from "@/lib/data/portal";
@@ -67,7 +64,7 @@ export default async function DistrictSchoolsPage({
               inside each school; this page uses aggregate counts.
             </p>
           </div>
-          {readiness ? (
+          {readiness?.schools.length ? (
             <p className="text-sm font-semibold text-muted-strong">
               {readyCount} of {readiness.schools.length} schools ready
             </p>
@@ -76,11 +73,14 @@ export default async function DistrictSchoolsPage({
 
         <section id="add-school" className="section-rule mt-8 scroll-mt-24 pt-8">
           <h2 className="text-base font-semibold text-foreground">
-            Add a school
+            {readiness?.schools.length
+              ? "Add a school"
+              : "Create the first school"}
           </h2>
           <p className="mt-1 text-sm text-muted">
-            After creation, Causey opens the school staffing step so you can
-            invite its administrator.
+            {readiness?.schools.length
+              ? "After creation, Causey opens the school staffing step so you can invite its administrator."
+              : "No school workspaces yet. After creation, Causey opens the school staffing step so you can invite its administrator."}
           </p>
           <div className="mt-5">
             <DistrictSchoolForm
@@ -100,15 +100,7 @@ export default async function DistrictSchoolsPage({
               label: "Retry school readiness",
             }}
           />
-        ) : !readiness?.schools.length ? (
-          <section className="section-rule mt-8 pt-8">
-            <PortalEmptyState
-              title="No school workspaces yet"
-              description="Create the first school above. The next page will ask you to invite its administrator before students are provisioned."
-              action={{ href: "#add-school", label: "Create the first school" }}
-            />
-          </section>
-        ) : (
+        ) : readiness?.schools.length ? (
           <section className="section-rule mt-8 pt-8">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 className="text-base font-semibold text-foreground">
@@ -159,7 +151,7 @@ export default async function DistrictSchoolsPage({
               })}
             </ul>
           </section>
-        )}
+        ) : null}
       </div>
     </>
   );
