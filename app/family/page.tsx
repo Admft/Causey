@@ -597,7 +597,11 @@ export default async function FamilyPage() {
                               ? " · Going"
                               : row.status === "not_going"
                                 ? " · Can’t go"
-                                : ""
+                                : row.status === "attended"
+                                  ? " · Attended"
+                                  : row.status === "did_not_attend"
+                                    ? " · Did not attend"
+                                    : ""
                           }${
                             row.responded_by === user.id
                               ? " · RSVP’d by you"
