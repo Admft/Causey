@@ -59,6 +59,7 @@ describe("workflow audit follow-ups", () => {
     expect(nav).toContain('label: "Plan"');
     expect(nav).not.toContain('label: "My tournaments"');
     expect(me).toContain("Your plan");
+    expect(me).toContain('redirect("/login?next=/me")');
     expect(family).toContain("Who needs you");
     expect(family).not.toContain("Parent desk");
   });

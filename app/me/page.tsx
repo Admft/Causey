@@ -24,6 +24,7 @@ import {
   staffPlanMissionFromTypes,
   studentOrgChromeFromTypes,
 } from "@/lib/portal-copy";
+import { getViewerTodayIso } from "@/lib/viewer-today";
 
 export const dynamic = "force-dynamic";
 
@@ -108,7 +109,7 @@ const ROLE_NEXT_ACTION: Record<
 
 export default async function MePage() {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/me");
 
   const profile = await getCurrentProfile();
   if (!profile) return <ProfileNotReady section="Your plan" />;
@@ -122,6 +123,7 @@ export default async function MePage() {
     entrantRows,
     myOrgs,
     recommendations,
+    today,
   ] = await Promise.all([
     supabase
       .from("saved_competitions")
@@ -150,6 +152,7 @@ export default async function MePage() {
       ? getMyOrgs(profile.id)
       : Promise.resolve([]),
     getMyRecommendations(profile.id),
+    getViewerTodayIso(profile.id),
   ]);
   // Only a request the student still has to answer is a task. A request the
   // student sent is waiting on the parent, so it must not drive the mission.
@@ -157,7 +160,11 @@ export default async function MePage() {
     (link) => link.status === "pending" && !link.awaiting_parent
   );
 
-  const today = new Date().toISOString().slice(0, 10);
+  const goingCompetitionIds = new Set(
+    entrantRows
+      .filter((row) => row.status === "going")
+      .map((row) => row.competition_id)
+  );
   const registrationEvents = (registrationRows ?? [])
     .flatMap((row) => {
       const competition =
@@ -177,6 +184,7 @@ export default async function MePage() {
   const registrationNeeded = registrationEvents.filter(
     (row) =>
       row.status !== "registered" &&
+      goingCompetitionIds.has(row.competitionId) &&
       isUpcomingEvent(row.competition, today)
   );
   const upcomingInvitations = entrantRows.filter(
