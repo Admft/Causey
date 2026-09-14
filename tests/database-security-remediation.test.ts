@@ -43,8 +43,9 @@ describe("effective database security remediation", () => {
   it("demotes only removed join-code memberships on reactivation", () => {
     const definition = effectiveFunction("join_org_with_code");
     expect(definition.file).toBe(
-      "0044_database_security_remediation.sql"
+      "0104_family_tournament_club_followups.sql"
     );
+    expect(definition.sql).toContain("student_account_required");
     expect(definition.sql).toContain(
       "when membership.status = 'removed' then 'student'"
     );
