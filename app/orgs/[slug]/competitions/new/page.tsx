@@ -38,26 +38,17 @@ export default async function NewCompetitionPage({
   if (!view) notFound();
   if (!view.canManageTournaments) redirect(`/orgs/${slug}/competitions`);
 
-  const districtHosts =
-    view.org.type === "district"
-      ? [
-          {
-            id: view.org.id,
-            name: view.org.name,
-            state: view.org.state,
-            type: view.org.type,
-            parentOrgId: view.org.parent_org_id,
-          },
-        ]
-      : [
-          {
-            id: view.org.id,
-            name: view.org.name,
-            state: view.org.state,
-            type: view.org.type,
-            parentOrgId: view.org.parent_org_id,
-          },
-        ];
+  // Hosting as a connected school is not wired yet: school-hosted events are
+  // created from the school's own workspace. Only the district itself hosts here.
+  const districtHosts = [
+    {
+      id: view.org.id,
+      name: view.org.name,
+      state: view.org.state,
+      type: view.org.type,
+      parentOrgId: view.org.parent_org_id,
+    },
+  ];
   const targetHost =
     districtHosts.find((host) => host.id === query.host) ?? districtHosts[0];
   const hostChosen =
@@ -113,8 +104,9 @@ export default async function NewCompetitionPage({
                 Hosting organization
               </span>
               <span className="mt-1 block text-xs text-muted">
-                Choose District-wide or one connected school. Causey stores one
-                event under the selected host.
+                Causey stores this event under the district office. To host as
+                one connected school instead, open that school&rsquo;s
+                workspace and create the competition there.
               </span>
               <select
                 name="host"
