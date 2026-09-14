@@ -4,16 +4,52 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { recordAccountInAppAlert } from "@/lib/actions/notifications";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import {
+  AUTH_CAPTCHA_ENABLED,
+  AuthCaptcha,
+  CAPTCHA_REQUIRED_MESSAGE,
+} from "@/components/AuthCaptcha";
 import { PasswordField } from "@/components/PasswordField";
 import {
   WEAK_PASSWORD_MESSAGE,
   isPasswordAcceptable,
 } from "@/lib/password-strength";
 
+function passwordVerificationMessage(error: unknown): string {
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : "";
+  if (
+    message.includes("email not confirmed") ||
+    message.includes("email_not_confirmed")
+  ) {
+    return "Confirm this email first. Check your inbox for the confirmation link, then try again.";
+  }
+  if (message.includes("rate") || message.includes("too many")) {
+    return "Too many attempts. Wait a minute, then try again.";
+  }
+  if (message.includes("captcha")) {
+    return "Complete the security check, then try again.";
+  }
+  if (
+    message.includes("invalid login") ||
+    message.includes("invalid credentials") ||
+    message.includes("invalid_grant")
+  ) {
+    return "Current password is incorrect.";
+  }
+  console.error("Account password verification failed:", error);
+  return "Could not verify your current password. Check your connection and try again.";
+}
+
 function accountErrorMessage(error: unknown, fallback: string): string {
   if (
     error instanceof Error &&
-    error.message === "Current password is incorrect."
+    (error.message === "Current password is incorrect." ||
+      error.message === CAPTCHA_REQUIRED_MESSAGE ||
+      error.message.startsWith("Confirm this email") ||
+      error.message.startsWith("Too many attempts") ||
+      error.message.startsWith("Complete the security check") ||
+      error.message.startsWith("Could not verify your current password"))
   ) {
     return error.message;
   }
@@ -54,6 +90,18 @@ export function AccountSecurityForm({
   const [resetPending, setResetPending] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [emailCaptchaToken, setEmailCaptchaToken] = useState<string | null>(
+    null
+  );
+  const [emailCaptchaVersion, setEmailCaptchaVersion] = useState(0);
+  const [passwordCaptchaToken, setPasswordCaptchaToken] = useState<
+    string | null
+  >(null);
+  const [passwordCaptchaVersion, setPasswordCaptchaVersion] = useState(0);
+  const [resetCaptchaToken, setResetCaptchaToken] = useState<string | null>(
+    null
+  );
+  const [resetCaptchaVersion, setResetCaptchaVersion] = useState(0);
 
   async function onChangeEmail(event: FormEvent) {
     event.preventDefault();
@@ -70,13 +118,17 @@ export function AccountSecurityForm({
     }
     setEmailPending(true);
     try {
+      if (AUTH_CAPTCHA_ENABLED && !emailCaptchaToken) {
+        throw new Error(CAPTCHA_REQUIRED_MESSAGE);
+      }
       const supabase = createBrowserSupabaseClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password: emailPassword,
+        options: { captchaToken: emailCaptchaToken ?? undefined },
       });
       if (authError) {
-        throw new Error("Current password is incorrect.");
+        throw new Error(passwordVerificationMessage(authError));
       }
       const { error: updateError } = await supabase.auth.updateUser(
         { email: next },
@@ -103,6 +155,8 @@ export function AccountSecurityForm({
       );
     } finally {
       setEmailPending(false);
+      setEmailCaptchaToken(null);
+      setEmailCaptchaVersion((current) => current + 1);
     }
   }
 
@@ -124,13 +178,17 @@ export function AccountSecurityForm({
     }
     setPasswordPending(true);
     try {
+      if (AUTH_CAPTCHA_ENABLED && !passwordCaptchaToken) {
+        throw new Error(CAPTCHA_REQUIRED_MESSAGE);
+      }
       const supabase = createBrowserSupabaseClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password: currentPassword,
+        options: { captchaToken: passwordCaptchaToken ?? undefined },
       });
       if (authError) {
-        throw new Error("Current password is incorrect.");
+        throw new Error(passwordVerificationMessage(authError));
       }
       const { error: updateError } = await supabase.auth.updateUser({
         password,
@@ -151,6 +209,8 @@ export function AccountSecurityForm({
       );
     } finally {
       setPasswordPending(false);
+      setPasswordCaptchaToken(null);
+      setPasswordCaptchaVersion((current) => current + 1);
     }
   }
 
@@ -159,9 +219,13 @@ export function AccountSecurityForm({
     setResetMessage(null);
     setResetPending(true);
     try {
+      if (AUTH_CAPTCHA_ENABLED && !resetCaptchaToken) {
+        throw new Error(CAPTCHA_REQUIRED_MESSAGE);
+      }
       const supabase = createBrowserSupabaseClient();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+        captchaToken: resetCaptchaToken ?? undefined,
       });
       if (error) throw error;
       setResetMessage(
@@ -170,9 +234,17 @@ export function AccountSecurityForm({
       void recordAccountInAppAlert("password_reset_requested");
     } catch (err) {
       console.error("Password reset request failed:", err);
-      setResetError("Could not send the reset email. Try again.");
+      const message = err instanceof Error ? err.message : "";
+      setResetError(
+        message === CAPTCHA_REQUIRED_MESSAGE ||
+          message.toLowerCase().includes("captcha")
+          ? "Complete the security check, then try again."
+          : "Could not send the reset email. Try again."
+      );
     } finally {
       setResetPending(false);
+      setResetCaptchaToken(null);
+      setResetCaptchaVersion((current) => current + 1);
     }
   }
 
@@ -237,6 +309,12 @@ export function AccountSecurityForm({
               onChange={(e) => setEmailPassword(e.target.value)}
             />
           </label>
+          {AUTH_CAPTCHA_ENABLED ? (
+            <AuthCaptcha
+              key={emailCaptchaVersion}
+              onTokenChange={setEmailCaptchaToken}
+            />
+          ) : null}
           {emailError ? (
             <p className="text-sm font-medium text-brand-red" role="alert">
               {emailError}
@@ -249,7 +327,9 @@ export function AccountSecurityForm({
           ) : null}
           <button
             type="submit"
-            disabled={emailPending}
+            disabled={
+              emailPending || (AUTH_CAPTCHA_ENABLED && !emailCaptchaToken)
+            }
             className="cta-enabled w-fit disabled:opacity-60"
           >
             {emailPending ? "Sending confirmation…" : "Change email"}
@@ -348,6 +428,12 @@ export function AccountSecurityForm({
               value={confirm}
               onChange={setConfirm}
             />
+            {AUTH_CAPTCHA_ENABLED ? (
+              <AuthCaptcha
+                key={passwordCaptchaVersion}
+                onTokenChange={setPasswordCaptchaToken}
+              />
+            ) : null}
             {passwordError ? (
               <p className="text-sm font-medium text-brand-red" role="alert">
                 {passwordError}
@@ -360,7 +446,10 @@ export function AccountSecurityForm({
             ) : null}
             <button
               type="submit"
-              disabled={passwordPending}
+              disabled={
+                passwordPending ||
+                (AUTH_CAPTCHA_ENABLED && !passwordCaptchaToken)
+              }
               className="cta-enabled w-fit disabled:opacity-60"
             >
               {passwordPending ? "Updating…" : "Change password"}
@@ -373,6 +462,14 @@ export function AccountSecurityForm({
               <span className="font-medium text-foreground">{email}</span>.
               Open it to set a new password.
             </p>
+            {AUTH_CAPTCHA_ENABLED ? (
+              <div className="mt-4">
+                <AuthCaptcha
+                  key={resetCaptchaVersion}
+                  onTokenChange={setResetCaptchaToken}
+                />
+              </div>
+            ) : null}
             {resetError ? (
               <p className="mt-3 text-sm font-medium text-brand-red" role="alert">
                 {resetError}
@@ -385,7 +482,9 @@ export function AccountSecurityForm({
             ) : null}
             <button
               type="button"
-              disabled={resetPending}
+              disabled={
+                resetPending || (AUTH_CAPTCHA_ENABLED && !resetCaptchaToken)
+              }
               onClick={() => void onSendPasswordReset()}
               className="cta-enabled mt-4 w-fit disabled:opacity-60"
             >

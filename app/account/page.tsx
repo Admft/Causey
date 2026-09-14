@@ -192,8 +192,9 @@ export default async function AccountPage() {
         Sign-in
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted">
-        Change the email or password used to access Causey. Both require your
-        current password.
+        Change the email or password used to access Causey. Changing either
+        in place requires your current password. You can also email a reset
+        link.
       </p>
       <div className="mt-6">
         <AccountSecurityForm

@@ -18,6 +18,16 @@ describe("authentication CAPTCHA protection", () => {
     expect(signup).toContain("supabase.auth.resend");
     expect(login).toContain("options: { captchaToken: captchaToken ?? undefined }");
     expect(recovery).toContain("captchaToken: captchaToken ?? undefined");
+    const account = read("components/AccountSecurityForm.tsx");
+    expect(account).toContain(
+      "options: { captchaToken: emailCaptchaToken ?? undefined }"
+    );
+    expect(account).toContain(
+      "options: { captchaToken: passwordCaptchaToken ?? undefined }"
+    );
+    expect(account).toContain(
+      "captchaToken: resetCaptchaToken ?? undefined"
+    );
   });
 
   it("allows hCaptcha scripts, requests, and frames through the CSP", () => {
