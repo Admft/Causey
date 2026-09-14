@@ -37,7 +37,12 @@ describe("parent → student separate-device handoff", () => {
     expect(signupPage).toContain('requestedSignupRole === "student"');
     expect(signupPage).toContain("AlreadySignedInSignup");
     expect(parentGate).toContain("Open this on the student’s device");
-    expect(parentGate).toContain("/family#student-account-setup");
+    // #student-account-setup only exists for parents with no linked or
+    // pending students, so the gate links to plain /family plus the
+    // always-mounted #link-student section.
+    expect(parentGate).toContain('href="/family"');
+    expect(parentGate).toContain("/family#link-student");
+    expect(parentGate).not.toContain("/family#student-account-setup");
     expect(parentGate).not.toContain("SignupForm");
   });
 

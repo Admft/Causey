@@ -38,11 +38,10 @@ export function ParentStudentSignupGate({
           </li>
         </ol>
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          <Link
-            href="/family#student-account-setup"
-            className="cta-enabled inline-flex"
-          >
-            Back to Family setup
+          {/* No hash: #student-account-setup only exists for parents with no
+              linked or pending students, which this gate cannot know. */}
+          <Link href="/family" className="cta-enabled inline-flex">
+            Back to Family
           </Link>
           <Link
             href="/family#link-student"
