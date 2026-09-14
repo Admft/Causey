@@ -45,7 +45,15 @@ const OrgSettingsSchema = z.object({
   orgId: z.string().uuid(),
   orgSlug: z.string().min(1),
   name: z.string().trim().min(2).max(80),
-  state: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+  state: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine(
+      (value) => value === "" || /^[A-Z]{2}$/.test(value),
+      "Enter a two-letter state, or leave it blank."
+    )
+    .transform((value) => (value === "" ? null : value)),
   websiteUrl: z
     .string()
     .trim()

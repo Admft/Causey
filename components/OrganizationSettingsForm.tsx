@@ -161,7 +161,7 @@ export function OrganizationSettingsForm({
               onChange={(event) =>
                 setState(event.target.value.toUpperCase().slice(0, 2))
               }
-              required
+              required={org.type === "school" || org.type === "district"}
               pattern="[A-Z]{2}"
             />
           </label>
@@ -178,8 +178,13 @@ export function OrganizationSettingsForm({
               maxLength={200}
             />
             <span className="mt-1 block text-xs text-muted">
-              Members see this on the club overview. It is not a public
-              directory listing.
+              Members see this on the{" "}
+              {org.type === "club" || org.type === "team"
+                ? org.type
+                : org.type === "district"
+                  ? "district"
+                  : "school"}{" "}
+              overview. It is not a public directory listing.
             </span>
           </label>
           <label>
