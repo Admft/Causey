@@ -1318,9 +1318,18 @@ export async function adminSetTournamentStatus(input: {
   }
 
   const supabase = await createServerSupabaseClient();
+  const reviewedAt = new Date().toISOString();
+  const patch =
+    parsed.data.status === "published"
+      ? {
+          status: parsed.data.status,
+          reviewed_at: reviewedAt,
+          reviewed_by: admin.id,
+        }
+      : { status: parsed.data.status };
   const { data, error } = await supabase
     .from("competitions")
-    .update({ status: parsed.data.status })
+    .update(patch)
     .eq("id", parsed.data.competitionId)
     .select("id");
   if (error || !data?.length) {
@@ -1392,9 +1401,18 @@ export async function adminBulkSetTournamentStatus(input: {
 
   const ids = [...new Set(parsed.data.competitionIds)];
   const supabase = await createServerSupabaseClient();
+  const reviewedAt = new Date().toISOString();
+  const patch =
+    parsed.data.status === "published"
+      ? {
+          status: parsed.data.status,
+          reviewed_at: reviewedAt,
+          reviewed_by: admin.id,
+        }
+      : { status: parsed.data.status };
   const { data, error } = await supabase
     .from("competitions")
-    .update({ status: parsed.data.status })
+    .update(patch)
     .in("id", ids)
     .select("id");
   if (error) {
