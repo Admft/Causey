@@ -26,14 +26,18 @@ export function AdminOrganizationReviewActions({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [pendingStatus, setPendingStatus] =
+    useState<VerificationStatus | null>(null);
 
   function submit(status: VerificationStatus, correctionNote: string) {
     setMessage(null);
     setError(null);
+    setPendingStatus(status);
     startTransition(async () => {
       const result = await attemptAction(() =>
         adminReviewOrganization({ orgId, orgSlug, status, note: correctionNote })
       );
+      setPendingStatus(null);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -90,7 +94,9 @@ export function AdminOrganizationReviewActions({
             disabled={isPending}
             className="cta-enabled disabled:opacity-60"
           >
-            {isPending ? "Saving…" : "Verify organization"}
+            {isPending && pendingStatus === "verified"
+              ? "Saving…"
+              : "Verify organization"}
           </button>
         ) : null}
         <button
@@ -116,7 +122,9 @@ export function AdminOrganizationReviewActions({
             disabled={isPending}
             className="action-button"
           >
-            Back to pending
+            {isPending && pendingStatus === "pending"
+              ? "Moving…"
+              : "Back to pending"}
           </button>
         ) : null}
       </div>
@@ -142,7 +150,9 @@ export function AdminOrganizationReviewActions({
             disabled={isPending}
             className="cta-enabled justify-self-start disabled:opacity-60"
           >
-            {isPending ? "Sending…" : "Send correction"}
+            {isPending && pendingStatus === "rejected"
+              ? "Sending…"
+              : "Send correction"}
           </button>
         </div>
       ) : null}
