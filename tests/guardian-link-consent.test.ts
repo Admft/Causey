@@ -109,6 +109,14 @@ describe("0075 does not let a parent probe for student accounts", () => {
     );
   });
 
+  it("counts only parent-opened pending requests on Family", () => {
+    const portal = read("lib/data/portal.ts");
+    const fn = portal.slice(
+      portal.indexOf("export async function getPendingChildRequestCount")
+    );
+    expect(fn).toContain('.eq("requested_by", userId)');
+  });
+
   it("requires a role on each side", () => {
     expect(functionBody(migration, "request_child_link")).toContain(
       "p.role = 'parent'"
@@ -263,6 +271,7 @@ describe("guardian link surfaces", () => {
     const form = read("components/GuardianLinkRequestForm.tsx");
     expect(page).toContain("GuardianLinkRequestForm");
     expect(form).toContain("requestGuardianLink");
+    expect(form).toContain("Could not send the link request");
     expect(form).toContain("/signup?role=parent");
     // Opening the link themselves would sign the student out.
     expect(form).toContain("you’ll be signed out of your own account");

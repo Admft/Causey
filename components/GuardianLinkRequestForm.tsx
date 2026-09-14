@@ -31,6 +31,10 @@ export function GuardianLinkRequestForm() {
       setMessage(result.message);
       setEmail("");
       router.refresh();
+    } catch {
+      setError(
+        "Could not send the link request. Check your connection and try again."
+      );
     } finally {
       setPending(false);
     }
