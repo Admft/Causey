@@ -15,6 +15,7 @@ import { RsvpButtons } from "@/components/RsvpButtons";
 import { getSessionUser } from "@/lib/auth/session";
 import { competitionTypeLabel } from "@/lib/competition-types";
 import { isCompetitionStarted } from "@/lib/competition-timing";
+import { getViewerTodayIso } from "@/lib/viewer-today";
 import {
   getDistrictPilotReadiness,
   getOrgStaffDirectory,
@@ -144,6 +145,7 @@ export default async function OrgPage({
     seasonAttendanceResult,
     connectedSchools,
     schoolStaffResult,
+    today,
   ] =
     await Promise.all([
     isCoach ? Promise.resolve([]) : getMyEntrantRows(user.id),
@@ -166,6 +168,7 @@ export default async function OrgPage({
     org.type === "school" && isAdmin
       ? getOrgStaffDirectory(org.id)
       : Promise.resolve(null),
+    getViewerTodayIso(user.id),
   ]);
   const events = competitionWorkspace?.events ?? directEvents;
   const drafts = competitionWorkspace?.drafts ?? directDrafts;
@@ -209,7 +212,6 @@ export default async function OrgPage({
     (org.owner_profile_id ?? org.created_by) !== user.id &&
     (!org.owner_profile_id || org.owner_profile_id === org.created_by);
 
-  const today = new Date().toISOString().slice(0, 10);
   const activeEvents = events.filter((event) => event.status !== "archived");
   const upcoming = activeEvents.filter((e) => isUpcomingEvent(e, today));
   const districtUpcoming = (competitionWorkspace?.events ?? []).filter(
@@ -578,6 +580,7 @@ export default async function OrgPage({
       (school) =>
         getDistrictSchoolReadinessStatus(school, org.slug).ready
     ).length ?? 0;
+  const hasDistrictSchools = Boolean(districtReadiness?.schools.length);
   const seasonPlacements = seasonAttendance.flatMap((row) => {
     const recorded = formatRecordedResult({
       placement: row.placement,
@@ -711,67 +714,78 @@ export default async function OrgPage({
         ) : null}
 
         {org.type === "district" && isAdmin && districtAction ? (
-          <section className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
-            <div>
-              <PortalMission
-                title={districtAction.title}
-                description={districtAction.description}
-                action={{
-                  href: districtAction.href,
-                  label: districtAction.label,
-                }}
-                secondary={
-                  districtSecondary
-                    ? {
-                        href: districtSecondary.href,
-                        label: districtSecondary.label,
-                      }
-                    : undefined
-                }
-              />
-            </div>
-
-            <div className="border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <div>
-                  <h2 className="text-sm font-semibold text-foreground">
-                    School pilot readiness
-                  </h2>
-                  <p className="mt-1 text-xs text-muted">
-                    {readySchoolCount} of{" "}
-                    {districtReadiness?.schools.length ?? 0} ready
-                  </p>
-                </div>
-                <Link
-                  href={
-                    districtReadiness?.schools.length
-                      ? `/orgs/${org.slug}/schools`
-                      : `#add-school`
-                  }
-                  className="text-xs font-semibold text-muted-strong hover:text-brand-red"
-                >
-                  {districtReadiness?.schools.length
-                    ? "Add another school"
-                    : "Add a school"}
-                </Link>
+          districtAction.stage === "create_school" ? (
+            <section className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+              <div>
+                <PortalMission
+                  title={districtAction.title}
+                  description={districtAction.description}
+                />
               </div>
 
-              {!districtReadiness?.schools.length ? (
-                <div id="add-school" className="mt-4 scroll-mt-24">
-                  <p className="mb-4 max-w-prose text-sm text-muted">
-                    No school workspaces yet. Create one here, then invite its
-                    school administrator. Coaches are assigned on the school,
-                    not from this district office.
-                  </p>
+              <div
+                id="add-school"
+                className="scroll-mt-24 border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0"
+              >
+                <h2 className="text-sm font-semibold text-foreground">
+                  Create school
+                </h2>
+                <p className="mt-1 max-w-prose text-xs text-muted">
+                  After creation, Causey opens the school staffing step so you
+                  can invite its administrator. Coaches are assigned on the
+                  school, not from this district office.
+                </p>
+                <div className="mt-5">
                   <DistrictSchoolForm
                     districtId={org.id}
                     districtSlug={org.slug}
                     defaultState={org.state}
                   />
                 </div>
-              ) : (
+              </div>
+            </section>
+          ) : (
+            <section className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+              <div>
+                <PortalMission
+                  title={districtAction.title}
+                  description={districtAction.description}
+                  action={{
+                    href: districtAction.href,
+                    label: districtAction.label,
+                  }}
+                  secondary={
+                    districtSecondary
+                      ? {
+                          href: districtSecondary.href,
+                          label: districtSecondary.label,
+                        }
+                      : undefined
+                  }
+                />
+              </div>
+
+              <div className="border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-foreground">
+                      School pilot readiness
+                    </h2>
+                    <p className="mt-1 text-xs text-muted">
+                      {readySchoolCount} of{" "}
+                      {districtReadiness?.schools.length ?? 0} ready
+                    </p>
+                  </div>
+                  <Link
+                    href={`/orgs/${org.slug}/schools`}
+                    className="text-xs font-semibold text-muted-strong hover:text-brand-red"
+                  >
+                    Add another school
+                  </Link>
+                </div>
+
                 <ul className="mt-4 divide-y divide-line border-y border-line">
-                  {districtReadiness.schools.map((school) => {
+                  {districtReadiness?.schools.map((school) => {
                     const status = getDistrictSchoolReadinessStatus(
                       school,
                       org.slug
@@ -809,9 +823,9 @@ export default async function OrgPage({
                     );
                   })}
                 </ul>
-              )}
-            </div>
-          </section>
+              </div>
+            </section>
+          )
         ) : null}
 
         {org.type === "district" && isAdmin ? (
@@ -841,8 +855,10 @@ export default async function OrgPage({
                   className="font-semibold text-brand-red hover:underline"
                 >
                   Create a district-wide competition
-                </Link>{" "}
-                or open a school workspace to host one there.
+                </Link>
+                {hasDistrictSchools
+                  ? " or open a school workspace to host one there."
+                  : "."}
               </p>
             ) : (
               <ul className="mt-4 divide-y divide-line border-y border-line">
@@ -1281,7 +1297,8 @@ export default async function OrgPage({
           </section>
         ) : null}
 
-        {!isCoach && membership?.status === "active" ? (
+        {membership?.status === "active" &&
+        org.owner_profile_id !== user.id ? (
           <div className="mt-10 border-t border-line pt-8">
             <LeaveOrgButton orgId={org.id} orgName={org.name} />
           </div>
