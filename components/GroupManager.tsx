@@ -29,12 +29,14 @@ export function GroupManager({
   groups,
   roster,
   staff = [],
+  orgType,
 }: {
   orgId: string;
   orgSlug: string;
   groups: GroupWithMembers[];
   roster: RosterEntry[];
   staff?: StaffEntry[];
+  orgType?: "school" | "district" | "club" | "team";
 }) {
   const router = useRouter();
   const [newName, setNewName] = useState("");
@@ -150,7 +152,9 @@ export function GroupManager({
           return;
         }
         setStatus(
-          `${group.name} staff updated. Those coaches now see only their assigned groups.`
+          orgType === "club" || orgType === "team"
+            ? `${group.name} staff updated. Assignment is organizational — club and team coaches still see the full roster.`
+            : `${group.name} staff updated. Those coaches now see only their assigned groups.`
         );
         router.refresh();
       } finally {
@@ -279,8 +283,9 @@ export function GroupManager({
                           Assigned coaches
                         </h5>
                         <p className="mt-1 text-xs text-muted">
-                          Coaches can operate these students. Assistants can
-                          review them but cannot make changes.
+                          {orgType === "club" || orgType === "team"
+                            ? "Assignment is organizational. Club and team coaches still see every student on the roster."
+                            : "Those coaches now see only their assigned groups. Assistants can review them but cannot make changes."}
                         </p>
                         <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
                           {staff.map((member) => (
