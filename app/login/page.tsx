@@ -25,10 +25,16 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const next = sanitizeNextPath(params.next);
+  const callbackError =
+    params.error === "auth_config"
+      ? "Sign-in is misconfigured on this build. Try again later, or report a problem."
+      : params.error === "auth"
+        ? "That confirmation or reset link is expired or already used. Request a new one, or sign in if your account is already confirmed."
+        : null;
   const user = await getSessionUser();
   if (user && !isClaimNextPath(next) && !isJoinCodeNextPath(next)) {
     const profile = await getCurrentProfile();
@@ -83,6 +89,37 @@ export default async function LoginPage({
             {heading}
           </h1>
           <p className="mt-3 text-md text-muted">{supporting}</p>
+          {callbackError ? (
+            <div className="mt-5 rounded-xl border border-brand-red/25 bg-accent-soft p-4" role="alert">
+              <p className="text-sm font-medium text-foreground">{callbackError}</p>
+              {params.error === "auth" ? (
+                <p className="mt-2 text-sm text-muted">
+                  <Link
+                    href="/forgot-password"
+                    className="font-semibold text-brand-red hover:underline"
+                  >
+                    Request a new reset link
+                  </Link>
+                  {" · "}
+                  <Link
+                    href="/support"
+                    className="font-semibold text-brand-red hover:underline"
+                  >
+                    Report a problem
+                  </Link>
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-muted">
+                  <Link
+                    href="/support"
+                    className="font-semibold text-brand-red hover:underline"
+                  >
+                    Report a problem
+                  </Link>
+                </p>
+              )}
+            </div>
+          ) : null}
 
           {isJoiningOrganization || isClaimingInvitation ? (
             <div className="mt-6 rounded-2xl border border-brand-blue/45 bg-brand-blue-soft p-5 sm:p-6">
