@@ -56,7 +56,8 @@ export function CancelTournamentButton({
           <button
             type="button"
             onClick={() => setConfirming(false)}
-            className="action-button"
+            disabled={pending}
+            className="action-button disabled:opacity-60"
           >
             Keep it
           </button>
