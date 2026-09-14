@@ -57,6 +57,9 @@ export function AdminOrgMembersPanel({
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [pendingSource, setPendingSource] = useState<"search" | "page" | null>(
+    null
+  );
 
   const firstResult = total ? (page - 1) * PAGE_SIZE + 1 : 0;
   const lastResult = Math.min(page * PAGE_SIZE, total);
@@ -66,9 +69,11 @@ export function AdminOrgMembersPanel({
   function search(
     nextPage: number,
     nextQuery = appliedQuery,
-    nextRole = appliedRole
+    nextRole = appliedRole,
+    source: "search" | "page" = "page"
   ) {
     setError(null);
+    setPendingSource(source);
     startTransition(async () => {
       const result = await attemptAction(() =>
         adminSearchOrgMembers({
@@ -83,6 +88,7 @@ export function AdminOrgMembersPanel({
         setTotal(0);
         setError(result.error);
         setLoaded(true);
+        setPendingSource(null);
         return;
       }
       setMembers(result.members);
@@ -91,6 +97,7 @@ export function AdminOrgMembersPanel({
       setAppliedQuery(nextQuery);
       setAppliedRole(nextRole);
       setLoaded(true);
+      setPendingSource(null);
     });
   }
 
@@ -103,7 +110,7 @@ export function AdminOrgMembersPanel({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    search(1, query.trim(), role);
+    search(1, query.trim(), role, "search");
   }
 
   return (
@@ -163,7 +170,7 @@ export function AdminOrgMembersPanel({
           className="cta-enabled disabled:opacity-60"
           disabled={isPending}
         >
-          {isPending ? "Searching…" : "Search"}
+          {isPending && pendingSource === "search" ? "Searching…" : "Search"}
         </button>
       </form>
 
