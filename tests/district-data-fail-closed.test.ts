@@ -298,11 +298,17 @@ describe("district read failure surfaces", () => {
     const overview = source("app/orgs/[slug]/page.tsx");
     const reports = source("app/orgs/[slug]/reports/page.tsx");
     const csv = source("app/orgs/[slug]/reports/export/route.ts");
+    const manage = source("app/event/[slug]/manage/page.tsx");
 
     expect(overview).toContain("School readiness could not load");
     expect(overview).toContain("Retry school readiness");
     expect(reports).toContain("District reporting could not load");
     expect(reports).toContain("No totals or CSV were generated.");
+    expect(manage).toContain("districtSummaryFailed");
+    expect(manage).toContain(
+      "No invite actions were offered. Retry this page before treating"
+    );
+    expect(manage).toContain("{districtSummaryFailed ? null : (");
     expect(reports).toContain("District-hosted competitions");
     expect(reports).toContain("They are not");
     expect(reports).toContain("District-hosted by participating school");

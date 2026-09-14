@@ -16,6 +16,7 @@ import { PublishTournamentPanel } from "@/components/PublishTournamentPanel";
 import { isCompetitionStarted } from "@/lib/competition-timing";
 import { getSessionUser } from "@/lib/auth/session";
 import { getDistrictEventSchoolSummary } from "@/lib/data/district";
+import { getViewerTodayIso } from "@/lib/viewer-today";
 import {
   canManageCompetitionAsViewer,
   getChildSchoolsForDistrict,
@@ -112,6 +113,7 @@ export default async function ManageEventPage({
   const districtSummaryResult = districtOfficeView
     ? await getDistrictEventSchoolSummary(competition.id)
     : null;
+  const districtSummaryFailed = districtSummaryResult?.ok === false;
   const districtSchoolSummary =
     districtSummaryResult?.ok === true ? districtSummaryResult.data : [];
   const attendance = districtOfficeView
@@ -218,7 +220,7 @@ export default async function ManageEventPage({
         awaiting: districtAwaiting,
       }
     : summarizeAttendance(labeledAttendance);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = await getViewerTodayIso(user.id);
   const attendanceOpen = isCompetitionStarted(competition, today);
   const isDraft = canManage && competition.status === "draft";
   const needsInvite = !isDraft && !visibleAttendance.length;
@@ -232,7 +234,9 @@ export default async function ManageEventPage({
   ).length;
   const inviteFirst =
     !isDraft &&
-    ((districtOfficeView ? districtInvited === 0 : needsInvite) ||
+    ((districtOfficeView
+      ? districtSummaryFailed || districtInvited === 0
+      : needsInvite) ||
       (candidates.length > 0 && !needsReplies && !attendanceOpen));
   const resultSections = competition.sections.map((section) => ({
     id: section.id,
@@ -491,50 +495,59 @@ export default async function ManageEventPage({
       <p className="mt-1 text-sm text-muted">
         {isDistrictHost
           ? districtOfficeView
-            ? "Invite every active connected-school roster in one step. Student names stay with school staff."
+            ? districtSummaryFailed
+              ? "School roster totals could not load. Retry before inviting schools or treating this event as empty."
+              : "Invite every active connected-school roster in one step. Student names stay with school staff."
             : "Invite students from your assigned school groups."
           : "Groups invite in one step. Individual picks work when you only need a few students."}
       </p>
       <div className="mt-4">
-        <EntrantManager
-          competitionId={competition.id}
-          eventSlug={competition.slug}
-          candidates={candidates}
-          groups={groups.map((g) => ({
-            id: g.id,
-            name: g.name,
-            memberCount: g.member_ids.length,
-          }))}
-          hasActiveRoster={
-            districtOfficeView
-              ? districtActiveStudents > 0
-              : activeStudents.length > 0
-          }
-          rosterHref={rosterHref}
-          rosterLinkLabel={
-            isDistrictHost
-              ? childSchools.length
-                ? "Open a school roster"
-                : "Add a school"
-              : "Open the roster"
-          }
-          inviteAllConnected={
-            isDistrictHost && canManage && candidates.length
-              ? {
-                  studentCount: candidates.length,
-                  schoolCount: childSchools.length,
-                }
-              : districtOfficeView && districtNotInvited > 0
+        {districtSummaryFailed ? (
+          <p className="text-sm font-medium text-brand-red" role="alert">
+            No invite actions were offered. Retry this page before treating
+            connected schools as empty.
+          </p>
+        ) : (
+          <EntrantManager
+            competitionId={competition.id}
+            eventSlug={competition.slug}
+            candidates={candidates}
+            groups={groups.map((g) => ({
+              id: g.id,
+              name: g.name,
+              memberCount: g.member_ids.length,
+            }))}
+            hasActiveRoster={
+              districtOfficeView
+                ? districtActiveStudents > 0
+                : activeStudents.length > 0
+            }
+            rosterHref={rosterHref}
+            rosterLinkLabel={
+              isDistrictHost
+                ? childSchools.length
+                  ? "Open a school roster"
+                  : "Add a school"
+                : "Open the roster"
+            }
+            inviteAllConnected={
+              isDistrictHost && canManage && candidates.length
                 ? {
-                    studentCount: districtNotInvited,
-                    schoolCount: districtSchoolSummary.filter(
-                      (school) => school.not_invited > 0
-                    ).length,
+                    studentCount: candidates.length,
+                    schoolCount: childSchools.length,
                   }
-              : null
-          }
-          isDistrictHosted={isDistrictHost}
-        />
+                : districtOfficeView && districtNotInvited > 0
+                  ? {
+                      studentCount: districtNotInvited,
+                      schoolCount: districtSchoolSummary.filter(
+                        (school) => school.not_invited > 0
+                      ).length,
+                    }
+                  : null
+            }
+            isDistrictHosted={isDistrictHost}
+          />
+        )}
       </div>
     </section>
   );
@@ -684,10 +697,12 @@ export default async function ManageEventPage({
         <h2 className="text-sm font-semibold text-foreground">
           School reply totals
         </h2>
-        <p className="text-xs text-muted">
-          {districtGoing} going · {districtNotGoing} can&rsquo;t go ·{" "}
-          {districtAwaiting} awaiting
-        </p>
+        {districtSummaryFailed ? null : (
+          <p className="text-xs text-muted">
+            {districtGoing} going · {districtNotGoing} can&rsquo;t go ·{" "}
+            {districtAwaiting} awaiting
+          </p>
+        )}
       </div>
       <p className="mt-2 max-w-prose text-sm text-muted">
         District staff see aggregate school totals only. School administrators
