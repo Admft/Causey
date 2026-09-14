@@ -25,10 +25,15 @@ export async function performDeleteOwnAccount(input: {
   if (!error) return { ok: true };
 
   if (error.message.includes("owns_organization")) {
+    const ownedName =
+      typeof error.hint === "string" && error.hint.trim()
+        ? error.hint.trim()
+        : null;
     return {
       ok: false,
-      error:
-        "Transfer ownership of every organization you own before deleting this account.",
+      error: ownedName
+        ? `Transfer ownership of ${ownedName} before deleting this account.`
+        : "Transfer ownership of every organization you own before deleting this account.",
     };
   }
   if (error.message.includes("cannot_delete_super_admin")) {

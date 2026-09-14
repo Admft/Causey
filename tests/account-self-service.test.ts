@@ -13,6 +13,10 @@ describe("account export and self-service delete", () => {
     expect(read("app/api/account/export/route.ts")).toContain("linked_students");
     expect(read("lib/account-delete.ts")).toContain("delete_own_account");
     expect(read("lib/account-delete.ts")).toContain("owns_organization");
+    expect(read("lib/account-delete.ts")).toContain("error.hint");
+    expect(read("components/AccountDataControls.tsx")).toContain(
+      "Transfer ownership of any organization you own first"
+    );
     expect(read("lib/actions/account-data.ts")).toContain(
       "performDeleteOwnAccount"
     );

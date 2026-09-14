@@ -45,7 +45,7 @@ export function AccountDataControls({ email }: { email: string }) {
         <h3 className="text-sm font-semibold text-foreground">Delete account</h3>
         <p className="mt-2 max-w-prose text-sm text-muted">
           Permanently removes this sign-in and the Causey records attached to
-          it. Transfer ownership of any school or club you own first. Type{" "}
+          it. Transfer ownership of any organization you own first. Type{" "}
           <span className="font-medium text-foreground">{email}</span> to
           confirm.
         </p>
