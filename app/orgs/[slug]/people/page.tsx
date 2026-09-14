@@ -57,7 +57,6 @@ export default async function OrganizationPeoplePage({
     ? staffResult.data.filter(
         (row) =>
           row.org_id === view.org.id &&
-          row.profile_id !== user.id &&
           row.member_status === "active" &&
           (row.member_role === "school_admin" ||
             row.member_role === "admin")
