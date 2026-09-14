@@ -31,11 +31,16 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Restore signed-out tournament search: unpublished-manager SELECT
-  policies must not call `is_org_coach` for anon — 2026-09-14
+- Guard unsigned search: migration invariant + production smoke so
+  PUBLIC competition SELECT cannot name `is_org_coach` again — 2026-09-14
 
 ## Last tick
 
+- 2026-09-14 — Added CI protections so the Saturday unsigned-search
+  500 cannot land again: `validate:migrations` fails if competitions or
+  sections SELECT policies name staff helpers for anon/public, and
+  `smoke:public-directory` hits causey.dev search, event, and pathways
+  without a session.
 - 2026-09-14 — Signed-out search 500ed on causey.dev (`permission denied
   for function is_org_coach`) while a signed-in session on this machine
   still worked. Live unpublished-manager policies on competitions/sections
