@@ -4,6 +4,34 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { actionErrorMessage } from "@/lib/actions/errors";
+
+function clientMutationMessage(
+  err: unknown,
+  fallback: string,
+  duplicateMessage?: string
+): string {
+  const code =
+    err && typeof err === "object" && "code" in err
+      ? String((err as { code?: string }).code)
+      : "";
+  const message =
+    err instanceof Error
+      ? err.message
+      : err && typeof err === "object" && "message" in err
+        ? String((err as { message?: string }).message)
+        : "";
+  const lower = message.toLowerCase();
+  if (
+    duplicateMessage &&
+    (code === "23505" ||
+      lower.includes("duplicate key") ||
+      lower.includes("unique constraint"))
+  ) {
+    return duplicateMessage;
+  }
+  return actionErrorMessage({ code, message }, fallback);
+}
 
 type SaveCompetitionButtonProps = {
   competitionId: string;
@@ -73,7 +101,14 @@ function SaveCompetitionControl({
       }
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update save.");
+      console.error("Save tournament toggle failed:", err);
+      setError(
+        clientMutationMessage(
+          err,
+          "Could not update save. Try again.",
+          saved ? "Already removed from your profile." : "Already saved to your profile."
+        )
+      );
     } finally {
       setPending(false);
     }
@@ -179,7 +214,10 @@ function DifficultyRatingControl({
       setScore(next);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save rating.");
+      console.error("Difficulty rating failed:", err);
+      setError(
+        clientMutationMessage(err, "Could not save that rating. Try again.")
+      );
     } finally {
       setPending(false);
     }

@@ -164,6 +164,8 @@ describe("event difficulty rating layout", () => {
     expect(ratingActions).toContain("aria-pressed");
     expect(ratingActions).toContain("Remove rating");
     expect(ratingActions).toContain(".delete()");
+    expect(ratingActions).toContain("clientMutationMessage");
+    expect(ratingActions).toContain("Already saved to your profile.");
     expect(ratingActions).not.toContain("grid w-full grid-cols-5 gap-1");
     expect(eventPage).toContain("DifficultyRating");
   });
