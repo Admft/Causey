@@ -17,7 +17,26 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Family RSVP clear, household consent, public-listing edits, and club
+  roster gates: coach-invite clear notifies without failing; household Going
+  rows delete instead of becoming phantom invites; parent pending counts only
+  parent-opened requests; join codes refuse non-students; approved public
+  edits stay published (`0104`); club Remove / rotate-code are admin-only;
+  roster read failures fail closed — 2026-09-13
+- [x] Claimed school administrators count as the delegated admin on People, so
+  they see pending invites or roster next steps instead of a permanent
+  “Delegate this school” mission. District claim (`0103`) also moves
+  super-admin-owned child schools to the new district owner so Hand off school
+  can succeed, and a failed district event summary hides zero totals and empty
+  roster invite framing — 2026-09-13
+- [x] Claim-link signup now verifies the complete invited email before creating
+  an Auth account. The signup screen distinguishes the generic Staff sign-in
+  type from the exact school/district role granted by the invitation, so a
+  mistyped or forwarded address cannot become an unscoped staff account first
+  and fail only after confirmation — 2026-09-13
+- [x] People invite success panel: Copy link / Copy code / Copy all claim links shared one `copied` flag, so copying the activation code lit up "Copied" on the link button and the code button gave no feedback — looked like it copied the wrong value. Each copy action now tracks its own state and confirms on the button actually pressed — 2026-09-13
 - [x] Unassigned school coaches and assistants no longer bounce overview ↔ roster after claim: wait-state mission, manage invite copy, school Staff “Assign groups,” People invite next step, and Activity labels for admin/group-staff audits — 2026-09-13
+- [x] District command-center zero-school state has one real create-school action: the mission CTA and readiness-header link were `#add-school` anchors that did nothing once you were already at the anchor, and the panel read "0 of 0 ready". Now the create_school stage pairs the mission copy with the actual form (anchor kept for admin deep links), the dead anchors and empty count are gone, the events empty state no longer tells a school-less district to "open a school workspace," and `/schools` drops the redundant empty state that duplicated the form above it — 2026-09-12
 - [x] Founder super-admins can permanently delete a school workspace (including orphan “not under a district” schools) from `/admin/organizations`; confirmation accepts hyphen or underscore in the slug (`0101`) — 2026-09-12
 - [x] District and school role consoles now enforce the real hierarchy:
   district administrators get first-class Schools, scoped Staff, delegated

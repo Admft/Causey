@@ -30,10 +30,26 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Unassigned school coach/assistant group-assignment wait state — 2026-09-13
+- Club coaches no longer see Remove / rotate-join-code actions that always
+  fail; family RSVP clear works; editing an approved public listing no longer
+  silently unpublishes — 2026-09-13
 
 ## Last tick
 
+- 2026-09-13 — Family RSVP clear no longer errors after resetting a coach
+  invite; household-created answers delete instead of becoming phantom invites;
+  parent pending-request counts only parent-opened rows; join codes are
+  student-only; editing an approved public event stays published (`0104`);
+  club coaches no longer see Remove / rotate controls that always fail.
+- 2026-09-13 — A claimed school administrator no longer sees a permanent
+  “Delegate this school” mission on People; district claim (`0103`) also
+  moves still-super-admin-owned child schools to the new district owner so the
+  Hand off school CTA can succeed; failed district event summaries hide zero
+  totals and empty-roster invite framing.
+- 2026-09-13 — Staff signup from a claim link now checks the complete invited
+  email before calling Supabase Auth. A forwarded or mistyped address cannot
+  create a generic staff account that only fails at the later claim step; the
+  invitation role remains the source of organization access.
 - 2026-09-13 — Unassigned school coaches and assistants no longer hit a roster redirect loop after claim. Overview and manage show a wait-for-assignment mission; school Staff adds Assign groups; People invite success names the next step; Activity labels administrator grant/revoke and group staff changes with People / Students & groups follow-through. No schema change.
 - 2026-09-12 — Founder super-admins can delete a school from `/admin/organizations` (including orphan schools not under a district) with the same `DELETE {slug}` confirm as districts; hyphens and underscores both count. Migration `0101`.
 - 2026-09-12 — District administrators now get Schools, scoped Staff,

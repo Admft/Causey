@@ -82,6 +82,13 @@ Causey can run an **assisted chess district pilot**: platform-created district, 
   mission (overview + manage) instead of a roster redirect loop; school Staff
   offers Assign groups; People invite success names the next step; Activity
   labels admin grant/revoke and group staff changes — 2026-09-13
+- [x] Claim-link signup checks the complete invited email before creating the
+  account, while the invitation’s stored role remains authoritative for the
+  school or district membership — 2026-09-13
+- [x] School People counts the claimed administrator as the delegated admin;
+  district claim also transfers super-admin-owned child schools (`0103`) so
+  ownership handoff is not a dead end; district event manage fails closed on
+  school totals — 2026-09-13
 - [ ] Email proven at school volume
 - [ ] Owner/legal: price, contract, FERPA/state privacy, retention, public school directory
 

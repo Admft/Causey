@@ -82,7 +82,7 @@ Chess is the working surface. Other competition types exist in the product but a
 | Qualification pathways | Chess pathway explorer for selected series; “Get your kid to chess nationals” pin above chess search | Illustrative scaffolding; swap in verified US Chess rules when they arrive; confirm with the organizer |
 | District → school structure | One district over many schools | Yes, Causey-assisted |
 | Role-based access | Protected district/school owners, delegated administrators, assigned-group coaches, read-only assistants, parents, and students each see scoped work | Yes; migrations through `0100` required |
-| Claim-link provisioning | Email or copyable invite plus a typable activation code; CSV import/export via one set-based RPC; reissue; Causey super admin can provision a district or a child school | Yes |
+| Claim-link provisioning | Email or copyable invite plus a typable activation code; signup verifies the complete invited email before account creation; CSV import/export via one set-based RPC; reissue; Causey super admin can provision a district or a child school; the first district-admin claim also takes still-provisioner-owned child schools so the office can finish school handoff | Yes |
 | Rosters and groups | School/club roster, groups for invites and attendance | Yes |
 | Hosted competitions | Draft → preview → publish; public events go through Causey review; district inventory includes child-school hosts; district-hosted manage invites connected-school rosters, stamps school of origin, and labels replies by school | Yes |
 | Event audiences | Public, district-only, school-only, invite-only | Yes |
@@ -116,7 +116,7 @@ Before a paid student rollout, Causey and the district still have to settle pric
 ## How a pilot is set up
 
 1. **Causey sets up the district** after written approval. The district is not a self-serve signup.
-2. **Each school is created under that district** (by Causey or the district office), then handed to the named school administrator.
+2. **Each school is created under that district** (by Causey or the district office), then handed to the named school administrator. If Causey provisioned the schools before the district office claimed, that claim also takes those school records off the temporary provisioner so the office can finish the school handoff.
 3. **Staff invite their own people** with join links and claim links.
 4. **Coaches run events**; families RSVP and finish organizer registration off-site.
 5. **The district reads totals**, not individual student browsing records.
