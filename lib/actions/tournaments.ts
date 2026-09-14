@@ -754,6 +754,15 @@ export async function updateTournament(
       resubmitted.status === "pending_review"
         ? "pending_review"
         : "published";
+  } else if (existing?.status === "published") {
+    const { data: current } = await supabase
+      .from("competitions")
+      .select("status")
+      .eq("id", values.competitionId)
+      .maybeSingle();
+    if (current?.status === "pending_review") {
+      status = "pending_review";
+    }
   }
 
   if (existing?.category && isDiscoveryCategory(existing.category)) {
