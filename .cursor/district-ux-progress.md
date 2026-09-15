@@ -17,6 +17,10 @@ Living backlog for the continuous improvement loop. Mark items done with date + 
 - [x] Org workspace visual redesign (coach home reads as one clear mission, not panel soup) — 2026-08-05 (426148a)
 
 ## Backend / workflow shipped
+- [x] Account settings match the person looking: alert prefs hide
+  parent/coach no-op guardian routing and student-facing RSVP-update;
+  grade is student-only; Leave sits on leaveable Account org rows with
+  school/district/club nouns; save path enforces role scope — 2026-09-15
 - [x] CI blocks a repeat of unsigned search 500s: migration validation
   rejects PUBLIC competition/section SELECT policies that name staff
   helpers, and CI smokes causey.dev search/event/pathways without a

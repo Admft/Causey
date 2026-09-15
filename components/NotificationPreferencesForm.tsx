@@ -1,9 +1,15 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import type { AccountRole } from "@/lib/auth/types";
 import { saveNotificationPreferences } from "@/lib/actions/district";
 import { attemptAction } from "@/lib/attempt-action";
 import type { NotificationPreferenceRow } from "@/lib/data/district";
+import {
+  notificationPreferenceChoicesForRole,
+  preferenceKeyAppliesToRole,
+  type NotificationPreferenceChoiceKey,
+} from "@/lib/notifications";
 
 const DEFAULTS: NotificationPreferenceRow = {
   invitation: true,
@@ -22,15 +28,21 @@ const DEFAULTS: NotificationPreferenceRow = {
 
 export function NotificationPreferencesForm({
   initial,
+  role,
 }: {
   initial: NotificationPreferenceRow | null;
+  role: AccountRole;
 }) {
   const [values, setValues] = useState(initial ?? DEFAULTS);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const choices = useMemo(
+    () => notificationPreferenceChoicesForRole(role),
+    [role]
+  );
 
-  function toggle(key: keyof NotificationPreferenceRow) {
+  function toggle(key: NotificationPreferenceChoiceKey) {
     setValues((current) => ({
       ...current,
       [key]: !current[key],
@@ -51,11 +63,15 @@ export function NotificationPreferencesForm({
           reminder1Day: values.reminder_1_day,
           scheduleChange: values.schedule_change,
           cancellation: values.cancellation,
-          rsvpUpdate: values.rsvp_update,
+          rsvpUpdate: preferenceKeyAppliesToRole("rsvp_update", role)
+            ? values.rsvp_update
+            : true,
           announcement: values.announcement,
           result: values.result,
           emailEnabled: values.email_enabled,
-          guardianRouting: values.guardian_routing,
+          guardianRouting: preferenceKeyAppliesToRole("guardian_routing", role)
+            ? values.guardian_routing
+            : true,
           timezone: values.timezone,
         })
       );
@@ -63,79 +79,13 @@ export function NotificationPreferencesForm({
         setError(result.error);
         return;
       }
-      setMessage("Preferences saved. In-app and product-email alerts follow these choices.");
+      setMessage(
+        "Preferences saved. In-app and product-email alerts follow these choices."
+      );
     } finally {
       setPending(false);
     }
   }
-
-  const choices: {
-    key: keyof NotificationPreferenceRow;
-    label: string;
-    description: string;
-  }[] = [
-    {
-      key: "invitation",
-      label: "Tournament and organization invitations",
-      description: "In-app when a coach, school, or district needs a response.",
-    },
-    {
-      key: "registration_deadline",
-      label: "Registration deadlines",
-      description:
-        "Show unfinished registration in Needs attention when a deadline is within a week.",
-    },
-    {
-      key: "reminder_7_day",
-      label: "Seven-day reminders",
-      description:
-        "Show saved or going tournaments in Needs attention about a week out.",
-    },
-    {
-      key: "reminder_1_day",
-      label: "One-day reminders",
-      description:
-        "Show saved or going tournaments in Needs attention for today or tomorrow.",
-    },
-    {
-      key: "schedule_change",
-      label: "Date, venue, or registration changes",
-      description: "In-app when a saved or planned tournament changes details.",
-    },
-    {
-      key: "cancellation",
-      label: "Cancellations",
-      description: "In-app when a tracked tournament is cancelled or archived.",
-    },
-    {
-      key: "rsvp_update",
-      label: "RSVP updates",
-      description: "In-app when someone responds to an invitation you sent.",
-    },
-    {
-      key: "announcement",
-      label: "Coach announcements",
-      description: "In-app when your organization posts an update.",
-    },
-    {
-      key: "result",
-      label: "Recorded results",
-      description:
-        "In-app when a coach records a division, place, or award for you or a linked student.",
-    },
-    {
-      key: "email_enabled",
-      label: "Product email",
-      description:
-        "Send enabled invitations, deadlines, reminders, and important updates by email.",
-    },
-    {
-      key: "guardian_routing",
-      label: "Route student deadlines to linked guardians",
-      description:
-        "Also email active linked guardians when a student has an enabled tournament alert.",
-    },
-  ];
 
   return (
     <form onSubmit={submit}>
@@ -172,7 +122,10 @@ export function NotificationPreferencesForm({
           className="field mt-1"
           value={values.timezone}
           onChange={(event) =>
-            setValues((current) => ({ ...current, timezone: event.target.value }))
+            setValues((current) => ({
+              ...current,
+              timezone: event.target.value,
+            }))
           }
         >
           <option value="America/New_York">Eastern</option>

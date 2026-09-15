@@ -285,9 +285,17 @@ describe("official multi-category source adapters", () => {
     );
     expect(scrape).toContain("official-cover");
     expect(scrape).toContain("NSB_HOME_URL");
+    // Popular sort pages in JS so standingSortRank can lift national DOE
+    // rows when interest counts are tied (same path for every category).
     expect(
       readFileSync(resolve(process.cwd(), "lib/data/supabase.ts"), "utf8")
-    ).toContain('filters.category === "stem"');
+    ).toContain('(filters.sort ?? "popular") !== "popular"');
+    expect(
+      readFileSync(resolve(process.cwd(), "lib/event-standing.ts"), "utf8")
+    ).toContain('doe_science_bowl_scrape');
+    expect(
+      readFileSync(resolve(process.cwd(), "lib/data/search.ts"), "utf8")
+    ).toContain("standingSortRank");
   });
 
   it("parses AFSA only when the official cycle and deadline agree", () => {

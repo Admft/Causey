@@ -13,7 +13,8 @@ Causey is **Enough** at named roles + org-type fit + school group assignment, **
 | Agent | Workflow | Headline |
 | --- | --- | --- |
 | 1 | Signup, claim, identity | **Enough** — three person types; parent cannot eat a student session; claim email + invitation role; join codes student-only (`0104`). |
-| 2 | Account settings and alerts | **Thin** — profile/prefs/org labels work; leave is on overview not Account; alert kinds are not role-filtered (`guardian_routing` shown to students). |
+| 2 | Account settings and alerts | **Enough** — alert prefs role-scoped (guardian routing student-only; RSVP updates coach-only); grade student-only; Leave on leaveable Account org rows. |
+
 | 3 | Discover, save, Plan | **Enough** for chess after `0106` (signed-out directory was 500ing); other directories honest/thin. |
 | 4 | Family desk | **Enough** — invite → Plan → mark complete; Clear; staff team-entry labeled. |
 | 5 | Club / team workspace | **Enough** — self-serve club/team only; type locked; People hides school/district admin. |
@@ -49,9 +50,13 @@ Causey is **Enough** at named roles + org-type fit + school group assignment, **
 - [x] CSV bulk invite uses the same type-fit helper as single invite — confirmed `lib/actions/district.ts`; CSV help now names allowed roles
 - [x] Platform admin membership upsert type-fit — `0105`
 - [x] District coach Account shortcut was Schools (redirect loop) — now Competitions
+- [x] Alert prefs role-scoped: guardian routing student-only; RSVP updates
+  coach-only; parent/coach no-op toggles removed; save enforces scope —
+  2026-09-15
+- [x] Leave club/school/district on leaveable Account org rows (owners and
+  inherited district school views stay without Leave) — 2026-09-15
+- [x] Profile grade field is student-only — 2026-09-15
 - [ ] School coach/assistant **group assignment is after claim**, not on the invite form — keep two-step unless product wants intended groups stored on the invitation (**Thin**, M)
-- [ ] Alert prefs are one matrix for every person type — hide `guardian_routing` / coach-only kinds from students (**Thin**, S)
-- [ ] Leave club/school lives on org overview, not Account org rows (**Thin**, S)
 - [ ] Club group “Assigned coaches” does not restrict access (school assignment does) — honest copy exists; do not pretend it is grant-only (**Thin**, leave unless asked to hide)
 
 ## Out (do not build unless asked)
@@ -60,11 +65,14 @@ Salesforce permission sets, custom role names, per-tab ACL, fourth signup type, 
 
 ## Active batch
 
-- Wrong-seat next steps across school admin, district coach, school
-  coach, and join-code copy — 2026-09-14
+- Account settings role honesty: alerts, grade, Leave — 2026-09-15
 
 ## Last tick
 
+- 2026-09-15 — Account Agent 2: alert prefs, grade, and Leave match the
+  person type. Guardian routing is student-only (parents no longer see a
+  no-op); RSVP updates are coach-only; grade is student-only; Leave is on
+  leaveable Account org rows.
 - 2026-09-14 — Walked other account-type landings for the same class of
   lie as “Delegate this school.” School overview no longer pins district
   ownership handoff; Plan copy follows membership role; competitions

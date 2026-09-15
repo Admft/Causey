@@ -6,6 +6,7 @@ import { PageBackLink } from "@/components/PageBackLink";
 import { AccountDataControls } from "@/components/AccountDataControls";
 import { AccountSettingsShell } from "@/components/AccountSettingsShell";
 import { HouseholdRequestActions } from "@/components/HouseholdRequestActions";
+import { LeaveOrgButton } from "@/components/LeaveOrgButton";
 import { NotificationPreferencesForm } from "@/components/NotificationPreferencesForm";
 import { PortalEmptyState } from "@/components/PortalPrimitives";
 import { ProfileEditor } from "@/components/ProfileEditor";
@@ -244,7 +245,10 @@ export default async function AccountPage() {
         </Link>
       </p>
       <div className="mt-6">
-        <NotificationPreferencesForm initial={preferences} />
+        <NotificationPreferencesForm
+          initial={preferences}
+          role={profile.role}
+        />
       </div>
     </div>
   );
@@ -471,6 +475,14 @@ export default async function AccountPage() {
                           Settings
                         </Link>
                       </>
+                    ) : null}
+                    {row.memberRole &&
+                    row.org.owner_profile_id !== profile.id ? (
+                      <LeaveOrgButton
+                        orgId={row.org.id}
+                        orgName={row.org.name}
+                        orgType={row.org.type}
+                      />
                     ) : null}
                   </div>
                 </div>

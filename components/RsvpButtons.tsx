@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { clearRsvp, setRsvp } from "@/lib/actions/entrants";
 import type { RsvpUiStatus } from "@/lib/event-rsvp-targets";
-import { isAttendanceLocked, rsvpLabel } from "@/lib/rsvp";
+import { rsvpLabel } from "@/lib/rsvp";
 
 /**
  * Two-button RSVP. Works for yourself and — when profileId is a linked
@@ -22,7 +22,7 @@ type RsvpButtonsProps = {
 };
 
 export function RsvpButtons(props: RsvpButtonsProps) {
-  if (isAttendanceLocked(props.status)) {
+  if (props.status === "attended" || props.status === "did_not_attend") {
     return (
       <p className="text-sm text-muted">{rsvpLabel(props.status)}</p>
     );

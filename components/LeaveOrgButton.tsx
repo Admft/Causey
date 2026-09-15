@@ -5,7 +5,33 @@ import { useState } from "react";
 import { leaveOrg } from "@/lib/actions/orgs";
 import { attemptAction } from "@/lib/attempt-action";
 
-export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: string }) {
+function leaveVerb(orgType?: string): string {
+  if (orgType === "school") return "Leave this school";
+  if (orgType === "district") return "Leave this district";
+  if (orgType === "team") return "Leave this team";
+  if (orgType === "club") return "Leave this club";
+  return "Leave organization";
+}
+
+function leaveConfirmHelp(orgType?: string): string {
+  if (orgType === "school" || orgType === "district") {
+    return "You’ll return to Your organizations. Claim another invitation from there, or open Plan.";
+  }
+  if (orgType === "club" || orgType === "team") {
+    return "You’ll return to Your organizations. Join another club or team from there, or open Plan.";
+  }
+  return "You’ll return to My organizations. Join another school or club from there, or open Plan.";
+}
+
+export function LeaveOrgButton({
+  orgId,
+  orgName,
+  orgType,
+}: {
+  orgId: string;
+  orgName: string;
+  orgType?: string;
+}) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
@@ -51,8 +77,7 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
           </span>
         ) : (
           <span className="basis-full text-xs text-muted">
-            You’ll return to My organizations. Join another school or club from
-            there, or open Plan.
+            {leaveConfirmHelp(orgType)}
           </span>
         )}
       </span>
@@ -65,7 +90,7 @@ export function LeaveOrgButton({ orgId, orgName }: { orgId: string; orgName: str
       onClick={() => setConfirming(true)}
       className="action-button action-button--reversal"
     >
-      Leave organization
+      {leaveVerb(orgType)}
     </button>
   );
 }

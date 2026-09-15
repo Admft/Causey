@@ -1281,7 +1281,11 @@ export default async function OrgPage({
         {membership?.status === "active" &&
         org.owner_profile_id !== user.id ? (
           <div className="mt-10 border-t border-line pt-8">
-            <LeaveOrgButton orgId={org.id} orgName={org.name} />
+            <LeaveOrgButton
+              orgId={org.id}
+              orgName={org.name}
+              orgType={org.type}
+            />
           </div>
         ) : null}
       </div>

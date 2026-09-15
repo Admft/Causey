@@ -24,6 +24,7 @@ import {
   hashedRequestActorKey,
 } from "@/lib/rate-limit";
 import { flushPendingInvitationEmails } from "@/lib/email/delivery";
+import { preferenceKeyAppliesToRole } from "@/lib/notifications";
 
 const InvitationRoleSchema = z.enum([
   "student",
@@ -1045,6 +1046,22 @@ export async function saveNotificationPreferences(
   if (!parsed.success) return { ok: false, error: "Check your notification choices." };
   const user = await currentUserOrError();
   if (!user.ok) return user;
+  const profile = await getCurrentProfile();
+  if (!profile) return { ok: false, error: "Sign in to continue." };
+
+  // Role-scoped fields: guardian_routing is student-only; rsvp_update is for
+  // staff who send invitations. Ignore client values outside those seats so a
+  // parent/coach cannot write a no-op toggle or clear a student routing flag.
+  const rsvpUpdate = preferenceKeyAppliesToRole("rsvp_update", profile.role)
+    ? parsed.data.rsvpUpdate
+    : true;
+  const guardianRouting = preferenceKeyAppliesToRole(
+    "guardian_routing",
+    profile.role
+  )
+    ? parsed.data.guardianRouting
+    : true;
+
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.from("notification_preferences").upsert({
     profile_id: user.id,
@@ -1054,11 +1071,11 @@ export async function saveNotificationPreferences(
     reminder_1_day: parsed.data.reminder1Day,
     schedule_change: parsed.data.scheduleChange,
     cancellation: parsed.data.cancellation,
-    rsvp_update: parsed.data.rsvpUpdate,
+    rsvp_update: rsvpUpdate,
     announcement: parsed.data.announcement,
     result: parsed.data.result,
     email_enabled: parsed.data.emailEnabled,
-    guardian_routing: parsed.data.guardianRouting,
+    guardian_routing: guardianRouting,
     timezone: parsed.data.timezone,
     updated_at: new Date().toISOString(),
   });

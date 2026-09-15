@@ -1,5 +1,6 @@
 /** Shared in-app and product-email notification preferences. */
 
+import type { AccountRole } from "@/lib/auth/types";
 import type { ChildSummary } from "@/lib/data/portal";
 
 export const NOTIFICATION_KINDS = [
@@ -28,6 +29,121 @@ export type NotificationPrefsLike = {
   announcement: boolean;
   result: boolean;
 };
+
+/** Preference keys that are not universal across person types. */
+export type RoleScopedPreferenceKey = "rsvp_update" | "guardian_routing";
+
+export type NotificationPreferenceChoiceKey =
+  | keyof NotificationPrefsLike
+  | "email_enabled"
+  | "guardian_routing";
+
+export type NotificationPreferenceChoice = {
+  key: NotificationPreferenceChoiceKey;
+  label: string;
+  description: string;
+};
+
+/**
+ * Guardian routing is honored only for student profiles (email copies to
+ * linked parents). RSVP-update alerts are for people who send invitations
+ * (coach/staff accounts). Everyone else seeing those toggles was a no-op lie.
+ */
+export function preferenceKeyAppliesToRole(
+  key: RoleScopedPreferenceKey | string,
+  role: AccountRole
+): boolean {
+  if (key === "guardian_routing") return role === "student";
+  if (key === "rsvp_update") return role === "coach";
+  return true;
+}
+
+export function notificationPreferenceChoicesForRole(
+  role: AccountRole
+): NotificationPreferenceChoice[] {
+  const announcementLabel =
+    role === "coach"
+      ? "Organization announcements"
+      : "School and club announcements";
+  const resultDescription =
+    role === "parent"
+      ? "In-app and email when a coach records a division, place, or award for a linked student."
+      : role === "coach"
+        ? "In-app and email when a result is recorded for someone you track."
+        : "In-app and email when a coach records a division, place, or award for you.";
+
+  const choices: NotificationPreferenceChoice[] = [
+    {
+      key: "invitation",
+      label: "Tournament and organization invitations",
+      description:
+        "In-app and email when a coach, school, or district needs a response.",
+    },
+    {
+      key: "registration_deadline",
+      label: "Registration deadlines",
+      description:
+        "Show unfinished registration in Needs attention when a deadline is within a week.",
+    },
+    {
+      key: "reminder_7_day",
+      label: "Seven-day reminders",
+      description:
+        "Show saved or going tournaments in Needs attention about a week out.",
+    },
+    {
+      key: "reminder_1_day",
+      label: "One-day reminders",
+      description:
+        "Show saved or going tournaments in Needs attention for today or tomorrow.",
+    },
+    {
+      key: "schedule_change",
+      label: "Date, venue, or registration changes",
+      description:
+        "In-app and email when a saved or planned tournament changes details.",
+    },
+    {
+      key: "cancellation",
+      label: "Cancellations",
+      description:
+        "In-app and email when a tracked tournament is cancelled or archived.",
+    },
+    {
+      key: "rsvp_update",
+      label: "RSVP updates",
+      description:
+        "In-app and email when someone responds to an invitation you sent.",
+    },
+    {
+      key: "announcement",
+      label: announcementLabel,
+      description:
+        "In-app and email when your school, district, or club posts an update.",
+    },
+    {
+      key: "result",
+      label: "Recorded results",
+      description: resultDescription,
+    },
+    {
+      key: "email_enabled",
+      label: "Product email",
+      description:
+        "Send enabled invitations, deadlines, reminders, and important updates by email.",
+    },
+    {
+      key: "guardian_routing",
+      label: "Route my deadlines to linked parents",
+      description:
+        "Also email active linked parents when you have an enabled tournament alert.",
+    },
+  ];
+
+  return choices.filter((choice) =>
+    preferenceKeyAppliesToRole(choice.key, role)
+  );
+}
 
 export type NotificationEmailPrefsLike = NotificationPrefsLike & {
   email_enabled: boolean;

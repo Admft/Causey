@@ -122,6 +122,7 @@ export function ProfileEditor({
       if (otherId.trim()) credential_ids.other = otherId.trim();
       const parsedGrade = grade === "" ? null : Number(grade);
       if (
+        profile.role === "student" &&
         parsedGrade !== null &&
         (!Number.isInteger(parsedGrade) || parsedGrade < 0 || parsedGrade > 12)
       ) {
@@ -137,7 +138,7 @@ export function ProfileEditor({
           interests.has(category.id)
         ).map((category) => category.id),
         preferred_competition_category: shortcut || null,
-        grade: parsedGrade,
+        grade: profile.role === "student" ? parsedGrade : null,
         credential_ids,
         updated_at: new Date().toISOString(),
       });
@@ -194,25 +195,27 @@ export function ProfileEditor({
           </span>
         ) : null}
       </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-semibold text-muted-strong">Grade</span>
-        <select
-          className="field"
-          value={grade}
-          onChange={(e) => {
-            setGrade(e.target.value);
-            setSaved(false);
-          }}
-        >
-          <option value="">Not set</option>
-          {Array.from({ length: 13 }, (_, n) => (
-            <option key={n} value={String(n)}>
-              {n === 0 ? "K" : `Grade ${n}`}
-            </option>
-          ))}
-        </select>
-        <span className="text-2xs text-muted">{gradeHelpText}</span>
-      </label>
+      {profile.role === "student" ? (
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold text-muted-strong">Grade</span>
+          <select
+            className="field"
+            value={grade}
+            onChange={(e) => {
+              setGrade(e.target.value);
+              setSaved(false);
+            }}
+          >
+            <option value="">Not set</option>
+            {Array.from({ length: 13 }, (_, n) => (
+              <option key={n} value={String(n)}>
+                {n === 0 ? "K" : `Grade ${n}`}
+              </option>
+            ))}
+          </select>
+          <span className="text-2xs text-muted">{gradeHelpText}</span>
+        </label>
+      ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
           <span className="text-xs font-semibold text-muted-strong">State</span>

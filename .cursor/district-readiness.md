@@ -211,13 +211,11 @@ Source walk as district athletics coordinator (chess pilot). No app code edited.
 
 ### Recommended next shippable win
 
-Ops proof of email at school volume, apply migrations through `0101` in each
+Ops proof of email at school volume, apply migrations through `0106` in each
 environment, and run the live two-district role/isolation smoke in the pilot
-runbook. `0096` is the claim auto-join gate; `0097`–`0098` are the scoped role
-console and aggregate-read gates; `0099` completes protected district
-ownership handoff; `0100` aligns legacy aliases and child-school UI/permission
-gates; `0101` is founder school delete. Unassigned school coach wait-state
-shipped 2026-09-13 (no migration). Defer to owner/legal gates.
+runbook. Account settings role honesty shipped 2026-09-15 (no migration).
+Optional leftover: whether district People should stop offering coach /
+assistant invites (product call). Defer FERPA/price to owner/legal.
 
 ### Out-of-scope refusals this pass
 

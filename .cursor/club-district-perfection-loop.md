@@ -31,11 +31,17 @@ Emulate **that buyer** before coding. Do not mix club IA into district chrome or
 
 ## Active batch
 
-- Guard unsigned search: migration invariant + production smoke so
-  PUBLIC competition SELECT cannot name `is_org_coach` again — 2026-09-14
+- Account settings role honesty: alerts, grade, Leave — 2026-09-15
 
 ## Last tick
 
+- 2026-09-15 — Account settings match the person looking. Alert prefs
+  show guardian routing only to students (parents/coaches no longer see
+  a no-op toggle) and RSVP updates only to coaches; save enforces the
+  same scope. Grade is student-only. Leave is on leaveable Account org
+  rows with school/district/club nouns. Stale NSB popular-rank test and
+  RsvpButtons unanswered typecheck fixed so the suite and production
+  build stay green.
 - 2026-09-14 — Added CI protections so the Saturday unsigned-search
   500 cannot land again: `validate:migrations` fails if competitions or
   sections SELECT policies name staff helpers for anon/public, and

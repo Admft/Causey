@@ -32,7 +32,10 @@ describe("district first-session next-step honesty", () => {
       "school or club first"
     );
     expect(source("components/LeaveOrgButton.tsx")).toContain(
-      "Join another school or club"
+      "Join another club or team from there"
+    );
+    expect(source("components/LeaveOrgButton.tsx")).toContain(
+      "Leave this school"
     );
     expect(source("app/event/[slug]/page.tsx")).toContain(
       "Entry is through your invite, not open registration."
